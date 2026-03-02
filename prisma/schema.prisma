@@ -1,0 +1,177 @@
+// Liberty Trading Pro — Prisma Schema
+// Supabase PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── ENUMS ────────────────────────────────────────
+
+enum Plan {
+  FREE
+  CLUB
+  PRO
+  PORTFOLIO
+}
+
+// ─── MODELS ───────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  phone     String?
+  plan      Plan     @default(FREE)
+  active    Boolean  @default(true)
+  hotmartId String?
+  authId    String?  @unique
+  createdAt DateTime @default(now())
+
+  tradingPlans   TradingPlan[]
+  sessions       TradingSession[]
+  weeklyReports  WeeklyReport[]
+  monthlyReports MonthlyReport[]
+  conversations  VincesConversation[]
+}
+
+model TradingPlan {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  name           String
+  broker         String
+  accountName    String
+  capitalInicial Float
+  riesgo         Float
+  rrRatio        Float
+  riesgoPorTrade Float
+  gestionStop    String
+  reglas         String
+  horaInicio     String
+  horaFin        String
+  instrumento    String
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  sessions TradingSession[]
+}
+
+model TradingSession {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  planId         String?
+  plan           TradingPlan? @relation(fields: [planId], references: [id])
+  date           DateTime
+  instrumento    String
+  direccion      String
+  resultado      String
+  pnlBruto       Float
+  comisiones     Float        @default(0)
+  pnlNeto        Float
+  contratos      Int          @default(1)
+  entryPrice     Float?
+  exitPrice      Float?
+  stopLoss       Float?
+  takeProfit     Float?
+  rrReal         Float?
+  siguioPlan     Boolean      @default(true)
+  sentimiento    String?
+  notas          String?
+  screenshotUrl  String?
+  vincesAnalysis String?
+  createdAt      DateTime     @default(now())
+}
+
+model GastoFijo {
+  id         String   @id @default(cuid())
+  userId     String
+  concepto   String
+  monto      Float
+  frecuencia String
+  diaCobro   Int?
+  activo     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
+
+model MetricasPeriodo {
+  id               String   @id @default(cuid())
+  userId           String
+  planId           String?
+  periodo          String
+  totalOperaciones Int
+  ganadoras        Int
+  perdedoras       Int
+  winRate          Float
+  winRateLong      Float?
+  winRateShort     Float?
+  pnlBruto         Float
+  comisiones       Float
+  pnlNeto          Float
+  rendimiento      Float
+  profitFactor     Float
+  rrPromedio       Float
+  maxDrawdown      Float
+  maxDrawdownPct   Float
+  rachaGanadora    Int
+  rachaPerdedora   Int
+  pnlPromTrade     Float
+  pnlPromGanador   Float
+  pnlPromPerdedor  Float
+  mejorTrade       Float
+  peorTrade        Float
+  calculadoAt      DateTime @default(now())
+}
+
+model WeeklyReport {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  weekStart       DateTime
+  weekEnd         DateTime
+  totalTrades     Int
+  winRate         Float
+  totalPnl        Float
+  disciplineScore Float
+  patterns        String?
+  feedback        String?
+  createdAt       DateTime @default(now())
+}
+
+model MonthlyReport {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  month       Int
+  year        Int
+  metrics     Json
+  pdfUrl      String?
+  vincesNotes String?
+  createdAt   DateTime @default(now())
+}
+
+model Opportunity {
+  id          String   @id @default(cuid())
+  title       String
+  instrumento String
+  tipo        String
+  description String
+  imageUrl    String?
+  publishedAt DateTime @default(now())
+  active      Boolean  @default(true)
+  minPlan     Plan     @default(CLUB)
+}
+
+model VincesConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  messages  Json
+  context   String?
+  sessionId String?
+  createdAt DateTime @default(now())
+}
