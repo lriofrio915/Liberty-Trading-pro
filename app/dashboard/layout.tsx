@@ -9,6 +9,7 @@ const navItems = [
   { href: '/dashboard/track-record', icon: '📈', label: 'Track Record' },
   { href: '/dashboard/planes', icon: '📋', label: 'Planes' },
   { href: '/dashboard/reportes', icon: '📄', label: 'Reportes' },
+  { href: '/dashboard/monitor', icon: '🌍', label: 'Monitor Mundial' },
 ]
 
 export default async function DashboardLayout({

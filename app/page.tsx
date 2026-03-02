@@ -2,7 +2,6 @@ import Navbar from '@/components/Navbar/Navbar'
 import Hero from '@/components/Hero/Hero'
 import Pricing from '@/components/Pricing/Pricing'
 import Footer from '@/components/Footer/Footer'
-import CustomCursor from '@/components/CustomCursor/CustomCursor'
 import Link from 'next/link'
 
 const WA = 'https://wa.me/+593996691586?text=Hola%20Luis%2C%20me%20interesa%20el%20servicio%20P2P%20de%20USDT%2FBTC'
@@ -10,7 +9,6 @@ const WA = 'https://wa.me/+593996691586?text=Hola%20Luis%2C%20me%20interesa%20el
 export default function LandingPage() {
   return (
     <main className="relative noise">
-      <CustomCursor />
       <Navbar />
       <Hero />
 
