@@ -236,6 +236,31 @@ html, body {
   background: linear-gradient(to bottom, var(--gold-dark), transparent);
 }
 
+/* ─── Leaflet dark theme ─── */
+.leaflet-container { background: #0d0d0d; font-family: var(--font-sans); }
+.leaflet-popup-content-wrapper {
+  background: #111111;
+  border: 1px solid #1e1e1e;
+  border-radius: 10px;
+  color: #f0ece4;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.9);
+}
+.leaflet-popup-tip { background: #111111; }
+.leaflet-popup-close-button { color: #4a4642 !important; }
+.leaflet-popup-close-button:hover { color: #f0ece4 !important; }
+.leaflet-control-attribution {
+  background: rgba(8,8,8,0.75) !important;
+  color: #4a4642 !important;
+  font-size: 9px !important;
+}
+.leaflet-control-attribution a { color: #6a6460 !important; }
+.leaflet-control-zoom a {
+  background: #111111 !important;
+  border-color: #1e1e1e !important;
+  color: #8a8480 !important;
+}
+.leaflet-control-zoom a:hover { background: #1a1a1a !important; color: #f0ece4 !important; }
+
 /* ─── Panel grid lines (track record) ─── */
 .track-panel {
   background: var(--panel);

@@ -1,14 +1,23 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import dynamic from 'next/dynamic'
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
+import type { GDELTEvent } from '@/components/Monitor/LeafletMap'
 
-interface NewsItem {
-  title: string
-  description: string
-  link: string
-  pubDate: string
-  source: string
-}
+// ── Dynamic import (Leaflet must not run on server) ───────────────────────────
+const LeafletMap = dynamic(() => import('@/components/Monitor/LeafletMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center bg-[var(--bg-secondary)]">
+      <div className="text-center">
+        <div className="text-3xl mb-2 animate-pulse">🗺️</div>
+        <p className="label-mono text-[10px]">Cargando mapa...</p>
+      </div>
+    </div>
+  ),
+})
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface PriceItem {
   symbol: string
@@ -19,199 +28,527 @@ interface PriceItem {
   up: boolean
 }
 
-const STRESS_LABELS: Record<string, { label: string; desc: string; invert?: boolean }> = {
-  '%5EVIX': { label: 'VIX', desc: 'Índice de Volatilidad — miedo del mercado', invert: true },
-  '^VIX':   { label: 'VIX', desc: 'Índice de Volatilidad — miedo del mercado', invert: true },
-  'DX=F':   { label: 'DXY', desc: 'Dólar Index — fortaleza del USD' },
-  'GC=F':   { label: 'Oro', desc: 'Activo refugio — stress geopolítico' },
-  'NQ=F':   { label: 'NQ Fut', desc: 'Futuros Nasdaq — apetito de riesgo' },
+interface Article {
+  title: string
+  description: string
+  link: string
+  pubDate: string
+  source: string
+  image?: string
 }
 
-function formatPrice(sym: string, price: number): string {
-  if (!price || isNaN(price)) return '—'
-  if (sym === 'EURUSD=X') return price.toFixed(4)
-  if (sym === '%5EVIX' || sym === '^VIX') return price.toFixed(2)
-  return price.toLocaleString('en-US', { maximumFractionDigits: 2 })
+type Timespan = '1h' | '6h' | '24h' | '7d'
+type EventType = 'conflict' | 'protest' | 'disaster' | 'economic' | 'other'
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const TIMESPANS: { value: Timespan; label: string }[] = [
+  { value: '1h', label: '1h' },
+  { value: '6h', label: '6h' },
+  { value: '24h', label: '24h' },
+  { value: '7d', label: '7d' },
+]
+
+const EVENT_TYPES: { type: EventType; label: string; color: string; emoji: string }[] = [
+  { type: 'conflict', label: 'Conflicto', color: '#ef4444', emoji: '💥' },
+  { type: 'protest', label: 'Protesta', color: '#f97316', emoji: '✊' },
+  { type: 'disaster', label: 'Desastre', color: '#a855f7', emoji: '🌊' },
+  { type: 'economic', label: 'Económico', color: '#eab308', emoji: '📉' },
+  { type: 'other', label: 'Otros', color: '#60a5fa', emoji: '🌐' },
+]
+
+const STRESS_CONFIG: Record<string, { label: string; desc: string; dangerIfHigh?: boolean }> = {
+  'VIX': { label: 'VIX', desc: 'Volatilidad — miedo del mercado', dangerIfHigh: true },
+  '^VIX': { label: 'VIX', desc: 'Volatilidad — miedo del mercado', dangerIfHigh: true },
+  'DXY': { label: 'DXY', desc: 'Fortaleza del dólar USD' },
+  'NQ Futures': { label: 'NQ', desc: 'Apetito de riesgo' },
+  'Oro': { label: 'Oro', desc: 'Refugio seguro — stress global', dangerIfHigh: true },
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function timeAgo(dateStr: string): string {
   if (!dateStr) return ''
-  const diff = (Date.now() - new Date(dateStr).getTime()) / 1000
-  if (diff < 60) return 'Hace un momento'
-  if (diff < 3600) return `Hace ${Math.floor(diff / 60)}m`
-  if (diff < 86400) return `Hace ${Math.floor(diff / 3600)}h`
-  return `Hace ${Math.floor(diff / 86400)}d`
+  try {
+    const diff = (Date.now() - new Date(dateStr).getTime()) / 1000
+    if (diff < 60) return 'Hace un momento'
+    if (diff < 3600) return `Hace ${Math.floor(diff / 60)}m`
+    if (diff < 86400) return `Hace ${Math.floor(diff / 3600)}h`
+    return `Hace ${Math.floor(diff / 86400)}d`
+  } catch {
+    return ''
+  }
 }
 
-export default function MonitorPage() {
-  const [news, setNews] = useState<NewsItem[]>([])
-  const [prices, setPrices] = useState<PriceItem[]>([])
-  const [newsLoading, setNewsLoading] = useState(true)
-  const [pricesLoading, setPricesLoading] = useState(true)
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+function fmtPrice(price: number, name: string): string {
+  if (!price || isNaN(price)) return '—'
+  if (name === 'VIX') return price.toFixed(2)
+  if (name.includes('/')) return price.toFixed(2)
+  return price.toLocaleString('en-US', { maximumFractionDigits: 2 })
+}
 
-  const fetchPrices = useCallback(async () => {
+function toneLabel(tone: number): { text: string; color: string } {
+  if (tone < -8) return { text: 'Muy negativo', color: '#ef4444' }
+  if (tone < -4) return { text: 'Negativo', color: '#f97316' }
+  if (tone < -1) return { text: 'Levemente neg.', color: '#eab308' }
+  if (tone < 1) return { text: 'Neutral', color: '#8a8480' }
+  return { text: 'Positivo', color: '#22c55e' }
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+export default function MonitorPage() {
+  const [timespan, setTimespan] = useState<Timespan>('24h')
+  const [events, setEvents] = useState<GDELTEvent[]>([])
+  const [eventsLoading, setEventsLoading] = useState(true)
+  const [eventCount, setEventCount] = useState(0)
+
+  const [articles, setArticles] = useState<Article[]>([])
+  const [newsLoading, setNewsLoading] = useState(true)
+
+  const [prices, setPrices] = useState<PriceItem[]>([])
+  const [pricesLoading, setPricesLoading] = useState(true)
+
+  const [selectedEvent, setSelectedEvent] = useState<GDELTEvent | null>(null)
+  const [activeTypes, setActiveTypes] = useState<Set<EventType>>(
+    new Set<EventType>(['conflict', 'protest', 'disaster', 'economic', 'other'])
+  )
+
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  const eventsTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // ── Fetch events ────────────────────────────────────────────────────────────
+
+  const fetchEvents = useCallback(async (ts: Timespan) => {
+    setEventsLoading(true)
     try {
-      const res = await fetch('/api/prices', { cache: 'no-store' })
+      const res = await fetch(`/api/monitor/events?timespan=${ts}`, { cache: 'no-store' })
       const data = await res.json()
-      if (data.prices?.length) {
-        setPrices(data.prices)
-        setLastUpdate(new Date())
-      }
+      setEvents(data.events ?? [])
+      setEventCount(data.count ?? 0)
+      setLastUpdate(new Date())
+    } catch {
+      // keep previous events
     } finally {
-      setPricesLoading(false)
+      setEventsLoading(false)
     }
   }, [])
 
+  // ── Fetch news ──────────────────────────────────────────────────────────────
+
   const fetchNews = useCallback(async () => {
     try {
-      const res = await fetch('/api/news', { cache: 'no-store' })
+      const res = await fetch('/api/monitor/news', { cache: 'no-store' })
       const data = await res.json()
-      if (data.news?.length) setNews(data.news)
+      setArticles(data.articles ?? [])
     } finally {
       setNewsLoading(false)
     }
   }, [])
 
-  useEffect(() => {
-    fetchPrices()
-    fetchNews()
-    const p = setInterval(fetchPrices, 30_000)
-    const n = setInterval(fetchNews, 120_000)
-    return () => { clearInterval(p); clearInterval(n) }
-  }, [fetchPrices, fetchNews])
+  // ── Fetch prices ────────────────────────────────────────────────────────────
 
-  const stressIndicators = prices.filter(p =>
-    ['%5EVIX', '^VIX', 'DX=F', 'GC=F', 'NQ=F'].includes(p.symbol)
+  const fetchPrices = useCallback(async () => {
+    try {
+      const res = await fetch('/api/prices', { cache: 'no-store' })
+      const data = await res.json()
+      if (data.prices?.length) setPrices(data.prices)
+    } finally {
+      setPricesLoading(false)
+    }
+  }, [])
+
+  // ── Initial load + intervals ────────────────────────────────────────────────
+
+  useEffect(() => {
+    fetchEvents(timespan)
+    fetchNews()
+    fetchPrices()
+
+    const newsTimer = setInterval(fetchNews, 120_000)
+    const pricesTimer = setInterval(fetchPrices, 30_000)
+
+    return () => {
+      clearInterval(newsTimer)
+      clearInterval(pricesTimer)
+    }
+  }, [fetchEvents, fetchNews, fetchPrices, timespan])
+
+  // Auto-refresh events every 5 min
+  useEffect(() => {
+    if (eventsTimerRef.current) clearInterval(eventsTimerRef.current)
+    eventsTimerRef.current = setInterval(() => fetchEvents(timespan), 300_000)
+    return () => { if (eventsTimerRef.current) clearInterval(eventsTimerRef.current) }
+  }, [fetchEvents, timespan])
+
+  // Re-fetch when timespan changes
+  const handleTimespanChange = (ts: Timespan) => {
+    setTimespan(ts)
+    setSelectedEvent(null)
+    fetchEvents(ts)
+  }
+
+  // ── Filtered events (by type) ───────────────────────────────────────────────
+
+  const filteredEvents = useMemo(
+    () => events.filter((e) => activeTypes.has(e.eventType)),
+    [events, activeTypes]
   )
 
-  return (
-    <div className="animate-fadeIn space-y-6">
+  // ── Type counts ─────────────────────────────────────────────────────────────
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
+  const typeCounts = useMemo(() => {
+    const c: Partial<Record<EventType, number>> = {}
+    for (const e of events) {
+      c[e.eventType] = (c[e.eventType] ?? 0) + 1
+    }
+    return c
+  }, [events])
+
+  // ── Stress indicators ───────────────────────────────────────────────────────
+
+  const stressIndicators = useMemo(
+    () => prices.filter((p) => ['VIX', 'DXY', 'Oro', 'NQ Futures', '^VIX'].includes(p.name)),
+    [prices]
+  )
+
+  // ── Render ───────────────────────────────────────────────────────────────────
+
+  return (
+    <div className="animate-fadeIn space-y-5 pb-6">
+
+      {/* ── Header ── */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-black mb-1">
-            <span className="gradient-gold">Monitor de Mercados</span> <span className="text-[var(--text-secondary)] text-2xl">Globales</span>
+            <span className="gradient-gold">Monitor</span>
+            <span className="text-[var(--text-secondary)] text-2xl"> de Mercados Globales</span>
           </h1>
           <p className="text-[var(--text-secondary)] text-sm">
-            Eventos geopolíticos · Indicadores de stress · Noticias en tiempo real
+            Eventos geopolíticos en tiempo real · GDELT · Noticias en español
           </p>
         </div>
-        {lastUpdate && (
-          <div className="text-right">
-            <div className="label-mono text-[9px]">Actualizado</div>
-            <div className="label-mono text-[10px] text-[var(--gold)]">
-              {lastUpdate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-            </div>
+        <div className="text-right shrink-0">
+          {lastUpdate && (
+            <>
+              <div className="label-mono text-[9px]">Última actualización</div>
+              <div className="label-mono text-[10px] text-[var(--gold)]">
+                {lastUpdate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </div>
+            </>
+          )}
+          <div className="label-mono text-[9px] mt-1 text-[var(--text-muted)]">
+            Eventos auto-refresh: 5min
+          </div>
+        </div>
+      </div>
+
+      {/* ── Stress Indicators ── */}
+      <div>
+        <div className="label-mono mb-2.5 text-[var(--gold)]">Indicadores de stress del mercado</div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {pricesLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="card h-20 animate-pulse" />
+              ))
+            : stressIndicators.map((p) => {
+                const cfg = STRESS_CONFIG[p.name] ?? { label: p.name, desc: '' }
+                const bad = cfg.dangerIfHigh ? p.up : !p.up
+                return (
+                  <div key={p.symbol} className="card flex flex-col gap-1 py-3">
+                    <div className="flex items-center justify-between">
+                      <span className="label-mono text-[10px]">{cfg.label}</span>
+                      <span
+                        className="text-[10px] font-mono-custom font-bold px-1.5 py-0.5 rounded"
+                        style={{
+                          background: bad ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)',
+                          color: bad ? '#ef4444' : '#22c55e',
+                        }}
+                      >
+                        {p.changePct >= 0 ? '+' : ''}{p.changePct.toFixed(2)}%
+                      </span>
+                    </div>
+                    <div
+                      className="text-xl font-bold"
+                      style={{ fontFamily: 'var(--font-serif)', color: bad ? '#ef4444' : '#22c55e' }}
+                    >
+                      {fmtPrice(p.price, p.name)}
+                    </div>
+                    <div className="text-[10px] text-[var(--text-muted)] leading-tight">{cfg.desc}</div>
+                  </div>
+                )
+              })}
+        </div>
+      </div>
+
+      {/* ── Timeline + Legend row ── */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+
+        {/* Timeline buttons */}
+        <div className="flex items-center gap-1">
+          <span className="label-mono text-[10px] mr-2">Período:</span>
+          {TIMESPANS.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => handleTimespanChange(value)}
+              disabled={eventsLoading}
+              className={`px-3 py-1 rounded-md text-xs font-mono-custom transition-all border ${
+                timespan === value
+                  ? 'border-[var(--gold)] text-[var(--gold)] bg-[rgba(201,168,76,0.08)]'
+                  : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--gold-dark)] hover:text-[var(--text-secondary)]'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+          {eventsLoading && (
+            <span className="label-mono text-[10px] text-[var(--text-muted)] ml-2 animate-pulse">
+              cargando...
+            </span>
+          )}
+        </div>
+
+        {/* Event count */}
+        {!eventsLoading && (
+          <div className="label-mono text-[10px] text-[var(--gold)]">
+            {filteredEvents.length} eventos
+            {filteredEvents.length !== eventCount && ` de ${eventCount} totales`}
+            {' '}· últimas {timespan}
           </div>
         )}
       </div>
 
-      {/* Stress Indicators */}
-      <div>
-        <div className="label-mono mb-3 text-[var(--gold)]">Indicadores de stress del mercado</div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {pricesLoading
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="card animate-pulse h-20" />
-              ))
-            : stressIndicators.length > 0
-              ? stressIndicators.map((p) => {
-                  const info = STRESS_LABELS[p.symbol] ?? { label: p.name, desc: '' }
-                  const stressUp = info.invert ? !p.up : p.up
-                  return (
-                    <div key={p.symbol} className="card flex flex-col gap-1">
-                      <div className="flex items-center justify-between">
-                        <span className="label-mono text-[10px]">{info.label}</span>
-                        <span className={`text-[10px] font-mono-custom font-bold px-1.5 py-0.5 rounded ${
-                          stressUp ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'
-                        }`}>
-                          {p.changePct >= 0 ? '+' : ''}{p.changePct.toFixed(2)}%
-                        </span>
-                      </div>
-                      <div className="text-xl font-bold" style={{ fontFamily: 'var(--font-serif)', color: stressUp ? 'var(--green)' : 'var(--red)' }}>
-                        {formatPrice(p.symbol, p.price)}
-                      </div>
-                      <div className="text-[10px] text-[var(--text-muted)] leading-tight">{info.desc}</div>
-                    </div>
-                  )
+      {/* ── Type filter legend ── */}
+      <div className="flex flex-wrap gap-2">
+        {EVENT_TYPES.map(({ type, label, color, emoji }) => {
+          const active = activeTypes.has(type)
+          const count = typeCounts[type] ?? 0
+          return (
+            <button
+              key={type}
+              onClick={() => {
+                setActiveTypes((prev) => {
+                  const next = new Set(prev)
+                  if (next.has(type)) next.delete(type)
+                  else next.add(type)
+                  return next
                 })
-              : (
-                <div className="col-span-4 text-center py-4 text-sm text-[var(--text-muted)]">
-                  Cargando indicadores...
-                </div>
-              )
-          }
-        </div>
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-mono-custom transition-all"
+              style={{
+                borderColor: active ? color : 'var(--border)',
+                background: active ? `${color}18` : 'transparent',
+                color: active ? color : 'var(--text-muted)',
+                opacity: count === 0 ? 0.4 : 1,
+              }}
+            >
+              <span>{emoji}</span>
+              <span>{label}</span>
+              {count > 0 && <span className="opacity-70">({count})</span>}
+            </button>
+          )
+        })}
       </div>
 
-      {/* Two-column layout: map + news */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+      {/* ── Main grid: Map + Sidebar ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4" style={{ minHeight: 480 }}>
 
-        {/* Mapa geopolítico */}
-        <div className="lg:col-span-3 flex flex-col">
-          <div className="label-mono mb-3 text-[var(--gold)]">Mapa de eventos globales</div>
-          <div className="rounded-xl overflow-hidden border border-[var(--border)] flex-1" style={{ minHeight: 360 }}>
-            <iframe
-              src="https://liveuamap.com/embed"
-              className="w-full h-full"
-              style={{ minHeight: 360, border: 0 }}
-              title="Mapa de eventos globales"
-              loading="lazy"
+        {/* Map */}
+        <div className="lg:col-span-3 relative rounded-xl overflow-hidden border border-[var(--border)]">
+          <div style={{ height: 480 }}>
+            <LeafletMap
+              events={filteredEvents}
+              onEventClick={setSelectedEvent}
+              selectedId={selectedEvent?.id}
             />
           </div>
-          <p className="text-[9px] text-[var(--text-muted)] mt-1.5 label-mono">
-            Fuente: LiveUAMap · Eventos geopolíticos en tiempo real
-          </p>
-        </div>
-
-        {/* News feed */}
-        <div className="lg:col-span-2 flex flex-col">
-          <div className="label-mono mb-3 text-[var(--gold)]">Noticias internacionales</div>
-          <div className="space-y-2 flex-1 overflow-y-auto" style={{ maxHeight: 420 }}>
-            {newsLoading
-              ? Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="card p-3 animate-pulse h-16" />
-                ))
-              : news.length > 0
-                ? news.map((item, i) => (
-                    <a
-                      key={i}
-                      href={item.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block card p-3 hover:border-[var(--gold-dark)] transition-all group"
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <span className="label-mono text-[9px] text-[var(--gold)]">{item.source}</span>
-                        <span className="label-mono text-[9px] shrink-0">{timeAgo(item.pubDate)}</span>
-                      </div>
-                      <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--gold)] transition-colors leading-tight line-clamp-2">
-                        {item.title}
-                      </p>
-                      {item.description && (
-                        <p className="text-xs text-[var(--text-muted)] mt-1 line-clamp-2 leading-relaxed">
-                          {item.description}
-                        </p>
-                      )}
-                    </a>
-                  ))
-                : (
-                  <div className="text-center py-8 text-sm text-[var(--text-muted)]">
-                    Cargando noticias...
-                  </div>
-                )
-            }
+          {/* No-data overlay */}
+          {!eventsLoading && filteredEvents.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center bg-[rgba(8,8,8,0.75)] pointer-events-none">
+              <div className="text-center">
+                <div className="text-4xl mb-2">🌐</div>
+                <p className="label-mono text-[11px] text-[var(--text-muted)]">
+                  Sin eventos para los filtros seleccionados
+                </p>
+              </div>
+            </div>
+          )}
+          {/* Attribution */}
+          <div className="absolute bottom-1 left-1 z-[1000] pointer-events-none">
+            <span className="label-mono text-[8px] text-[var(--text-muted)] bg-[rgba(8,8,8,0.7)] px-1.5 py-0.5 rounded">
+              Datos: GDELT Project · Mapa: © OpenStreetMap / CARTO
+            </span>
           </div>
         </div>
+
+        {/* Event detail sidebar */}
+        <div className="lg:col-span-2 flex flex-col gap-3">
+          {selectedEvent ? (
+            <EventSidebar event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+          ) : (
+            <div className="card flex-1 flex flex-col items-center justify-center text-center py-12">
+              <div className="text-4xl mb-3">👆</div>
+              <p className="label-mono text-[11px] text-[var(--text-muted)] max-w-[180px]">
+                Haz clic en un marcador del mapa para ver los detalles del evento
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Disclaimer */}
+      {/* ── News feed ── */}
+      <div>
+        <div className="label-mono mb-3 text-[var(--gold)]">Noticias internacionales en español</div>
+        {newsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="card h-20 animate-pulse" />
+            ))}
+          </div>
+        ) : articles.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {articles.map((item, i) => (
+              <a
+                key={i}
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="card p-3.5 hover:border-[var(--gold-dark)] transition-all group"
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="label-mono text-[9px] text-[var(--gold)]">{item.source}</span>
+                  <span className="label-mono text-[9px] text-[var(--text-muted)]">
+                    {timeAgo(item.pubDate)}
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--gold)] transition-colors leading-snug line-clamp-2">
+                  {item.title}
+                </p>
+                {item.description && (
+                  <p className="text-xs text-[var(--text-muted)] mt-1.5 line-clamp-2 leading-relaxed">
+                    {item.description}
+                  </p>
+                )}
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="card text-center py-10">
+            <p className="text-[var(--text-muted)] text-sm">Sin noticias disponibles</p>
+          </div>
+        )}
+      </div>
+
+      {/* ── Disclaimer ── */}
       <div className="label-mono text-[9px] text-[var(--text-muted)] text-center border-t border-[var(--border)] pt-4">
-        Información con fines educativos · Los eventos geopolíticos pueden impactar los mercados con alta volatilidad · No es asesoramiento de inversión
+        Información con fines educativos · Fuente: GDELT Project (gdeltproject.org) ·
+        Los eventos geopolíticos impactan la volatilidad de los mercados · No es asesoramiento de inversión
       </div>
 
+    </div>
+  )
+}
+
+// ── Event Sidebar sub-component ───────────────────────────────────────────────
+
+function EventSidebar({
+  event,
+  onClose,
+}: {
+  event: GDELTEvent
+  onClose: () => void
+}) {
+  const typeInfo = EVENT_TYPES.find((t) => t.type === event.eventType)
+  const tone = toneLabel(event.tone)
+  const dateStr = event.isoDate
+    ? new Date(event.isoDate).toLocaleString('es-ES', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '—'
+
+  return (
+    <div className="card flex flex-col gap-4 h-full">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          {typeInfo && (
+            <span
+              className="text-[10px] font-mono-custom font-bold px-2 py-0.5 rounded-full"
+              style={{ background: `${typeInfo.color}20`, color: typeInfo.color, border: `1px solid ${typeInfo.color}40` }}
+            >
+              {typeInfo.emoji} {typeInfo.label.toUpperCase()}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={onClose}
+          className="text-[var(--text-muted)] hover:text-white transition-colors text-sm flex-shrink-0"
+        >
+          ✕
+        </button>
+      </div>
+
+      <p className="text-sm font-semibold text-[var(--text-primary)] leading-snug">
+        {event.title}
+      </p>
+
+      <div className="space-y-2 text-xs">
+        <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
+          <span className="text-[var(--text-muted)]">Fuente</span>
+          <span className="font-mono-custom text-[var(--text-secondary)]">{event.domain || '—'}</span>
+        </div>
+        <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
+          <span className="text-[var(--text-muted)]">Fecha</span>
+          <span className="text-[var(--text-secondary)]">{dateStr}</span>
+        </div>
+        <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
+          <span className="text-[var(--text-muted)]">País fuente</span>
+          <span className="text-[var(--text-secondary)]">{event.sourcecountry || '—'}</span>
+        </div>
+        <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
+          <span className="text-[var(--text-muted)]">Coordenadas</span>
+          <span className="font-mono-custom text-[var(--text-muted)] text-[10px]">
+            {event.lat.toFixed(2)}°, {event.lng.toFixed(2)}°
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-[var(--text-muted)]">Tono GDELT</span>
+          <span className="font-mono-custom font-bold" style={{ color: tone.color }}>
+            {event.tone.toFixed(1)} — {tone.text}
+          </span>
+        </div>
+      </div>
+
+      {event.themes && (
+        <div>
+          <div className="label-mono text-[9px] mb-1.5">Temas detectados</div>
+          <div className="flex flex-wrap gap-1">
+            {event.themes.split(/[;,\s]+/).filter(Boolean).slice(0, 8).map((t) => (
+              <span key={t} className="text-[9px] font-mono-custom px-1.5 py-0.5 bg-[var(--bg-secondary)] border border-[var(--border)] rounded text-[var(--text-muted)]">
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {event.url && (
+        <a
+          href={event.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-outline text-xs py-2.5 px-4 rounded-lg text-center mt-auto"
+        >
+          Leer artículo original →
+        </a>
+      )}
+
+      <div className="label-mono text-[8px] text-[var(--text-muted)] text-center">
+        Datos: GDELT Project
+      </div>
     </div>
   )
 }

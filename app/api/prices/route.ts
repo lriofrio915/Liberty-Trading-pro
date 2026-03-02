@@ -19,6 +19,9 @@ const YAHOO_NAMES: Record<string, string> = {
   'EURUSD=X': 'EUR/USD',
   '%5EVIX': 'VIX',
   'DX=F': 'DXY',
+  'USDCOP=X': 'USD/COP',
+  'USDMXN=X': 'USD/MXN',
+  'USDBRL=X': 'USD/BRL',
 }
 
 async function fetchYahoo(symbol: string): Promise<PriceItem | null> {
@@ -71,20 +74,23 @@ async function fetchBinance(symbol: string, name: string, display: string): Prom
 }
 
 export async function GET() {
-  const [nq, gc, cl, eurusd, vix, dxy, btc, eth, sol] = await Promise.allSettled([
+  const [nq, gc, cl, eurusd, vix, dxy, cop, mxn, brl, btc, eth, sol] = await Promise.allSettled([
     fetchYahoo('NQ=F'),
     fetchYahoo('GC=F'),
     fetchYahoo('CL=F'),
     fetchYahoo('EURUSD=X'),
     fetchYahoo('%5EVIX'),
     fetchYahoo('DX=F'),
+    fetchYahoo('USDCOP=X'),
+    fetchYahoo('USDMXN=X'),
+    fetchYahoo('USDBRL=X'),
     fetchBinance('BTCUSDT', 'Bitcoin', 'BTC/USD'),
     fetchBinance('ETHUSDT', 'Ethereum', 'ETH/USD'),
     fetchBinance('SOLUSDT', 'Solana', 'SOL/USD'),
   ])
 
   const prices: PriceItem[] = []
-  for (const result of [nq, gc, cl, eurusd, vix, dxy, btc, eth, sol]) {
+  for (const result of [nq, gc, cl, eurusd, vix, dxy, cop, mxn, brl, btc, eth, sol]) {
     if (result.status === 'fulfilled' && result.value) {
       prices.push(result.value)
     }
