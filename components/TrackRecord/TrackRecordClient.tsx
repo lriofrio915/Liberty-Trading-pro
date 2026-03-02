@@ -47,7 +47,7 @@ const TZ = 'America/Guayaquil'
 
 /** Display a DB date string in Guayaquil timezone */
 function formatDateGYE(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-ES', {
+  return new Date(dateStr).toLocaleDateString('es-EC', {
     timeZone: TZ,
     day: '2-digit',
     month: 'short',
@@ -248,8 +248,12 @@ export default function TrackRecordClient({ initialSessions }: { initialSessions
       const rawPnl = parseFloat(form.pnlNeto)
       const pnlNeto = normalizePnl(rawPnl, form.resultado)
 
+      // Build date at local noon so UTC storage never shifts the day (UTC-5)
+      const [fy, fm, fd] = form.date.split('-').map(Number)
+      const localNoon = new Date(fy, fm - 1, fd, 12, 0, 0)
+
       const body = {
-        date: form.date, // "YYYY-MM-DD" — API converts to noon UTC
+        date: localNoon.toISOString(), // ISO string — API stores directly
         instrumento: form.instrumento,
         direccion: form.direccion,
         resultado: form.resultado,
@@ -458,26 +462,26 @@ export default function TrackRecordClient({ initialSessions }: { initialSessions
                       >
                         {s.contratos}
                       </td>
-                      {/* Action buttons */}
+                      {/* Action buttons — always visible */}
                       <td className="py-3 px-4">
-                        <div className="flex items-center gap-1.5 justify-end">
+                        <div className="flex items-center gap-0.5 justify-end">
                           <button
                             onClick={e => { e.stopPropagation(); openEdit(s) }}
-                            className="text-[var(--text-muted)] hover:text-[var(--gold)] transition-colors text-sm px-1.5 py-0.5 rounded hover:bg-[rgba(201,168,76,0.08)]"
-                            title="Editar operación"
+                            className="p-2 text-gray-400 hover:text-yellow-400 transition-colors rounded"
+                            title="Editar"
                           >
                             ✏️
                           </button>
                           <button
                             onClick={e => { e.stopPropagation(); setConfirmDeleteId(s.id) }}
-                            className="text-[var(--text-muted)] hover:text-[var(--red)] transition-colors text-sm px-1.5 py-0.5 rounded hover:bg-[rgba(255,68,68,0.08)]"
-                            title="Eliminar operación"
+                            className="p-2 text-gray-400 hover:text-red-400 transition-colors rounded"
+                            title="Eliminar"
                           >
                             🗑️
                           </button>
                           <button
                             onClick={() => setExpandedRow(expandedRow === s.id ? null : s.id)}
-                            className="text-[var(--text-muted)] text-xs px-1 w-4"
+                            className="p-2 text-gray-500 hover:text-gray-300 text-xs transition-colors"
                           >
                             {expandedRow === s.id ? '▲' : '▼'}
                           </button>

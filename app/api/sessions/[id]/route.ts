@@ -30,9 +30,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
-    // Parse date as noon UTC to avoid timezone shift in UTC-5
-    const [y, m, d] = (body.date as string).split('-').map(Number)
-    const dateUTC = new Date(Date.UTC(y, m - 1, d, 12, 0, 0))
+    // Client sends ISO string already set to local noon — store directly
+    const dateUTC = new Date(body.date as string)
 
     const pnlNeto = normalizePnl(parseFloat(body.pnlNeto), body.resultado)
     const pnlBruto = normalizePnl(parseFloat(body.pnlBruto), body.resultado)
