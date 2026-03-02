@@ -9,27 +9,10 @@ function normalizePnl(pnl: number, resultado: string): number {
   return pnl
 }
 
-export async function GET(_req: NextRequest) {
-  try {
-    const supabase = await createSupabaseServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
-    if (!dbUser) return NextResponse.json({ sessions: [] })
-
-    const sessions = await prisma.tradingSession.findMany({
-      where: { userId: dbUser.id },
-      orderBy: { date: 'desc' },
-    })
-
-    return NextResponse.json({ sessions })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
-  }
-}
-
-export async function POST(req: NextRequest) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const supabase = await createSupabaseServerClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -38,7 +21,14 @@ export async function POST(req: NextRequest) {
     const dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
     if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
+    const { id } = await params
     const body = await req.json()
+
+    // Verify ownership
+    const existing = await prisma.tradingSession.findUnique({ where: { id } })
+    if (!existing || existing.userId !== dbUser.id) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
 
     // Parse date as noon UTC to avoid timezone shift in UTC-5
     const [y, m, d] = (body.date as string).split('-').map(Number)
@@ -47,9 +37,9 @@ export async function POST(req: NextRequest) {
     const pnlNeto = normalizePnl(parseFloat(body.pnlNeto), body.resultado)
     const pnlBruto = normalizePnl(parseFloat(body.pnlBruto), body.resultado)
 
-    const session = await prisma.tradingSession.create({
+    const session = await prisma.tradingSession.update({
+      where: { id },
       data: {
-        userId: dbUser.id,
         date: dateUTC,
         instrumento: body.instrumento,
         direccion: body.direccion,
@@ -72,7 +62,37 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ session })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = await createSupabaseServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
+    if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+    const { id } = await params
+
+    // Verify ownership
+    const existing = await prisma.tradingSession.findUnique({ where: { id } })
+    if (!existing || existing.userId !== dbUser.id) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
+    await prisma.tradingSession.delete({ where: { id } })
+
+    return NextResponse.json({ ok: true })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
