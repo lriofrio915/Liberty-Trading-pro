@@ -73,7 +73,7 @@ export default function Pricing() {
                 con acompañamiento directo de Luis.
               </p>
               <ul className="space-y-1.5 mb-6 text-sm text-[var(--text-secondary)]">
-                {['Acciones, ETFs y criptoactivos', 'Análisis fundamental y técnico', '2 meses de acceso + revisiones'].map(f => (
+                {['Acciones, ETFs y criptoactivos', 'Análisis fundamental y técnico', '2 meses de acceso + revisiones', 'Apertura de cuenta IBKR paso a paso', 'Configuración de NinjaTrader 8', 'Acceso al mercado americano desde Latam'].map(f => (
                   <li key={f} className="flex items-center gap-2">
                     <span className="text-[var(--gold)] text-xs">✓</span>{f}
                   </li>
@@ -108,7 +108,7 @@ export default function Pricing() {
                   con operativa institucional real. El camino completo.
                 </p>
                 <ul className="space-y-1.5 mb-6 text-sm text-[var(--text-secondary)]">
-                  {['Futuros NQ/MNQ — CME', 'Smart Money Concepts + gestión de riesgo', '12 meses de acceso completo', 'Comunidad y seguimiento continuo'].map(f => (
+                  {['Futuros NQ/MNQ — CME', 'Price Action + gestión de riesgo', '12 meses de acceso completo', 'Comunidad y seguimiento continuo'].map(f => (
                     <li key={f} className="flex items-center gap-2">
                       <span className="text-[var(--gold)] text-xs">✓</span>{f}
                     </li>
@@ -118,7 +118,7 @@ export default function Pricing() {
                   <div>
                     <div className="label-mono mb-1">Inversión</div>
                     <div className="text-4xl font-bold text-white"
-                      style={{ fontFamily: 'var(--font-serif)' }}>$897 <span className="text-base font-normal text-[var(--text-muted)]">USD</span></div>
+                      style={{ fontFamily: 'var(--font-serif)' }}>$1,049 <span className="text-base font-normal text-[var(--text-muted)]">USD</span></div>
                   </div>
                 </div>
                 <a href="https://go.hotmart.com/R33067457O" target="_blank" rel="noopener noreferrer"
@@ -164,8 +164,8 @@ export default function Pricing() {
                 }`}
                 style={{ background: plan.highlighted ? 'rgba(201,168,76,0.04)' : 'var(--bg-card)' }}>
                 {plan.badge && (
-                  <div className="absolute -top-3 left-6">
-                    <span className="btn-gold text-[10px] py-1 px-4 rounded-full whitespace-nowrap tracking-widest">
+                  <div className="absolute top-4 right-4">
+                    <span className="btn-gold text-[10px] py-1 px-3 rounded-full whitespace-nowrap tracking-widest">
                       {plan.badge.toUpperCase()}
                     </span>
                   </div>

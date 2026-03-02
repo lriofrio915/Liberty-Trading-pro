@@ -116,7 +116,7 @@ export default function LandingPage() {
                 <div>
                   <div className="label-mono mb-1">Inversión</div>
                   <div className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>
-                    $897
+                    $1,049
                   </div>
                 </div>
                 <div className="text-right">
