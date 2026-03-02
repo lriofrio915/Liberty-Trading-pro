@@ -9,15 +9,15 @@ const TRACK_RECORD = [
   { metric: 'Rendimiento YTD', value: '+11.94%', sub: '2026', positive: true },
   { metric: 'Win Rate', value: '71.4%', sub: '10/14 trades', positive: true },
   { metric: 'Profit Factor', value: '2.55x', sub: 'Gross P/L ratio', positive: true },
-  { metric: 'Instrumento', value: 'NQ / ES', sub: 'Futuros CME', positive: null },
+  { metric: 'Instrumento', value: 'NQ/MNQ', sub: 'Futuros CME', positive: null },
 ]
 
 const TRADE_LOG = [
   { date: '28 Feb', sym: 'NQ1!', dir: 'LONG', res: 'WIN', pnl: '+$1,240' },
-  { date: '27 Feb', sym: 'ES1!', dir: 'SHORT', res: 'WIN', pnl: '+$860' },
+  { date: '27 Feb', sym: 'MNQ1!', dir: 'SHORT', res: 'WIN', pnl: '+$860' },
   { date: '26 Feb', sym: 'NQ1!', dir: 'LONG', res: 'LOSS', pnl: '-$480' },
   { date: '25 Feb', sym: 'NQ1!', dir: 'LONG', res: 'WIN', pnl: '+$2,100' },
-  { date: '24 Feb', sym: 'ES1!', dir: 'SHORT', res: 'WIN', pnl: '+$620' },
+  { date: '24 Feb', sym: 'MNQ1!', dir: 'SHORT', res: 'WIN', pnl: '+$620' },
 ]
 
 export default function Hero() {

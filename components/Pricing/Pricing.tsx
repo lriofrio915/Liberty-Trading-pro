@@ -13,7 +13,7 @@ const subscriptions = [
     features: [
       'Oportunidades en Acciones y ETFs',
       'Informes fundamentales de empresas',
-      'Sesgo diario NQ y ES',
+      'Sesgo diario NQ/MNQ',
       'Análisis a mediano y largo plazo',
       'Comunidad Liberty Trading Club',
       'Monitor Mundial — geopolítica',
@@ -104,11 +104,11 @@ export default function Pricing() {
                   Especialización en<br />Trading de Futuros
                 </h3>
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-2">
-                  Para traders que quieren profesionalizarse en Nasdaq y SP500 con operativa
-                  institucional real. El camino completo.
+                  Para traders que quieren profesionalizarse en futuros de Nasdaq (NQ/MNQ)
+                  con operativa institucional real. El camino completo.
                 </p>
                 <ul className="space-y-1.5 mb-6 text-sm text-[var(--text-secondary)]">
-                  {['Futuros NQ y ES — CME', 'Smart Money Concepts + gestión de riesgo', '12 meses de acceso completo', 'Comunidad y seguimiento continuo'].map(f => (
+                  {['Futuros NQ/MNQ — CME', 'Smart Money Concepts + gestión de riesgo', '12 meses de acceso completo', 'Comunidad y seguimiento continuo'].map(f => (
                     <li key={f} className="flex items-center gap-2">
                       <span className="text-[var(--gold)] text-xs">✓</span>{f}
                     </li>
@@ -118,7 +118,7 @@ export default function Pricing() {
                   <div>
                     <div className="label-mono mb-1">Inversión</div>
                     <div className="text-4xl font-bold text-white"
-                      style={{ fontFamily: 'var(--font-serif)' }}>€840 <span className="text-base font-normal text-[var(--text-muted)]">EUR</span></div>
+                      style={{ fontFamily: 'var(--font-serif)' }}>$897 <span className="text-base font-normal text-[var(--text-muted)]">USD</span></div>
                   </div>
                 </div>
                 <a href="https://go.hotmart.com/R33067457O" target="_blank" rel="noopener noreferrer"

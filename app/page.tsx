@@ -109,14 +109,14 @@ export default function LandingPage() {
                 Especialización en<br />Trading de Futuros
               </h3>
               <p className="text-sm text-[var(--text-secondary)] mb-5 leading-relaxed">
-                Programa completo de formación en operativa de futuros Nasdaq y SP500.
+                Programa completo de formación en operativa de futuros de Nasdaq (NQ/MNQ).
                 Estrategia, gestión de riesgo, psicología y operativa en tiempo real.
               </p>
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <div className="label-mono mb-1">Inversión</div>
                   <div className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>
-                    €840
+                    $897
                   </div>
                 </div>
                 <div className="text-right">
@@ -233,7 +233,7 @@ export default function LandingPage() {
                 Luis Riofrio —<br /><span className="gradient-gold">Operador Financiero</span>
               </h2>
               <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
-                Trader de Futuros Nasdaq y SP500 con operativa institucional verificable.
+                Trader de Futuros Nasdaq (NQ/MNQ) con operativa institucional verificable.
                 Resultados documentados con capturas de pantalla. Transparencia total en
                 cada operación — ganadores y perdedores.
               </p>
@@ -242,7 +242,7 @@ export default function LandingPage() {
               <div className="space-y-2.5 mb-8">
                 {[
                   '🏛 Operador Financiero en Emporium Quality Funds',
-                  '📈 Trader de Futuros Nasdaq (NQ) y SP500 (ES)',
+                  '📈 Trader de Futuros Nasdaq (NQ/MNQ)',
                   '🤝 Fundador de Liberty Trading Club',
                   '🏦 Gestor de portafolios vía IBKR + NinjaTrader 8',
                   '💱 Operador P2P USDT y BTC — Ecuador y Latinoamérica',
