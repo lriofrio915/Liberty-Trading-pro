@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
 
 const NAV_LINKS = [
   { href: '#servicios', label: 'Servicios' },
@@ -13,6 +15,25 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+
+    // Get current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null)
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[var(--border)]"
@@ -36,14 +57,23 @@ export default function Navbar() {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          <Link href="/login"
-            className="hidden sm:block label-mono text-[11px] text-[var(--text-muted)] hover:text-white transition-colors px-3 py-1.5">
-            Ingresar
-          </Link>
-          <Link href="/register"
-            className="btn-gold text-[11px] py-2 px-4 rounded-md">
-            Comenzar
-          </Link>
+          {user ? (
+            <Link href="/dashboard"
+              className="btn-gold text-[11px] py-2 px-4 rounded-md">
+              Mi Dashboard →
+            </Link>
+          ) : (
+            <>
+              <Link href="/login"
+                className="hidden sm:block label-mono text-[11px] text-[var(--text-muted)] hover:text-white transition-colors px-3 py-1.5">
+                Ingresar
+              </Link>
+              <Link href="/register"
+                className="btn-gold text-[11px] py-2 px-4 rounded-md">
+                Comenzar
+              </Link>
+            </>
+          )}
           {/* Mobile hamburger */}
           <button className="lg:hidden text-[var(--text-secondary)] ml-1 p-1"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -68,10 +98,17 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link href="/login" onClick={() => setMenuOpen(false)}
-            className="label-mono text-[11px] text-[var(--text-muted)] hover:text-white transition-colors">
-            Ingresar
-          </Link>
+          {user ? (
+            <Link href="/dashboard" onClick={() => setMenuOpen(false)}
+              className="label-mono text-[11px] text-[var(--gold)] hover:text-white transition-colors">
+              Mi Dashboard →
+            </Link>
+          ) : (
+            <Link href="/login" onClick={() => setMenuOpen(false)}
+              className="label-mono text-[11px] text-[var(--text-muted)] hover:text-white transition-colors">
+              Ingresar
+            </Link>
+          )}
         </div>
       )}
     </nav>

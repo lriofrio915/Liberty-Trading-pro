@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Cormorant_Garamond, DM_Mono, Syne } from 'next/font/google'
 import './globals.css'
 import { LanguageProvider } from '@/contexts/LanguageContext'
+import ScrollToTop from '@/components/ScrollToTop'
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -46,6 +47,7 @@ export default function RootLayout({
     <html lang="es" className={`${cormorant.variable} ${dmMono.variable} ${syne.variable}`}>
       <body>
         <LanguageProvider>{children}</LanguageProvider>
+        <ScrollToTop />
       </body>
     </html>
   )
