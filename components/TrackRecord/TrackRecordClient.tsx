@@ -149,7 +149,8 @@ export default function TrackRecordClient({ initialSessions }: { initialSessions
   const metrics = useMemo(() => {
     const wins = filtered.filter(s => s.resultado === 'WIN').length
     const total = filtered.length
-    const pnl = filtered.reduce((sum, s) => sum + (s.pnlNeto ?? 0), 0)
+    // Normalize display: LOSS records saved before the fix may be positive in DB
+    const pnl = filtered.reduce((sum, s) => sum + normalizePnl(s.pnlNeto ?? 0, s.resultado), 0)
     return { total, wins, pnl, winRate: total > 0 ? (wins / total) * 100 : 0 }
   }, [filtered])
 
@@ -446,10 +447,10 @@ export default function TrackRecordClient({ initialSessions }: { initialSessions
                         </span>
                       </td>
                       <td
-                        className={`py-3 px-4 font-bold font-mono-custom cursor-pointer ${s.pnlNeto >= 0 ? 'positive' : 'negative'}`}
+                        className={`py-3 px-4 font-bold font-mono-custom cursor-pointer ${normalizePnl(s.pnlNeto, s.resultado) >= 0 ? 'positive' : 'negative'}`}
                         onClick={() => setExpandedRow(expandedRow === s.id ? null : s.id)}
                       >
-                        {s.pnlNeto >= 0 ? '+' : ''}${Math.abs(s.pnlNeto).toFixed(0)}
+                        {(() => { const p = normalizePnl(s.pnlNeto, s.resultado); return `${p >= 0 ? '+' : '-'}$${Math.abs(p).toFixed(0)}` })()}
                       </td>
                       <td
                         className="py-3 px-4 text-[var(--text-secondary)] cursor-pointer"

@@ -4,26 +4,21 @@ import { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 
-interface GDELTEvent {
-  id: string
-  lat: number
-  lng: number
-  title: string
-  url: string
-  domain: string
-  sourcecountry: string
-  isoDate: string
-  tone: number
-  eventType: 'conflict' | 'protest' | 'disaster' | 'economic' | 'other'
-  color: string
-}
-
-const EVENT_LABELS: Record<string, string> = {
-  conflict: 'CONFLICTO',
-  protest: 'PROTESTA',
-  disaster: 'DESASTRE',
-  economic: 'ECONÓMICO',
-  other: 'OTRO',
+interface GdeltFeature {
+  geometry: {
+    coordinates: [number, number] // [lng, lat]
+  }
+  properties: {
+    name?: string
+    SOURCEURL?: string
+    DATEADDED?: string
+    url?: string
+    dateadded?: string
+    tone?: number
+    domain?: string
+    sourcecountry?: string
+    themes?: string
+  }
 }
 
 interface GdeltMapProps {
@@ -31,45 +26,57 @@ interface GdeltMapProps {
 }
 
 export default function GdeltMap({ timespan = '24h' }: GdeltMapProps) {
-  const [events, setEvents] = useState<GDELTEvent[]>([])
+  const [events, setEvents] = useState<GdeltFeature[]>([])
   const [loading, setLoading] = useState(true)
+  const [count, setCount] = useState(0)
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/monitor/events?timespan=${timespan}`, { cache: 'no-store' })
+    fetch(`/api/monitor/events?timespan=${timespan}`)
       .then((r) => r.json())
-      .then((data) => setEvents(data.events || []))
+      .then((data) => {
+        const features: GdeltFeature[] = data.features || []
+        setEvents(features)
+        setCount(features.length)
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [timespan])
 
   return (
-    <div style={{ height: '100%', width: '100%', position: 'relative' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+
       {/* Loading overlay */}
       {loading && (
         <div
           style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(8,8,8,0.75)',
-            zIndex: 1000,
-            borderRadius: 12,
+            position: 'absolute', inset: 0, zIndex: 1000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(0,0,0,0.8)',
           }}
         >
-          <span
+          <p
             style={{
-              color: '#C9A84C',
-              fontFamily: 'monospace',
-              fontSize: 11,
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
+              color: '#C9A84C', fontFamily: 'monospace', fontSize: 12,
+              letterSpacing: '0.15em', textTransform: 'uppercase',
             }}
           >
-            Cargando eventos GDELT...
-          </span>
+            CARGANDO EVENTOS GLOBALES...
+          </p>
+        </div>
+      )}
+
+      {/* Event count badge */}
+      {!loading && count > 0 && (
+        <div
+          style={{
+            position: 'absolute', top: 10, left: 10, zIndex: 1000,
+            background: 'rgba(0,0,0,0.85)', border: '1px solid #C9A84C',
+            padding: '5px 12px', fontFamily: 'monospace', fontSize: 11,
+            color: '#C9A84C', letterSpacing: '0.12em', pointerEvents: 'none',
+          }}
+        >
+          {count} EVENTOS · ÚLTIMAS {timespan.toUpperCase()}
         </div>
       )}
 
@@ -77,6 +84,7 @@ export default function GdeltMap({ timespan = '24h' }: GdeltMapProps) {
         center={[20, 0]}
         zoom={2}
         minZoom={2}
+        scrollWheelZoom
         style={{ height: '100%', width: '100%', background: '#0a0a0a' }}
         attributionControl={false}
       >
@@ -85,131 +93,99 @@ export default function GdeltMap({ timespan = '24h' }: GdeltMapProps) {
           attribution="©OpenStreetMap ©CartoDB"
         />
 
-        {events.map((event) => (
-          <CircleMarker
-            key={event.id}
-            center={[event.lat, event.lng]}
-            radius={6}
-            fillColor={event.color}
-            color={event.color}
-            weight={1.5}
-            opacity={0.9}
-            fillOpacity={0.45}
-          >
-            <Popup>
-              <div
-                style={{
-                  background: '#111111',
-                  color: '#E8E4DC',
-                  padding: '10px 12px',
-                  minWidth: '220px',
-                  maxWidth: '280px',
-                  fontFamily: 'system-ui, sans-serif',
-                  borderRadius: 8,
-                }}
-              >
-                {/* Type + country */}
+        {events.map((event, i) => {
+          const coords = event.geometry?.coordinates
+          if (!coords || coords[0] === 0 || coords[1] === 0) return null
+          const [lng, lat] = coords
+          if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null
+
+          const srcUrl = event.properties?.SOURCEURL || event.properties?.url || ''
+          const rawDate = event.properties?.DATEADDED || event.properties?.dateadded || ''
+          const domain = event.properties?.domain || (srcUrl ? srcUrl.split('/')[2] : '')
+          const country = event.properties?.sourcecountry || ''
+          const tone = event.properties?.tone
+
+          // Parse GDELT date "YYYYMMDDHHMMSS" or ISO
+          let displayDate = ''
+          try {
+            if (rawDate.length >= 8 && /^\d+$/.test(rawDate)) {
+              const y = rawDate.slice(0, 4)
+              const mo = rawDate.slice(4, 6)
+              const d = rawDate.slice(6, 8)
+              const h = rawDate.slice(8, 10) || '00'
+              const mi = rawDate.slice(10, 12) || '00'
+              displayDate = new Date(`${y}-${mo}-${d}T${h}:${mi}:00Z`).toLocaleString('es', {
+                day: '2-digit', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit',
+              })
+            } else if (rawDate) {
+              displayDate = new Date(rawDate).toLocaleString('es', {
+                day: '2-digit', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit',
+              })
+            }
+          } catch { /* leave blank */ }
+
+          return (
+            <CircleMarker
+              key={i}
+              center={[lat, lng]}
+              radius={5}
+              pathOptions={{
+                fillColor: '#C9A84C',
+                color: '#C9A84C',
+                weight: 1,
+                opacity: 0.8,
+                fillOpacity: 0.5,
+              }}
+            >
+              <Popup>
                 <div
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: 6,
+                    background: '#111111', color: '#E8E4DC',
+                    padding: '10px 12px', minWidth: '220px', maxWidth: '280px',
+                    fontFamily: 'system-ui, sans-serif',
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 700,
-                      color: event.color,
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                      fontFamily: 'monospace',
-                    }}
-                  >
-                    {EVENT_LABELS[event.eventType] ?? event.eventType}
-                  </span>
-                  {event.sourcecountry && (
-                    <span style={{ fontSize: 10, color: '#8a8480', fontFamily: 'monospace' }}>
-                      {event.sourcecountry}
-                    </span>
+                  {/* Date + country */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <p style={{ fontSize: 11, color: '#C9A84C', fontFamily: 'monospace' }}>
+                      {displayDate || '—'}
+                    </p>
+                    {country && (
+                      <span style={{ fontSize: 10, color: '#8a8480', fontFamily: 'monospace' }}>
+                        {country}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Tone */}
+                  {tone !== undefined && (
+                    <p style={{ fontSize: 10, color: '#4a4642', marginBottom: 6, fontFamily: 'monospace' }}>
+                      Tono: {tone.toFixed(1)} · {domain}
+                    </p>
+                  )}
+
+                  {/* Source link */}
+                  {srcUrl && (
+                    <a
+                      href={srcUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        color: '#C9A84C', fontSize: 12, lineHeight: 1.4,
+                        textDecoration: 'none', display: 'block',
+                      }}
+                    >
+                      {domain || srcUrl.slice(0, 40)} →
+                    </a>
                   )}
                 </div>
-
-                {/* Date */}
-                <p style={{ fontSize: 11, color: '#C9A84C', marginBottom: 6, fontFamily: 'monospace' }}>
-                  {new Date(event.isoDate).toLocaleString('es', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
-
-                {/* Title */}
-                <p style={{ fontSize: 13, lineHeight: 1.45, marginBottom: 8, color: '#f0ece4' }}>
-                  {event.title?.length > 110
-                    ? event.title.slice(0, 110) + '...'
-                    : event.title}
-                </p>
-
-                {/* Tone */}
-                <p style={{ fontSize: 10, color: '#4a4642', marginBottom: 8, fontFamily: 'monospace' }}>
-                  Tono GDELT: {event.tone?.toFixed(1)} ·{' '}
-                  {event.domain || ''}
-                </p>
-
-                {/* Link */}
-                {event.url && (
-                  <a
-                    href={event.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      color: '#C9A84C',
-                      fontSize: 11,
-                      textDecoration: 'none',
-                      fontWeight: 600,
-                    }}
-                  >
-                    Ver fuente →
-                  </a>
-                )}
-              </div>
-            </Popup>
-          </CircleMarker>
-        ))}
+              </Popup>
+            </CircleMarker>
+          )
+        })}
       </MapContainer>
-
-      {/* Event count badge */}
-      {!loading && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 8,
-            left: 8,
-            zIndex: 1000,
-            background: 'rgba(8,8,8,0.85)',
-            border: '1px solid rgba(201,168,76,0.25)',
-            borderRadius: 6,
-            padding: '3px 8px',
-            pointerEvents: 'none',
-          }}
-        >
-          <span
-            style={{
-              color: '#C9A84C',
-              fontSize: 9,
-              fontFamily: 'monospace',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-            }}
-          >
-            {events.length} eventos · GDELT · últimas {timespan}
-          </span>
-        </div>
-      )}
     </div>
   )
 }
