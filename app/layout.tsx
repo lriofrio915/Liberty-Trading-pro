@@ -1,18 +1,37 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Cormorant_Garamond, DM_Mono, Syne } from 'next/font/google'
 import './globals.css'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 
-const inter = Inter({ subsets: ['latin'] })
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  variable: '--font-serif',
+  weight: ['300', '400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+})
+
+const dmMono = DM_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  weight: ['300', '400', '500'],
+  display: 'swap',
+})
+
+const syne = Syne({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: 'Liberty Trading Pro — Trading Institucional con Luis Riofrio',
+  title: 'Liberty Trading Pro — Operador Financiero Luis Riofrio',
   description:
-    'Aprende a operar como los institucionales. Señales en tiempo real, análisis con IA, mentoring personalizado.',
-  keywords: 'trading, forex, futuros, señales, Luis Riofrio, Ecuador',
+    'Oportunidades de inversión en acciones y ETFs, coaching con IA, gestión de portafolio vía IBKR. Luis Riofrio, Operador Financiero en Emporium Quality Funds.',
+  keywords: 'trading, futuros, inversión, acciones, ETFs, Luis Riofrio, Ecuador, IBKR, NinjaTrader',
   openGraph: {
     title: 'Liberty Trading Pro',
-    description: 'Trading Institucional con Luis Riofrio',
+    description: 'Oportunidades de inversión con enfoque institucional — Luis Riofrio',
     url: 'https://libertytrading.pro',
     siteName: 'Liberty Trading Pro',
   },
@@ -24,8 +43,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es">
-      <body className={inter.className}>
+    <html lang="es" className={`${cormorant.variable} ${dmMono.variable} ${syne.variable}`}>
+      <body>
         <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>

@@ -1,134 +1,164 @@
 'use client'
 
 import Link from 'next/link'
-import { useLang } from '@/contexts/LanguageContext'
 
 const plans = [
   {
     name: 'FREE',
+    label: 'Liberty Club',
     price: '$0',
-    period: '/mes',
+    period: '',
     badge: null,
-    features: [
-      { text: 'Track Record público de Luis', included: true },
-      { text: 'Indicadores básicos', included: true },
-      { text: 'Comunidad básica', included: true },
-      { text: 'Señales en tiempo real', included: false },
-      { text: 'Chat con Vinces AI', included: false },
-      { text: 'Reportes automáticos', included: false },
-    ],
-    cta: 'Crear Cuenta Gratis',
-    href: '/register?plan=free',
     highlighted: false,
+    features: [
+      'Curso: Estrategia Nasdaq en YouTube',
+      'Monitor Mundial — geopolítica en tiempo real',
+      'Comunidad Liberty Trading Club',
+      'Track record público de Luis',
+    ],
+    cta: 'Acceder Gratis',
+    href: '/register?plan=free',
   },
   {
     name: 'CLUB',
-    price: '$47',
+    label: 'Club de Inversión',
+    price: '$19',
     period: '/mes',
     badge: 'Más Popular',
-    features: [
-      { text: 'Todo lo de Free', included: true },
-      { text: 'Señales en tiempo real', included: true },
-      { text: 'Oportunidades de inversión', included: true },
-      { text: 'Chat con Vinces AI', included: true },
-      { text: 'Reportes semanales', included: true },
-      { text: 'Gestión de portafolio', included: false },
-    ],
-    cta: 'Comenzar con Club',
-    href: '/register?plan=club',
     highlighted: true,
+    features: [
+      'Todo lo de Free',
+      'Oportunidades en Acciones y ETFs',
+      'Informes fundamentales de empresas',
+      'Sesgo diario NQ y ES',
+      'Análisis a mediano y largo plazo',
+    ],
+    cta: 'Unirme al Club',
+    href: '/register?plan=club',
   },
   {
     name: 'PRO',
-    price: '$97',
+    label: 'PRO + Vinces IA',
+    price: '$49',
     period: '/mes',
     badge: null,
-    features: [
-      { text: 'Todo lo de Club', included: true },
-      { text: 'Mentoría personalizada', included: true },
-      { text: 'Reportes mensuales PDF', included: true },
-      { text: 'Análisis Vinces ilimitado', included: true },
-      { text: 'Acceso a nuevas funciones', included: true },
-      { text: 'Gestión de portafolio', included: true },
-    ],
-    cta: 'Comenzar PRO',
-    href: '/register?plan=pro',
     highlighted: false,
+    features: [
+      'Todo lo de Club',
+      'Vinces IA — coaching personalizado',
+      'Revisión mensual 1:1 con Luis',
+      'Data histórica completa',
+      'Reportes PDF semanales y mensuales',
+      'Track récord verificable',
+    ],
+    cta: 'Activar PRO',
+    href: '/register?plan=pro',
   },
 ]
 
 export default function Pricing() {
-  const { t } = useLang()
-
   return (
     <section id="precios" className="py-24 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-black mb-4">
-            {t('Planes ', 'Plans ')}<span className="gradient-gold">{t('Transparentes', 'Transparent')}</span>
+          <div className="label-mono mb-4">Membresías</div>
+          <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)] mb-4">
+            Planes <span className="gradient-gold">transparentes</span>
           </h2>
-          <p className="text-[var(--text-secondary)] text-lg max-w-2xl mx-auto">
-            {t(
-              'Elige el plan que se adapta a tu nivel. Sin contratos, sin permanencia.',
-              'Choose the plan that fits your level. No contracts, no lock-in.'
-            )}
+          <p className="text-[var(--text-secondary)] max-w-xl mx-auto">
+            Sin contratos. Sin permanencia. Solo pagas lo que usas.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Subscriptions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`relative rounded-2xl p-8 flex flex-col ${
+            <div key={plan.name}
+              className={`relative rounded-2xl p-7 flex flex-col ${
                 plan.highlighted
-                  ? 'border-2 border-[var(--gold)] glow-gold'
+                  ? 'border border-[var(--gold)] glow-gold-sm'
                   : 'border border-[var(--border)]'
               }`}
-              style={{ background: plan.highlighted ? '#0d0d00' : 'var(--bg-card)' }}
-            >
+              style={{ background: plan.highlighted ? 'rgba(201,168,76,0.04)' : 'var(--bg-card)' }}>
               {plan.badge && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="btn-gold text-xs py-1 px-4 rounded-full whitespace-nowrap">
-                    {t(plan.badge, plan.badge)}
+                  <span className="btn-gold text-[10px] py-1 px-4 rounded-full whitespace-nowrap tracking-widest">
+                    {plan.badge.toUpperCase()}
                   </span>
                 </div>
               )}
 
-              <div className="mb-8">
-                <div className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">
-                  {plan.name}
-                </div>
+              <div className="mb-6">
+                <div className="label-mono mb-2">{plan.name}</div>
+                <div className="headline text-xl text-[var(--text-primary)] mb-3">{plan.label}</div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-black text-white">{plan.price}</span>
-                  <span className="text-[var(--text-muted)]">{plan.period}</span>
+                  <span className="text-4xl font-bold text-white"
+                    style={{ fontFamily: 'var(--font-serif)' }}>{plan.price}</span>
+                  {plan.period && (
+                    <span className="label-mono text-sm">{plan.period}</span>
+                  )}
                 </div>
               </div>
 
-              <ul className="flex-1 space-y-3 mb-8">
-                {plan.features.map((feature) => (
-                  <li key={feature.text} className="flex items-center gap-3">
-                    <span className={feature.included ? 'text-[var(--green)]' : 'text-[var(--text-muted)]'}>
-                      {feature.included ? '✓' : '✗'}
-                    </span>
-                    <span className={`text-sm ${feature.included ? 'text-[var(--text-secondary)]' : 'text-[var(--text-muted)] line-through'}`}>
-                      {t(feature.text, feature.text)}
-                    </span>
+              <ul className="flex-1 space-y-2.5 mb-7">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5">
+                    <span className="text-[var(--gold)] mt-0.5 text-sm flex-shrink-0">✓</span>
+                    <span className="text-sm text-[var(--text-secondary)]">{f}</span>
                   </li>
                 ))}
               </ul>
 
-              <Link
-                href={plan.href}
-                className={`text-center py-3 px-6 rounded-xl font-bold text-sm transition-all ${
-                  plan.highlighted
-                    ? 'btn-gold'
-                    : 'btn-outline'
-                }`}
-              >
-                {t(plan.cta, plan.cta)}
+              <Link href={plan.href}
+                className={`text-center py-3 px-5 rounded-lg font-bold text-sm transition-all ${
+                  plan.highlighted ? 'btn-gold' : 'btn-outline'
+                }`}>
+                {plan.cta}
               </Link>
             </div>
           ))}
+        </div>
+
+        {/* Portfolio management — special card */}
+        <div className="rounded-2xl border border-[var(--gold-dark)] p-7 relative overflow-hidden"
+          style={{ background: 'rgba(201,168,76,0.03)' }}>
+          <div className="absolute top-0 right-0 w-64 h-64 opacity-5"
+            style={{ background: 'radial-gradient(circle, var(--gold) 0%, transparent 70%)' }} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start relative">
+            <div>
+              <div className="label-mono mb-2 text-[var(--gold)]">Sin mensualidad</div>
+              <div className="headline text-3xl text-[var(--text-primary)] mb-3">
+                Gestión de Portafolio<br />
+                <span className="gradient-gold">vía Interactive Brokers</span>
+              </div>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-6">
+                Luis replica su operativa en tu cuenta de IBKR en tiempo real a través de NinjaTrader 8.
+                Solo pagas cuando ganas. Capital mínimo recomendado: <strong className="text-white">$10,000 USD</strong>
+              </p>
+              <Link href="/register?plan=portfolio"
+                className="btn-gold text-sm py-3 px-7 rounded-lg inline-block">
+                Consultar disponibilidad →
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { icon: '🏦', title: 'Apertura guiada', desc: 'Luis te acompaña en la apertura de cuenta IBKR' },
+                { icon: '🔗', title: 'Conexión NinjaTrader 8', desc: 'Tu cuenta conectada en tiempo real' },
+                { icon: '💼', title: '1% gestión', desc: 'Comisión sobre cada depósito realizado' },
+                { icon: '🎯', title: '30% éxito', desc: 'Solo pagas sobre las ganancias generadas' },
+                { icon: '📅', title: 'Retiro anual', desc: 'Ganancias disponibles a fin de año' },
+                { icon: '🚫', title: 'Sin mensualidades', desc: 'Cero costo fijo — solo resultados' },
+              ].map((item) => (
+                <div key={item.title} className="card p-4">
+                  <div className="text-xl mb-1.5">{item.icon}</div>
+                  <div className="text-sm font-bold text-[var(--text-primary)] mb-0.5">{item.title}</div>
+                  <div className="text-xs text-[var(--text-muted)]">{item.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
