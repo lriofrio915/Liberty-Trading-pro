@@ -33,6 +33,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         instrumento: body.instrumento || 'NQ',
         dataFeedMensual: body.dataFeedMensual ? parseFloat(body.dataFeedMensual) : null,
         comisionPorTrade: body.comisionPorTrade ? parseFloat(body.comisionPorTrade) : null,
+        maxDrawdownPermitido: body.maxDrawdownPermitido ? parseFloat(body.maxDrawdownPermitido) : null,
         active: body.active ?? true,
       },
     })

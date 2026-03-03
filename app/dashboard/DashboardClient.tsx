@@ -8,6 +8,8 @@ interface Session {
   instrumento: string
   direccion: string
   resultado: string
+  pnlBruto: number
+  comisiones: number
   pnlNeto: number
   contratos: number
   entryPrice: number | null
@@ -15,6 +17,14 @@ interface Session {
   siguioPlan: boolean
   sentimiento: string | null
   notas: string | null
+  planId: string | null
+}
+
+interface Plan {
+  id: string
+  name: string
+  dataFeedMensual: number | null
+  comisionPorTrade: number | null
 }
 
 interface Metricas {
@@ -120,10 +130,12 @@ export default function DashboardClient({
   sessions,
   userName,
   userPlan,
+  plans = [],
 }: {
   sessions: Session[]
   userName: string | null
   userPlan: string | null
+  plans?: Plan[]
 }) {
   const [mesSeleccionado, setMesSeleccionado] = useState(() => {
     const now = new Date()
@@ -155,6 +167,28 @@ export default function DashboardClient({
   }, [sessions, mesSeleccionado])
 
   const metricas = useMemo(() => calcularMetricas(sessionesFiltradas), [sessionesFiltradas])
+
+  // Cost breakdown: comision por trade + data feed proporcional
+  const costMetrics = useMemo(() => {
+    if (!sessionesFiltradas.length || !plans.length) return null
+    const planMap = new Map(plans.map(p => [p.id, p]))
+    let comisionesAdicionales = 0
+    sessionesFiltradas.forEach(s => {
+      if (s.planId) {
+        const plan = planMap.get(s.planId)
+        if (plan?.comisionPorTrade) comisionesAdicionales += plan.comisionPorTrade
+      }
+    })
+    // Data feed: count unique months in filtered sessions
+    const meses = new Set(sessionesFiltradas.map(s => new Date(s.date).toISOString().slice(0, 7)))
+    let dataFeedTotal = 0
+    plans.forEach(p => {
+      if (p.dataFeedMensual) dataFeedTotal += p.dataFeedMensual * meses.size
+    })
+    const pnlBruto = sessionesFiltradas.reduce((sum, s) => sum + (s.pnlBruto ?? s.pnlNeto), 0)
+    const costosTotal = comisionesAdicionales + dataFeedTotal
+    return { pnlBruto, comisionesAdicionales, dataFeedTotal, costosTotal, pnlNetoReal: pnlBruto - costosTotal }
+  }, [sessionesFiltradas, plans])
 
   const totalPaginas = Math.ceil(sessionesFiltradas.length / PAGE_SIZE)
   const sessionesPaginadas = sessionesFiltradas.slice(
@@ -326,6 +360,35 @@ export default function DashboardClient({
           {[...Array(8)].map((_, i) => (
             <div key={i} className="card h-24" style={{ background: 'var(--bg-secondary)' }} />
           ))}
+        </div>
+      )}
+
+      {/* Costos Operativos */}
+      {costMetrics && (costMetrics.comisionesAdicionales > 0 || costMetrics.dataFeedTotal > 0) && (
+        <div className="card mb-8">
+          <div className="label-mono text-xs mb-4 text-[var(--text-muted)]">Costos Operativos del Periodo</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <div className="text-xs text-[var(--text-muted)] mb-1">PnL Bruto</div>
+              <div className="text-xl font-black" style={{ color: costMetrics.pnlBruto >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                {costMetrics.pnlBruto >= 0 ? '+' : ''}${costMetrics.pnlBruto.toFixed(2)}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-[var(--text-muted)] mb-1">Comisiones / Trade</div>
+              <div className="text-xl font-black text-red-400">-${costMetrics.comisionesAdicionales.toFixed(2)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-[var(--text-muted)] mb-1">Data Feed</div>
+              <div className="text-xl font-black text-red-400">-${costMetrics.dataFeedTotal.toFixed(2)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-[var(--text-muted)] mb-1">PnL Neto Real</div>
+              <div className="text-xl font-black" style={{ color: costMetrics.pnlNetoReal >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                {costMetrics.pnlNetoReal >= 0 ? '+' : ''}${costMetrics.pnlNetoReal.toFixed(2)}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

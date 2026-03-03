@@ -55,13 +55,51 @@ model TradingPlan {
   reglas         String
   horaInicio     String
   horaFin        String
-  instrumento        String
-  dataFeedMensual    Float?
-  comisionPorTrade   Float?
-  active             Boolean  @default(true)
-  createdAt          DateTime @default(now())
+  instrumento           String
+  dataFeedMensual       Float?
+  comisionPorTrade      Float?
+  maxDrawdownPermitido  Float?
+  active                Boolean  @default(true)
+  createdAt             DateTime @default(now())
 
   sessions TradingSession[]
+  retiros  Retiro[]
+}
+
+model Retiro {
+  id       String   @id @default(cuid())
+  userId   String
+  planId   String?
+  plan     TradingPlan? @relation(fields: [planId], references: [id])
+  monto    Float
+  fecha    DateTime
+  nota     String?
+  creadoEn DateTime @default(now())
+}
+
+model Leccion {
+  id            String   @id @default(cuid())
+  titulo        String
+  descripcion   String
+  contenido     String
+  videoUrl      String?
+  orden         Int      @default(0)
+  categoria     String
+  publicado     Boolean  @default(false)
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  progresos LeccionProgreso[]
+}
+
+model LeccionProgreso {
+  id        String   @id @default(cuid())
+  userId    String
+  leccionId String
+  creadoEn  DateTime @default(now())
+  leccion   Leccion  @relation(fields: [leccionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, leccionId])
 }
 
 model TradingSession {

@@ -4,6 +4,9 @@ export const navItems = [
   { href: '/dashboard/oportunidades', icon: '🎯', label: 'Oportunidades' },
   { href: '/dashboard/track-record', icon: '📈', label: 'Track Record' },
   { href: '/dashboard/planes', icon: '📋', label: 'Planes' },
+  { href: '/dashboard/retiros', icon: '💰', label: 'Retiros' },
   { href: '/dashboard/reportes', icon: '📄', label: 'Reportes' },
+  { href: '/dashboard/academia', icon: '🎓', label: 'Academia' },
+  { href: '/dashboard/championship', icon: '🏆', label: 'Championship' },
   { href: '/dashboard/monitor', icon: '🌍', label: 'Monitor Mundial' },
 ]

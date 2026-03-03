@@ -30,6 +30,7 @@ interface TradingPlan {
   instrumento: string
   dataFeedMensual: number | null
   comisionPorTrade: number | null
+  maxDrawdownPermitido: number | null
   active: boolean
   createdAt: string
   sessions: PlanSession[]
@@ -50,6 +51,7 @@ interface FormState {
   instrumento: string
   dataFeedMensual: string
   comisionPorTrade: string
+  maxDrawdownPermitido: string
   active: boolean
 }
 
@@ -72,7 +74,19 @@ function computeStats(sessions: PlanSession[]) {
   const winsGross = wins.reduce((s, t) => s + Math.abs(t.pnlNeto), 0)
   const lossesGross = losses.reduce((s, t) => s + Math.abs(t.pnlNeto), 0)
   const profitFactor = lossesGross > 0 ? winsGross / lossesGross : wins.length > 0 ? Infinity : 0
-  return { total: sessions.length, wins: wins.length, losses: losses.length, pnl, winRate, profitFactor }
+
+  // Max Drawdown
+  let peak = 0, maxDD = 0, balance = 0
+  const sorted = [...sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  sorted.forEach(s => {
+    const p = s.resultado === 'WIN' ? Math.abs(s.pnlNeto) : s.resultado === 'LOSS' ? -Math.abs(s.pnlNeto) : s.pnlNeto
+    balance += p
+    if (balance > peak) peak = balance
+    const dd = peak - balance
+    if (dd > maxDD) maxDD = dd
+  })
+
+  return { total: sessions.length, wins: wins.length, losses: losses.length, pnl, winRate, profitFactor, maxDrawdown: maxDD }
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -262,6 +276,18 @@ function PlanModal({ mode, form, set, saving, onSubmit, onClose }: ModalProps) {
                 className="input text-sm"
               />
             </div>
+            <div className="sm:col-span-2">
+              <label className="label-mono text-[10px] block mb-1.5">Max Drawdown Permitido (USD)</label>
+              <input
+                type="number"
+                step="100"
+                placeholder="ej. 2000"
+                value={form.maxDrawdownPermitido}
+                onChange={e => set('maxDrawdownPermitido', e.target.value)}
+                className="input text-sm"
+              />
+              <p className="text-[10px] text-[var(--text-muted)] mt-1">Si llegas a esta perdida maxima, paras de operar</p>
+            </div>
           </div>
         </div>
 
@@ -399,6 +425,7 @@ export default function PlanesClient({ initialPlans }: { initialPlans: TradingPl
     instrumento: 'NQ',
     dataFeedMensual: '',
     comisionPorTrade: '',
+    maxDrawdownPermitido: '',
     active: true,
   })
 
@@ -432,6 +459,7 @@ export default function PlanesClient({ initialPlans }: { initialPlans: TradingPl
       instrumento: plan.instrumento,
       dataFeedMensual: plan.dataFeedMensual != null ? String(plan.dataFeedMensual) : '',
       comisionPorTrade: plan.comisionPorTrade != null ? String(plan.comisionPorTrade) : '',
+      maxDrawdownPermitido: plan.maxDrawdownPermitido != null ? String(plan.maxDrawdownPermitido) : '',
       active: plan.active,
     })
     setEditingPlan(plan)
@@ -463,6 +491,7 @@ export default function PlanesClient({ initialPlans }: { initialPlans: TradingPl
         instrumento: form.instrumento,
         dataFeedMensual: form.dataFeedMensual ? parseFloat(form.dataFeedMensual) : null,
         comisionPorTrade: form.comisionPorTrade ? parseFloat(form.comisionPorTrade) : null,
+        maxDrawdownPermitido: form.maxDrawdownPermitido ? parseFloat(form.maxDrawdownPermitido) : null,
         active: form.active,
       }
 
@@ -701,6 +730,33 @@ export default function PlanesClient({ initialPlans }: { initialPlans: TradingPl
                         </div>
                       </div>
                     </div>
+
+                    {/* Drawdown bar */}
+                    {plan.maxDrawdownPermitido != null && plan.maxDrawdownPermitido > 0 && (() => {
+                      const pct = (stats.maxDrawdown / plan.maxDrawdownPermitido!) * 100
+                      const barColor = pct >= 100 ? '#FF4444' : pct >= 80 ? '#f97316' : '#eab308'
+                      return (
+                        <div className="bg-black/30 rounded-lg p-3">
+                          <div className="flex justify-between text-xs mb-1.5">
+                            <span className="label-mono text-[9px]">Drawdown actual vs limite</span>
+                            {pct >= 100
+                              ? <span className="font-bold text-red-400">⛔ LIMITE ALCANZADO</span>
+                              : <span style={{ color: barColor }} className="font-bold">{pct.toFixed(0)}%</span>
+                            }
+                          </div>
+                          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                            <div
+                              style={{ width: `${Math.min(pct, 100)}%`, background: barColor }}
+                              className="h-full rounded-full transition-all duration-500"
+                            />
+                          </div>
+                          <div className="flex justify-between text-[10px] mt-1 text-[var(--text-muted)]">
+                            <span>-${stats.maxDrawdown.toFixed(0)} actual</span>
+                            <span>Limite: -${plan.maxDrawdownPermitido}</span>
+                          </div>
+                        </div>
+                      )
+                    })()}
 
                     {/* Cost calculator */}
                     {(plan.dataFeedMensual || plan.comisionPorTrade) && (
