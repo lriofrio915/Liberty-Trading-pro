@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import SidebarNav, { navItems } from '@/components/Sidebar/SidebarNav'
+import SidebarNav from '@/components/Sidebar/SidebarNav'
+import { navItems } from '@/components/Sidebar/navConfig'
 
 export default async function DashboardLayout({
   children,
