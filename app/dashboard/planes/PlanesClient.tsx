@@ -431,8 +431,8 @@ export default function PlanesClient({ initialPlans }: { initialPlans: TradingPl
 
       {/* ── Modal (New / Edit) ── */}
       {modalMode !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
-          <div className="card-panel w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-20 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.85)' }}>
+          <div className="card-panel w-full max-w-2xl relative mb-8">
             <button onClick={closeModal} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-white text-xl">✕</button>
 
             <div className="label-mono mb-1 text-[var(--gold)]">
