@@ -141,6 +141,7 @@ export default function DashboardClient({
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   })
+  const [planSeleccionado, setPlanSeleccionado] = useState('all')
   const [pagina, setPagina] = useState(1)
 
   const mesesDisponibles = useMemo(() => {
@@ -158,13 +159,16 @@ export default function DashboardClient({
   }, [sessions])
 
   const sessionesFiltradas = useMemo(() => {
-    if (mesSeleccionado === 'all') return sessions
     return sessions.filter(s => {
-      const fecha = new Date(s.date)
-      const mes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`
-      return mes === mesSeleccionado
+      if (mesSeleccionado !== 'all') {
+        const fecha = new Date(s.date)
+        const mes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`
+        if (mes !== mesSeleccionado) return false
+      }
+      if (planSeleccionado !== 'all' && s.planId !== planSeleccionado) return false
+      return true
     })
-  }, [sessions, mesSeleccionado])
+  }, [sessions, mesSeleccionado, planSeleccionado])
 
   const metricas = useMemo(() => calcularMetricas(sessionesFiltradas), [sessionesFiltradas])
 
@@ -201,6 +205,11 @@ export default function DashboardClient({
     setPagina(1)
   }
 
+  function handlePlanChange(planId: string) {
+    setPlanSeleccionado(planId)
+    setPagina(1)
+  }
+
   const mesLabel =
     mesSeleccionado !== 'all'
       ? new Date(mesSeleccionado + '-02')
@@ -221,23 +230,41 @@ export default function DashboardClient({
         </p>
       </div>
 
-      {/* Month filter */}
-      <div className="flex items-center gap-4 mb-8">
-        <span className="label-mono text-xs text-[var(--text-muted)]">Período:</span>
-        <select
-          value={mesSeleccionado}
-          onChange={e => handleMesChange(e.target.value)}
-          className="bg-gray-900 border border-yellow-900/30 text-yellow-400 font-mono text-xs px-3 py-2 tracking-widest cursor-pointer focus:outline-none focus:border-yellow-500 rounded-lg"
-        >
-          <option value="all">TODOS LOS MESES</option>
-          {mesesDisponibles.map(m => (
-            <option key={m} value={m}>
-              {new Date(m + '-02')
-                .toLocaleDateString('es', { month: 'long', year: 'numeric' })
-                .toUpperCase()}
-            </option>
-          ))}
-        </select>
+      {/* Filters row */}
+      <div className="flex flex-wrap items-center gap-4 mb-8">
+        <div className="flex items-center gap-2">
+          <span className="label-mono text-xs text-[var(--text-muted)]">Período:</span>
+          <select
+            value={mesSeleccionado}
+            onChange={e => handleMesChange(e.target.value)}
+            className="bg-gray-900 border border-yellow-900/30 text-yellow-400 font-mono text-xs px-3 py-2 tracking-widest cursor-pointer focus:outline-none focus:border-yellow-500 rounded-lg"
+          >
+            <option value="all">TODOS LOS MESES</option>
+            {mesesDisponibles.map(m => (
+              <option key={m} value={m}>
+                {new Date(m + '-02')
+                  .toLocaleDateString('es', { month: 'long', year: 'numeric' })
+                  .toUpperCase()}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {plans.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="label-mono text-xs text-[var(--text-muted)]">Plan:</span>
+            <select
+              value={planSeleccionado}
+              onChange={e => handlePlanChange(e.target.value)}
+              className="bg-gray-900 border border-yellow-900/30 text-yellow-400 font-mono text-xs px-3 py-2 tracking-widest cursor-pointer focus:outline-none focus:border-yellow-500 rounded-lg"
+            >
+              <option value="all">TODOS LOS PLANES</option>
+              {plans.map(p => (
+                <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {metricas ? (

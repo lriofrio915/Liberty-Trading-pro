@@ -57,12 +57,6 @@ function formatDateGYE(dateStr: string): string {
   })
 }
 
-/** Extract "YYYY-MM" key for month grouping in Guayaquil TZ */
-function monthKeyGYE(dateStr: string): string {
-  // en-CA gives YYYY-MM-DD format
-  return new Date(dateStr).toLocaleDateString('en-CA', { timeZone: TZ }).slice(0, 7)
-}
-
 /** Extract "YYYY-MM-DD" from a DB date string in Guayaquil TZ (for form pre-fill) */
 function toDateInputGYE(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-CA', { timeZone: TZ })
@@ -108,9 +102,9 @@ export default function TrackRecordClient({
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
-  const [filterMonth, setFilterMonth] = useState('all')
-  const [filterResult, setFilterResult] = useState('all')
-  const [filterInstrument, setFilterInstrument] = useState('all')
+  const [planSeleccionado, setPlanSeleccionado] = useState('all')
+  const [fechaInicio, setFechaInicio] = useState('')
+  const [fechaFin, setFechaFin] = useState('')
 
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -140,27 +134,79 @@ export default function TrackRecordClient({
 
   // ── Computed ────────────────────────────────────────────────────────────────
 
-  const months = useMemo(() => {
-    const s = new Set<string>()
-    sessions.forEach(sess => s.add(monthKeyGYE(sess.date)))
-    return Array.from(s).sort().reverse()
-  }, [sessions])
-
   const filtered = useMemo(() => {
     return sessions.filter(s => {
-      if (filterMonth !== 'all' && monthKeyGYE(s.date) !== filterMonth) return false
-      if (filterResult !== 'all' && s.resultado !== filterResult) return false
-      if (filterInstrument !== 'all' && s.instrumento !== filterInstrument) return false
+      if (planSeleccionado !== 'all' && s.planId !== planSeleccionado) return false
+      if (fechaInicio) {
+        const d = new Date(s.date).toLocaleDateString('en-CA', { timeZone: TZ })
+        if (d < fechaInicio) return false
+      }
+      if (fechaFin) {
+        const d = new Date(s.date).toLocaleDateString('en-CA', { timeZone: TZ })
+        if (d > fechaFin) return false
+      }
       return true
     })
-  }, [sessions, filterMonth, filterResult, filterInstrument])
+  }, [sessions, planSeleccionado, fechaInicio, fechaFin])
 
   const metrics = useMemo(() => {
-    const wins = filtered.filter(s => s.resultado === 'WIN').length
     const total = filtered.length
-    // Normalize display: LOSS records saved before the fix may be positive in DB
-    const pnl = filtered.reduce((sum, s) => sum + normalizePnl(s.pnlNeto ?? 0, s.resultado), 0)
-    return { total, wins, pnl, winRate: total > 0 ? (wins / total) * 100 : 0 }
+    const wins = filtered.filter(s => s.resultado === 'WIN')
+    const losses = filtered.filter(s => s.resultado === 'LOSS')
+    const allPnls = filtered.map(s => normalizePnl(s.pnlNeto ?? 0, s.resultado))
+    const pnl = allPnls.reduce((sum, p) => sum + p, 0)
+
+    const winPnls = wins.map(s => normalizePnl(s.pnlNeto ?? 0, s.resultado))
+    const lossPnls = losses.map(s => Math.abs(normalizePnl(s.pnlNeto ?? 0, s.resultado)))
+
+    const mejorTrade = allPnls.length ? Math.max(...allPnls) : 0
+    const peorTrade = allPnls.length ? Math.min(...allPnls) : 0
+    const avgGanador = winPnls.length ? winPnls.reduce((s, p) => s + p, 0) / winPnls.length : 0
+    const avgPerdedor = lossPnls.length ? lossPnls.reduce((s, p) => s + p, 0) / lossPnls.length : 0
+    const rrPromedio = avgPerdedor > 0 ? avgGanador / avgPerdedor : 0
+
+    // Max Drawdown
+    const sorted = [...filtered].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    let peak = 0, maxDD = 0, balance = 0
+    sorted.forEach(s => {
+      balance += normalizePnl(s.pnlNeto ?? 0, s.resultado)
+      if (balance > peak) peak = balance
+      const dd = peak - balance
+      if (dd > maxDD) maxDD = dd
+    })
+
+    // Racha por días (group by calendar day, positive/negative cumulative PnL)
+    const byDay: Record<string, number> = {}
+    sorted.forEach(s => {
+      const day = new Date(s.date).toLocaleDateString('en-CA', { timeZone: TZ })
+      byDay[day] = (byDay[day] ?? 0) + normalizePnl(s.pnlNeto ?? 0, s.resultado)
+    })
+    const dayKeys = Object.keys(byDay).sort()
+    let curGan = 0, curPer = 0, maxRachaGan = 0, maxRachaPer = 0
+    dayKeys.forEach(day => {
+      if (byDay[day] > 0) {
+        curGan++; curPer = 0
+        if (curGan > maxRachaGan) maxRachaGan = curGan
+      } else if (byDay[day] < 0) {
+        curPer++; curGan = 0
+        if (curPer > maxRachaPer) maxRachaPer = curPer
+      }
+    })
+
+    return {
+      total,
+      wins: wins.length,
+      pnl,
+      winRate: total > 0 ? (wins.length / total) * 100 : 0,
+      mejorTrade,
+      peorTrade,
+      avgGanador,
+      avgPerdedor,
+      rrPromedio,
+      maxDrawdown: maxDD,
+      rachaGanadora: maxRachaGan,
+      rachaPerdedora: maxRachaPer,
+    }
   }, [filtered])
 
   // ── Handlers ────────────────────────────────────────────────────────────────
@@ -357,8 +403,48 @@ export default function TrackRecordClient({
         </button>
       </div>
 
-      {/* Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 mb-6">
+        {initialPlans.length > 0 && (
+          <select
+            value={planSeleccionado}
+            onChange={e => setPlanSeleccionado(e.target.value)}
+            className="input text-sm py-1.5 px-3 w-auto"
+          >
+            <option value="all">Todos los planes</option>
+            {initialPlans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        )}
+        <div className="flex items-center gap-2">
+          <label className="label-mono text-[10px] text-[var(--text-muted)] whitespace-nowrap">Desde:</label>
+          <input
+            type="date"
+            value={fechaInicio}
+            onChange={e => setFechaInicio(e.target.value)}
+            className="input text-sm py-1.5 px-3 w-auto"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="label-mono text-[10px] text-[var(--text-muted)] whitespace-nowrap">Hasta:</label>
+          <input
+            type="date"
+            value={fechaFin}
+            onChange={e => setFechaFin(e.target.value)}
+            className="input text-sm py-1.5 px-3 w-auto"
+          />
+        </div>
+        {(planSeleccionado !== 'all' || fechaInicio || fechaFin) && (
+          <button
+            onClick={() => { setPlanSeleccionado('all'); setFechaInicio(''); setFechaFin('') }}
+            className="text-xs text-[var(--text-muted)] hover:text-white border border-[var(--border)] px-3 py-1.5 rounded-lg transition-colors"
+          >
+            Limpiar ✕
+          </button>
+        )}
+      </div>
+
+      {/* Metrics — Fila 1 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
         {[
           { label: 'Total Trades', value: metrics.total, color: 'var(--gold)' },
           { label: 'Win Rate', value: `${metrics.winRate.toFixed(1)}%`, color: metrics.winRate >= 50 ? 'var(--green)' : 'var(--red)' },
@@ -374,28 +460,38 @@ export default function TrackRecordClient({
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-5">
-        <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)} className="input text-sm py-1.5 px-3 w-auto">
-          <option value="all">Todos los meses</option>
-          {months.map(m => <option key={m} value={m}>{m}</option>)}
-        </select>
-        <select value={filterResult} onChange={e => setFilterResult(e.target.value)} className="input text-sm py-1.5 px-3 w-auto">
-          <option value="all">Todos los resultados</option>
-          {RESULTS.map(r => <option key={r} value={r}>{r}</option>)}
-        </select>
-        <select value={filterInstrument} onChange={e => setFilterInstrument(e.target.value)} className="input text-sm py-1.5 px-3 w-auto">
-          <option value="all">Todos los instrumentos</option>
-          {INSTRUMENTS.map(i => <option key={i} value={i}>{i}</option>)}
-        </select>
-        {(filterMonth !== 'all' || filterResult !== 'all' || filterInstrument !== 'all') && (
-          <button
-            onClick={() => { setFilterMonth('all'); setFilterResult('all'); setFilterInstrument('all') }}
-            className="text-xs text-[var(--text-muted)] hover:text-white border border-[var(--border)] px-3 py-1.5 rounded-lg transition-colors"
-          >
-            Limpiar ✕
-          </button>
-        )}
+      {/* Metrics — Fila 2 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+        {[
+          { label: 'Mejor Trade', value: `${metrics.mejorTrade >= 0 ? '+' : ''}$${metrics.mejorTrade.toFixed(0)}`, color: 'var(--green)' },
+          { label: 'Peor Trade', value: `$${metrics.peorTrade.toFixed(0)}`, color: 'var(--red)' },
+          { label: 'Prom. Ganador', value: metrics.avgGanador > 0 ? `+$${metrics.avgGanador.toFixed(0)}` : '$0', color: 'var(--green)' },
+          { label: 'Prom. Perdedor', value: metrics.avgPerdedor > 0 ? `-$${metrics.avgPerdedor.toFixed(0)}` : '$0', color: 'var(--red)' },
+        ].map(stat => (
+          <div key={stat.label} className="card text-center py-4">
+            <div className="text-2xl font-black mb-1" style={{ color: stat.color, fontFamily: 'var(--font-serif)' }}>
+              {stat.value}
+            </div>
+            <div className="label-mono text-[10px]">{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Metrics — Fila 3 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {[
+          { label: 'RR Promedio', value: `1:${metrics.rrPromedio.toFixed(2)}`, color: 'var(--gold)' },
+          { label: 'Racha Ganadora', value: `${metrics.rachaGanadora} días`, color: 'var(--green)' },
+          { label: 'Racha Perdedora', value: `${metrics.rachaPerdedora} días`, color: 'var(--red)' },
+          { label: 'Max Drawdown', value: metrics.maxDrawdown > 0 ? `-$${metrics.maxDrawdown.toFixed(0)}` : '$0', color: metrics.maxDrawdown > 0 ? 'var(--red)' : 'var(--text-muted)' },
+        ].map(stat => (
+          <div key={stat.label} className="card text-center py-4">
+            <div className="text-2xl font-black mb-1" style={{ color: stat.color, fontFamily: 'var(--font-serif)' }}>
+              {stat.value}
+            </div>
+            <div className="label-mono text-[10px]">{stat.label}</div>
+          </div>
+        ))}
       </div>
 
       {/* Table */}
