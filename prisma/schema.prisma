@@ -55,9 +55,11 @@ model TradingPlan {
   reglas         String
   horaInicio     String
   horaFin        String
-  instrumento    String
-  active         Boolean  @default(true)
-  createdAt      DateTime @default(now())
+  instrumento        String
+  dataFeedMensual    Float?
+  comisionPorTrade   Float?
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now())
 
   sessions TradingSession[]
 }

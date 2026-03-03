@@ -48,6 +48,8 @@ export async function POST(req: NextRequest) {
         horaInicio: body.horaInicio || '09:30',
         horaFin: body.horaFin || '11:30',
         instrumento: body.instrumento || 'NQ',
+        dataFeedMensual: body.dataFeedMensual ? parseFloat(body.dataFeedMensual) : null,
+        comisionPorTrade: body.comisionPorTrade ? parseFloat(body.comisionPorTrade) : null,
         active: body.active ?? true,
       },
     })
