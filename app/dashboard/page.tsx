@@ -20,7 +20,7 @@ export default async function DashboardPage() {
         }),
         prisma.tradingPlan.findMany({
           where: { userId: dbUser.id },
-          select: { id: true, name: true, dataFeedMensual: true, comisionPorTrade: true },
+          select: { id: true, name: true, capitalInicial: true, createdAt: true, dataFeedMensual: true, comisionPorTrade: true },
         }),
       ])
     }

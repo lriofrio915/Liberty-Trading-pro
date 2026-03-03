@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Session {
   id: string
@@ -23,6 +25,8 @@ interface Session {
 interface Plan {
   id: string
   name: string
+  capitalInicial: number
+  createdAt: string
   dataFeedMensual: number | null
   comisionPorTrade: number | null
 }
@@ -38,16 +42,19 @@ interface Metricas {
   shortsTotal: number
   longsWin: number
   shortsWin: number
-  pnlNeto: number
   profitFactor: number
   rrPromedio: number
   maxDrawdown: number
-  maxDrawdownPct: number
   maxRachaGanadora: number
   maxRachaPerdedora: number
-  avgWin: number
-  avgLoss: number
 }
+
+interface Benchmark {
+  sp500: string | null
+  nasdaq: string | null
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function calcularMetricas(sessions: Session[]): Metricas | null {
   if (!sessions.length) return null
@@ -59,7 +66,6 @@ function calcularMetricas(sessions: Session[]): Metricas | null {
   const longsWin = longs.filter(s => s.resultado === 'WIN')
   const shortsWin = shorts.filter(s => s.resultado === 'WIN')
 
-  const pnlNeto = sessions.reduce((sum, s) => sum + (s.pnlNeto || 0), 0)
   const pnlGanadores = wins.reduce((sum, s) => sum + (s.pnlNeto || 0), 0)
   const pnlPerdedores = losses.reduce((sum, s) => sum + (s.pnlNeto || 0), 0)
 
@@ -83,20 +89,16 @@ function calcularMetricas(sessions: Session[]): Metricas | null {
     const dd = peak - balance
     if (dd > maxDD) maxDD = dd
   })
-  const capitalInicial = 51000
-  const maxDDPct = capitalInicial > 0 ? (maxDD / capitalInicial) * 100 : 0
 
   // Rachas
   let rachaGanadora = 0, rachaPerdedora = 0
   let maxRachaGan = 0, maxRachaPer = 0
   sortedByDate.forEach(s => {
     if (s.resultado === 'WIN') {
-      rachaGanadora++
-      rachaPerdedora = 0
+      rachaGanadora++; rachaPerdedora = 0
       if (rachaGanadora > maxRachaGan) maxRachaGan = rachaGanadora
     } else if (s.resultado === 'LOSS') {
-      rachaPerdedora++
-      rachaGanadora = 0
+      rachaPerdedora++; rachaGanadora = 0
       if (rachaPerdedora > maxRachaPer) maxRachaPer = rachaPerdedora
     }
   })
@@ -112,17 +114,23 @@ function calcularMetricas(sessions: Session[]): Metricas | null {
     shortsTotal: shorts.length,
     longsWin: longsWin.length,
     shortsWin: shortsWin.length,
-    pnlNeto,
     profitFactor,
     rrPromedio,
     maxDrawdown: maxDD,
-    maxDrawdownPct: maxDDPct,
     maxRachaGanadora: maxRachaGan,
     maxRachaPerdedora: maxRachaPer,
-    avgWin,
-    avgLoss: avgLoss * -1,
   }
 }
+
+function fmtMoney(v: number) {
+  return `${v >= 0 ? '+' : ''}$${Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+function fmtPct(v: number) {
+  return `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function DashboardClient({
   sessions,
@@ -140,7 +148,24 @@ export default function DashboardClient({
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   })
   const [planSeleccionado, setPlanSeleccionado] = useState('all')
+  const [benchmark, setBenchmark] = useState<Benchmark | null>(null)
 
+  // ── Period dates derived from mesSeleccionado ────────────────────────────
+  const periodoFechas = useMemo(() => {
+    const hoy = new Date()
+    const hoyStr = hoy.toLocaleDateString('en-CA')
+    if (mesSeleccionado === 'all') {
+      return { desde: `${hoy.getFullYear()}-01-01`, hasta: hoyStr }
+    }
+    const [y, m] = mesSeleccionado.split('-').map(Number)
+    const lastDay = new Date(y, m, 0).getDate()
+    return {
+      desde: `${y}-${String(m).padStart(2, '0')}-01`,
+      hasta: `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`,
+    }
+  }, [mesSeleccionado])
+
+  // ── Available months ─────────────────────────────────────────────────────
   const mesesDisponibles = useMemo(() => {
     if (!sessions.length) return []
     const fechas = sessions.map(s => new Date(s.date))
@@ -155,6 +180,7 @@ export default function DashboardClient({
     return meses.reverse()
   }, [sessions])
 
+  // ── Filtered sessions ────────────────────────────────────────────────────
   const sessionesFiltradas = useMemo(() => {
     return sessions.filter(s => {
       if (mesSeleccionado !== 'all') {
@@ -167,37 +193,107 @@ export default function DashboardClient({
     })
   }, [sessions, mesSeleccionado, planSeleccionado])
 
+  // ── Trading metrics ──────────────────────────────────────────────────────
   const metricas = useMemo(() => calcularMetricas(sessionesFiltradas), [sessionesFiltradas])
 
-  // Cost breakdown: comision por trade + data feed proporcional
-  const costMetrics = useMemo(() => {
-    if (!sessionesFiltradas.length || !plans.length) return null
+  // ── Financial metrics (PnL bruto/neto, fees, capital, rendimiento) ───────
+  const fin = useMemo(() => {
+    if (!sessionesFiltradas.length) return null
+
+    // Plans in scope
+    const relevantPlans = planSeleccionado === 'all'
+      ? plans
+      : plans.filter(p => p.id === planSeleccionado)
+    const capitalRef = relevantPlans.reduce((s, p) => s + (p.capitalInicial || 0), 0) || 51000
+
+    // PnL Bruto = sum of all session pnlNeto (raw from user)
+    const pnlBruto = sessionesFiltradas.reduce((sum, s) => sum + (s.pnlNeto || 0), 0)
+
+    // Meses transcurridos in selected period
+    let mesesTranscurridos: number
+    if (mesSeleccionado !== 'all') {
+      mesesTranscurridos = 1
+    } else {
+      const sorted = [...sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      if (sorted.length) {
+        const inicio = new Date(sorted[0].date)
+        const fin2 = new Date()
+        mesesTranscurridos = Math.max(1,
+          (fin2.getFullYear() - inicio.getFullYear()) * 12 +
+          fin2.getMonth() - inicio.getMonth() + 1
+        )
+      } else {
+        mesesTranscurridos = 1
+      }
+    }
+
+    // Comisiones: per-session based on linked plan
     const planMap = new Map(plans.map(p => [p.id, p]))
-    let comisionesAdicionales = 0
+    let comisionesTotal = 0
     sessionesFiltradas.forEach(s => {
       if (s.planId) {
         const plan = planMap.get(s.planId)
-        if (plan?.comisionPorTrade) comisionesAdicionales += plan.comisionPorTrade
+        if (plan?.comisionPorTrade) comisionesTotal += plan.comisionPorTrade
       }
     })
-    // Data feed: count unique months in filtered sessions
-    const meses = new Set(sessionesFiltradas.map(s => new Date(s.date).toISOString().slice(0, 7)))
+
+    // Data feed: per relevant plan × meses
     let dataFeedTotal = 0
-    plans.forEach(p => {
-      if (p.dataFeedMensual) dataFeedTotal += p.dataFeedMensual * meses.size
+    relevantPlans.forEach(p => {
+      if (p.dataFeedMensual) dataFeedTotal += p.dataFeedMensual * mesesTranscurridos
     })
-    const pnlBruto = sessionesFiltradas.reduce((sum, s) => sum + (s.pnlBruto ?? s.pnlNeto), 0)
-    const costosTotal = comisionesAdicionales + dataFeedTotal
-    return { pnlBruto, comisionesAdicionales, dataFeedTotal, costosTotal, pnlNetoReal: pnlBruto - costosTotal }
-  }, [sessionesFiltradas, plans])
 
-  function handleMesChange(mes: string) {
-    setMesSeleccionado(mes)
-  }
+    const pnlNetoReal = pnlBruto - comisionesTotal - dataFeedTotal
+    const rendimientoPct = capitalRef > 0 ? (pnlNetoReal / capitalRef) * 100 : 0
 
-  function handlePlanChange(planId: string) {
-    setPlanSeleccionado(planId)
-  }
+    // Capital at start/end of selected period
+    let capitalInicialPeriodo = capitalRef
+    if (mesSeleccionado !== 'all') {
+      const periodoStart = new Date(periodoFechas.desde)
+      const sesionesAntes = sessions.filter(s => {
+        if (planSeleccionado !== 'all' && s.planId !== planSeleccionado) return false
+        return new Date(s.date) < periodoStart
+      })
+      const pnlAnterior = sesionesAntes.reduce((sum, s) => sum + (s.pnlNeto || 0), 0)
+      capitalInicialPeriodo = capitalRef + pnlAnterior
+    }
+    const capitalFinalPeriodo = capitalInicialPeriodo + pnlNetoReal
+    const variacionPct = capitalInicialPeriodo > 0
+      ? ((capitalFinalPeriodo - capitalInicialPeriodo) / capitalInicialPeriodo) * 100
+      : 0
+
+    return {
+      pnlBruto,
+      comisionesTotal,
+      dataFeedTotal,
+      pnlNetoReal,
+      rendimientoPct,
+      capitalRef,
+      capitalInicialPeriodo,
+      capitalFinalPeriodo,
+      variacionPct,
+      mesesTranscurridos,
+      tieneFees: comisionesTotal > 0 || dataFeedTotal > 0,
+    }
+  }, [sessionesFiltradas, sessions, plans, planSeleccionado, mesSeleccionado, periodoFechas])
+
+  // ── Benchmark fetch ──────────────────────────────────────────────────────
+  useEffect(() => {
+    setBenchmark(null)
+    if (!fin) return
+    const params = new URLSearchParams({ desde: periodoFechas.desde, hasta: periodoFechas.hasta })
+    fetch(`/api/benchmark?${params}`)
+      .then(r => r.json())
+      .then((data: Benchmark) => setBenchmark(data))
+      .catch(() => setBenchmark(null))
+  }, [periodoFechas, fin])
+
+  // ── Period label ─────────────────────────────────────────────────────────
+  const periodoLabel = mesSeleccionado === 'all'
+    ? 'YTD'
+    : new Date(mesSeleccionado + '-02').toLocaleDateString('es', { month: 'long', year: 'numeric' }).toUpperCase()
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="animate-fadeIn">
@@ -218,7 +314,7 @@ export default function DashboardClient({
           <span className="label-mono text-xs text-[var(--text-muted)]">Período:</span>
           <select
             value={mesSeleccionado}
-            onChange={e => handleMesChange(e.target.value)}
+            onChange={e => setMesSeleccionado(e.target.value)}
             className="bg-gray-900 border border-yellow-900/30 text-yellow-400 font-mono text-xs px-3 py-2 tracking-widest cursor-pointer focus:outline-none focus:border-yellow-500 rounded-lg"
           >
             <option value="all">TODOS LOS MESES</option>
@@ -237,7 +333,7 @@ export default function DashboardClient({
             <span className="label-mono text-xs text-[var(--text-muted)]">Plan:</span>
             <select
               value={planSeleccionado}
-              onChange={e => handlePlanChange(e.target.value)}
+              onChange={e => setPlanSeleccionado(e.target.value)}
               className="bg-gray-900 border border-yellow-900/30 text-yellow-400 font-mono text-xs px-3 py-2 tracking-widest cursor-pointer focus:outline-none focus:border-yellow-500 rounded-lg"
             >
               <option value="all">TODOS LOS PLANES</option>
@@ -285,15 +381,32 @@ export default function DashboardClient({
               </div>
             </div>
 
-            {/* PnL Neto */}
+            {/* PnL Neto Real */}
             <div className="card">
               <div className="label-mono text-xs mb-3 text-[var(--text-muted)]">PnL Neto</div>
-              <div
-                className="text-2xl font-black"
-                style={{ color: metricas.pnlNeto >= 0 ? 'var(--green)' : 'var(--red)' }}
-              >
-                {metricas.pnlNeto >= 0 ? '+' : ''}${metricas.pnlNeto.toFixed(2)}
-              </div>
+              {fin ? (
+                <>
+                  <div
+                    className="text-2xl font-black"
+                    style={{ color: fin.pnlNetoReal >= 0 ? 'var(--green)' : 'var(--red)' }}
+                  >
+                    {fmtMoney(fin.pnlNetoReal)}
+                  </div>
+                  <div
+                    className="text-xs mt-1 font-bold"
+                    style={{ color: fin.rendimientoPct >= 0 ? 'var(--green)' : 'var(--red)' }}
+                  >
+                    {fmtPct(fin.rendimientoPct)} sobre capital
+                  </div>
+                </>
+              ) : (
+                <div
+                  className="text-2xl font-black"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  $0.00
+                </div>
+              )}
             </div>
 
             {/* Profit Factor */}
@@ -343,9 +456,6 @@ export default function DashboardClient({
               <div className="text-xl font-black text-red-400">
                 -${metricas.maxDrawdown.toFixed(2)}
               </div>
-              <div className="text-xs text-[var(--text-muted)] mt-1">
-                -{metricas.maxDrawdownPct.toFixed(2)}% del capital
-              </div>
             </div>
 
             {/* Rachas */}
@@ -372,35 +482,178 @@ export default function DashboardClient({
         </div>
       )}
 
-      {/* Costos Operativos */}
-      {costMetrics && (costMetrics.comisionesAdicionales > 0 || costMetrics.dataFeedTotal > 0) && (
+      {/* ── Costos Operativos + Capital ── */}
+      {fin && (fin.tieneFees || mesSeleccionado !== 'all') && (
         <div className="card mb-8">
-          <div className="label-mono text-xs mb-4 text-[var(--text-muted)]">Costos Operativos del Periodo</div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="label-mono text-xs mb-4 text-[var(--text-muted)]">
+            Desglose Financiero del Período
+          </div>
+
+          {/* PnL breakdown */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
             <div>
               <div className="text-xs text-[var(--text-muted)] mb-1">PnL Bruto</div>
-              <div className="text-xl font-black" style={{ color: costMetrics.pnlBruto >= 0 ? 'var(--green)' : 'var(--red)' }}>
-                {costMetrics.pnlBruto >= 0 ? '+' : ''}${costMetrics.pnlBruto.toFixed(2)}
+              <div className="text-xl font-black" style={{ color: fin.pnlBruto >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                {fmtMoney(fin.pnlBruto)}
               </div>
+              <div className="text-[10px] text-[var(--text-muted)] mt-0.5">Suma directa de sesiones</div>
             </div>
             <div>
-              <div className="text-xs text-[var(--text-muted)] mb-1">Comisiones / Trade</div>
-              <div className="text-xl font-black text-red-400">-${costMetrics.comisionesAdicionales.toFixed(2)}</div>
+              <div className="text-xs text-[var(--text-muted)] mb-1">Comisiones</div>
+              <div className="text-xl font-black text-red-400">
+                {fin.comisionesTotal > 0 ? `-$${fin.comisionesTotal.toFixed(2)}` : '$0.00'}
+              </div>
+              <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{sessionesFiltradas.length} trades × plan</div>
             </div>
             <div>
               <div className="text-xs text-[var(--text-muted)] mb-1">Data Feed</div>
-              <div className="text-xl font-black text-red-400">-${costMetrics.dataFeedTotal.toFixed(2)}</div>
+              <div className="text-xl font-black text-red-400">
+                {fin.dataFeedTotal > 0 ? `-$${fin.dataFeedTotal.toFixed(2)}` : '$0.00'}
+              </div>
+              <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{fin.mesesTranscurridos} {fin.mesesTranscurridos === 1 ? 'mes' : 'meses'}</div>
             </div>
             <div>
               <div className="text-xs text-[var(--text-muted)] mb-1">PnL Neto Real</div>
-              <div className="text-xl font-black" style={{ color: costMetrics.pnlNetoReal >= 0 ? 'var(--green)' : 'var(--red)' }}>
-                {costMetrics.pnlNetoReal >= 0 ? '+' : ''}${costMetrics.pnlNetoReal.toFixed(2)}
+              <div className="text-xl font-black" style={{ color: fin.pnlNetoReal >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                {fmtMoney(fin.pnlNetoReal)}
+              </div>
+              <div
+                className="text-[10px] font-bold mt-0.5"
+                style={{ color: fin.rendimientoPct >= 0 ? 'var(--green)' : 'var(--red)' }}
+              >
+                {fmtPct(fin.rendimientoPct)} rendimiento
+              </div>
+            </div>
+          </div>
+
+          {/* Capital al inicio/fin del período */}
+          <div className="border-t border-[var(--border)] pt-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <div className="text-xs text-[var(--text-muted)] mb-1">Capital al inicio</div>
+                <div className="text-lg font-black text-white">
+                  ${fin.capitalInicialPeriodo.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-[var(--text-muted)] mb-1">Capital al final</div>
+                <div
+                  className="text-lg font-black"
+                  style={{ color: fin.capitalFinalPeriodo >= fin.capitalInicialPeriodo ? 'var(--green)' : 'var(--red)' }}
+                >
+                  ${fin.capitalFinalPeriodo.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-[var(--text-muted)] mb-1">Variación</div>
+                <div
+                  className="text-lg font-black"
+                  style={{ color: fin.variacionPct >= 0 ? 'var(--green)' : 'var(--red)' }}
+                >
+                  {fmtMoney(fin.capitalFinalPeriodo - fin.capitalInicialPeriodo)}
+                </div>
+                <div
+                  className="text-[10px] font-bold"
+                  style={{ color: fin.variacionPct >= 0 ? 'var(--green)' : 'var(--red)' }}
+                >
+                  {fmtPct(fin.variacionPct)}
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* ── Benchmark Comparativo ── */}
+      {fin && (
+        <div className="card mb-8">
+          <div className="label-mono text-xs mb-1 text-[var(--text-muted)]">
+            Benchmark Comparativo
+          </div>
+          <div className="text-xs text-[var(--gold)] mb-4 font-mono">{periodoLabel}</div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--border)]">
+                  <th className="text-left py-2 px-3 text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wider w-32" />
+                  <th className="text-center py-2 px-3 text-[10px] text-[var(--gold)] font-bold uppercase tracking-wider">
+                    Tu Cuenta
+                  </th>
+                  <th className="text-center py-2 px-3 text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wider">
+                    Nasdaq 100
+                  </th>
+                  <th className="text-center py-2 px-3 text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wider">
+                    S&P 500
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="py-3 px-3 text-xs text-[var(--text-muted)]">Rendimiento</td>
+                  <td className="py-3 px-3 text-center">
+                    <span
+                      className="text-lg font-black"
+                      style={{ color: fin.rendimientoPct >= 0 ? 'var(--green)' : 'var(--red)', fontFamily: 'var(--font-serif)' }}
+                    >
+                      {fmtPct(fin.rendimientoPct)}
+                    </span>
+                  </td>
+                  <td className="py-3 px-3 text-center">
+                    {benchmark ? (
+                      benchmark.nasdaq ? (
+                        <span
+                          className="text-base font-bold"
+                          style={{ color: parseFloat(benchmark.nasdaq) >= 0 ? 'var(--green)' : 'var(--red)' }}
+                        >
+                          {parseFloat(benchmark.nasdaq) >= 0 ? '+' : ''}{benchmark.nasdaq}%
+                        </span>
+                      ) : (
+                        <span className="text-xs text-[var(--text-muted)]">N/A</span>
+                      )
+                    ) : (
+                      <span className="text-xs text-[var(--text-muted)] animate-pulse">...</span>
+                    )}
+                  </td>
+                  <td className="py-3 px-3 text-center">
+                    {benchmark ? (
+                      benchmark.sp500 ? (
+                        <span
+                          className="text-base font-bold"
+                          style={{ color: parseFloat(benchmark.sp500) >= 0 ? 'var(--green)' : 'var(--red)' }}
+                        >
+                          {parseFloat(benchmark.sp500) >= 0 ? '+' : ''}{benchmark.sp500}%
+                        </span>
+                      ) : (
+                        <span className="text-xs text-[var(--text-muted)]">N/A</span>
+                      )
+                    ) : (
+                      <span className="text-xs text-[var(--text-muted)] animate-pulse">...</span>
+                    )}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Comparison text */}
+          {benchmark?.nasdaq && (
+            <div className="mt-3 pt-3 border-t border-[var(--border)]">
+              {(() => {
+                const diff = fin.rendimientoPct - parseFloat(benchmark.nasdaq!)
+                const supera = diff >= 0
+                return (
+                  <p className="text-xs" style={{ color: supera ? 'var(--green)' : 'var(--text-muted)' }}>
+                    {supera
+                      ? `✅ Tu cuenta superó al Nasdaq 100 por ${diff.toFixed(2)} puntos porcentuales`
+                      : `⚠️ El Nasdaq 100 superó tu cuenta por ${Math.abs(diff).toFixed(2)} puntos porcentuales`}
+                  </p>
+                )
+              })()}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
