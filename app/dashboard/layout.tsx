@@ -1,16 +1,7 @@
 import Link from 'next/link'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
-
-const navItems = [
-  { href: '/dashboard', icon: '📊', label: 'Dashboard' },
-  { href: '/dashboard/vinces', icon: '🤖', label: 'Vinces AI' },
-  { href: '/dashboard/oportunidades', icon: '🎯', label: 'Oportunidades' },
-  { href: '/dashboard/track-record', icon: '📈', label: 'Track Record' },
-  { href: '/dashboard/planes', icon: '📋', label: 'Planes' },
-  { href: '/dashboard/reportes', icon: '📄', label: 'Reportes' },
-  { href: '/dashboard/monitor', icon: '🌍', label: 'Monitor Mundial' },
-]
+import SidebarNav, { navItems } from '@/components/Sidebar/SidebarNav'
 
 export default async function DashboardLayout({
   children,
@@ -31,18 +22,7 @@ export default async function DashboardLayout({
           <Link href="/" className="text-lg font-black gradient-gold">Liberty Trading</Link>
         </div>
 
-        <nav className="flex-1 px-3 py-6 space-y-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-white transition-all group"
-            >
-              <span className="text-base">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
+        <SidebarNav />
 
         <div className="px-4 py-4 border-t border-[var(--border)]">
           <div className="text-xs text-[var(--text-muted)] mb-1 truncate">{user.email}</div>
