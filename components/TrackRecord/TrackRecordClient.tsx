@@ -20,6 +20,7 @@ interface Session {
   sentimiento: string | null
   notas: string | null
   screenshotUrl: string | null
+  planId: string | null
 }
 
 interface FormState {
@@ -34,6 +35,7 @@ interface FormState {
   siguioPlan: boolean
   sentimiento: string
   notas: string
+  planId: string
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -90,7 +92,13 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function TrackRecordClient({ initialSessions }: { initialSessions: Session[] }) {
+export default function TrackRecordClient({
+  initialSessions,
+  initialPlans = [],
+}: {
+  initialSessions: Session[]
+  initialPlans: { id: string; name: string }[]
+}) {
   const [sessions, setSessions] = useState<Session[]>(initialSessions)
 
   // Modal mode: null = closed, 'new' = create, 'edit' = edit
@@ -124,6 +132,7 @@ export default function TrackRecordClient({ initialSessions }: { initialSessions
     siguioPlan: true,
     sentimiento: 'Sereno',
     notas: '',
+    planId: '',
   })
 
   const [form, setForm] = useState<FormState>(blankForm())
@@ -200,6 +209,7 @@ export default function TrackRecordClient({ initialSessions }: { initialSessions
       siguioPlan: s.siguioPlan,
       sentimiento: s.sentimiento ?? 'Sereno',
       notas: s.notas ?? '',
+      planId: s.planId ?? '',
     })
     // Show existing screenshot URL in preview area (no File object)
     setScreenshotFile(null)
@@ -267,6 +277,7 @@ export default function TrackRecordClient({ initialSessions }: { initialSessions
         sentimiento: form.sentimiento,
         notas: form.notas || null,
         screenshotUrl,
+        planId: form.planId || null,
       }
 
       if (modalMode === 'edit' && editingSession) {
@@ -510,6 +521,15 @@ export default function TrackRecordClient({ initialSessions }: { initialSessions
                               <div className="label-mono text-[9px] mb-0.5">Siguió el plan</div>
                               <div className="text-sm">{s.siguioPlan ? '✅ Sí' : '❌ No'}</div>
                             </div>
+                            {s.planId && (() => {
+                              const p = initialPlans.find(pl => pl.id === s.planId)
+                              return p ? (
+                                <div>
+                                  <div className="label-mono text-[9px] mb-0.5">Plan</div>
+                                  <div className="text-sm text-[var(--gold)]">{p.name}</div>
+                                </div>
+                              ) : null
+                            })()}
                             {s.sentimiento && (
                               <div>
                                 <div className="label-mono text-[9px] mb-0.5">Sentimiento</div>
@@ -581,6 +601,17 @@ export default function TrackRecordClient({ initialSessions }: { initialSessions
                   {INSTRUMENTS.map(i => <option key={i} value={i}>{i}</option>)}
                 </select>
               </div>
+
+              {/* Plan */}
+              {initialPlans.length > 0 && (
+                <div>
+                  <label className="label-mono text-[10px] block mb-1.5">Plan usado (opcional)</label>
+                  <select value={form.planId} onChange={e => set('planId', e.target.value)} className="input text-sm">
+                    <option value="">Sin plan</option>
+                    {initialPlans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+              )}
 
               {/* Dirección */}
               <div>
