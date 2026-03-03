@@ -124,8 +124,6 @@ function calcularMetricas(sessions: Session[]): Metricas | null {
   }
 }
 
-const PAGE_SIZE = 20
-
 export default function DashboardClient({
   sessions,
   userName,
@@ -142,7 +140,6 @@ export default function DashboardClient({
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   })
   const [planSeleccionado, setPlanSeleccionado] = useState('all')
-  const [pagina, setPagina] = useState(1)
 
   const mesesDisponibles = useMemo(() => {
     if (!sessions.length) return []
@@ -194,28 +191,13 @@ export default function DashboardClient({
     return { pnlBruto, comisionesAdicionales, dataFeedTotal, costosTotal, pnlNetoReal: pnlBruto - costosTotal }
   }, [sessionesFiltradas, plans])
 
-  const totalPaginas = Math.ceil(sessionesFiltradas.length / PAGE_SIZE)
-  const sessionesPaginadas = sessionesFiltradas.slice(
-    (pagina - 1) * PAGE_SIZE,
-    pagina * PAGE_SIZE
-  )
-
   function handleMesChange(mes: string) {
     setMesSeleccionado(mes)
-    setPagina(1)
   }
 
   function handlePlanChange(planId: string) {
     setPlanSeleccionado(planId)
-    setPagina(1)
   }
-
-  const mesLabel =
-    mesSeleccionado !== 'all'
-      ? new Date(mesSeleccionado + '-02')
-          .toLocaleDateString('es', { month: 'long', year: 'numeric' })
-          .toUpperCase()
-      : null
 
   return (
     <div className="animate-fadeIn">
@@ -419,123 +401,6 @@ export default function DashboardClient({
         </div>
       )}
 
-      {/* Tabla de operaciones */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold">
-            Operaciones
-            {mesLabel && (
-              <span className="text-[var(--gold)] text-sm font-mono ml-2">— {mesLabel}</span>
-            )}
-          </h2>
-          <span className="text-xs text-[var(--text-muted)] font-mono">
-            {sessionesFiltradas.length} operaciones
-          </span>
-        </div>
-
-        {sessionesFiltradas.length === 0 ? (
-          <div className="text-center py-12 text-[var(--text-muted)]">
-            <div className="text-4xl mb-3">📝</div>
-            <p className="text-sm">No hay operaciones en este período</p>
-            <a
-              href="/dashboard/track-record"
-              className="text-xs text-[var(--gold)] hover:underline mt-2 inline-block"
-            >
-              Registrar operación →
-            </a>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--border)]">
-                    {['Fecha', 'Instrumento', 'Dirección', 'Resultado', 'PnL'].map(h => (
-                      <th
-                        key={h}
-                        className="text-left py-2 px-3 text-xs text-[var(--text-muted)] font-medium uppercase tracking-wider"
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sessionesPaginadas.map(s => (
-                    <tr
-                      key={s.id}
-                      className="border-b border-[var(--border)] hover:bg-[var(--bg-hover)] transition-colors"
-                    >
-                      <td className="py-3 px-3 text-[var(--text-secondary)]">
-                        {new Date(s.date).toLocaleDateString('es-ES', {
-                          day: '2-digit',
-                          month: 'short',
-                        })}
-                      </td>
-                      <td className="py-3 px-3 font-medium">{s.instrumento}</td>
-                      <td className="py-3 px-3">
-                        <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded ${
-                            s.direccion === 'LONG'
-                              ? 'bg-green-950 text-green-400'
-                              : 'bg-red-950 text-red-400'
-                          }`}
-                        >
-                          {s.direccion}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3">
-                        <span
-                          className={
-                            s.resultado === 'WIN'
-                              ? 'positive font-bold'
-                              : s.resultado === 'LOSS'
-                              ? 'negative font-bold'
-                              : 'text-[var(--text-muted)]'
-                          }
-                        >
-                          {s.resultado}
-                        </span>
-                      </td>
-                      <td
-                        className={`py-3 px-3 font-bold ${
-                          s.pnlNeto >= 0 ? 'positive' : 'negative'
-                        }`}
-                      >
-                        {s.pnlNeto >= 0 ? '+' : ''}
-                        {s.pnlNeto.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {totalPaginas > 1 && (
-              <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-[var(--border)]">
-                <button
-                  onClick={() => setPagina(p => Math.max(1, p - 1))}
-                  disabled={pagina === 1}
-                  className="label-mono text-xs px-3 py-2 rounded border border-[var(--border)] disabled:opacity-30 hover:border-[var(--gold)] hover:text-[var(--gold)] transition-colors"
-                >
-                  ← Anterior
-                </button>
-                <span className="text-xs text-[var(--text-muted)] font-mono">
-                  Página {pagina} de {totalPaginas}
-                </span>
-                <button
-                  onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
-                  disabled={pagina === totalPaginas}
-                  className="label-mono text-xs px-3 py-2 rounded border border-[var(--border)] disabled:opacity-30 hover:border-[var(--gold)] hover:text-[var(--gold)] transition-colors"
-                >
-                  Siguiente →
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
     </div>
   )
 }

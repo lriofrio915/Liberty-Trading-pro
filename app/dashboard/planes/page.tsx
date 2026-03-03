@@ -7,28 +7,35 @@ export default async function PlanesPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   let plans: any[] = []
+  let retiros: any[] = []
 
   try {
     const dbUser = await prisma.user.findUnique({ where: { authId: user?.id } })
     if (dbUser) {
-      plans = await prisma.tradingPlan.findMany({
-        where: { userId: dbUser.id },
-        orderBy: { createdAt: 'desc' },
-        include: {
-          sessions: {
-            select: {
-              id: true,
-              date: true,
-              resultado: true,
-              pnlNeto: true,
-              instrumento: true,
-              direccion: true,
+      ;[plans, retiros] = await Promise.all([
+        prisma.tradingPlan.findMany({
+          where: { userId: dbUser.id },
+          orderBy: { createdAt: 'desc' },
+          include: {
+            sessions: {
+              select: {
+                id: true,
+                date: true,
+                resultado: true,
+                pnlNeto: true,
+                instrumento: true,
+                direccion: true,
+              },
             },
           },
-        },
-      })
+        }),
+        prisma.retiro.findMany({
+          where: { userId: dbUser.id },
+          select: { planId: true, monto: true },
+        }),
+      ])
     }
   } catch {}
 
-  return <PlanesClient initialPlans={plans} />
+  return <PlanesClient initialPlans={plans} initialRetiros={retiros} />
 }

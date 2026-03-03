@@ -14,6 +14,11 @@ interface PlanSession {
   direccion: string
 }
 
+interface Retiro {
+  planId: string | null
+  monto: number
+}
+
 interface TradingPlan {
   id: string
   name: string
@@ -61,32 +66,73 @@ const INSTRUMENTS = ['NQ', 'MNQ', 'ES', 'MES', 'BTC', 'ETH', 'Otro']
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function computeStats(sessions: PlanSession[]) {
+function normPnl(s: PlanSession): number {
+  const abs = Math.abs(s.pnlNeto)
+  if (s.resultado === 'WIN') return abs
+  if (s.resultado === 'LOSS') return -abs
+  return s.pnlNeto
+}
+
+function computeStats(plan: TradingPlan, retiros: Retiro[]) {
+  const sessions = plan.sessions
   const wins = sessions.filter(s => s.resultado === 'WIN')
   const losses = sessions.filter(s => s.resultado === 'LOSS')
-  const pnl = sessions.reduce((sum, s) => {
-    const abs = Math.abs(s.pnlNeto)
-    if (s.resultado === 'WIN') return sum + abs
-    if (s.resultado === 'LOSS') return sum - abs
-    return sum + s.pnlNeto
-  }, 0)
-  const winRate = sessions.length > 0 ? (wins.length / sessions.length) * 100 : 0
-  const winsGross = wins.reduce((s, t) => s + Math.abs(t.pnlNeto), 0)
-  const lossesGross = losses.reduce((s, t) => s + Math.abs(t.pnlNeto), 0)
-  const profitFactor = lossesGross > 0 ? winsGross / lossesGross : wins.length > 0 ? Infinity : 0
 
-  // Max Drawdown
+  // Net PnL from sessions
+  const pnlNeto = sessions.reduce((sum, s) => sum + normPnl(s), 0)
+
+  // Retiros para este plan
+  const totalRetiros = retiros
+    .filter(r => r.planId === plan.id)
+    .reduce((sum, r) => sum + r.monto, 0)
+
+  // Meses transcurridos desde creación del plan (mínimo 1)
+  const createdAt = new Date(plan.createdAt)
+  const now = new Date()
+  const mesesTranscurridos = Math.max(
+    1,
+    (now.getFullYear() - createdAt.getFullYear()) * 12 + (now.getMonth() - createdAt.getMonth()) + 1
+  )
+
+  // Capital actual
+  const dataFeedTotal = (plan.dataFeedMensual ?? 0) * mesesTranscurridos
+  const comisionesTotal = sessions.length * (plan.comisionPorTrade ?? 0)
+  const capitalActual = plan.capitalInicial + pnlNeto - totalRetiros - dataFeedTotal - comisionesTotal
+
+  // Riesgo real
+  const lossPnls = losses.map(s => Math.abs(normPnl(s)))
+  const perdidaPromedio = lossPnls.length ? lossPnls.reduce((a, b) => a + b, 0) / lossPnls.length : 0
+  const riesgoRealPct = capitalActual > 0 ? (perdidaPromedio / capitalActual) * 100 : 0
+
+  // RR real
+  const winPnls = wins.map(s => normPnl(s))
+  const gananciaPromedio = winPnls.length ? winPnls.reduce((a, b) => a + b, 0) / winPnls.length : 0
+  const rrReal = perdidaPromedio > 0 ? gananciaPromedio / perdidaPromedio : 0
+
+  // Rendimiento
+  const rendimiento = plan.capitalInicial > 0
+    ? ((capitalActual - plan.capitalInicial) / plan.capitalInicial) * 100
+    : 0
+
+  // Max Drawdown (for drawdown bar)
   let peak = 0, maxDD = 0, balance = 0
   const sorted = [...sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
   sorted.forEach(s => {
-    const p = s.resultado === 'WIN' ? Math.abs(s.pnlNeto) : s.resultado === 'LOSS' ? -Math.abs(s.pnlNeto) : s.pnlNeto
-    balance += p
+    balance += normPnl(s)
     if (balance > peak) peak = balance
     const dd = peak - balance
     if (dd > maxDD) maxDD = dd
   })
 
-  return { total: sessions.length, wins: wins.length, losses: losses.length, pnl, winRate, profitFactor, maxDrawdown: maxDD }
+  return {
+    total: sessions.length,
+    capitalActual,
+    rendimiento,
+    riesgoRealPct,
+    rrReal,
+    pnlNeto,
+    maxDrawdown: maxDD,
+  }
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -396,8 +442,15 @@ function PlanModal({ mode, form, set, saving, onSubmit, onClose }: ModalProps) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function PlanesClient({ initialPlans }: { initialPlans: TradingPlan[] }) {
+export default function PlanesClient({
+  initialPlans,
+  initialRetiros = [],
+}: {
+  initialPlans: TradingPlan[]
+  initialRetiros?: Retiro[]
+}) {
   const [plans, setPlans] = useState<TradingPlan[]>(initialPlans)
+  const retiros = initialRetiros // retiros are read-only here, fetched server-side
   const [modalMode, setModalMode] = useState<'new' | 'edit' | null>(null)
   const [editingPlan, setEditingPlan] = useState<TradingPlan | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -598,18 +651,18 @@ export default function PlanesClient({ initialPlans }: { initialPlans: TradingPl
       ) : (
         <div className="space-y-4">
           {plans.map(plan => {
-            const stats = computeStats(plan.sessions)
+            const stats = computeStats(plan, retiros)
             const isExpanded = expandedId === plan.id
-
-            // Cost line for card
-            const costParts: string[] = []
-            if (plan.dataFeedMensual) costParts.push(`Data Feed: $${plan.dataFeedMensual}/mes`)
-            if (plan.comisionPorTrade) costParts.push(`Comision: $${plan.comisionPorTrade}/trade`)
 
             // Calculator
             const tradesNum = parseInt(tradesPerMonth) || 0
             const totalComisiones = plan.comisionPorTrade ? plan.comisionPorTrade * tradesNum : 0
             const totalOperativo = (plan.dataFeedMensual ?? 0) + totalComisiones
+
+            // Theoretical risk in USD
+            const riesgoUSD = plan.capitalInicial > 0
+              ? (plan.riesgo / 100) * plan.capitalInicial
+              : plan.riesgoPorTrade
 
             return (
               <div key={plan.id} className={`card-gold transition-all ${!plan.active ? 'opacity-60' : ''}`}>
@@ -628,11 +681,6 @@ export default function PlanesClient({ initialPlans }: { initialPlans: TradingPl
                     <div className="text-xs text-[var(--text-muted)] mt-0.5">
                       {plan.broker}{plan.accountName ? ` · ${plan.accountName}` : ''}
                     </div>
-                    {costParts.length > 0 && (
-                      <div className="text-[10px] text-[var(--text-muted)] mt-1">
-                        {costParts.join(' | ')}
-                      </div>
-                    )}
                   </div>
                   <div className="flex items-center gap-0.5 shrink-0">
                     <button
@@ -658,56 +706,59 @@ export default function PlanesClient({ initialPlans }: { initialPlans: TradingPl
                   </div>
                 </div>
 
-                {/* Plan info grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-4">
+                {/* Fila teórica — valores del plan */}
+                <div className="grid grid-cols-3 gap-3 mb-3">
                   {[
-                    { label: 'Capital', value: `$${plan.capitalInicial.toLocaleString()}` },
-                    { label: 'Riesgo/Trade', value: `${plan.riesgo}%` },
-                    { label: 'R:R Objetivo', value: `${plan.rrRatio}:1` },
-                    { label: 'Instrumento', value: plan.instrumento },
+                    { label: 'Capital Inicial', value: `$${plan.capitalInicial.toLocaleString()}` },
+                    { label: 'Riesgo / Trade', value: `${plan.riesgo}% ($${riesgoUSD.toFixed(0)})` },
+                    { label: 'R:R Objetivo', value: `1:${plan.rrRatio}` },
                   ].map(item => (
-                    <div key={item.label}>
-                      <div className="label-mono text-[9px] mb-0.5">{item.label}</div>
-                      <div className="font-medium">{item.value}</div>
+                    <div key={item.label} className="bg-black/20 rounded-lg py-2.5 px-3">
+                      <div className="label-mono text-[8px] text-[var(--text-muted)] mb-0.5">{item.label}</div>
+                      <div className="text-sm font-bold text-white">{item.value}</div>
                     </div>
                   ))}
                 </div>
 
-                {/* Stats from linked sessions */}
-                {stats.total > 0 && (
-                  <div className="grid grid-cols-4 gap-2 mb-4">
+                {/* Separator */}
+                <div className="border-t border-[var(--border)] mb-3" />
+
+                {/* Fila real — calculada desde sesiones */}
+                {stats.total > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                     {[
-                      { label: 'Trades', value: stats.total, color: 'var(--gold)' },
                       {
-                        label: 'Win Rate',
-                        value: `${stats.winRate.toFixed(0)}%`,
-                        color: stats.winRate >= 50 ? 'var(--green)' : 'var(--red)',
+                        label: 'Capital Actual (real)',
+                        value: `$${stats.capitalActual.toLocaleString('es', { maximumFractionDigits: 0 })}`,
+                        color: stats.capitalActual >= plan.capitalInicial ? 'var(--green)' : 'var(--red)',
                       },
                       {
-                        label: 'PnL Total',
-                        value: `${stats.pnl >= 0 ? '+' : ''}$${stats.pnl.toFixed(0)}`,
-                        color: stats.pnl >= 0 ? 'var(--green)' : 'var(--red)',
+                        label: 'Riesgo Real',
+                        value: `${stats.riesgoRealPct.toFixed(2)}% prom.`,
+                        color: 'var(--text-secondary)',
                       },
                       {
-                        label: 'Profit F.',
-                        value: isFinite(stats.profitFactor) ? stats.profitFactor.toFixed(2) : '∞',
-                        color: stats.profitFactor >= 1.5 ? 'var(--green)' : 'var(--text-muted)',
+                        label: 'RR Real',
+                        value: stats.rrReal > 0 ? `1:${stats.rrReal.toFixed(2)}` : '—',
+                        color: stats.rrReal >= plan.rrRatio ? 'var(--green)' : 'var(--gold)',
+                      },
+                      {
+                        label: 'Rendimiento',
+                        value: `${stats.rendimiento >= 0 ? '+' : ''}${stats.rendimiento.toFixed(2)}%`,
+                        color: stats.rendimiento >= 0 ? 'var(--green)' : 'var(--red)',
                       },
                     ].map(s => (
-                      <div key={s.label} className="bg-black/30 rounded-lg py-2 px-3 text-center">
-                        <div
-                          className="text-base font-black"
-                          style={{ color: s.color, fontFamily: 'var(--font-serif)' }}
-                        >
+                      <div key={s.label} className="bg-black/30 rounded-lg py-2.5 px-3">
+                        <div className="label-mono text-[8px] mb-0.5" style={{ color: 'rgba(201,168,76,0.6)' }}>
+                          {s.label}
+                        </div>
+                        <div className="text-sm font-black" style={{ color: s.color, fontFamily: 'var(--font-serif)' }}>
                           {s.value}
                         </div>
-                        <div className="label-mono text-[8px] mt-0.5">{s.label}</div>
                       </div>
                     ))}
                   </div>
-                )}
-
-                {stats.total === 0 && (
+                ) : (
                   <div className="text-xs text-[var(--text-muted)] mb-4">Sin operaciones vinculadas aun</div>
                 )}
 

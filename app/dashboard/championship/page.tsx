@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import EquityChart from './EquityChart'
 
 const MENTOR_EMAIL = 'lriofrio915@gmail.com'
 const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
@@ -56,6 +57,13 @@ export default async function ChampionshipPage() {
       })
       mentor = mentorUser
       mentorMetrics = calcMetrics(mentorSessions)
+
+      // Build equity curve data with dates for the line chart
+      let cum = 0
+      mentorMetrics.equityData = mentorSessions.map(s => {
+        cum += s.pnlNeto || 0
+        return { fecha: String(s.date).slice(0, 10), equity: cum, pnl: s.pnlNeto }
+      })
     }
 
     // Top 10 alumnos (min 10 trades)
@@ -141,29 +149,9 @@ export default async function ChampionshipPage() {
               ))}
             </div>
 
-            {/* Equity curve — simple bar chart */}
-            {mentorMetrics.equityCurve.length > 1 && (
-              <div>
-                <div className="label-mono text-[9px] mb-2">Equity Curve</div>
-                <div className="h-16 flex items-end gap-[1px]">
-                  {mentorMetrics.equityCurve.map((val: number, i: number) => {
-                    const range = (mentorMetrics.maxEquity - mentorMetrics.minEquity) || 1
-                    const heightPct = ((val - mentorMetrics.minEquity) / range) * 100
-                    return (
-                      <div
-                        key={i}
-                        style={{
-                          height: `${Math.max(2, heightPct)}%`,
-                          flex: 1,
-                          background: val >= 0 ? 'var(--green)' : 'var(--red)',
-                          opacity: 0.8,
-                          borderRadius: '1px 1px 0 0',
-                        }}
-                      />
-                    )
-                  })}
-                </div>
-              </div>
+            {/* Equity curve — line chart */}
+            {mentorMetrics.equityData?.length > 1 && (
+              <EquityChart data={mentorMetrics.equityData} />
             )}
           </div>
         </div>

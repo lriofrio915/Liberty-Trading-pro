@@ -153,59 +153,16 @@ export default function TrackRecordClient({
     const total = filtered.length
     const wins = filtered.filter(s => s.resultado === 'WIN')
     const losses = filtered.filter(s => s.resultado === 'LOSS')
-    const allPnls = filtered.map(s => normalizePnl(s.pnlNeto ?? 0, s.resultado))
-    const pnl = allPnls.reduce((sum, p) => sum + p, 0)
-
     const winPnls = wins.map(s => normalizePnl(s.pnlNeto ?? 0, s.resultado))
     const lossPnls = losses.map(s => Math.abs(normalizePnl(s.pnlNeto ?? 0, s.resultado)))
-
-    const mejorTrade = allPnls.length ? Math.max(...allPnls) : 0
-    const peorTrade = allPnls.length ? Math.min(...allPnls) : 0
     const avgGanador = winPnls.length ? winPnls.reduce((s, p) => s + p, 0) / winPnls.length : 0
     const avgPerdedor = lossPnls.length ? lossPnls.reduce((s, p) => s + p, 0) / lossPnls.length : 0
     const rrPromedio = avgPerdedor > 0 ? avgGanador / avgPerdedor : 0
-
-    // Max Drawdown
-    const sorted = [...filtered].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    let peak = 0, maxDD = 0, balance = 0
-    sorted.forEach(s => {
-      balance += normalizePnl(s.pnlNeto ?? 0, s.resultado)
-      if (balance > peak) peak = balance
-      const dd = peak - balance
-      if (dd > maxDD) maxDD = dd
-    })
-
-    // Racha por días (group by calendar day, positive/negative cumulative PnL)
-    const byDay: Record<string, number> = {}
-    sorted.forEach(s => {
-      const day = new Date(s.date).toLocaleDateString('en-CA', { timeZone: TZ })
-      byDay[day] = (byDay[day] ?? 0) + normalizePnl(s.pnlNeto ?? 0, s.resultado)
-    })
-    const dayKeys = Object.keys(byDay).sort()
-    let curGan = 0, curPer = 0, maxRachaGan = 0, maxRachaPer = 0
-    dayKeys.forEach(day => {
-      if (byDay[day] > 0) {
-        curGan++; curPer = 0
-        if (curGan > maxRachaGan) maxRachaGan = curGan
-      } else if (byDay[day] < 0) {
-        curPer++; curGan = 0
-        if (curPer > maxRachaPer) maxRachaPer = curPer
-      }
-    })
-
     return {
       total,
       wins: wins.length,
-      pnl,
       winRate: total > 0 ? (wins.length / total) * 100 : 0,
-      mejorTrade,
-      peorTrade,
-      avgGanador,
-      avgPerdedor,
       rrPromedio,
-      maxDrawdown: maxDD,
-      rachaGanadora: maxRachaGan,
-      rachaPerdedora: maxRachaPer,
     }
   }, [filtered])
 
@@ -443,47 +400,12 @@ export default function TrackRecordClient({
         )}
       </div>
 
-      {/* Metrics — Fila 1 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+      {/* Metrics — 3 cards */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Total Trades', value: metrics.total, color: 'var(--gold)' },
           { label: 'Win Rate', value: `${metrics.winRate.toFixed(1)}%`, color: metrics.winRate >= 50 ? 'var(--green)' : 'var(--red)' },
-          { label: 'Ganadoras', value: metrics.wins, color: 'var(--green)' },
-          { label: 'PnL Total', value: `${metrics.pnl >= 0 ? '+' : ''}$${metrics.pnl.toFixed(0)}`, color: metrics.pnl >= 0 ? 'var(--green)' : 'var(--red)' },
-        ].map(stat => (
-          <div key={stat.label} className="card text-center py-4">
-            <div className="text-2xl font-black mb-1" style={{ color: stat.color, fontFamily: 'var(--font-serif)' }}>
-              {stat.value}
-            </div>
-            <div className="label-mono text-[10px]">{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Metrics — Fila 2 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-        {[
-          { label: 'Mejor Trade', value: `${metrics.mejorTrade >= 0 ? '+' : ''}$${metrics.mejorTrade.toFixed(0)}`, color: 'var(--green)' },
-          { label: 'Peor Trade', value: `$${metrics.peorTrade.toFixed(0)}`, color: 'var(--red)' },
-          { label: 'Prom. Ganador', value: metrics.avgGanador > 0 ? `+$${metrics.avgGanador.toFixed(0)}` : '$0', color: 'var(--green)' },
-          { label: 'Prom. Perdedor', value: metrics.avgPerdedor > 0 ? `-$${metrics.avgPerdedor.toFixed(0)}` : '$0', color: 'var(--red)' },
-        ].map(stat => (
-          <div key={stat.label} className="card text-center py-4">
-            <div className="text-2xl font-black mb-1" style={{ color: stat.color, fontFamily: 'var(--font-serif)' }}>
-              {stat.value}
-            </div>
-            <div className="label-mono text-[10px]">{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Metrics — Fila 3 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {[
+          { label: 'Total Trades', value: metrics.total, color: 'var(--gold)' },
           { label: 'RR Promedio', value: `1:${metrics.rrPromedio.toFixed(2)}`, color: 'var(--gold)' },
-          { label: 'Racha Ganadora', value: `${metrics.rachaGanadora} días`, color: 'var(--green)' },
-          { label: 'Racha Perdedora', value: `${metrics.rachaPerdedora} días`, color: 'var(--red)' },
-          { label: 'Max Drawdown', value: metrics.maxDrawdown > 0 ? `-$${metrics.maxDrawdown.toFixed(0)}` : '$0', color: metrics.maxDrawdown > 0 ? 'var(--red)' : 'var(--text-muted)' },
         ].map(stat => (
           <div key={stat.label} className="card text-center py-4">
             <div className="text-2xl font-black mb-1" style={{ color: stat.color, fontFamily: 'var(--font-serif)' }}>
