@@ -453,7 +453,7 @@ export default function ReportesClient() {
 
             {!analysis && !aiLoading && (
               <div className="text-center py-6 text-[var(--text-muted)] text-xs">
-                Haz clic en "Generar análisis" para que Vinces revise tu operativa
+                Haz clic en &quot;Generar análisis&quot; para que Vinces revise tu operativa
               </div>
             )}
           </div>
