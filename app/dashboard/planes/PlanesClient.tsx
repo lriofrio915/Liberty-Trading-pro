@@ -780,58 +780,6 @@ export default function PlanesClient({
                   <div className="text-xs text-[var(--text-muted)] mb-4">Sin operaciones vinculadas aun</div>
                 )}
 
-                {/* Gráfica de rendimiento mensual */}
-                {plan.sessions.length > 0 && (() => {
-                  const pnlPorMes = plan.sessions.reduce((acc: Record<string, number>, s) => {
-                    const mes = s.date?.toString().slice(0, 7)
-                    if (!mes) return acc
-                    acc[mes] = (acc[mes] || 0) + normPnl(s)
-                    return acc
-                  }, {})
-                  const dataGrafica = Object.entries(pnlPorMes)
-                    .sort(([a], [b]) => a.localeCompare(b))
-                    .map(([mes, pnl]) => ({
-                      mes: new Date(mes + '-01').toLocaleDateString('es', { month: 'short', year: '2-digit' }),
-                      pnl: parseFloat(pnl.toFixed(2)),
-                      positivo: pnl >= 0,
-                    }))
-                  if (dataGrafica.length === 0) return null
-                  return (
-                    <div className="mb-4">
-                      <div className="label-mono text-[9px] text-[var(--gold)] mb-2">RENDIMIENTO MENSUAL</div>
-                      <ResponsiveContainer width="100%" height={180}>
-                        <BarChart data={dataGrafica} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                          <XAxis
-                            dataKey="mes"
-                            tick={{ fill: '#6B6560', fontSize: 10, fontFamily: 'monospace' }}
-                            axisLine={false}
-                            tickLine={false}
-                          />
-                          <YAxis hide />
-                          <Tooltip
-                            formatter={(v: string | number | undefined) => [typeof v === 'number' ? v.toFixed(2) : `${v ?? ''}`, 'PnL']}
-                            contentStyle={{
-                              background: '#111',
-                              border: '1px solid rgba(201,168,76,0.2)',
-                              fontFamily: 'monospace',
-                              fontSize: 11,
-                            }}
-                          />
-                          <ReferenceLine y={0} stroke="rgba(255,255,255,0.1)" />
-                          <Bar dataKey="pnl" radius={[3, 3, 0, 0]} maxBarSize={40}>
-                            {dataGrafica.map((entry, i) => (
-                              <Cell
-                                key={i}
-                                fill={entry.positivo ? '#4CAF50' : '#F44336'}
-                                fillOpacity={0.8}
-                              />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )
-                })()}
 
                 {/* Expanded detail */}
                 {isExpanded && (
