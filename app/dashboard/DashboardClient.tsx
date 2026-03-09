@@ -151,10 +151,7 @@ export default function DashboardClient({
   userPlan: string | null
   plans?: Plan[]
 }) {
-  const [mesSeleccionado, setMesSeleccionado] = useState(() => {
-    const now = new Date()
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  })
+  const [mesSeleccionado, setMesSeleccionado] = useState('all')
   const [planSeleccionado, setPlanSeleccionado] = useState('all')
   const [benchmark, setBenchmark] = useState<Benchmark | null>(null)
 

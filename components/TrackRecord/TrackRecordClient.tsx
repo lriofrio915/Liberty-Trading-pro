@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef, useCallback } from 'react'
+import React, { useState, useMemo, useRef, useCallback } from 'react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -445,9 +445,8 @@ export default function TrackRecordClient({
               </thead>
               <tbody>
                 {filtered.map(s => (
-                  <>
+                  <React.Fragment key={s.id}>
                     <tr
-                      key={s.id}
                       className="border-b border-[var(--border)] hover:bg-[var(--bg-hover)] transition-colors"
                     >
                       {/* Fecha — timezone-safe */}
@@ -524,7 +523,7 @@ export default function TrackRecordClient({
 
                     {/* Expanded details */}
                     {expandedRow === s.id && (
-                      <tr key={`${s.id}-detail`} className="bg-[var(--bg-secondary)]">
+                      <tr className="bg-[var(--bg-secondary)]">
                         <td colSpan={7} className="px-4 py-4">
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {s.entryPrice != null && (
@@ -580,7 +579,7 @@ export default function TrackRecordClient({
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>

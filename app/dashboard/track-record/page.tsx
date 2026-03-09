@@ -10,8 +10,16 @@ export default async function TrackRecordPage() {
   let plans: { id: string; name: string }[] = []
 
   try {
-    const dbUser = await prisma.user.findUnique({ where: { authId: user?.id } })
-    if (dbUser) {
+    if (user) {
+      const dbUser = await prisma.user.upsert({
+        where: { authId: user.id },
+        update: {},
+        create: {
+          authId: user.id,
+          email: user.email ?? user.id,
+          name: (user.user_metadata?.name as string) || user.email?.split('@')[0] || 'Trader',
+        },
+      })
       ;[sessions, plans] = await Promise.all([
         prisma.tradingSession.findMany({
           where: { userId: dbUser.id },
