@@ -259,8 +259,8 @@ export default function ConocimientoPage() {
       {/* ── Add/Edit modal ── */}
       {showForm && (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.8)' }}>
-          <div className="flex justify-center p-4 pt-16 pb-16">
-          <div className="w-full max-w-2xl rounded-2xl border border-[var(--border)] shadow-2xl" style={{ background: 'var(--bg-card)' }}>
+          <div className="min-h-full flex justify-center px-4 py-16">
+          <div className="w-full max-w-2xl h-fit rounded-2xl border border-[var(--border)] shadow-2xl" style={{ background: 'var(--bg-card)' }}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
               <h2 className="font-bold text-[var(--text-primary)]">{editId ? 'Editar documento' : 'Nuevo documento'}</h2>
               <button onClick={() => { setShowForm(false); setEditId(null) }} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">✕</button>
