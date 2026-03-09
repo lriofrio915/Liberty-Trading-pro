@@ -247,21 +247,19 @@ export default function ReportesClient() {
     // ── Screenshots annexe ─────────────────────────────────────────────────────
     const screenshots = sessions.filter(s => s.screenshotUrl)
     const annexe = screenshots.length > 0 ? `
-      <div style="page-break-before:always">
-        <h2 style="color:#C9A84C;font-size:15px;margin-bottom:16px;border-bottom:1px solid #333;padding-bottom:8px">
-          ANEXOS — Capturas de Entradas
-        </h2>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div style="page-break-before:always;padding-top:8px">
+        <div class="section-title">Anexos — Capturas de entradas</div>
+        <div class="screenshot-grid">
           ${screenshots.map(s => `
-            <div style="break-inside:avoid">
-              <div style="font-size:10px;color:#888;margin-bottom:6px">
-                ${new Date(s.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: '2-digit' })}
+            <div class="screenshot-item">
+              <div style="font-size:10px;color:#888;margin-bottom:6px;line-height:1.6">
+                <strong style="color:#e0e0e0">${new Date(s.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: '2-digit' })}</strong>
                 &nbsp;·&nbsp;${s.instrumento} ${s.direccion}
-                &nbsp;·&nbsp;<span style="color:${s.resultado === 'WIN' ? '#4CAF50' : s.resultado === 'LOSS' ? '#F44336' : '#aaa'}">${s.resultado}</span>
-                &nbsp;·&nbsp;<span style="color:${s.pnlNeto >= 0 ? '#4CAF50' : '#F44336'}">${s.pnlNeto >= 0 ? '+' : ''}$${s.pnlNeto.toFixed(2)}</span>
+                &nbsp;·&nbsp;<span style="color:${s.resultado === 'WIN' ? '#4CAF50' : s.resultado === 'LOSS' ? '#F44336' : '#aaa'};font-weight:bold">${s.resultado}</span>
+                &nbsp;·&nbsp;<span style="color:${s.pnlNeto >= 0 ? '#4CAF50' : '#F44336'};font-weight:bold">${s.pnlNeto >= 0 ? '+' : ''}$${s.pnlNeto.toFixed(2)}</span>
               </div>
-              <img src="${s.screenshotUrl}" style="width:100%;border-radius:6px;border:1px solid #333" crossorigin="anonymous"/>
-              ${s.notas ? `<div style="font-size:10px;color:#888;margin-top:4px">${s.notas}</div>` : ''}
+              <img src="${s.screenshotUrl}" style="width:100%;border-radius:6px;border:1px solid #333;display:block" crossorigin="anonymous"/>
+              ${s.notas ? `<div style="font-size:10px;color:#888;margin-top:5px;line-height:1.5">${s.notas}</div>` : ''}
             </div>
           `).join('')}
         </div>
@@ -274,29 +272,62 @@ export default function ReportesClient() {
       <html><head><title>Reporte ${label}</title>
       <style>
         * { box-sizing: border-box; }
-        body { font-family: monospace; background: #0a0a0a; color: #e0e0e0; padding: 32px; max-width: 800px; margin: 0 auto; }
+        @page { margin: 20mm 18mm; }
+        body { font-family: monospace; background: #0a0a0a; color: #e0e0e0; padding: 28px; max-width: 800px; margin: 0 auto; }
         h1 { color: #C9A84C; font-size: 22px; margin-bottom: 4px; }
-        .sub { color: #888; font-size: 12px; margin-bottom: 24px; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
-        .kpi { background: #111; border: 1px solid #333; border-radius: 8px; padding: 12px; }
+        .sub { color: #888; font-size: 12px; margin-bottom: 20px; }
+
+        /* KPIs — nunca se parten */
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; page-break-inside: avoid; break-inside: avoid; }
+        .kpi { background: #111; border: 1px solid #333; border-radius: 8px; padding: 12px; page-break-inside: avoid; break-inside: avoid; }
         .kpi-label { font-size: 9px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
         .kpi-val { font-size: 17px; font-weight: 900; margin-top: 4px; }
-        .chart-box { background: #111; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+
+        /* Curva — no se parte */
+        .chart-box { background: #111; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 20px; page-break-inside: avoid; break-inside: avoid; }
         .chart-title { font-size: 9px; color: #C9A84C; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 24px; }
-        th { text-align: left; padding: 6px 8px; color: #C9A84C; border-bottom: 1px solid #333; font-size: 9px; text-transform: uppercase; }
-        .analysis { background: #111; border: 1px solid #333; border-radius: 8px; padding: 16px; font-size: 12px; line-height: 1.8; margin-bottom: 24px; }
+
+        /* Tabla — encabezado se repite en cada página */
+        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; }
+        thead { display: table-header-group; }
+        tfoot { display: table-footer-group; }
+        th { text-align: left; padding: 7px 8px; color: #C9A84C; border-bottom: 1px solid #333; font-size: 9px; text-transform: uppercase; background: #0a0a0a; }
+        tr { page-break-inside: avoid; break-inside: avoid; }
+        td { padding: 6px 8px; vertical-align: top; }
+        /* Separación visual entre filas */
+        tbody tr { border-bottom: 1px solid #1e1e1e; }
+        tbody tr:last-child { border-bottom: none; }
+
+        /* Análisis — no rompe párrafos */
+        .analysis { background: #111; border: 1px solid #333; border-radius: 8px; padding: 20px; font-size: 12px; line-height: 1.9; margin-bottom: 20px; page-break-inside: avoid; break-inside: avoid; orphans: 3; widows: 3; }
+        .analysis p, .analysis div { orphans: 2; widows: 2; }
+
+        /* Sección título (tabla, análisis, anexos) */
+        .section-title { font-size: 9px; color: #C9A84C; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; page-break-after: avoid; break-after: avoid; }
+
+        /* Cada screenshot no se parte */
+        .screenshot-item { break-inside: avoid; page-break-inside: avoid; margin-bottom: 20px; }
+        .screenshot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
         @media print {
-          body { background: white; color: #111; }
+          body { background: white; color: #111; padding: 0; }
+          h1 { color: #8a6520; }
+          .sub { color: #666; }
           .kpi { background: #f7f7f7; border-color: #ddd; }
+          .kpi-label { color: #999; }
+          .kpi-val { color: #111; }
           .chart-box { background: #f7f7f7; border-color: #ddd; }
-          .analysis { background: #f7f7f7; border-color: #ddd; }
-          img { max-width: 100%; }
+          .analysis { background: #f7f7f7; border-color: #ddd; color: #222; }
+          th { background: white; color: #8a6520; border-bottom-color: #ccc; }
+          tbody tr { border-bottom-color: #eee; }
+          img { max-width: 100%; border-color: #ddd !important; }
+          .section-title { color: #8a6520; }
         }
       </style></head><body>
       <h1>Reporte de Operativa</h1>
       <div class="sub">Periodo: ${label} &nbsp;|&nbsp; Generado: ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
 
+      <div class="section-title">Resumen del período</div>
       <div class="grid">
         <div class="kpi"><div class="kpi-label">Total Trades</div><div class="kpi-val">${stats.total}</div><div style="font-size:10px;color:#666;margin-top:2px">${stats.wins}G · ${stats.losses}P</div></div>
         <div class="kpi"><div class="kpi-label">Win Rate</div><div class="kpi-val" style="color:${stats.winRate >= 50 ? '#4CAF50' : '#F44336'}">${stats.winRate.toFixed(1)}%</div></div>
@@ -313,12 +344,19 @@ export default function ReportesClient() {
         ${equitySvg}
       </div>
 
+      <div class="section-title">Operaciones del período</div>
       <table>
         <thead><tr><th>Fecha</th><th>Instrumento</th><th>Dirección</th><th>Resultado</th><th style="text-align:right">PnL</th><th style="text-align:right">RR</th><th>Notas</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
 
-      ${analysis ? `<div class="analysis"><div style="color:#C9A84C;font-weight:bold;margin-bottom:8px">Análisis Vinces AI</div>${analysis.replace(/\n/g, '<br/>')}</div>` : ''}
+      ${analysis ? `
+        <div class="section-title">Análisis Vinces AI</div>
+        <div class="analysis">${analysis
+          .split('\n\n')
+          .map(p => `<p style="margin-bottom:10px">${p.replace(/\n/g, '<br/>')}</p>`)
+          .join('')
+        }</div>` : ''}
 
       ${annexe}
       </body></html>
