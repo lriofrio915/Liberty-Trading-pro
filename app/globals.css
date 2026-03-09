@@ -24,6 +24,27 @@
   --font-sans: 'Syne', system-ui, sans-serif;
 }
 
+/* ─── Light mode ─── */
+html.light {
+  --bg-primary: #f5f2eb;
+  --bg-secondary: #edeae1;
+  --bg-card: #ffffff;
+  --panel: #ffffff;
+  --bg-hover: #e4e0d6;
+  --text-primary: #1a1612;
+  --text-secondary: #6b6460;
+  --text-muted: #9a9490;
+  --border: #d8d3c8;
+  --green: #00966e;
+  --red: #d93535;
+}
+html.light body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+html.light ::-webkit-scrollbar-track { background: var(--bg-primary); }
+html.light .leaflet-container { background: #e8e4d8; }
+
 * { box-sizing: border-box; padding: 0; margin: 0; }
 
 html, body {
