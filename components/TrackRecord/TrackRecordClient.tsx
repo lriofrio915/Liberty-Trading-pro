@@ -586,8 +586,9 @@ export default function TrackRecordClient({
 
       {/* ── Modal (New / Edit) ── */}
       {modalMode !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
-          <div className="card-panel w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.85)' }}>
+          <div className="min-h-full flex justify-center px-4 py-12">
+          <div className="card-panel w-full max-w-2xl h-fit relative">
             <button onClick={closeModal} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-white text-xl">✕</button>
 
             <div className="label-mono mb-1 text-[var(--gold)]">
@@ -708,32 +709,6 @@ export default function TrackRecordClient({
                 />
               </div>
 
-              {/* Entrada */}
-              <div>
-                <label className="label-mono text-[10px] block mb-1.5">Precio de entrada (opcional)</label>
-                <input
-                  type="number"
-                  step="0.25"
-                  placeholder="ej. 21450.00"
-                  value={form.entryPrice}
-                  onChange={e => set('entryPrice', e.target.value)}
-                  className="input text-sm"
-                />
-              </div>
-
-              {/* Salida */}
-              <div>
-                <label className="label-mono text-[10px] block mb-1.5">Precio de salida (opcional)</label>
-                <input
-                  type="number"
-                  step="0.25"
-                  placeholder="ej. 21530.00"
-                  value={form.exitPrice}
-                  onChange={e => set('exitPrice', e.target.value)}
-                  className="input text-sm"
-                />
-              </div>
-
               {/* Siguió el plan */}
               <div>
                 <label className="label-mono text-[10px] block mb-1.5">¿Siguió el plan?</label>
@@ -824,6 +799,7 @@ export default function TrackRecordClient({
                 Cancelar
               </button>
             </div>
+          </div>
           </div>
         </div>
       )}
