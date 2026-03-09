@@ -26,6 +26,7 @@ interface Session {
   siguioPlan: boolean
   notas: string | null
   sentimiento: string | null
+  screenshotUrl: string | null
 }
 
 interface ReportStats {
@@ -175,6 +176,62 @@ export default function ReportesClient() {
     const label = periodLabel(period, from, to)
     if (!stats) return
 
+    // ── Equity curve SVG ───────────────────────────────────────────────────────
+    const sorted = [...sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    const cumulative: number[] = []
+    let running = 0
+    sorted.forEach(s => { running += s.pnlNeto; cumulative.push(running) })
+
+    const svgW = 680, svgH = 160, padX = 48, padY = 20
+    const innerW = svgW - padX * 2, innerH = svgH - padY * 2
+    const minVal = Math.min(0, ...cumulative)
+    const maxVal = Math.max(0, ...cumulative)
+    const range = maxVal - minVal || 1
+
+    const px = (i: number) => padX + (i / Math.max(cumulative.length - 1, 1)) * innerW
+    const py = (v: number) => padY + innerH - ((v - minVal) / range) * innerH
+    const zeroY = py(0)
+
+    const points = cumulative.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ')
+    const areaPath = cumulative.length > 0
+      ? `M${px(0).toFixed(1)},${zeroY.toFixed(1)} ` +
+        cumulative.map((v, i) => `L${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ') +
+        ` L${px(cumulative.length - 1).toFixed(1)},${zeroY.toFixed(1)} Z`
+      : ''
+
+    const lastVal = cumulative[cumulative.length - 1] ?? 0
+    const lineColor = lastVal >= 0 ? '#4CAF50' : '#F44336'
+
+    const equitySvg = cumulative.length > 1 ? `
+      <svg width="${svgW}" height="${svgH}" style="display:block;margin:0 auto">
+        <defs>
+          <linearGradient id="eg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="${lineColor}" stop-opacity="0.02"/>
+          </linearGradient>
+        </defs>
+        <!-- zero line -->
+        <line x1="${padX}" y1="${zeroY.toFixed(1)}" x2="${svgW - padX}" y2="${zeroY.toFixed(1)}"
+              stroke="#444" stroke-width="1" stroke-dasharray="4,3"/>
+        <!-- area fill -->
+        <path d="${areaPath}" fill="url(#eg)"/>
+        <!-- line -->
+        <polyline points="${points}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <!-- start / end dots -->
+        <circle cx="${px(0).toFixed(1)}" cy="${py(cumulative[0]).toFixed(1)}" r="3" fill="${lineColor}"/>
+        <circle cx="${px(cumulative.length-1).toFixed(1)}" cy="${py(lastVal).toFixed(1)}" r="4" fill="${lineColor}"/>
+        <!-- y labels -->
+        <text x="${padX - 4}" y="${(padY + 4).toFixed(1)}" text-anchor="end" font-size="9" fill="#888">$${maxVal.toFixed(0)}</text>
+        <text x="${padX - 4}" y="${(zeroY + 3).toFixed(1)}" text-anchor="end" font-size="9" fill="#888">$0</text>
+        <text x="${padX - 4}" y="${(svgH - padY + 3).toFixed(1)}" text-anchor="end" font-size="9" fill="#888">$${minVal.toFixed(0)}</text>
+        <!-- final label -->
+        <text x="${(px(cumulative.length-1) + 6).toFixed(1)}" y="${(py(lastVal) + 4).toFixed(1)}"
+              font-size="10" fill="${lineColor}" font-weight="bold">
+          ${lastVal >= 0 ? '+' : ''}$${lastVal.toFixed(0)}
+        </text>
+      </svg>` : '<p style="text-align:center;color:#666;font-size:12px">Sin datos suficientes para la curva</p>'
+
+    // ── Table rows ─────────────────────────────────────────────────────────────
     const rows = sessions.map(s => `
       <tr style="border-bottom:1px solid #222">
         <td style="padding:6px 8px">${new Date(s.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: '2-digit' })}</td>
@@ -183,48 +240,91 @@ export default function ReportesClient() {
         <td style="padding:6px 8px;color:${s.resultado === 'WIN' ? '#4CAF50' : s.resultado === 'LOSS' ? '#F44336' : '#aaa'}">${s.resultado}</td>
         <td style="padding:6px 8px;text-align:right;color:${s.pnlNeto >= 0 ? '#4CAF50' : '#F44336'}">${s.pnlNeto >= 0 ? '+' : ''}$${s.pnlNeto.toFixed(2)}</td>
         <td style="padding:6px 8px;text-align:right">${s.rrReal !== null ? s.rrReal.toFixed(2) : '—'}</td>
-        <td style="padding:6px 8px;max-width:200px;font-size:11px;color:#aaa">${s.notas || ''}</td>
+        <td style="padding:6px 8px;max-width:180px;font-size:11px;color:#aaa">${s.notas || ''}</td>
       </tr>
     `).join('')
 
+    // ── Screenshots annexe ─────────────────────────────────────────────────────
+    const screenshots = sessions.filter(s => s.screenshotUrl)
+    const annexe = screenshots.length > 0 ? `
+      <div style="page-break-before:always">
+        <h2 style="color:#C9A84C;font-size:15px;margin-bottom:16px;border-bottom:1px solid #333;padding-bottom:8px">
+          ANEXOS — Capturas de Entradas
+        </h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          ${screenshots.map(s => `
+            <div style="break-inside:avoid">
+              <div style="font-size:10px;color:#888;margin-bottom:6px">
+                ${new Date(s.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: '2-digit' })}
+                &nbsp;·&nbsp;${s.instrumento} ${s.direccion}
+                &nbsp;·&nbsp;<span style="color:${s.resultado === 'WIN' ? '#4CAF50' : s.resultado === 'LOSS' ? '#F44336' : '#aaa'}">${s.resultado}</span>
+                &nbsp;·&nbsp;<span style="color:${s.pnlNeto >= 0 ? '#4CAF50' : '#F44336'}">${s.pnlNeto >= 0 ? '+' : ''}$${s.pnlNeto.toFixed(2)}</span>
+              </div>
+              <img src="${s.screenshotUrl}" style="width:100%;border-radius:6px;border:1px solid #333" crossorigin="anonymous"/>
+              ${s.notas ? `<div style="font-size:10px;color:#888;margin-top:4px">${s.notas}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>` : ''
+
+    // ── Print window ───────────────────────────────────────────────────────────
     const win = window.open('', '_blank')
     if (!win) return
     win.document.write(`
       <html><head><title>Reporte ${label}</title>
       <style>
-        body { font-family: monospace; background: #0a0a0a; color: #e0e0e0; padding: 32px; }
-        h1 { color: #C9A84C; font-size: 20px; margin-bottom: 4px; }
+        * { box-sizing: border-box; }
+        body { font-family: monospace; background: #0a0a0a; color: #e0e0e0; padding: 32px; max-width: 800px; margin: 0 auto; }
+        h1 { color: #C9A84C; font-size: 22px; margin-bottom: 4px; }
         .sub { color: #888; font-size: 12px; margin-bottom: 24px; }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
         .kpi { background: #111; border: 1px solid #333; border-radius: 8px; padding: 12px; }
         .kpi-label { font-size: 9px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-        .kpi-val { font-size: 18px; font-weight: 900; margin-top: 4px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { text-align: left; padding: 6px 8px; color: #C9A84C; border-bottom: 1px solid #333; font-size: 10px; text-transform: uppercase; }
-        .analysis { background: #111; border: 1px solid #333; border-radius: 8px; padding: 16px; font-size: 13px; line-height: 1.7; margin-top: 24px; }
-        @media print { body { background: white; color: black; } .kpi { background: #f5f5f5; border-color: #ddd; } .analysis { background: #f9f9f9; border-color: #ddd; } }
+        .kpi-val { font-size: 17px; font-weight: 900; margin-top: 4px; }
+        .chart-box { background: #111; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+        .chart-title { font-size: 9px; color: #C9A84C; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 24px; }
+        th { text-align: left; padding: 6px 8px; color: #C9A84C; border-bottom: 1px solid #333; font-size: 9px; text-transform: uppercase; }
+        .analysis { background: #111; border: 1px solid #333; border-radius: 8px; padding: 16px; font-size: 12px; line-height: 1.8; margin-bottom: 24px; }
+        @media print {
+          body { background: white; color: #111; }
+          .kpi { background: #f7f7f7; border-color: #ddd; }
+          .chart-box { background: #f7f7f7; border-color: #ddd; }
+          .analysis { background: #f7f7f7; border-color: #ddd; }
+          img { max-width: 100%; }
+        }
       </style></head><body>
       <h1>Reporte de Operativa</h1>
-      <div class="sub">Periodo: ${label} &nbsp;|&nbsp; Generado: ${new Date().toLocaleDateString('es-ES')}</div>
+      <div class="sub">Periodo: ${label} &nbsp;|&nbsp; Generado: ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+
       <div class="grid">
-        <div class="kpi"><div class="kpi-label">Total Trades</div><div class="kpi-val">${stats.total}</div></div>
+        <div class="kpi"><div class="kpi-label">Total Trades</div><div class="kpi-val">${stats.total}</div><div style="font-size:10px;color:#666;margin-top:2px">${stats.wins}G · ${stats.losses}P</div></div>
         <div class="kpi"><div class="kpi-label">Win Rate</div><div class="kpi-val" style="color:${stats.winRate >= 50 ? '#4CAF50' : '#F44336'}">${stats.winRate.toFixed(1)}%</div></div>
-        <div class="kpi"><div class="kpi-label">PnL Neto</div><div class="kpi-val" style="color:${stats.pnlNeto >= 0 ? '#4CAF50' : '#F44336'}">${fmtNum(stats.pnlNeto)}</div></div>
-        <div class="kpi"><div class="kpi-label">Profit Factor</div><div class="kpi-val">${stats.profitFactor.toFixed(2)}</div></div>
-        <div class="kpi"><div class="kpi-label">RR Promedio</div><div class="kpi-val">${stats.rrPromedio.toFixed(2)}</div></div>
+        <div class="kpi"><div class="kpi-label">PnL Neto</div><div class="kpi-val" style="color:${stats.pnlNeto >= 0 ? '#4CAF50' : '#F44336'}">${stats.pnlNeto >= 0 ? '+' : ''}$${Math.abs(stats.pnlNeto).toFixed(2)}</div></div>
+        <div class="kpi"><div class="kpi-label">Profit Factor</div><div class="kpi-val">${stats.profitFactor >= 99 ? '∞' : stats.profitFactor.toFixed(2)}</div></div>
+        <div class="kpi"><div class="kpi-label">RR Promedio</div><div class="kpi-val">${stats.rrPromedio > 0 ? '1:' + stats.rrPromedio.toFixed(2) : '—'}</div></div>
         <div class="kpi"><div class="kpi-label">Max Drawdown</div><div class="kpi-val" style="color:#F44336">-$${stats.maxDrawdown.toFixed(2)}</div></div>
         <div class="kpi"><div class="kpi-label">Mejor Trade</div><div class="kpi-val" style="color:#4CAF50">+$${stats.mejorTrade.toFixed(2)}</div></div>
         <div class="kpi"><div class="kpi-label">Disciplina</div><div class="kpi-val">${stats.disciplina.toFixed(1)}%</div></div>
       </div>
+
+      <div class="chart-box">
+        <div class="chart-title">Curva de Rendimiento Acumulado</div>
+        ${equitySvg}
+      </div>
+
       <table>
         <thead><tr><th>Fecha</th><th>Instrumento</th><th>Dirección</th><th>Resultado</th><th style="text-align:right">PnL</th><th style="text-align:right">RR</th><th>Notas</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
-      ${analysis ? `<div class="analysis"><strong style="color:#C9A84C">Analisis Vinces AI</strong><br/><br/>${analysis.replace(/\n/g, '<br/>')}</div>` : ''}
+
+      ${analysis ? `<div class="analysis"><div style="color:#C9A84C;font-weight:bold;margin-bottom:8px">Análisis Vinces AI</div>${analysis.replace(/\n/g, '<br/>')}</div>` : ''}
+
+      ${annexe}
       </body></html>
     `)
     win.document.close()
-    setTimeout(() => win.print(), 300)
+    setTimeout(() => win.print(), 400)
   }
 
   const { from, to } = getPeriodDates(period, customFrom, customTo)
