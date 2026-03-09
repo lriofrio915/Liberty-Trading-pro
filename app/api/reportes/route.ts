@@ -84,24 +84,27 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const from = searchParams.get('from')
     const to = searchParams.get('to')
+    const planId = searchParams.get('planId')
 
     const where: any = { userId: dbUser.id }
     if (from && to) {
-      // Filter by full day range (UTC boundaries)
       where.date = {
         gte: new Date(`${from}T00:00:00.000Z`),
         lte: new Date(`${to}T23:59:59.999Z`),
       }
     }
+    if (planId && planId !== 'all') {
+      where.planId = planId === 'none' ? null : planId
+    }
 
-    const sessions = await prisma.tradingSession.findMany({
-      where,
-      orderBy: { date: 'desc' },
-    })
+    const [sessions, plans] = await Promise.all([
+      prisma.tradingSession.findMany({ where, orderBy: { date: 'desc' } }),
+      prisma.tradingPlan.findMany({ where: { userId: dbUser.id }, select: { id: true, name: true, accountName: true, active: true } }),
+    ])
 
     const stats = computeStats(sessions)
 
-    return NextResponse.json({ sessions, stats })
+    return NextResponse.json({ sessions, stats, plans })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }

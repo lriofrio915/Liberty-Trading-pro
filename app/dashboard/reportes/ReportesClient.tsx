@@ -6,6 +6,13 @@ import { useState, useCallback, useEffect } from 'react'
 
 type Period = 'today' | 'week' | 'month' | 'year' | 'custom'
 
+interface Plan {
+  id: string
+  name: string
+  accountName: string
+  active: boolean
+}
+
 interface Session {
   id: string
   date: string
@@ -105,6 +112,8 @@ export default function ReportesClient() {
   const [period, setPeriod] = useState<Period>('month')
   const [customFrom, setCustomFrom] = useState(fmtDate(new Date()))
   const [customTo, setCustomTo] = useState(fmtDate(new Date()))
+  const [selectedPlan, setSelectedPlan] = useState('all')
+  const [plans, setPlans] = useState<Plan[]>([])
   const [sessions, setSessions] = useState<Session[]>([])
   const [stats, setStats] = useState<ReportStats | null>(null)
   const [loading, setLoading] = useState(false)
@@ -112,18 +121,20 @@ export default function ReportesClient() {
   const [aiLoading, setAiLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchReport = useCallback(async (p: Period, cf: string, ct: string) => {
+  const fetchReport = useCallback(async (p: Period, cf: string, ct: string, plan: string) => {
     const { from, to } = getPeriodDates(p, cf, ct)
     if (!from || !to) return
     setLoading(true)
     setAnalysis(null)
     setError(null)
     try {
-      const res = await fetch(`/api/reportes?from=${from}&to=${to}`)
+      const url = `/api/reportes?from=${from}&to=${to}&planId=${plan}`
+      const res = await fetch(url)
       const data = await res.json()
       if (data.error) throw new Error(data.error)
       setSessions(data.sessions)
       setStats(data.stats)
+      if (data.plans) setPlans(data.plans)
     } catch (e: any) {
       setError(e.message)
     } finally {
@@ -131,12 +142,12 @@ export default function ReportesClient() {
     }
   }, [])
 
-  // Load on mount and period change
+  // Load on mount and when period or plan changes
   useEffect(() => {
-    fetchReport(period, customFrom, customTo)
-  }, [period]) // eslint-disable-line
+    fetchReport(period, customFrom, customTo, selectedPlan)
+  }, [period, selectedPlan]) // eslint-disable-line
 
-  const handleCustomApply = () => fetchReport('custom', customFrom, customTo)
+  const handleCustomApply = () => fetchReport('custom', customFrom, customTo, selectedPlan)
 
   const handleAiAnalysis = async () => {
     if (!stats || stats.total === 0) return
@@ -263,6 +274,37 @@ export default function ReportesClient() {
             </button>
           ))}
         </div>
+
+        {/* Plan filter */}
+        {plans.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-[var(--border)]">
+            <span className="label-mono text-[9px] text-[var(--text-muted)] self-center mr-1">CUENTA:</span>
+            <button
+              onClick={() => setSelectedPlan('all')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                selectedPlan === 'all'
+                  ? 'bg-[var(--gold)]/20 text-[var(--gold)] border border-[var(--gold-dark)]'
+                  : 'bg-black/30 text-[var(--text-muted)] border border-[var(--border)] hover:text-white'
+              }`}
+            >
+              Todas
+            </button>
+            {plans.map(plan => (
+              <button
+                key={plan.id}
+                onClick={() => setSelectedPlan(plan.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  selectedPlan === plan.id
+                    ? 'bg-[var(--gold)]/20 text-[var(--gold)] border border-[var(--gold-dark)]'
+                    : 'bg-black/30 text-[var(--text-muted)] border border-[var(--border)] hover:text-white'
+                }`}
+              >
+                {plan.name}
+                {!plan.active && <span className="ml-1 opacity-50">(inactiva)</span>}
+              </button>
+            ))}
+          </div>
+        )}
 
         {period === 'custom' && (
           <div className="flex flex-wrap items-end gap-3 mt-4 pt-4 border-t border-[var(--border)]">
