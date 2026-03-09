@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import { LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -49,9 +50,16 @@ interface Metricas {
   maxRachaPerdedora: number
 }
 
+interface BenchmarkPoint {
+  date: string
+  sp500: number | null
+  nasdaq: number | null
+}
+
 interface Benchmark {
   sp500: string | null
   nasdaq: string | null
+  series: BenchmarkPoint[]
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -489,8 +497,8 @@ export default function DashboardClient({
             Desglose Financiero del Período
           </div>
 
-          {/* PnL breakdown */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+          {/* PnL breakdown — 3 cards */}
+          <div className="grid grid-cols-3 gap-4 mb-5">
             <div>
               <div className="text-xs text-[var(--text-muted)] mb-1">PnL Bruto</div>
               <div className="text-xl font-black" style={{ color: fin.pnlBruto >= 0 ? 'var(--green)' : 'var(--red)' }}>
@@ -499,21 +507,18 @@ export default function DashboardClient({
               <div className="text-[10px] text-[var(--text-muted)] mt-0.5">Suma directa de sesiones</div>
             </div>
             <div>
-              <div className="text-xs text-[var(--text-muted)] mb-1">Comisiones</div>
+              <div className="text-xs text-[var(--text-muted)] mb-1">Comisiones + Data Feed</div>
               <div className="text-xl font-black text-red-400">
-                {fin.comisionesTotal > 0 ? `-$${fin.comisionesTotal.toFixed(2)}` : '$0.00'}
+                {(fin.comisionesTotal + fin.dataFeedTotal) > 0
+                  ? `-$${(fin.comisionesTotal + fin.dataFeedTotal).toFixed(2)}`
+                  : '$0.00'}
               </div>
-              <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{sessionesFiltradas.length} trades × plan</div>
+              <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
+                {sessionesFiltradas.length} trades · {fin.mesesTranscurridos} {fin.mesesTranscurridos === 1 ? 'mes' : 'meses'} feed
+              </div>
             </div>
             <div>
-              <div className="text-xs text-[var(--text-muted)] mb-1">Data Feed</div>
-              <div className="text-xl font-black text-red-400">
-                {fin.dataFeedTotal > 0 ? `-$${fin.dataFeedTotal.toFixed(2)}` : '$0.00'}
-              </div>
-              <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{fin.mesesTranscurridos} {fin.mesesTranscurridos === 1 ? 'mes' : 'meses'}</div>
-            </div>
-            <div>
-              <div className="text-xs text-[var(--text-muted)] mb-1">PnL Neto Real</div>
+              <div className="text-xs text-[var(--text-muted)] mb-1">PnL Neto</div>
               <div className="text-xl font-black" style={{ color: fin.pnlNetoReal >= 0 ? 'var(--green)' : 'var(--red)' }}>
                 {fmtMoney(fin.pnlNetoReal)}
               </div>
@@ -536,7 +541,7 @@ export default function DashboardClient({
                 </div>
               </div>
               <div>
-                <div className="text-xs text-[var(--text-muted)] mb-1">Capital al final</div>
+                <div className="text-xs text-[var(--text-muted)] mb-1">Capital Actual</div>
                 <div
                   className="text-lg font-black"
                   style={{ color: fin.capitalFinalPeriodo >= fin.capitalInicialPeriodo ? 'var(--green)' : 'var(--red)' }}
@@ -572,86 +577,143 @@ export default function DashboardClient({
           </div>
           <div className="text-xs text-[var(--gold)] mb-4 font-mono">{periodoLabel}</div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[var(--border)]">
-                  <th className="text-left py-2 px-3 text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wider w-32" />
-                  <th className="text-center py-2 px-3 text-[10px] text-[var(--gold)] font-bold uppercase tracking-wider">
-                    Tu Cuenta
-                  </th>
-                  <th className="text-center py-2 px-3 text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wider">
-                    Nasdaq 100
-                  </th>
-                  <th className="text-center py-2 px-3 text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wider">
-                    S&P 500
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="py-3 px-3 text-xs text-[var(--text-muted)]">Rendimiento</td>
-                  <td className="py-3 px-3 text-center">
-                    <span
-                      className="text-lg font-black"
-                      style={{ color: fin.rendimientoPct >= 0 ? 'var(--green)' : 'var(--red)', fontFamily: 'var(--font-serif)' }}
-                    >
-                      {fmtPct(fin.rendimientoPct)}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-center">
-                    {benchmark ? (
-                      benchmark.nasdaq ? (
-                        <span
-                          className="text-base font-bold"
-                          style={{ color: parseFloat(benchmark.nasdaq) >= 0 ? 'var(--green)' : 'var(--red)' }}
-                        >
-                          {parseFloat(benchmark.nasdaq) >= 0 ? '+' : ''}{benchmark.nasdaq}%
-                        </span>
-                      ) : (
-                        <span className="text-xs text-[var(--text-muted)]">N/A</span>
-                      )
-                    ) : (
-                      <span className="text-xs text-[var(--text-muted)] animate-pulse">...</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-3 text-center">
-                    {benchmark ? (
-                      benchmark.sp500 ? (
-                        <span
-                          className="text-base font-bold"
-                          style={{ color: parseFloat(benchmark.sp500) >= 0 ? 'var(--green)' : 'var(--red)' }}
-                        >
-                          {parseFloat(benchmark.sp500) >= 0 ? '+' : ''}{benchmark.sp500}%
-                        </span>
-                      ) : (
-                        <span className="text-xs text-[var(--text-muted)]">N/A</span>
-                      )
-                    ) : (
-                      <span className="text-xs text-[var(--text-muted)] animate-pulse">...</span>
-                    )}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Comparison text */}
-          {benchmark?.nasdaq && (
-            <div className="mt-3 pt-3 border-t border-[var(--border)]">
-              {(() => {
-                const diff = fin.rendimientoPct - parseFloat(benchmark.nasdaq!)
-                const supera = diff >= 0
-                return (
-                  <p className="text-xs" style={{ color: supera ? 'var(--green)' : 'var(--text-muted)' }}>
-                    {supera
-                      ? `✅ Tu cuenta superó al Nasdaq 100 por ${diff.toFixed(2)} puntos porcentuales`
-                      : `⚠️ El Nasdaq 100 superó tu cuenta por ${Math.abs(diff).toFixed(2)} puntos porcentuales`}
-                  </p>
-                )
-              })()}
+          {benchmark === null ? (
+            <div className="flex items-center justify-center h-48">
+              <span className="text-xs text-[var(--text-muted)] animate-pulse">Cargando benchmark...</span>
             </div>
-          )}
+          ) : (() => {
+            // Build user equity curve normalized to 100
+            const capitalBase = fin.capitalInicialPeriodo
+            const sesionesOrdenadas = [...sessionesFiltradas].sort(
+              (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+            )
+            const userByDate = new Map<string, number>()
+            let acum = 0
+            sesionesOrdenadas.forEach(s => {
+              acum += s.pnlNeto || 0
+              const d = new Date(s.date).toISOString().slice(0, 10)
+              userByDate.set(d, acum)
+            })
+
+            // Merge benchmark series with user equity
+            const series = benchmark.series ?? []
+            let lastUserVal = 0
+            const chartData = series.map(point => {
+              if (userByDate.has(point.date)) lastUserVal = userByDate.get(point.date)!
+              const userPct = capitalBase > 0 ? 100 + (lastUserVal / capitalBase) * 100 : 100
+              return {
+                fecha: point.date.slice(5), // "MM-DD"
+                tuCuenta: parseFloat(userPct.toFixed(3)),
+                nasdaq: point.nasdaq,
+                sp500: point.sp500,
+              }
+            })
+
+            const fmtVal = (v: number) => {
+              const pct = (v - 100).toFixed(2)
+              return `${parseFloat(pct) >= 0 ? '+' : ''}${pct}%`
+            }
+
+            return (
+              <>
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
+                    <XAxis
+                      dataKey="fecha"
+                      tick={{ fill: '#4a4642', fontSize: 10, fontFamily: 'monospace' }}
+                      tickLine={false}
+                      axisLine={false}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis
+                      tick={{ fill: '#4a4642', fontSize: 10, fontFamily: 'monospace' }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={fmtVal}
+                      width={52}
+                      domain={['auto', 'auto']}
+                    />
+                    <RTooltip
+                      formatter={(v: number | undefined, name: string | undefined) => {
+                        const labels: Record<string, string> = {
+                          tuCuenta: 'Tu Cuenta',
+                          nasdaq: 'Nasdaq 100',
+                          sp500: 'S&P 500',
+                        }
+                        const key = name ?? ''
+                        return [v != null ? fmtVal(v) : '—', labels[key] ?? key]
+                      }}
+                      labelFormatter={(l) => `Fecha: ${l}`}
+                      contentStyle={{
+                        background: '#111',
+                        border: '1px solid #C9A84C44',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontFamily: 'monospace',
+                      }}
+                      labelStyle={{ color: '#6B6560', fontSize: '11px' }}
+                    />
+                    <ReferenceLine y={100} stroke="rgba(255,255,255,0.1)" strokeDasharray="4 4" />
+                    <Legend
+                      formatter={(value) => {
+                        const labels: Record<string, string> = {
+                          tuCuenta: 'Tu Cuenta',
+                          nasdaq: 'Nasdaq 100',
+                          sp500: 'S&P 500',
+                        }
+                        return <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#9B9690' }}>{labels[value] ?? value}</span>
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="tuCuenta"
+                      stroke="#C9A84C"
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4, fill: '#C9A84C', stroke: '#111' }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="nasdaq"
+                      stroke="#4A9EFF"
+                      strokeWidth={1.5}
+                      dot={false}
+                      activeDot={{ r: 4, fill: '#4A9EFF', stroke: '#111' }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="sp500"
+                      stroke="#9B9B9B"
+                      strokeWidth={1.5}
+                      dot={false}
+                      activeDot={{ r: 4, fill: '#9B9B9B', stroke: '#111' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+
+                <p className="text-[10px] text-[var(--text-muted)] font-mono mt-1">
+                  Base 100 al inicio del período · Fuente: Yahoo Finance
+                </p>
+
+                {/* Comparison text */}
+                {benchmark.nasdaq && (
+                  <div className="mt-3 pt-3 border-t border-[var(--border)]">
+                    {(() => {
+                      const diff = fin.rendimientoPct - parseFloat(benchmark.nasdaq!)
+                      const supera = diff >= 0
+                      return (
+                        <p className="text-xs" style={{ color: supera ? 'var(--green)' : 'var(--text-muted)' }}>
+                          {supera
+                            ? `✅ Tu cuenta superó al Nasdaq 100 por ${diff.toFixed(2)} puntos porcentuales`
+                            : `⚠️ El Nasdaq 100 superó tu cuenta por ${Math.abs(diff).toFixed(2)} puntos porcentuales`}
+                        </p>
+                      )
+                    })()}
+                  </div>
+                )}
+              </>
+            )
+          })()}
         </div>
       )}
     </div>
