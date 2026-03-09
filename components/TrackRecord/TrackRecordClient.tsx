@@ -294,6 +294,8 @@ export default function TrackRecordClient({
           setSessions(prev => prev.map(s => s.id === editingSession.id ? data.session : s))
           closeModal()
           showToast('Operación actualizada correctamente')
+        } else {
+          throw new Error(data.error || 'Error al actualizar')
         }
       } else {
         const res = await fetch('/api/sessions', {
@@ -306,6 +308,8 @@ export default function TrackRecordClient({
           setSessions(prev => [data.session, ...prev])
           closeModal()
           showToast('Operación registrada correctamente')
+        } else {
+          throw new Error(data.error || 'Error al guardar')
         }
       }
     } catch {

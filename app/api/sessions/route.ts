@@ -35,8 +35,15 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
-    if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    const dbUser = await prisma.user.upsert({
+      where: { authId: user.id },
+      update: {},
+      create: {
+        authId: user.id,
+        email: user.email ?? user.id,
+        name: user.user_metadata?.name || user.email?.split('@')[0] || 'Trader',
+      },
+    })
 
     const body = await req.json()
 

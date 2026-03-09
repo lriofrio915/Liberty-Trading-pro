@@ -19,7 +19,7 @@ export async function PUT(
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
-    if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    if (!dbUser) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
     const { id } = await params
     const body = await req.json()
@@ -77,7 +77,7 @@ export async function DELETE(
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
-    if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    if (!dbUser) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
     const { id } = await params
 
