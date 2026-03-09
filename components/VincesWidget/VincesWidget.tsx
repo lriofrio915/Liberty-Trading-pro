@@ -88,7 +88,11 @@ export default function VincesWidget() {
       const data = await res.json()
 
       if (data.content) {
-        const withReply = [...nextMessages, { role: 'assistant' as const, content: data.content }]
+        // Prepend RAG indicator if docs were found
+        const ragNote = data.ragDocsFound > 0
+          ? `📚 *${data.ragDocsFound} doc${data.ragDocsFound > 1 ? 's' : ''} de tu base de conocimiento consultado${data.ragDocsFound > 1 ? 's' : ''}*\n\n`
+          : ''
+        const withReply = [...nextMessages, { role: 'assistant' as const, content: ragNote + data.content }]
         setMessages(withReply)
         saveMessages(withReply)
       } else {

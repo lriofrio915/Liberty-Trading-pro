@@ -38,38 +38,50 @@ export async function POST(req: NextRequest) {
     if (user) {
       try {
         dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
+        // userId: prefer DB record id, fall back to authId (matches how knowledge docs are stored)
+        const userId = dbUser?.id ?? user.id
+
         if (dbUser) {
-          // Get trading sessions
           sessions = await prisma.tradingSession.findMany({
             where: { userId: dbUser.id },
             orderBy: { date: 'desc' },
             take: 50,
           })
+        }
 
-          // Search knowledge base with the last user message
-          const lastUserMsg = (messages || [])
-            .filter((m: any) => m.role === 'user')
-            .slice(-1)[0]?.content || ''
+        // Search knowledge base — always runs regardless of dbUser
+        const lastUserMsg = (messages || [])
+          .filter((m: any) => m.role === 'user')
+          .slice(-1)[0]?.content || ''
 
-          if (lastUserMsg.length > 3) {
-            const terms = lastUserMsg.slice(0, 200)
-            ragDocs = await (prisma.knowledgeDoc as any).findMany({
-              where: {
-                userId: dbUser.id,
-                OR: [
-                  { title: { contains: terms.slice(0, 50), mode: 'insensitive' } },
-                  { content: { contains: terms.slice(0, 100), mode: 'insensitive' } },
-                  { tags: { contains: terms.slice(0, 50), mode: 'insensitive' } },
-                  { description: { contains: terms.slice(0, 100), mode: 'insensitive' } },
-                ],
-              },
+        if (lastUserMsg.length > 2) {
+          // Split into keywords (4+ chars), search each one with OR
+          const stopWords = new Set(['para', 'como', 'esto', 'esta', 'este', 'cual', 'segun', 'sobre', 'dice', 'que', 'del', 'los', 'las', 'con', 'por', 'una', 'qué', 'cómo', 'cuál', 'según'])
+          const keywords = lastUserMsg
+            .toLowerCase()
+            .replace(/[¿?¡!.,;:()]/g, ' ')
+            .split(/\s+/)
+            .filter((w: string) => w.length >= 4 && !stopWords.has(w))
+            .slice(0, 6)
+
+          if (keywords.length > 0) {
+            const orConditions = keywords.flatMap((kw: string) => [
+              { title: { contains: kw, mode: 'insensitive' as const } },
+              { content: { contains: kw, mode: 'insensitive' as const } },
+              { tags: { contains: kw, mode: 'insensitive' as const } },
+              { description: { contains: kw, mode: 'insensitive' as const } },
+            ])
+
+            ragDocs = await (prisma as any).knowledgeDoc.findMany({
+              where: { userId, OR: orConditions },
               take: 3,
+              orderBy: { createdAt: 'desc' as const },
               select: { title: true, description: true, content: true, source: true, tags: true },
             })
           }
         }
-      } catch {
-        // silently continue without DB data
+      } catch (e) {
+        console.error('Vinces DB fetch error:', e)
       }
     }
 
@@ -160,7 +172,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No response from AI' }, { status: 500 })
     }
 
-    return NextResponse.json({ content })
+    return NextResponse.json({ content, ragDocsFound: ragDocs.length })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
