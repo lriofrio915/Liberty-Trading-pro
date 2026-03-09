@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -78,26 +79,33 @@ function computeStats(plan: TradingPlan, retiros: Retiro[]) {
   const wins = sessions.filter(s => s.resultado === 'WIN')
   const losses = sessions.filter(s => s.resultado === 'LOSS')
 
-  // Net PnL from sessions
-  const pnlNeto = sessions.reduce((sum, s) => sum + normPnl(s), 0)
+  // pnlBruto = suma directa de sesiones
+  const pnlBruto = sessions.reduce((sum, s) => sum + normPnl(s), 0)
+
+  // Comisiones
+  const comisionesTotal = sessions.length * (plan.comisionPorTrade ?? 0)
+
+  // Meses desde la primera sesión (no desde creación del plan)
+  const sorted = [...sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  const primeraFecha = sorted[0]?.date ? new Date(sorted[0].date) : new Date()
+  const now = new Date()
+  const meses = Math.max(
+    1,
+    (now.getFullYear() - primeraFecha.getFullYear()) * 12 + (now.getMonth() - primeraFecha.getMonth())
+  )
+
+  const dataFeedTotal = (plan.dataFeedMensual ?? 0) * meses
 
   // Retiros para este plan
   const totalRetiros = retiros
     .filter(r => r.planId === plan.id)
     .reduce((sum, r) => sum + r.monto, 0)
 
-  // Meses transcurridos desde creación del plan (mínimo 1)
-  const createdAt = new Date(plan.createdAt)
-  const now = new Date()
-  const mesesTranscurridos = Math.max(
-    1,
-    (now.getFullYear() - createdAt.getFullYear()) * 12 + (now.getMonth() - createdAt.getMonth()) + 1
-  )
+  // pnlNeto = pnlBruto - fees
+  const pnlNeto = pnlBruto - comisionesTotal - dataFeedTotal
 
-  // Capital actual
-  const dataFeedTotal = (plan.dataFeedMensual ?? 0) * mesesTranscurridos
-  const comisionesTotal = sessions.length * (plan.comisionPorTrade ?? 0)
-  const capitalActual = plan.capitalInicial + pnlNeto - totalRetiros - dataFeedTotal - comisionesTotal
+  // Capital actual = capitalInicial + pnlNeto - retiros
+  const capitalActual = plan.capitalInicial + pnlNeto - totalRetiros
 
   // Riesgo real
   const lossPnls = losses.map(s => Math.abs(normPnl(s)))
@@ -109,14 +117,11 @@ function computeStats(plan: TradingPlan, retiros: Retiro[]) {
   const gananciaPromedio = winPnls.length ? winPnls.reduce((a, b) => a + b, 0) / winPnls.length : 0
   const rrReal = perdidaPromedio > 0 ? gananciaPromedio / perdidaPromedio : 0
 
-  // Rendimiento
-  const rendimiento = plan.capitalInicial > 0
-    ? ((capitalActual - plan.capitalInicial) / plan.capitalInicial) * 100
-    : 0
+  // Rendimiento sobre capital inicial
+  const rendimiento = plan.capitalInicial > 0 ? (pnlNeto / plan.capitalInicial) * 100 : 0
 
-  // Max Drawdown (for drawdown bar)
+  // Max Drawdown
   let peak = 0, maxDD = 0, balance = 0
-  const sorted = [...sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
   sorted.forEach(s => {
     balance += normPnl(s)
     if (balance > peak) peak = balance
@@ -130,6 +135,7 @@ function computeStats(plan: TradingPlan, retiros: Retiro[]) {
     rendimiento,
     riesgoRealPct,
     rrReal,
+    pnlBruto,
     pnlNeto,
     maxDrawdown: maxDD,
   }
@@ -707,17 +713,39 @@ export default function PlanesClient({
                 </div>
 
                 {/* Fila teórica — valores del plan */}
-                <div className="grid grid-cols-3 gap-3 mb-3">
-                  {[
-                    { label: 'Capital Inicial', value: `$${plan.capitalInicial.toLocaleString()}` },
-                    { label: 'Riesgo / Trade', value: `${plan.riesgo}% ($${riesgoUSD.toFixed(0)})` },
-                    { label: 'R:R Objetivo', value: `1:${plan.rrRatio}` },
-                  ].map(item => (
-                    <div key={item.label} className="bg-black/20 rounded-lg py-2.5 px-3">
-                      <div className="label-mono text-[8px] text-[var(--text-muted)] mb-0.5">{item.label}</div>
-                      <div className="text-sm font-bold text-white">{item.value}</div>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-5 gap-3 mb-3">
+                  <div className="bg-black/20 rounded-lg py-2.5 px-3">
+                    <div className="label-mono text-[8px] text-[var(--text-muted)] mb-0.5">Capital Inicial</div>
+                    <div className="text-sm font-bold text-white">${plan.capitalInicial.toLocaleString()}</div>
+                  </div>
+                  <div className="bg-black/20 rounded-lg py-2.5 px-3">
+                    <div className="label-mono text-[8px] text-[var(--text-muted)] mb-0.5">Riesgo / Trade</div>
+                    <div className="text-sm font-bold text-white">{plan.riesgo}% (${riesgoUSD.toFixed(0)})</div>
+                  </div>
+                  <div className="bg-black/20 rounded-lg py-2.5 px-3">
+                    <div className="label-mono text-[8px] text-[var(--text-muted)] mb-0.5">R:R Objetivo</div>
+                    <div className="text-sm font-bold text-white">1:{plan.rrRatio}</div>
+                  </div>
+                  <div className="bg-black/20 rounded-lg py-2.5 px-3">
+                    <div className="label-mono text-[8px] text-[var(--text-muted)] mb-0.5">PnL Bruto</div>
+                    {stats.total > 0 ? (
+                      <div className="text-sm font-bold" style={{ color: stats.pnlBruto >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                        {stats.pnlBruto >= 0 ? '+' : ''}${Math.abs(stats.pnlBruto).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                      </div>
+                    ) : (
+                      <div className="text-sm font-bold text-white">—</div>
+                    )}
+                  </div>
+                  <div className="bg-black/20 rounded-lg py-2.5 px-3">
+                    <div className="label-mono text-[8px] text-[var(--text-muted)] mb-0.5">Beneficio Neto $</div>
+                    {stats.total > 0 ? (
+                      <div className="text-sm font-bold" style={{ color: stats.pnlNeto >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                        {stats.pnlNeto >= 0 ? '+' : ''}${Math.abs(stats.pnlNeto).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                      </div>
+                    ) : (
+                      <div className="text-sm font-bold text-white">—</div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Separator */}
@@ -725,10 +753,10 @@ export default function PlanesClient({
 
                 {/* Fila real — calculada desde sesiones */}
                 {stats.total > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                  <div className="grid grid-cols-4 gap-3 mb-4">
                     {[
                       {
-                        label: 'Capital Actual (real)',
+                        label: 'Capital Actual',
                         value: `$${stats.capitalActual.toLocaleString('es', { maximumFractionDigits: 0 })}`,
                         color: stats.capitalActual >= plan.capitalInicial ? 'var(--green)' : 'var(--red)',
                       },
@@ -761,6 +789,59 @@ export default function PlanesClient({
                 ) : (
                   <div className="text-xs text-[var(--text-muted)] mb-4">Sin operaciones vinculadas aun</div>
                 )}
+
+                {/* Gráfica de rendimiento mensual */}
+                {plan.sessions.length > 0 && (() => {
+                  const pnlPorMes = plan.sessions.reduce((acc: Record<string, number>, s) => {
+                    const mes = s.date?.toString().slice(0, 7)
+                    if (!mes) return acc
+                    acc[mes] = (acc[mes] || 0) + normPnl(s)
+                    return acc
+                  }, {})
+                  const dataGrafica = Object.entries(pnlPorMes)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([mes, pnl]) => ({
+                      mes: new Date(mes + '-01').toLocaleDateString('es', { month: 'short', year: '2-digit' }),
+                      pnl: parseFloat(pnl.toFixed(2)),
+                      positivo: pnl >= 0,
+                    }))
+                  if (dataGrafica.length === 0) return null
+                  return (
+                    <div className="mb-4">
+                      <div className="label-mono text-[9px] text-[var(--gold)] mb-2">RENDIMIENTO MENSUAL</div>
+                      <ResponsiveContainer width="100%" height={180}>
+                        <BarChart data={dataGrafica} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                          <XAxis
+                            dataKey="mes"
+                            tick={{ fill: '#6B6560', fontSize: 10, fontFamily: 'monospace' }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis hide />
+                          <Tooltip
+                            formatter={(v: string | number | undefined) => [typeof v === 'number' ? v.toFixed(2) : `${v ?? ''}`, 'PnL']}
+                            contentStyle={{
+                              background: '#111',
+                              border: '1px solid rgba(201,168,76,0.2)',
+                              fontFamily: 'monospace',
+                              fontSize: 11,
+                            }}
+                          />
+                          <ReferenceLine y={0} stroke="rgba(255,255,255,0.1)" />
+                          <Bar dataKey="pnl" radius={[3, 3, 0, 0]} maxBarSize={40}>
+                            {dataGrafica.map((entry, i) => (
+                              <Cell
+                                key={i}
+                                fill={entry.positivo ? '#4CAF50' : '#F44336'}
+                                fillOpacity={0.8}
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )
+                })()}
 
                 {/* Expanded detail */}
                 {isExpanded && (
