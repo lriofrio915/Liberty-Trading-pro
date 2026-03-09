@@ -713,7 +713,7 @@ export default function PlanesClient({
                 </div>
 
                 {/* Fila teórica — valores del plan */}
-                <div className="grid grid-cols-5 gap-3 mb-3">
+                <div className="grid grid-cols-4 gap-3 mb-3">
                   <div className="bg-black/20 rounded-lg py-2.5 px-3">
                     <div className="label-mono text-[8px] text-[var(--text-muted)] mb-0.5">Capital Inicial</div>
                     <div className="text-sm font-bold text-white">${plan.capitalInicial.toLocaleString()}</div>
@@ -725,16 +725,6 @@ export default function PlanesClient({
                   <div className="bg-black/20 rounded-lg py-2.5 px-3">
                     <div className="label-mono text-[8px] text-[var(--text-muted)] mb-0.5">R:R Objetivo</div>
                     <div className="text-sm font-bold text-white">1:{plan.rrRatio}</div>
-                  </div>
-                  <div className="bg-black/20 rounded-lg py-2.5 px-3">
-                    <div className="label-mono text-[8px] text-[var(--text-muted)] mb-0.5">PnL Bruto</div>
-                    {stats.total > 0 ? (
-                      <div className="text-sm font-bold" style={{ color: stats.pnlBruto >= 0 ? 'var(--green)' : 'var(--red)' }}>
-                        {stats.pnlBruto >= 0 ? '+' : ''}${Math.abs(stats.pnlBruto).toLocaleString('en-US', { maximumFractionDigits: 0 })}
-                      </div>
-                    ) : (
-                      <div className="text-sm font-bold text-white">—</div>
-                    )}
                   </div>
                   <div className="bg-black/20 rounded-lg py-2.5 px-3">
                     <div className="label-mono text-[8px] text-[var(--text-muted)] mb-0.5">Beneficio Neto $</div>
