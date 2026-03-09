@@ -197,15 +197,24 @@ model MonthlyReport {
 }
 
 model Opportunity {
-  id          String   @id @default(cuid())
-  title       String
-  instrumento String
-  tipo        String
-  description String
-  imageUrl    String?
-  publishedAt DateTime @default(now())
-  active      Boolean  @default(true)
-  minPlan     Plan     @default(CLUB)
+  id             String   @id @default(cuid())
+  title          String
+  ticker         String
+  instrumento    String
+  tipo           String                   // ACCION | ETF | CRIPTO | FOREX
+  direction      String                   // COMPRA | VENTA
+  precioEntrada  Float
+  precioObjetivo Float
+  stopLoss       Float
+  timeframe      String                   // CORTO | MEDIANO | LARGO
+  riesgo         String                   // BAJO | MEDIO | ALTO
+  description    String
+  aiReport       String?  @db.Text
+  imageUrl       String?
+  publishedAt    DateTime @default(now())
+  status         String   @default("ACTIVA") // ACTIVA | OBJETIVO_ALCANZADO | STOP_ACTIVADO | CANCELADA
+  active         Boolean  @default(true)
+  minPlan        Plan     @default(CLUB)
 }
 
 model VincesConversation {
