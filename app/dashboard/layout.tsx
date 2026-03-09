@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import SidebarNav from '@/components/Sidebar/SidebarNav'
 import { navItems } from '@/components/Sidebar/navConfig'
+import VincesWidget from '@/components/VincesWidget/VincesWidget'
 
 export default async function DashboardLayout({
   children,
@@ -53,6 +54,8 @@ export default async function DashboardLayout({
 
         <div className="p-4 md:p-8">{children}</div>
       </main>
+
+      <VincesWidget />
     </div>
   )
 }
