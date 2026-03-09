@@ -34,15 +34,39 @@ export async function POST(req: NextRequest) {
     // Fetch real trading sessions from DB
     let sessions: any[] = []
     let dbUser = null
+    let ragDocs: any[] = []
     if (user) {
       try {
         dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
         if (dbUser) {
+          // Get trading sessions
           sessions = await prisma.tradingSession.findMany({
             where: { userId: dbUser.id },
             orderBy: { date: 'desc' },
             take: 50,
           })
+
+          // Search knowledge base with the last user message
+          const lastUserMsg = (messages || [])
+            .filter((m: any) => m.role === 'user')
+            .slice(-1)[0]?.content || ''
+
+          if (lastUserMsg.length > 3) {
+            const terms = lastUserMsg.slice(0, 200)
+            ragDocs = await (prisma.knowledgeDoc as any).findMany({
+              where: {
+                userId: dbUser.id,
+                OR: [
+                  { title: { contains: terms.slice(0, 50), mode: 'insensitive' } },
+                  { content: { contains: terms.slice(0, 100), mode: 'insensitive' } },
+                  { tags: { contains: terms.slice(0, 50), mode: 'insensitive' } },
+                  { description: { contains: terms.slice(0, 100), mode: 'insensitive' } },
+                ],
+              },
+              take: 3,
+              select: { title: true, description: true, content: true, source: true, tags: true },
+            })
+          }
         }
       } catch {
         // silently continue without DB data
@@ -67,11 +91,22 @@ export async function POST(req: NextRequest) {
 
     const userName = dbUser?.name || user?.email || 'Trader'
 
+    // Build RAG context from knowledge base
+    const ragContext = ragDocs.length > 0
+      ? `\n\nBASE DE CONOCIMIENTO (documentos relevantes del usuario):\n` +
+        ragDocs.map((d: any, i: number) =>
+          `[DOC ${i + 1}] ${d.title}${d.source ? ` (${d.source})` : ''}\n` +
+          (d.description ? `Resumen: ${d.description}\n` : '') +
+          (d.content ? `Contenido: ${d.content.slice(0, 800)}\n` : '')
+        ).join('\n')
+      : ''
+
     // Build system prompt entirely on the server — never from client input
     const systemPrompt = sanitizeText(
       `Eres Vinces, el coach de trading personal de ${userName}. ` +
       `Eres directo, analitico y honesto. No das senales de trading. ` +
       `Tu rol es coaching de ejecucion, disciplina y mejora continua. ` +
+      `Cuando el usuario pregunte sobre temas financieros, usa primero la base de conocimiento si hay documentos relevantes. ` +
       `Respondes siempre en espanol de forma concisa y actionable.\n\n` +
       `DATOS REALES DEL TRADER:\n` +
       `- Total operaciones registradas: ${sessions.length}\n` +
@@ -81,7 +116,9 @@ export async function POST(req: NextRequest) {
       `- PnL neto total: $${pnlTotal.toFixed(2)}\n` +
       `- Profit Factor: ${profitFactor}\n\n` +
       `ULTIMAS 5 OPERACIONES:\n` +
-      `${last5}\n\n` +
+      `${last5}` +
+      ragContext +
+      `\n\n`+
       `Cuando el usuario pregunte por sus estadisticas, usa los datos reales de arriba. ` +
       `Se breve. Usa listas cuando ayude a la claridad.`
     )
