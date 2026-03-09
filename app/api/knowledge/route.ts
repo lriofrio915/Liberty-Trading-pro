@@ -10,12 +10,12 @@ export async function GET(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
-    if (!dbUser) return NextResponse.json({ docs: [] })
+    const userId = dbUser?.id ?? user.id
 
     const { searchParams } = new URL(req.url)
     const q = searchParams.get('q')?.trim()
 
-    const where: any = { userId: dbUser.id }
+    const where: any = { userId }
     if (q) {
       where.OR = [
         { title: { contains: q, mode: 'insensitive' } },
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
-    if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    const userId = dbUser?.id ?? user.id
 
     const body = await req.json()
     const { title, description, content, fileUrl, fileType, tags, source } = body
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
 
     const doc = await prisma.knowledgeDoc.create({
       data: {
-        userId: dbUser.id,
+        userId,
         title: title.trim(),
         description: description?.trim() || null,
         content: content?.trim() || null,
