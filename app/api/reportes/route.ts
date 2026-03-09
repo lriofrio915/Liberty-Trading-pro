@@ -34,8 +34,13 @@ function computeStats(sessions: any[]): ReportStats {
 
   const winRate = sessions.length > 0 ? (wins.length / sessions.length) * 100 : 0
 
+  // RR: use stored rrReal when available, otherwise derive from avg win / avg loss PnL
   const rrValues = sessions.filter(s => s.rrReal !== null).map(s => s.rrReal as number)
-  const rrPromedio = rrValues.length > 0 ? rrValues.reduce((a, b) => a + b, 0) / rrValues.length : 0
+  const gananciaPromedio = wins.length > 0 ? winPnl / wins.length : 0
+  const perdidaPromedio = losses.length > 0 ? lossPnl / losses.length : 0
+  const rrPromedio = rrValues.length > 0
+    ? rrValues.reduce((a, b) => a + b, 0) / rrValues.length
+    : perdidaPromedio > 0 ? gananciaPromedio / perdidaPromedio : 0
 
   const sorted = [...sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
   let peak = 0, maxDD = 0, balance = 0
