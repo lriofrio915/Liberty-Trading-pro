@@ -126,7 +126,7 @@ export default function VincesWidget() {
     <>
       {/* ── Chat panel ──────────────────────────────────────────────────── */}
       <div
-        className={`fixed bottom-36 right-5 z-50 flex flex-col transition-all duration-300 ease-in-out ${
+        className={`fixed bottom-44 right-5 z-50 flex flex-col transition-all duration-300 ease-in-out ${
           open
             ? 'opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 translate-y-4 pointer-events-none'
@@ -145,8 +145,12 @@ export default function VincesWidget() {
             className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] flex-shrink-0"
             style={{ background: 'var(--bg-card)' }}
           >
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🤖</span>
+            <div className="flex items-center gap-2.5">
+              <img
+                src="https://res.cloudinary.com/deusntwkn/image/upload/v1773069069/IMG_20251126_065050_395_wcnpca.webp"
+                alt="Vinces"
+                className="w-9 h-9 rounded-full object-cover border-2 border-[var(--gold)]"
+              />
               <div>
                 <p className="text-sm font-bold gradient-gold leading-none">Vinces AI</p>
                 <p className="text-[10px] text-[var(--text-muted)] font-mono">Asistente de trading</p>
@@ -246,20 +250,50 @@ export default function VincesWidget() {
       <button
         onClick={() => setOpen((v) => !v)}
         title="Vinces AI"
-        className="fixed bottom-20 right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 active:scale-95 overflow-hidden"
+        className="fixed bottom-28 right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 active:scale-95"
         style={{
-          background: 'linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 100%)',
-          boxShadow: '0 4px 24px rgba(201,168,76,0.45)',
+          background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)',
+          boxShadow: '0 4px 28px rgba(201,168,76,0.5), 0 0 0 2px rgba(201,168,76,0.3)',
         }}
       >
         {open ? (
-          <span className="text-2xl text-black font-bold">×</span>
+          <span className="text-xl font-bold" style={{ color: 'var(--gold)' }}>×</span>
         ) : (
-          <img
-            src="https://res.cloudinary.com/deusntwkn/image/upload/v1773069069/IMG_20251126_065050_395_wcnpca.webp"
-            alt="Vinces AI"
-            className="w-full h-full object-cover"
-          />
+          /* Animated robot icon */
+          <span className="relative flex items-center justify-center w-full h-full">
+            {/* Pulse ring */}
+            <span
+              className="absolute inset-0 rounded-full animate-ping opacity-30"
+              style={{ background: 'var(--gold)', animationDuration: '2s' }}
+            />
+            <svg
+              viewBox="0 0 36 36"
+              fill="none"
+              className="w-8 h-8"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              {/* Antenna */}
+              <line x1="18" y1="2" x2="18" y2="7" stroke="#C9A84C" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="18" cy="2" r="1.5" fill="#C9A84C"/>
+              {/* Head */}
+              <rect x="7" y="7" width="22" height="16" rx="4" fill="#C9A84C" opacity="0.15" stroke="#C9A84C" strokeWidth="1.5"/>
+              {/* Eyes */}
+              <circle cx="13" cy="15" r="2.5" fill="#C9A84C"/>
+              <circle cx="23" cy="15" r="2.5" fill="#C9A84C"/>
+              {/* Eye shine */}
+              <circle cx="14" cy="14" r="0.8" fill="#fff" opacity="0.7"/>
+              <circle cx="24" cy="14" r="0.8" fill="#fff" opacity="0.7"/>
+              {/* Mouth */}
+              <rect x="12" y="19" width="12" height="2" rx="1" fill="#C9A84C" opacity="0.6"/>
+              {/* Body */}
+              <rect x="10" y="24" width="16" height="9" rx="3" fill="#C9A84C" opacity="0.12" stroke="#C9A84C" strokeWidth="1.2"/>
+              {/* Arms */}
+              <rect x="4" y="25" width="5" height="7" rx="2" fill="#C9A84C" opacity="0.15" stroke="#C9A84C" strokeWidth="1.2"/>
+              <rect x="27" y="25" width="5" height="7" rx="2" fill="#C9A84C" opacity="0.15" stroke="#C9A84C" strokeWidth="1.2"/>
+              {/* Chest dot */}
+              <circle cx="18" cy="28" r="1.5" fill="#C9A84C" opacity="0.8"/>
+            </svg>
+          </span>
         )}
       </button>
     </>
