@@ -103,24 +103,13 @@ export default function GdeltMap({ timespan = '24h' }: GdeltMapProps) {
           const rawDate = event.properties?.DATEADDED || event.properties?.dateadded || ''
           const domain = event.properties?.domain || (srcUrl ? srcUrl.split('/')[2] : '')
           const country = event.properties?.sourcecountry || ''
-          const tone = event.properties?.tone
+          const title = event.properties?.name || ''
 
-          // Parse GDELT date "YYYYMMDDHHMMSS" or ISO
           let displayDate = ''
           try {
-            if (rawDate.length >= 8 && /^\d+$/.test(rawDate)) {
-              const y = rawDate.slice(0, 4)
-              const mo = rawDate.slice(4, 6)
-              const d = rawDate.slice(6, 8)
-              const h = rawDate.slice(8, 10) || '00'
-              const mi = rawDate.slice(10, 12) || '00'
-              displayDate = new Date(`${y}-${mo}-${d}T${h}:${mi}:00Z`).toLocaleString('es', {
-                day: '2-digit', month: 'short', year: 'numeric',
-                hour: '2-digit', minute: '2-digit',
-              })
-            } else if (rawDate) {
+            if (rawDate) {
               displayDate = new Date(rawDate).toLocaleString('es', {
-                day: '2-digit', month: 'short', year: 'numeric',
+                day: '2-digit', month: 'short',
                 hour: '2-digit', minute: '2-digit',
               })
             }
@@ -130,28 +119,28 @@ export default function GdeltMap({ timespan = '24h' }: GdeltMapProps) {
             <CircleMarker
               key={i}
               center={[lat, lng]}
-              radius={5}
+              radius={6}
               pathOptions={{
                 fillColor: '#C9A84C',
-                color: '#C9A84C',
-                weight: 1,
-                opacity: 0.8,
-                fillOpacity: 0.5,
+                color: '#9A7A30',
+                weight: 1.5,
+                opacity: 0.9,
+                fillOpacity: 0.55,
               }}
             >
               <Popup>
                 <div
                   style={{
                     background: '#111111', color: '#E8E4DC',
-                    padding: '10px 12px', minWidth: '220px', maxWidth: '280px',
+                    padding: '10px 12px', minWidth: '240px', maxWidth: '300px',
                     fontFamily: 'system-ui, sans-serif',
                   }}
                 >
-                  {/* Date + country */}
+                  {/* Source + country */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <p style={{ fontSize: 11, color: '#C9A84C', fontFamily: 'monospace' }}>
-                      {displayDate || '—'}
-                    </p>
+                    <span style={{ fontSize: 10, color: '#C9A84C', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                      {domain}
+                    </span>
                     {country && (
                       <span style={{ fontSize: 10, color: '#8a8480', fontFamily: 'monospace' }}>
                         {country}
@@ -159,27 +148,31 @@ export default function GdeltMap({ timespan = '24h' }: GdeltMapProps) {
                     )}
                   </div>
 
-                  {/* Tone */}
-                  {tone !== undefined && (
-                    <p style={{ fontSize: 10, color: '#4a4642', marginBottom: 6, fontFamily: 'monospace' }}>
-                      Tono: {tone.toFixed(1)} · {domain}
+                  {/* Article title */}
+                  {title && (
+                    <p style={{ fontSize: 12, lineHeight: 1.45, marginBottom: 8, color: '#E8E4DC' }}>
+                      {title}
                     </p>
                   )}
 
-                  {/* Source link */}
-                  {srcUrl && (
-                    <a
-                      href={srcUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        color: '#C9A84C', fontSize: 12, lineHeight: 1.4,
-                        textDecoration: 'none', display: 'block',
-                      }}
-                    >
-                      {domain || srcUrl.slice(0, 40)} →
-                    </a>
-                  )}
+                  {/* Date + link */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    {displayDate && (
+                      <span style={{ fontSize: 10, color: '#4a4642', fontFamily: 'monospace' }}>
+                        {displayDate}
+                      </span>
+                    )}
+                    {srcUrl && (
+                      <a
+                        href={srcUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#C9A84C', fontSize: 11, textDecoration: 'none', fontFamily: 'monospace' }}
+                      >
+                        Leer →
+                      </a>
+                    )}
+                  </div>
                 </div>
               </Popup>
             </CircleMarker>

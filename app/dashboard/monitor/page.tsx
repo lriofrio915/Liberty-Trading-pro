@@ -143,7 +143,7 @@ export default function MonitorPage() {
           <span className="text-[var(--text-secondary)] text-2xl"> de Mercados Globales</span>
         </h1>
         <p className="text-[var(--text-secondary)] text-sm">
-          Eventos geopolíticos en tiempo real · GDELT Project · Noticias en español
+          Eventos geopolíticos en tiempo real · BBC Mundo · El País · DW · France 24
         </p>
       </div>
 
