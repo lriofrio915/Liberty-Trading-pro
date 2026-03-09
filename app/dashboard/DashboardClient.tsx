@@ -323,7 +323,7 @@ export default function DashboardClient({
           <select
             value={mesSeleccionado}
             onChange={e => setMesSeleccionado(e.target.value)}
-            className="bg-gray-900 border border-yellow-900/30 text-yellow-400 font-mono text-xs px-3 py-2 tracking-widest cursor-pointer focus:outline-none focus:border-yellow-500 rounded-lg"
+            className="bg-[var(--bg-card)] border border-[var(--border)] text-[var(--gold)] font-mono text-xs px-3 py-2 tracking-widest cursor-pointer focus:outline-none focus:border-[var(--gold-dark)] rounded-lg"
           >
             <option value="all">TODOS LOS MESES</option>
             {mesesDisponibles.map(m => (
@@ -342,7 +342,7 @@ export default function DashboardClient({
             <select
               value={planSeleccionado}
               onChange={e => setPlanSeleccionado(e.target.value)}
-              className="bg-gray-900 border border-yellow-900/30 text-yellow-400 font-mono text-xs px-3 py-2 tracking-widest cursor-pointer focus:outline-none focus:border-yellow-500 rounded-lg"
+              className="bg-[var(--bg-card)] border border-[var(--border)] text-[var(--gold)] font-mono text-xs px-3 py-2 tracking-widest cursor-pointer focus:outline-none focus:border-[var(--gold-dark)] rounded-lg"
             >
               <option value="all">TODOS LOS PLANES</option>
               {plans.map(p => (
