@@ -126,7 +126,7 @@ export default function VincesWidget() {
     <>
       {/* ── Chat panel ──────────────────────────────────────────────────── */}
       <div
-        className={`fixed bottom-24 right-5 z-50 flex flex-col transition-all duration-300 ease-in-out ${
+        className={`fixed bottom-36 right-5 z-50 flex flex-col transition-all duration-300 ease-in-out ${
           open
             ? 'opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 translate-y-4 pointer-events-none'
@@ -246,15 +246,21 @@ export default function VincesWidget() {
       <button
         onClick={() => setOpen((v) => !v)}
         title="Vinces AI"
-        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 active:scale-95"
+        className="fixed bottom-20 right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 active:scale-95 overflow-hidden"
         style={{
           background: 'linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 100%)',
           boxShadow: '0 4px 24px rgba(201,168,76,0.45)',
         }}
       >
-        <span className="text-2xl" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
-          {open ? '×' : '🤖'}
-        </span>
+        {open ? (
+          <span className="text-2xl text-black font-bold">×</span>
+        ) : (
+          <img
+            src="https://res.cloudinary.com/deusntwkn/image/upload/v1773069069/IMG_20251126_065050_395_wcnpca.webp"
+            alt="Vinces AI"
+            className="w-full h-full object-cover"
+          />
+        )}
       </button>
     </>
   )
