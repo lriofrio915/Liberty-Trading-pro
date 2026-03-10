@@ -39,44 +39,75 @@ function primerNombre(fullName: string | null | undefined): string | null {
 // ── Transcripción de audio con Groq Whisper ───────────────────────────────────
 
 async function transcribirAudio(rawMessage: any): Promise<string> {
-  try {
-    const groqKey = process.env.GROQ_API_KEY
-    if (!groqKey) return '[Audio recibido — responde en texto por favor 🙏]'
+  const groqKey = process.env.GROQ_API_KEY
+  if (!groqKey) {
+    console.error('[Vinces WA] GROQ_API_KEY no configurada')
+    return ''
+  }
 
-    // Descargar audio vía Evolution API (devuelve base64)
+  try {
+    // 1. Descargar audio vía Evolution API
     const dlRes = await fetch(
       `${EVO_URL}/chat/getBase64FromMediaMessage/${EVO_INSTANCE}`,
       {
         method: 'POST',
         headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: rawMessage }),
+        signal: AbortSignal.timeout(15000),
       }
     )
+
+    if (!dlRes.ok) {
+      const txt = await dlRes.text()
+      console.error(`[Vinces WA] Evolution getBase64 error ${dlRes.status}:`, txt.slice(0, 300))
+      return ''
+    }
+
     const dlData = await dlRes.json()
-    const base64: string = dlData.base64
-    if (!base64) return '[No se pudo obtener el audio]'
+    // Evolution API puede devolver el base64 en distintos campos según versión
+    const base64: string = dlData.base64 || dlData.data || dlData.result || ''
 
-    // Convertir base64 → buffer → Blob
-    const buffer = Buffer.from(base64, 'base64')
-    const blob = new Blob([buffer], { type: 'audio/ogg' })
+    if (!base64) {
+      console.error('[Vinces WA] Evolution no devolvió base64:', JSON.stringify(dlData).slice(0, 300))
+      return ''
+    }
 
-    const form = new FormData()
-    form.append('file', blob, 'audio.ogg')
-    form.append('model', 'whisper-large-v3')
-    form.append('language', 'es')
+    // 2. Construir multipart manualmente (evita bugs de Blob/FormData en Node.js)
+    const audioBuffer = Buffer.from(base64, 'base64')
+    const boundary = `----WA${Date.now()}`
+    const CRLF = '\r\n'
 
-    const transcRes = await fetch(
-      'https://api.groq.com/openai/v1/audio/transcriptions',
-      {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${groqKey}` },
-        body: form,
-      }
-    )
+    const body = Buffer.concat([
+      Buffer.from(`--${boundary}${CRLF}Content-Disposition: form-data; name="file"; filename="audio.ogg"${CRLF}Content-Type: audio/ogg${CRLF}${CRLF}`),
+      audioBuffer,
+      Buffer.from(`${CRLF}--${boundary}${CRLF}Content-Disposition: form-data; name="model"${CRLF}${CRLF}whisper-large-v3`),
+      Buffer.from(`${CRLF}--${boundary}${CRLF}Content-Disposition: form-data; name="language"${CRLF}${CRLF}es`),
+      Buffer.from(`${CRLF}--${boundary}--${CRLF}`),
+    ])
+
+    const transcRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${groqKey}`,
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+      },
+      body,
+      signal: AbortSignal.timeout(30000),
+    })
+
+    if (!transcRes.ok) {
+      const txt = await transcRes.text()
+      console.error(`[Vinces WA] Groq error ${transcRes.status}:`, txt.slice(0, 300))
+      return ''
+    }
+
     const transcData = await transcRes.json()
-    return transcData.text?.trim() || '[No se pudo transcribir el audio]'
-  } catch {
-    return '[Error al procesar el audio]'
+    const texto = transcData.text?.trim() || ''
+    console.log('[Vinces WA] Transcripción OK:', texto.slice(0, 100))
+    return texto
+  } catch (e: any) {
+    console.error('[Vinces WA] transcribirAudio exception:', e?.message)
+    return ''
   }
 }
 
