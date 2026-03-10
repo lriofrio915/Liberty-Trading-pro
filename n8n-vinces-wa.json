@@ -85,29 +85,6 @@
     },
     {
       "parameters": {
-        "method": "PUT",
-        "url": "https://evo.nexus-ia.com.es/chat/sendPresence/vinces",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "apikey", "value": "157B8ABC2B63-46DE-B38C-05C3C3ACAA3A" },
-            { "name": "Content-Type", "value": "application/json" }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ number: $json.phone.replace('@s.whatsapp.net','').replace('@c.us',''), presence: 'composing', delay: 12000 }) }}",
-        "options": { "timeout": 8000 }
-      },
-      "id": "node-typing",
-      "name": "Enviar typing indicator",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [1120, 200],
-      "continueOnFail": true
-    },
-    {
-      "parameters": {
         "method": "POST",
         "url": "https://libertytrading.pro/api/vinces-wa",
         "sendHeaders": true,
@@ -125,7 +102,7 @@
       "name": "Vinces API",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [1340, 200]
+      "position": [1120, 200]
     },
     {
       "parameters": {
@@ -135,7 +112,7 @@
       "name": "Preparar respuestas",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1560, 200]
+      "position": [1340, 200]
     },
     {
       "parameters": {
@@ -157,7 +134,7 @@
       "name": "Enviar mensaje WA",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [1780, 200]
+      "position": [1560, 200]
     }
   ],
   "connections": {
@@ -178,12 +155,9 @@
     },
     "Mensaje valido?": {
       "main": [
-        [{ "node": "Enviar typing indicator", "type": "main", "index": 0 }],
+        [{ "node": "Vinces API", "type": "main", "index": 0 }],
         []
       ]
-    },
-    "Enviar typing indicator": {
-      "main": [[{ "node": "Vinces API", "type": "main", "index": 0 }]]
     },
     "Vinces API": {
       "main": [[{ "node": "Preparar respuestas", "type": "main", "index": 0 }]]
