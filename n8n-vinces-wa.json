@@ -85,7 +85,7 @@
     },
     {
       "parameters": {
-        "method": "POST",
+        "method": "PUT",
         "url": "https://evo.nexus-ia.com.es/chat/sendPresence/vinces",
         "sendHeaders": true,
         "headerParameters": {
@@ -97,13 +97,14 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ number: $json.phone.replace('@s.whatsapp.net','').replace('@c.us',''), presence: 'composing', delay: 12000 }) }}",
-        "options": { "timeout": 5000 }
+        "options": { "timeout": 8000 }
       },
       "id": "node-typing",
       "name": "Enviar typing indicator",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [1120, 200]
+      "position": [1120, 200],
+      "continueOnFail": true
     },
     {
       "parameters": {
