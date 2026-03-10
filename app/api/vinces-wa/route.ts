@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// ── Producto links ─────────────────────────────────────────────────────────────
+// ── Config ────────────────────────────────────────────────────────────────────
 const LINKS = {
-  APRENDIZ: process.env.HOTMART_LINK_ACADEMIA || 'https://hotm.io/NLcSS1',  // Mentoría Integral
-  TRADER:   process.env.HOTMART_LINK_CLUB     || 'https://hotm.io/HhAyjc',  // Especialización Futuros
+  APRENDIZ: process.env.HOTMART_LINK_ACADEMIA || 'https://hotm.io/NLcSS1',
+  TRADER:   process.env.HOTMART_LINK_CLUB     || 'https://hotm.io/HhAyjc',
 }
 
-// ── Preguntas de la entrevista ─────────────────────────────────────────────────
+const EVO_URL      = process.env.EVOLUTION_API_URL      || 'https://evo.nexus-ia.com.es'
+const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE      || 'vinces'
+const EVO_KEY      = process.env.EVOLUTION_API_KEY       || '157B8ABC2B63-46DE-B38C-05C3C3ACAA3A'
+
+// ── Preguntas ─────────────────────────────────────────────────────────────────
 const PREGUNTAS: Record<string, string> = {
   P1: '¿Tienes experiencia previa operando en mercados financieros (acciones, forex, futuros, cripto)? Cuéntame un poco.',
   P2: '¿Cuál es tu objetivo principal con el trading?\n\n1️⃣ Aprender desde cero\n2️⃣ Mejorar mis resultados actuales\n3️⃣ Generar ingresos consistentes\n4️⃣ Otro',
@@ -16,28 +20,73 @@ const PREGUNTAS: Record<string, string> = {
   P5: 'Última pregunta: ¿Qué es lo que más te frena hoy para comenzar o mejorar en el trading?',
 }
 
-// Estado → siguiente estado
 const NEXT_STATE: Record<string, string> = {
-  NOMBRE: 'P1',
-  P1: 'P2',
-  P2: 'P3',
-  P3: 'P4',
-  P4: 'P5',
-  P5: 'CLASIFICADO',
+  NOMBRE: 'P1', P1: 'P2', P2: 'P3', P3: 'P4', P4: 'P5', P5: 'CLASIFICADO',
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function cleanPhone(jid: string): string {
-  // Evolution API sends "5939XXXXXXXX@s.whatsapp.net" or just the number
   return jid.replace('@s.whatsapp.net', '').replace('@c.us', '').trim()
 }
+
+/** Toma solo el primer nombre — "Luis Riofrío" → "Luis" */
+function primerNombre(fullName: string | null | undefined): string | null {
+  if (!fullName?.trim()) return null
+  return fullName.trim().split(/\s+/)[0]
+}
+
+// ── Transcripción de audio con Groq Whisper ───────────────────────────────────
+
+async function transcribirAudio(rawMessage: any): Promise<string> {
+  try {
+    const groqKey = process.env.GROQ_API_KEY
+    if (!groqKey) return '[Audio recibido — responde en texto por favor 🙏]'
+
+    // Descargar audio vía Evolution API (devuelve base64)
+    const dlRes = await fetch(
+      `${EVO_URL}/chat/getBase64FromMediaMessage/${EVO_INSTANCE}`,
+      {
+        method: 'POST',
+        headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: rawMessage }),
+      }
+    )
+    const dlData = await dlRes.json()
+    const base64: string = dlData.base64
+    if (!base64) return '[No se pudo obtener el audio]'
+
+    // Convertir base64 → buffer → Blob
+    const buffer = Buffer.from(base64, 'base64')
+    const blob = new Blob([buffer], { type: 'audio/ogg' })
+
+    const form = new FormData()
+    form.append('file', blob, 'audio.ogg')
+    form.append('model', 'whisper-large-v3')
+    form.append('language', 'es')
+
+    const transcRes = await fetch(
+      'https://api.groq.com/openai/v1/audio/transcriptions',
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${groqKey}` },
+        body: form,
+      }
+    )
+    const transcData = await transcRes.json()
+    return transcData.text?.trim() || '[No se pudo transcribir el audio]'
+  } catch {
+    return '[Error al procesar el audio]'
+  }
+}
+
+// ── OpenRouter AI ─────────────────────────────────────────────────────────────
 
 async function callAI(messages: { role: string; content: string }[]): Promise<string> {
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
       'X-Title': 'Liberty Trading - Vinces WA',
@@ -53,185 +102,150 @@ async function callAI(messages: { role: string; content: string }[]): Promise<st
   return data.choices?.[0]?.message?.content || ''
 }
 
-// ── Clasificar perfil con AI ───────────────────────────────────────────────────
+// ── Clasificar perfil ─────────────────────────────────────────────────────────
 
-async function clasificarPerfil(name: string, respuestas: Record<string, string>): Promise<{
-  perfil: 'APRENDIZ' | 'TRADER'
-  mensaje: string
-  productoUrl: string
-}> {
+async function clasificarPerfil(name: string, respuestas: Record<string, string>) {
   const resumen = Object.entries(respuestas)
     .map(([k, v]) => `${PREGUNTAS[k]}\nRespuesta: ${v}`)
     .join('\n\n')
 
-  const prompt = `Eres Vinces, coach de trading de Liberty Trading Pro. Analizaste la entrevista de ${name}:
+  const prompt = `Eres Vinces, coach de Liberty Trading Pro. Analizaste la entrevista de ${name}:
 
 ${resumen}
 
-Clasifica al prospecto:
-- APRENDIZ: quiere aprender desde cero, poca experiencia, quiere entender mercados, abrir cuenta en broker y comprar sus primeros activos → Mentoría Integral
-- TRADER: ya opera o tiene experiencia, quiere especializarse y ser trader profesional → Especialización en Futuros
+Clasifica:
+- APRENDIZ: poca experiencia, quiere aprender desde cero → Mentoría Integral
+- TRADER: ya opera o tiene base, quiere especializarse → Especialización en Futuros
 
-Responde SOLO este JSON (sin markdown, sin corchetes adicionales):
-{"perfil":"APRENDIZ","mensaje":"texto aquí"}
+Responde SOLO este JSON:
+{"perfil":"APRENDIZ","mensaje":"texto"}
 
-Reglas del mensaje:
-- 3 oraciones máximo, cálidas y personalizadas según sus respuestas reales
-- NO uses asteriscos, guiones ni formato
-- NO incluyas el link en el mensaje (el sistema lo agrega solo)
-- Termina con una frase que invite a revisar la información`
+Reglas del mensaje: 3 oraciones personalizadas según sus respuestas, cálidas, sin links, sin formato, termina invitando a revisar.`
 
   const raw = await callAI([{ role: 'user', content: prompt }])
 
   try {
-    const jsonMatch = raw.match(/\{[\s\S]*\}/)
-    const parsed = JSON.parse(jsonMatch?.[0] || '{}')
+    const parsed = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] || '{}')
     const perfil: 'APRENDIZ' | 'TRADER' = parsed.perfil === 'TRADER' ? 'TRADER' : 'APRENDIZ'
     const url = LINKS[perfil]
-    const productoNombre = perfil === 'TRADER' ? 'Especialización en Futuros' : 'Mentoría Integral'
-    // Limpiar cualquier URL o markdown que el AI haya incluido
+    const producto = perfil === 'TRADER' ? 'Especialización en Futuros' : 'Mentoría Integral'
     const mensajeLimpio = (parsed.mensaje || '')
       .replace(/https?:\/\/\S+/g, '')
       .replace(/\[.*?\]\(.*?\)/g, '')
       .trim()
-    return {
-      perfil,
-      mensaje: `${mensajeLimpio}\n\n👉 ${productoNombre}:\n${url}`,
-      productoUrl: url,
-    }
+    return { perfil, mensaje: `${mensajeLimpio}\n\n👉 ${producto}:\n${url}`, productoUrl: url }
   } catch {
-    const perfil = 'APRENDIZ'
     return {
-      perfil,
-      mensaje: `Basado en lo que me contaste, creo que el mejor camino para ti es nuestra Mentoría Integral. 🎓\n\n👉 Mentoría Integral:\n${LINKS.APRENDIZ}`,
+      perfil: 'APRENDIZ' as const,
+      mensaje: `Basado en lo que me contaste, creo que el mejor camino es nuestra Mentoría Integral. 🎓\n\n👉 Mentoría Integral:\n${LINKS.APRENDIZ}`,
       productoUrl: LINKS.APRENDIZ,
     }
   }
 }
 
-// ── Respuesta conversacional con AI ───────────────────────────────────────────
+// ── Transición conversacional ─────────────────────────────────────────────────
 
 async function respuestaConversacional(
   name: string | null,
   historial: { role: string; content: string }[],
   ultimoMensaje: string,
-  estado: string,
-): Promise<string> {
-  const system = `Eres Vinces, asistente de Liberty Trading Pro. Hablas por WhatsApp con un prospecto llamado ${name || 'el usuario'}.
+) {
+  const system = `Eres Vinces, asistente de Liberty Trading Pro. Hablas por WhatsApp con ${name || 'un prospecto'}.
 
-REGLAS ESTRICTAS — violarlas arruina la experiencia del cliente:
-1. NUNCA escribas pensamientos internos, notas, etiquetas ni metadatos. Nada de "Interno:", "Nota:", "Próxima pregunta:", corchetes [así] ni paréntesis aclaratorios para ti mismo.
-2. Tu respuesta es SOLO lo que el cliente verá en su WhatsApp. Nada más.
-3. Escribe SOLO 2 o 3 oraciones cortas de empatía o reconocimiento a lo que dijo el cliente. Cálido, humano, natural.
-4. NO hagas preguntas. El sistema agrega la siguiente pregunta automáticamente después de tu respuesta.
-5. NO uses asteriscos, guiones como listas, ni formato markdown de ningún tipo.
-6. NO copies ni repitas lo que el cliente dijo.
-7. Usa máximo 1 emoji por mensaje.`
+REGLAS ESTRICTAS:
+1. NUNCA escribas pensamientos internos, notas ni metadatos. Nada de "Interno:", "Nota:", corchetes ni paréntesis aclaratorios.
+2. Tu respuesta es SOLO lo que el cliente verá. Nada más.
+3. Escribe SOLO 2 oraciones cortas de empatía o reconocimiento. Cálido, humano, natural.
+4. NO hagas preguntas. El sistema agrega la siguiente pregunta automáticamente.
+5. NO uses asteriscos, guiones ni markdown de ningún tipo.
+6. Usa máximo 1 emoji.`
 
-  const messages = [
+  return callAI([
     { role: 'system', content: system },
     ...historial.slice(-6),
     { role: 'user', content: ultimoMensaje },
-  ]
-
-  return callAI(messages)
+  ])
 }
 
-// ── POST /api/vinces-wa ────────────────────────────────────────────────────────
+// ── POST /api/vinces-wa ───────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-
-    // Extraer datos del payload de Evolution API
-    const { phone: rawPhone, message, pushName } = body as {
+    const { phone: rawPhone, pushName, isAudio, rawMessage } = body as {
       phone: string
-      message: string
       pushName?: string
+      isAudio?: boolean
+      rawMessage?: any
+    }
+    let { message } = body as { message?: string }
+
+    if (!rawPhone) return NextResponse.json({ ok: false, error: 'Missing phone' })
+
+    // ── Transcribir audio si es nota de voz ──────────────────────────────────
+    if (isAudio && rawMessage) {
+      message = await transcribirAudio(rawMessage)
     }
 
-    if (!rawPhone || !message?.trim()) {
-      return NextResponse.json({ ok: false, error: 'Missing phone or message' })
-    }
+    if (!message?.trim()) return NextResponse.json({ ok: false, error: 'Empty message' })
 
     const phone = cleanPhone(rawPhone)
-    const texto = message.trim()
+    let texto = message.trim()
 
-    // Buscar o crear lead
+    // ── Buscar o crear lead ──────────────────────────────────────────────────
     let lead = await (prisma as any).whatsappLead.findUnique({ where: { phone } })
-
     if (!lead) {
       lead = await (prisma as any).whatsappLead.create({
-        data: {
-          phone,
-          name: pushName || null,
-          estado: 'NUEVO',
-          historial: [],
-          respuestas: {},
-        },
+        data: { phone, name: primerNombre(pushName), estado: 'NUEVO', historial: [], respuestas: {} },
       })
     }
 
     const historial: { role: string; content: string }[] = (lead.historial as any) || []
     const respuestas: Record<string, string> = (lead.respuestas as any) || {}
-    let { estado, name } = lead
+    let { estado } = lead
+    let name: string | null = lead.name
     let respuesta = ''
 
-    // ── Máquina de estados ──────────────────────────────────────────────────
+    // ── Máquina de estados ───────────────────────────────────────────────────
 
     if (estado === 'NUEVO') {
-      name = pushName || null
+      name = primerNombre(pushName)
       if (name) {
-        // Tenemos nombre de WA, ir directo a P1
         estado = 'P1'
-        respuesta = `¡Hola ${name}! 👋 Soy *Vinces*, el asistente de Liberty Trading Pro.\n\nMe alegra que estés aquí. Voy a hacerte unas preguntas rápidas para orientarte mejor 🎯\n\n${PREGUNTAS.P1}`
+        respuesta = `¡Hola ${name}! 👋 Soy Vinces, el asistente de Liberty Trading Pro.\n\nMe alegra que estés aquí. Voy a hacerte unas preguntas rápidas para orientarte mejor 🎯\n\n${PREGUNTAS.P1}`
       } else {
         estado = 'NOMBRE'
-        respuesta = '¡Hola! 👋 Soy *Vinces*, el asistente de Liberty Trading Pro.\n\nEstoy aquí para ayudarte a encontrar el camino correcto en el mundo del trading.\n\n¿Cómo te llamas?'
+        respuesta = '¡Hola! 👋 Soy Vinces, el asistente de Liberty Trading Pro.\n\nEstoy aquí para ayudarte a encontrar tu camino en el trading.\n\n¿Cómo te llamas?'
       }
     }
 
     else if (estado === 'NOMBRE') {
-      name = texto.split(' ')[0] // tomar primer nombre
+      name = primerNombre(texto)
       estado = 'P1'
       respuesta = `¡Mucho gusto, ${name}! 😊\n\nTe voy a hacer unas preguntas rápidas para entender qué necesitas 👇\n\n${PREGUNTAS.P1}`
     }
 
     else if (['P1', 'P2', 'P3', 'P4'].includes(estado)) {
-      // Guardar respuesta a la pregunta actual
       respuestas[estado] = texto
-
-      // Generar transición natural con AI
-      const transicion = await respuestaConversacional(name, historial, texto, estado)
+      const transicion = await respuestaConversacional(name, historial, texto)
       const nextEstado = NEXT_STATE[estado]
       estado = nextEstado
-
       respuesta = `${transicion}\n\n${PREGUNTAS[nextEstado]}`
     }
 
     else if (estado === 'P5') {
-      // Última pregunta respondida → clasificar
       respuestas['P5'] = texto
       estado = 'CLASIFICADO'
+      respuesta = `Gracias por contarme todo esto, ${name} 🙏\n\nDéjame analizar tu perfil un momento...`
 
-      respuesta = `Gracias por contarme todo esto, ${name || 'amigo'} 🙏\n\nDéjame analizar tu perfil un momento...`
-
-      // Actualizar estado intermedio primero, luego clasificar async
       historial.push({ role: 'user', content: texto })
       historial.push({ role: 'assistant', content: respuesta })
 
       await (prisma as any).whatsappLead.update({
         where: { phone },
-        data: {
-          name,
-          estado,
-          respuestas,
-          historial: historial.slice(-20),
-          updatedAt: new Date(),
-        },
+        data: { name, estado, respuestas, historial: historial.slice(-20), updatedAt: new Date() },
       })
 
-      // Clasificación (devolvemos la respuesta intermedia ahora; la oferta se enviará en el siguiente webhook)
       const clasificacion = await clasificarPerfil(name || 'Trader', respuestas)
 
       await (prisma as any).whatsappLead.update({
@@ -240,48 +254,31 @@ export async function POST(req: NextRequest) {
           estado: 'CTA',
           perfil: clasificacion.perfil,
           productoUrl: clasificacion.productoUrl,
-          historial: [
-            ...historial,
-            { role: 'assistant', content: clasificacion.mensaje },
-          ].slice(-20),
+          historial: [...historial, { role: 'assistant', content: clasificacion.mensaje }].slice(-20),
           updatedAt: new Date(),
         },
       })
 
-      // Devolver ambos mensajes para que n8n los envíe en secuencia
-      return NextResponse.json({
-        ok: true,
-        messages: [respuesta, clasificacion.mensaje],
-      })
+      return NextResponse.json({ ok: true, messages: [respuesta, clasificacion.mensaje] })
     }
 
     else if (estado === 'CTA') {
-      // El usuario respondió después de recibir la oferta
-      const respAI = await respuestaConversacional(name, historial, texto, 'CTA')
+      const respAI = await respuestaConversacional(name, historial, texto)
       respuesta = respAI
-
-      // Si dice algo positivo, mantener en CTA; si compró, marcar VENDIDO
-      const positivo = /gracias|compré|me anoto|perfecto|listo|pagué|sí quiero/i.test(texto)
+      const positivo = /gracias|compré|me anoto|perfecto|listo|pagué|sí quiero|inscrib/i.test(texto)
       if (positivo) estado = 'VENDIDO'
     }
 
     else if (estado === 'VENDIDO') {
-      respuesta = `¡Felicidades ${name || ''}! 🎉 Ya eres parte de Liberty Trading Pro. En breve recibirás acceso. Cualquier duda estoy aquí 🚀`
+      respuesta = `¡Felicidades ${name}! 🎉 Ya eres parte de Liberty Trading Pro. En breve recibirás tu acceso. Cualquier duda estoy aquí.`
     }
 
-    // Actualizar historial y estado
     historial.push({ role: 'user', content: texto })
     historial.push({ role: 'assistant', content: respuesta })
 
     await (prisma as any).whatsappLead.update({
       where: { phone },
-      data: {
-        name,
-        estado,
-        respuestas,
-        historial: historial.slice(-20),
-        updatedAt: new Date(),
-      },
+      data: { name, estado, respuestas, historial: historial.slice(-20), updatedAt: new Date() },
     })
 
     return NextResponse.json({ ok: true, messages: [respuesta] })
