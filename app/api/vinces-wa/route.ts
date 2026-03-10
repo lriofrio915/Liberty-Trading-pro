@@ -209,6 +209,13 @@ export async function POST(req: NextRequest) {
 
     const phone = cleanPhone(rawPhone)
 
+    // ── Typing indicator: fire-and-forget (no bloquea el flujo) ──────────────
+    fetch(`${EVO_URL}/chat/sendPresence/${EVO_INSTANCE}`, {
+      method: 'POST',
+      headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ number: phone, presence: 'composing', delay: 25000 }),
+    }).catch(() => {})
+
     // ── Transcribir audio si es nota de voz ──────────────────────────────────
     if (isAudio && rawMessage) {
       const transcripcion = await transcribirAudio(rawMessage)
