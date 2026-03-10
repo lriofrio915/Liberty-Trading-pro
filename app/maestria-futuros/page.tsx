@@ -426,7 +426,7 @@ export default function MaestriaFuturosPage() {
 
       {/* ─── BOTÓN FLOTANTE VINCES ──────────────────────────────── */}
       <a href={VINCES_WA} target="_blank" rel="noopener noreferrer"
-        title="Hablar con Vinces IA" className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 group">
+        title="Hablar con Vinces IA" className="fixed bottom-24 right-6 z-50 flex items-center gap-2.5 group">
         <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
           Hablar con Vinces IA
         </span>

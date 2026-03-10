@@ -413,7 +413,7 @@ export default function LandingPage() {
         target="_blank"
         rel="noopener noreferrer"
         title="Hablar con Vinces IA"
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 group"
+        className="fixed bottom-24 right-6 z-50 flex items-center gap-2.5 group"
       >
         {/* Tooltip */}
         <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
