@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar/Navbar'
 import Footer from '@/components/Footer/Footer'
+import LeadCaptureForm from '@/components/LeadCaptureForm/LeadCaptureForm'
 
 const HOTMART = 'https://go.hotmart.com/R104429889B'
 const VINCES_WA = 'https://wa.me/18287149177?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20la%20Mentor%C3%ADa%20Integral%20de%20Inversi%C3%B3n'
@@ -305,6 +306,40 @@ export default function MentoriaIntegralPage() {
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{faq.a}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FORMULARIO CAPTACIÓN ───────────────────────────────── */}
+      <section className="py-24 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+            <div>
+              <div className="label-mono mb-3 text-[var(--gold)]">Sin compromiso</div>
+              <h2 className="headline text-4xl text-[var(--text-primary)] mb-5">
+                ¿Tienes dudas?<br />Vinces IA te orienta<br />
+                <span className="gradient-gold">gratis por WhatsApp</span>
+              </h2>
+              <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
+                Deja tu nombre y número. Vinces IA te escribe en segundos,
+                entiende tu situación y te dice si este programa es para ti —
+                sin presión y sin venderte nada que no necesites.
+              </p>
+              <div className="space-y-2">
+                {[
+                  '✓ Responde en segundos, cualquier hora',
+                  '✓ Analiza tu perfil y te da una recomendación real',
+                  '✓ Si no eres el perfil ideal, te lo dice con honestidad',
+                ].map((item) => (
+                  <p key={item} className="text-sm text-[var(--text-secondary)] font-mono">{item}</p>
+                ))}
+              </div>
+            </div>
+            <LeadCaptureForm
+              programa="INTEGRAL"
+              title="Habla con Vinces IA ahora"
+              subtitle="Deja tus datos y te contactamos por WhatsApp en segundos."
+            />
           </div>
         </div>
       </section>
