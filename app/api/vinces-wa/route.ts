@@ -3,21 +3,48 @@ import { prisma } from '@/lib/prisma'
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const LINKS = {
-  APRENDIZ: process.env.HOTMART_LINK_ACADEMIA || 'https://hotm.io/NLcSS1',
-  TRADER:   process.env.HOTMART_LINK_CLUB     || 'https://hotm.io/HhAyjc',
+  INTEGRAL: process.env.HOTMART_LINK_ACADEMIA || 'https://hotm.io/NLcSS1',
+  FUTUROS:  process.env.HOTMART_LINK_CLUB     || 'https://hotm.io/HhAyjc',
 }
 
-const EVO_URL      = process.env.EVOLUTION_API_URL      || 'https://evo.nexus-ia.com.es'
-const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE      || 'vinces'
-const EVO_KEY      = process.env.EVOLUTION_API_KEY       || '157B8ABC2B63-46DE-B38C-05C3C3ACAA3A'
+const EVO_URL      = process.env.EVOLUTION_API_URL || 'https://evo.nexus-ia.com.es'
+const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || 'vinces'
+const EVO_KEY      = process.env.EVOLUTION_API_KEY  || '157B8ABC2B63-46DE-B38C-05C3C3ACAA3A'
 
-// ── Preguntas ─────────────────────────────────────────────────────────────────
+// ── Contexto de Liberty Trading Pro ───────────────────────────────────────────
+const CONTEXTO_LUIS = `
+Eres Vinces, el asistente de ventas de Liberty Trading Pro — academia de trading fundada por Luis Riofrío.
+
+SOBRE LUIS RIOFRÍO (el formador):
+- Trader intradia especializado en futuros del Nasdaq (NQ/MNQ) con NinjaTrader 8
+- Estrategias: rompimiento y consecución (futuros intradia) | Dollar Cost Average (inversión a largo plazo)
+- NO enseña fórmulas mágicas. Enseña disciplina, consistencia, un método probado y un sistema que funciona
+- Honesto: el trading implica riesgo, no hay garantías de rentabilidad
+
+PROGRAMA 1 — Mentoría Integral de Inversión (2 meses, 1 a 1):
+- PARA QUIÉN: personas con trabajo/ingresos estables, que no tienen mucho tiempo libre, que quieren hacer crecer su capital e invertir con método. Perfil: adultos maduros, emprendedores, profesionales ocupados que quieren aprender a abrir cuentas en brokers, comprar acciones, ETFs, cripto, bonos, materias primas, construir un portafolio diversificado.
+- QUÉ APRENDEN: estrategia Dollar Cost Average, diversificación de portafolio, apertura de cuenta en Interactive Brokers, exchanges cripto, gestión de capital, conversiones USD/cripto.
+- FORMATO: clases 1 a 1 en vivo (ritmo adaptado), soporte por WhatsApp todo el programa, acceso de por vida a comunidad privada con análisis y oportunidades.
+- LINK: ${LINKS.INTEGRAL}
+
+PROGRAMA 2 — Maestría en Trading Intradía de Futuros NQ/MNQ (1 año):
+- PARA QUIÉN: personas que quieren hacer del trading su profesión o estilo de vida, que tienen tiempo para practicar y operar, que buscan cambiar de carrera, generar track record profesional, conseguir trabajo como operadores. Personas que ven el trading a largo plazo como su medio de vida.
+- QUÉ APRENDEN: sistema completo de trading intradia en NQ/MNQ con NinjaTrader 8, lectura de mercado, ejecución, gestión de posición, disciplina, métricas. El sistema opera en la apertura del mercado americano (9:30am NY) pero el alumno puede adaptarlo a su horario.
+- FORMATO: clases 1 a 1 con Luis, biblioteca de videos, mentoring grupal, comunidad privada, y Vinces IA como mentor de métricas (registra track record, win rate, profit factor, etc.)
+- LINK: ${LINKS.FUTUROS}
+
+CLAVE DE CLASIFICACIÓN:
+- ¿Quiere INVERTIR su capital y tiene trabajo? → Mentoría Integral
+- ¿Quiere VIVIR DEL TRADING y tiene tiempo para dedicarse? → Maestría en Futuros
+`
+
+// ── Preguntas rediseñadas ─────────────────────────────────────────────────────
 const PREGUNTAS: Record<string, string> = {
-  P1: '¿Tienes experiencia previa operando en mercados financieros (acciones, forex, futuros, cripto)? Cuéntame un poco.',
-  P2: '¿Cuál es tu objetivo principal con el trading?\n\n1️⃣ Aprender desde cero\n2️⃣ Mejorar mis resultados actuales\n3️⃣ Generar ingresos consistentes\n4️⃣ Otro',
-  P3: '¿Cuántas horas a la semana podrías dedicarle al trading o al aprendizaje?',
-  P4: '¿Con qué capital cuentas o planeas iniciar? No te preocupes, no hay respuesta incorrecta 😊',
-  P5: 'Última pregunta: ¿Qué es lo que más te frena hoy para comenzar o mejorar en el trading?',
+  P1: '¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has invertido antes o es algo completamente nuevo para ti?',
+  P2: '¿Cuál de estas opciones describe mejor lo que buscas?\n\n1️⃣ Aprender a invertir mis ahorros y hacer crecer mi capital (sin dejar mi trabajo)\n2️⃣ Convertirme en trader profesional y vivir del trading\n3️⃣ Generar ingresos extras operando en mis tiempos libres\n4️⃣ Aún no tengo claro, quiero orientación',
+  P3: '¿Cuánto tiempo libre tienes al día o a la semana para dedicarle al aprendizaje y práctica?',
+  P4: '¿Con qué capital piensas iniciar? No hay respuesta incorrecta, es solo para orientarte mejor 😊',
+  P5: 'Última pregunta: ¿qué te ha impedido hasta ahora dar el paso? ¿Qué buscas en un mentor?',
 }
 
 const NEXT_STATE: Record<string, string> = {
@@ -30,7 +57,6 @@ function cleanPhone(jid: string): string {
   return jid.replace('@s.whatsapp.net', '').replace('@c.us', '').trim()
 }
 
-/** Toma solo el primer nombre — "Luis Riofrío" → "Luis" */
 function primerNombre(fullName: string | null | undefined): string | null {
   if (!fullName?.trim()) return null
   return fullName.trim().split(/\s+/)[0]
@@ -49,7 +75,6 @@ async function transcribirAudio(rawMessage: any): Promise<string> {
     const audioMsg = rawMessage?.message?.audioMessage || rawMessage?.message?.pttMessage
     let base64: string = audioMsg?.base64 || ''
 
-    // Si Evolution API no incluye base64 en el webhook, pedirlo explícitamente
     if (!base64) {
       console.log('[Vinces WA] base64 no en payload, llamando getBase64FromMediaMessage...')
       const evoRes = await fetch(`${EVO_URL}/chat/getBase64FromMediaMessage/${EVO_INSTANCE}`, {
@@ -120,7 +145,7 @@ async function callAI(messages: { role: string; content: string }[]): Promise<st
       model: process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat-v3-0324',
       messages,
       max_tokens: 600,
-      temperature: 0.75,
+      temperature: 0.7,
     }),
   })
   const data = await res.json()
@@ -134,26 +159,33 @@ async function clasificarPerfil(name: string, respuestas: Record<string, string>
     .map(([k, v]) => `${PREGUNTAS[k]}\nRespuesta: ${v}`)
     .join('\n\n')
 
-  const prompt = `Eres Vinces, coach de Liberty Trading Pro. Analizaste la entrevista de ${name}:
+  const prompt = `${CONTEXTO_LUIS}
+
+Analizaste la conversación con ${name}:
 
 ${resumen}
 
-Clasifica:
-- APRENDIZ: poca experiencia, quiere aprender desde cero → Mentoría Integral
-- TRADER: ya opera o tiene base, quiere especializarse → Especialización en Futuros
+Basándote en el contexto de Liberty Trading Pro, clasifica a ${name} en uno de estos dos perfiles:
+- INTEGRAL: quiere invertir su capital, tiene trabajo/ingresos, no tiene mucho tiempo libre, perfil inversor → Mentoría Integral
+- FUTUROS: quiere vivir del trading, tiene tiempo para dedicarse, quiere cambio de carrera o trading como profesión → Maestría en Futuros
 
-Responde SOLO este JSON:
-{"perfil":"APRENDIZ","mensaje":"texto"}
+Responde SOLO este JSON (sin texto adicional):
+{"perfil":"INTEGRAL","mensaje":"texto"}
 
-Reglas del mensaje: 3 oraciones personalizadas según sus respuestas, cálidas, sin links, sin formato, termina invitando a revisar.`
+Reglas del mensaje:
+- 3 oraciones personalizadas basadas en lo que dijo ${name}
+- Cálido, empático, muestra que entendiste su situación
+- Explica brevemente POR QUÉ ese programa es el ideal para él/ella
+- Sin links, sin asteriscos, sin markdown, sin emojis en exceso
+- Termina con una invitación a revisar el programa`
 
   const raw = await callAI([{ role: 'user', content: prompt }])
 
   try {
     const parsed = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] || '{}')
-    const perfil: 'APRENDIZ' | 'TRADER' = parsed.perfil === 'TRADER' ? 'TRADER' : 'APRENDIZ'
+    const perfil: 'INTEGRAL' | 'FUTUROS' = parsed.perfil === 'FUTUROS' ? 'FUTUROS' : 'INTEGRAL'
     const url = LINKS[perfil]
-    const producto = perfil === 'TRADER' ? 'Especialización en Futuros' : 'Mentoría Integral'
+    const producto = perfil === 'FUTUROS' ? 'Maestría en Trading Intradía de Futuros' : 'Mentoría Integral de Inversión'
     const mensajeLimpio = (parsed.mensaje || '')
       .replace(/https?:\/\/\S+/g, '')
       .replace(/\[.*?\]\(.*?\)/g, '')
@@ -161,9 +193,9 @@ Reglas del mensaje: 3 oraciones personalizadas según sus respuestas, cálidas, 
     return { perfil, mensaje: `${mensajeLimpio}\n\n👉 ${producto}:\n${url}`, productoUrl: url }
   } catch {
     return {
-      perfil: 'APRENDIZ' as const,
-      mensaje: `Basado en lo que me contaste, creo que el mejor camino es nuestra Mentoría Integral. 🎓\n\n👉 Mentoría Integral:\n${LINKS.APRENDIZ}`,
-      productoUrl: LINKS.APRENDIZ,
+      perfil: 'INTEGRAL' as const,
+      mensaje: `Basado en lo que me contaste, creo que el mejor punto de partida es nuestra Mentoría Integral de Inversión. 🎓\n\n👉 Mentoría Integral de Inversión:\n${LINKS.INTEGRAL}`,
+      productoUrl: LINKS.INTEGRAL,
     }
   }
 }
@@ -175,15 +207,18 @@ async function respuestaConversacional(
   historial: { role: string; content: string }[],
   ultimoMensaje: string,
 ) {
-  const system = `Eres Vinces, asistente de Liberty Trading Pro. Hablas por WhatsApp con ${name || 'un prospecto'}.
+  const system = `${CONTEXTO_LUIS}
+
+Estás en una conversación de WhatsApp con ${name || 'un prospecto'} que está interesado en aprender trading o inversión.
 
 REGLAS ESTRICTAS:
-1. NUNCA escribas pensamientos internos, notas ni metadatos. Nada de "Interno:", "Nota:", corchetes ni paréntesis aclaratorios.
-2. Tu respuesta es SOLO lo que el cliente verá. Nada más.
-3. Escribe SOLO 2 oraciones cortas de empatía o reconocimiento. Cálido, humano, natural.
-4. NO hagas preguntas. El sistema agrega la siguiente pregunta automáticamente.
-5. NO uses asteriscos, guiones ni markdown de ningún tipo.
-6. Usa máximo 1 emoji.`
+1. NUNCA escribas pensamientos internos, notas ni metadatos. Nada de "Interno:", "Nota:", corchetes ni paréntesis.
+2. Tu respuesta es SOLO lo que el cliente verá en WhatsApp.
+3. Escribe SOLO 1-2 oraciones cortas de empatía o reconocimiento genuino. Cálido, humano, natural.
+4. NO hagas preguntas. El sistema añade la siguiente pregunta automáticamente.
+5. NO uses asteriscos, guiones, markdown ni formato de ningún tipo.
+6. Usa máximo 1 emoji natural.
+7. Si la persona menciona que no sabe algo (activos, términos), tranquilízala: "eso es exactamente para lo que estamos aquí".`
 
   return callAI([
     { role: 'system', content: system },
@@ -209,7 +244,7 @@ export async function POST(req: NextRequest) {
 
     const phone = cleanPhone(rawPhone)
 
-    // ── Typing indicator: fire-and-forget (no bloquea el flujo) ──────────────
+    // ── Typing indicator: fire-and-forget ────────────────────────────────────
     fetch(`${EVO_URL}/chat/sendPresence/${EVO_INSTANCE}`, {
       method: 'POST',
       headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
@@ -219,7 +254,6 @@ export async function POST(req: NextRequest) {
     // ── Transcribir audio si es nota de voz ──────────────────────────────────
     if (isAudio && rawMessage) {
       const transcripcion = await transcribirAudio(rawMessage)
-      // Si la transcripción falló (empieza con [), responder amigablemente sin avanzar estado
       if (!transcripcion || transcripcion.startsWith('[')) {
         const nombreGuardado = primerNombre(
           ((await (prisma as any).whatsappLead.findUnique({ where: { phone } }))?.name) || pushName
@@ -247,7 +281,6 @@ export async function POST(req: NextRequest) {
     const historial: { role: string; content: string }[] = (lead.historial as any) || []
     const respuestas: Record<string, string> = (lead.respuestas as any) || {}
     let { estado } = lead
-    // Siempre usar solo el primer nombre, aunque el DB tenga nombre completo
     let name: string | null = primerNombre(lead.name)
     let respuesta = ''
 
@@ -257,17 +290,17 @@ export async function POST(req: NextRequest) {
       name = primerNombre(pushName)
       if (name) {
         estado = 'P1'
-        respuesta = `¡Hola ${name}! 👋 Soy Vinces, el asistente de Liberty Trading Pro.\n\nMe alegra que estés aquí. Voy a hacerte unas preguntas rápidas para orientarte mejor 🎯\n\n${PREGUNTAS.P1}`
+        respuesta = `¡Hola ${name}! 👋 Soy Vinces, el asistente de Liberty Trading Pro.\n\nMe alegra que hayas llegado hasta aquí. Para orientarte de la mejor forma, voy a hacerte unas preguntas rápidas 🎯\n\n${PREGUNTAS.P1}`
       } else {
         estado = 'NOMBRE'
-        respuesta = '¡Hola! 👋 Soy Vinces, el asistente de Liberty Trading Pro.\n\nEstoy aquí para ayudarte a encontrar tu camino en el trading.\n\n¿Cómo te llamas?'
+        respuesta = '¡Hola! 👋 Soy Vinces, el asistente de Liberty Trading Pro.\n\nEstoy aquí para ayudarte a encontrar el camino correcto en el mundo de las inversiones y el trading.\n\n¿Cómo te llamas?'
       }
     }
 
     else if (estado === 'NOMBRE') {
       name = primerNombre(texto)
       estado = 'P1'
-      respuesta = `¡Mucho gusto, ${name}! 😊\n\nTe voy a hacer unas preguntas rápidas para entender qué necesitas 👇\n\n${PREGUNTAS.P1}`
+      respuesta = `¡Mucho gusto, ${name}! 😊\n\nTe haré unas preguntas rápidas para entender exactamente qué necesitas y orientarte bien 👇\n\n${PREGUNTAS.P1}`
     }
 
     else if (['P1', 'P2', 'P3', 'P4'].includes(estado)) {
@@ -281,7 +314,7 @@ export async function POST(req: NextRequest) {
     else if (estado === 'P5') {
       respuestas['P5'] = texto
       estado = 'CLASIFICADO'
-      respuesta = `Gracias por contarme todo esto, ${name} 🙏\n\nDéjame analizar tu perfil un momento...`
+      respuesta = `Gracias por compartir todo eso conmigo, ${name} 🙏\n\nDéjame analizar tu perfil para darte la mejor recomendación...`
 
       historial.push({ role: 'user', content: texto })
       historial.push({ role: 'assistant', content: respuesta })
@@ -308,14 +341,21 @@ export async function POST(req: NextRequest) {
     }
 
     else if (estado === 'CTA') {
-      const respAI = await respuestaConversacional(name, historial, texto)
-      respuesta = respAI
-      const positivo = /gracias|compré|me anoto|perfecto|listo|pagué|sí quiero|inscrib/i.test(texto)
+      const system = `${CONTEXTO_LUIS}
+
+Estás hablando con ${name || 'un prospecto'} que ya recibió tu recomendación de programa. Responde sus dudas con calidez y precisión usando el contexto de Liberty Trading Pro. Si pregunta precios o fechas de inicio, dile que Luis le dará esa información al contactarlo directamente. Si muestra interés en inscribirse, refuerza positivamente. Sin markdown, sin asteriscos, máximo 3 oraciones.`
+
+      respuesta = await callAI([
+        { role: 'system', content: system },
+        ...historial.slice(-8),
+        { role: 'user', content: texto },
+      ])
+      const positivo = /gracias|compré|me anoto|perfecto|listo|pagué|sí quiero|quiero inscrib|me interesa|lo tomo|voy a tomar/i.test(texto)
       if (positivo) estado = 'VENDIDO'
     }
 
     else if (estado === 'VENDIDO') {
-      respuesta = `¡Felicidades ${name}! 🎉 Ya eres parte de Liberty Trading Pro. En breve recibirás tu acceso. Cualquier duda estoy aquí.`
+      respuesta = `¡Excelente decisión, ${name}! 🎉 Luis se pondrá en contacto contigo muy pronto para darte todos los detalles y comenzar. ¡Bienvenido a Liberty Trading Pro!`
     }
 
     historial.push({ role: 'user', content: texto })
