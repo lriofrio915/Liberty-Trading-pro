@@ -1,0 +1,175 @@
+{
+  "name": "Vinces AI - WhatsApp Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vinces-wa",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Evolution API Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"ok\": true }"
+      },
+      "id": "node-respond",
+      "name": "Responder 200 a Evolution",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [460, 500]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-fromme",
+              "leftValue": "={{ $json.body.data.key.fromMe }}",
+              "rightValue": false,
+              "operator": { "type": "boolean", "operation": "equals" }
+            },
+            {
+              "id": "cond-event",
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "messages",
+              "operator": { "type": "string", "operation": "contains" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "node-filter",
+      "name": "Filtrar mensajes entrantes",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nconst data = body?.data;\n\nif (!data) return [{ json: { skip: true } }];\n\nconst msg = data.message || {};\nconst jid = data.key?.remoteJid || '';\n\n// Ignorar grupos y estado\nif (jid.includes('@g.us') || jid.includes('status@broadcast')) {\n  return [{ json: { skip: true } }];\n}\n\n// Detectar audio (ptt = push-to-talk / nota de voz)\nconst isAudio = !!(msg.audioMessage || msg.pttMessage);\n\n// Texto del mensaje\nconst text = msg.conversation ||\n  msg.extendedTextMessage?.text ||\n  msg.imageMessage?.caption ||\n  '';\n\n// Si no hay texto ni audio, ignorar\nif (!text.trim() && !isAudio) {\n  return [{ json: { skip: true } }];\n}\n\nreturn [{\n  json: {\n    phone: jid,\n    message: text.trim() || '',\n    pushName: data.pushName || null,\n    isAudio,\n    rawMessage: { key: data.key, message: msg },\n    skip: false\n  }\n}];"
+      },
+      "id": "node-extract",
+      "name": "Extraer datos del mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-skip",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": false,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "node-valid",
+      "name": "Mensaje valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://libertytrading.pro/api/vinces-wa",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ phone: $('Extraer datos del mensaje').first().json.phone, message: $('Extraer datos del mensaje').first().json.message, pushName: $('Extraer datos del mensaje').first().json.pushName, isAudio: $('Extraer datos del mensaje').first().json.isAudio, rawMessage: $('Extraer datos del mensaje').first().json.rawMessage }) }}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "node-vinces-api",
+      "name": "Vinces API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst phone = $('Extraer datos del mensaje').first().json.phone;\nconst number = phone.replace('@s.whatsapp.net','').replace('@c.us','').trim();\nconst messages = response.messages || [];\nif (messages.length === 0) return [];\nreturn messages.map((text, i) => ({\n  json: { number, text, delay: i * 2500 }\n}));"
+      },
+      "id": "node-prepare",
+      "name": "Preparar respuestas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://evo.nexus-ia.com.es/message/sendText/vinces",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "157B8ABC2B63-46DE-B38C-05C3C3ACAA3A" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $json.number, text: $json.text, delay: $json.delay }) }}",
+        "options": {}
+      },
+      "id": "node-send-wa",
+      "name": "Enviar mensaje WA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1560, 200]
+    }
+  ],
+  "connections": {
+    "Evolution API Webhook": {
+      "main": [[
+        { "node": "Filtrar mensajes entrantes", "type": "main", "index": 0 },
+        { "node": "Responder 200 a Evolution",  "type": "main", "index": 0 }
+      ]]
+    },
+    "Filtrar mensajes entrantes": {
+      "main": [
+        [{ "node": "Extraer datos del mensaje", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Extraer datos del mensaje": {
+      "main": [[{ "node": "Mensaje valido?", "type": "main", "index": 0 }]]
+    },
+    "Mensaje valido?": {
+      "main": [
+        [{ "node": "Vinces API", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Vinces API": {
+      "main": [[{ "node": "Preparar respuestas", "type": "main", "index": 0 }]]
+    },
+    "Preparar respuestas": {
+      "main": [[{ "node": "Enviar mensaje WA", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "staticData": null,
+  "tags": ["whatsapp", "vinces", "leads"]
+}
