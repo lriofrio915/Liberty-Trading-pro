@@ -231,6 +231,19 @@ model KnowledgeDoc {
   updatedAt   DateTime @updatedAt
 }
 
+model WhatsappLead {
+  id              String   @id @default(cuid())
+  phone           String   @unique        // e.g. "593999123456"
+  name            String?
+  estado          String   @default("NUEVO") // NUEVO | NOMBRE | P1..P5 | CLASIFICADO | CTA | VENDIDO
+  perfil          String?                 // APRENDIZ | TRADER
+  respuestas      Json?                   // { p1: "...", p2: "...", ... }
+  historial       Json?                   // [{ role, content }] últimos 20 msgs
+  productoUrl     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 model VincesConversation {
   id        String   @id @default(cuid())
   userId    String

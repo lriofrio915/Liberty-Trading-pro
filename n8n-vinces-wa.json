@@ -1,0 +1,203 @@
+{
+  "name": "Vinces AI - WhatsApp Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vinces-wa",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Evolution API Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.body.data.key.fromMe }}",
+              "value2": false
+            }
+          ],
+          "string": [
+            {
+              "value1": "={{ $json.body.event }}",
+              "operation": "contains",
+              "value2": "messages"
+            }
+          ]
+        },
+        "combineOperation": "all"
+      },
+      "id": "filter-node",
+      "name": "Filtrar mensajes entrantes",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nconst data = body.data;\n\n// Extraer texto del mensaje\nconst msg = data.message;\nconst text =\n  msg?.conversation ||\n  msg?.extendedTextMessage?.text ||\n  msg?.imageMessage?.caption ||\n  '';\n\n// Ignorar mensajes vacíos, de grupos o de estado\nconst jid = data.key?.remoteJid || '';\nif (!text || jid.includes('@g.us') || jid.includes('status')) {\n  return [{ json: { skip: true } }];\n}\n\nreturn [{\n  json: {\n    phone: jid,\n    message: text,\n    pushName: data.pushName || null,\n    skip: false\n  }\n}];"
+      },
+      "id": "extract-node",
+      "name": "Extraer datos del mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.skip }}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "id": "skip-filter",
+      "name": "¿Mensaje válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.APP_URL }}/api/vinces-wa",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-wa-secret",
+              "value": "={{ $env.WA_SECRET }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "pushName",
+              "value": "={{ $json.pushName }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "vinces-api",
+      "name": "Vinces API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst phone = $('Extraer datos del mensaje').first().json.phone;\n\n// Limpiar número: quitar @s.whatsapp.net\nconst number = phone.replace('@s.whatsapp.net', '').replace('@c.us', '');\n\nconst messages = response.messages || [];\n\n// Retornar un item por cada mensaje a enviar\nreturn messages.map((text, i) => ({\n  json: { number, text, delay: i * 2000 }\n}));"
+      },
+      "id": "prepare-replies",
+      "name": "Preparar respuestas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.EVOLUTION_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"{{ $json.number }}\",\n  \"text\": \"{{ $json.text }}\",\n  \"delay\": {{ $json.delay }}\n}",
+        "options": {}
+      },
+      "id": "send-whatsapp",
+      "name": "Enviar mensaje WA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true }"
+      },
+      "id": "respond-node",
+      "name": "Responder 200 a Evolution",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 420]
+    }
+  ],
+  "connections": {
+    "Evolution API Webhook": {
+      "main": [
+        [
+          { "node": "Filtrar mensajes entrantes", "type": "main", "index": 0 },
+          { "node": "Responder 200 a Evolution",  "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Filtrar mensajes entrantes": {
+      "main": [
+        [{ "node": "Extraer datos del mensaje", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Extraer datos del mensaje": {
+      "main": [
+        [{ "node": "¿Mensaje válido?", "type": "main", "index": 0 }]
+      ]
+    },
+    "¿Mensaje válido?": {
+      "main": [
+        [{ "node": "Vinces API", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Vinces API": {
+      "main": [
+        [{ "node": "Preparar respuestas", "type": "main", "index": 0 }]
+      ]
+    },
+    "Preparar respuestas": {
+      "main": [
+        [{ "node": "Enviar mensaje WA", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
