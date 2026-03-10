@@ -69,13 +69,17 @@ async function clasificarPerfil(name: string, respuestas: Record<string, string>
 ${resumen}
 
 Clasifica al prospecto:
-- APRENDIZ: quiere aprender desde cero, poca experiencia, quiere entender mercados, abrir cuenta en broker y comprar sus primeros activos → producto: Mentoría Integral
-- TRADER: ya opera o tiene experiencia, quiere especializarse en futuros y convertirse en trader profesional → producto: Especialización en Futuros
+- APRENDIZ: quiere aprender desde cero, poca experiencia, quiere entender mercados, abrir cuenta en broker y comprar sus primeros activos → Mentoría Integral
+- TRADER: ya opera o tiene experiencia, quiere especializarse y ser trader profesional → Especialización en Futuros
 
-Responde SOLO este JSON:
-{"perfil":"APRENDIZ"|"TRADER","mensaje":"[3-4 oraciones personalizadas, cálidas y motivadoras explicando por qué ESE producto es perfecto para él según sus respuestas. Termina mencionando el link.]"}
+Responde SOLO este JSON (sin markdown, sin corchetes adicionales):
+{"perfil":"APRENDIZ","mensaje":"texto aquí"}
 
-No incluyas nada más que el JSON.`
+Reglas del mensaje:
+- 3 oraciones máximo, cálidas y personalizadas según sus respuestas reales
+- NO uses asteriscos, guiones ni formato
+- NO incluyas el link en el mensaje (el sistema lo agrega solo)
+- Termina con una frase que invite a revisar la información`
 
   const raw = await callAI([{ role: 'user', content: prompt }])
 
@@ -84,13 +88,22 @@ No incluyas nada más que el JSON.`
     const parsed = JSON.parse(jsonMatch?.[0] || '{}')
     const perfil: 'APRENDIZ' | 'TRADER' = parsed.perfil === 'TRADER' ? 'TRADER' : 'APRENDIZ'
     const url = LINKS[perfil]
-    const mensaje = (parsed.mensaje || '').replace(/\[link\]/gi, url).replace(/https?:\/\/\S+/g, url)
-    return { perfil, mensaje: mensaje + `\n\n🔗 ${url}`, productoUrl: url }
+    const productoNombre = perfil === 'TRADER' ? 'Especialización en Futuros' : 'Mentoría Integral'
+    // Limpiar cualquier URL o markdown que el AI haya incluido
+    const mensajeLimpio = (parsed.mensaje || '')
+      .replace(/https?:\/\/\S+/g, '')
+      .replace(/\[.*?\]\(.*?\)/g, '')
+      .trim()
+    return {
+      perfil,
+      mensaje: `${mensajeLimpio}\n\n👉 ${productoNombre}:\n${url}`,
+      productoUrl: url,
+    }
   } catch {
     const perfil = 'APRENDIZ'
     return {
       perfil,
-      mensaje: `Basado en lo que me contaste, creo que el mejor camino para ti es nuestra Academia. 🎓\n\n🔗 ${LINKS.APRENDIZ}`,
+      mensaje: `Basado en lo que me contaste, creo que el mejor camino para ti es nuestra Mentoría Integral. 🎓\n\n👉 Mentoría Integral:\n${LINKS.APRENDIZ}`,
       productoUrl: LINKS.APRENDIZ,
     }
   }
@@ -104,16 +117,20 @@ async function respuestaConversacional(
   ultimoMensaje: string,
   estado: string,
 ): Promise<string> {
-  const system = `Eres Vinces, el asistente de ventas de Liberty Trading Pro. Eres cálido, empático y profesional.
-Tu tarea es hacer una entrevista de calificación a posibles clientes de trading, UNA pregunta a la vez.
-Si el usuario se desvía o hace preguntas generales, responde brevemente y retoma el flujo.
-Nombre del prospecto: ${name || 'el usuario'}.
-Estado actual de la conversación: ${estado}.
-No uses asteriscos ni markdown. Escribe en texto plano para WhatsApp. Usa emojis con moderación.`
+  const system = `Eres Vinces, asistente de Liberty Trading Pro. Hablas por WhatsApp con un prospecto llamado ${name || 'el usuario'}.
+
+REGLAS ESTRICTAS — violarlas arruina la experiencia del cliente:
+1. NUNCA escribas pensamientos internos, notas, etiquetas ni metadatos. Nada de "Interno:", "Nota:", "Próxima pregunta:", corchetes [así] ni paréntesis aclaratorios para ti mismo.
+2. Tu respuesta es SOLO lo que el cliente verá en su WhatsApp. Nada más.
+3. Escribe SOLO 2 o 3 oraciones cortas de empatía o reconocimiento a lo que dijo el cliente. Cálido, humano, natural.
+4. NO hagas preguntas. El sistema agrega la siguiente pregunta automáticamente después de tu respuesta.
+5. NO uses asteriscos, guiones como listas, ni formato markdown de ningún tipo.
+6. NO copies ni repitas lo que el cliente dijo.
+7. Usa máximo 1 emoji por mensaje.`
 
   const messages = [
     { role: 'system', content: system },
-    ...historial.slice(-10),
+    ...historial.slice(-6),
     { role: 'user', content: ultimoMensaje },
   ]
 
