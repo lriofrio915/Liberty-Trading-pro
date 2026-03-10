@@ -43,18 +43,23 @@ const PREGUNTAS: Record<string, string> = {
   P1: '¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has invertido antes o es algo completamente nuevo para ti?',
   P2: '¿Cuál de estas opciones describe mejor lo que buscas?\n\n1️⃣ Aprender a invertir mis ahorros y hacer crecer mi capital (sin dejar mi trabajo)\n2️⃣ Convertirme en trader profesional y vivir del trading\n3️⃣ Generar ingresos extras operando en mis tiempos libres\n4️⃣ Aún no tengo claro, quiero orientación',
   P3: '¿Cuánto tiempo libre tienes al día o a la semana para dedicarle al aprendizaje y práctica?',
-  P4: '¿Con qué capital piensas iniciar? No hay respuesta incorrecta, es solo para orientarte mejor 😊',
-  P5: 'Última pregunta: ¿qué te ha impedido hasta ahora dar el paso? ¿Qué buscas en un mentor?',
+  P4: 'Y para cerrar: ¿qué te ha frenado hasta ahora para dar el paso? ¿Qué sería lo más importante para ti en un programa de formación?',
 }
 
 const NEXT_STATE: Record<string, string> = {
-  NOMBRE: 'P1', P1: 'P2', P2: 'P3', P3: 'P4', P4: 'P5', P5: 'CLASIFICADO',
+  NOMBRE: 'P1', P1: 'P2', P2: 'P3', P3: 'P4', P4: 'CLASIFICADO',
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function cleanPhone(jid: string): string {
   return jid.replace('@s.whatsapp.net', '').replace('@c.us', '').trim()
+}
+
+/** Detecta mensajes de despedida o agradecimiento cortos */
+function esDespadida(texto: string): boolean {
+  const t = texto.trim().toLowerCase()
+  return t.length < 80 && /^(ok|okay|okey|gracias|muchas gracias|mil gracias|perfecto|listo|bye|chao|chau|adios|adiós|hasta luego|hasta pronto|nos vemos|que tengas|buen dia|buen día|buenas noches|buenas tardes|fue un placer|encantado|con gusto|entendido|claro|de acuerdo|sin problema|todo bien|nada mas|nada más|eso es todo|es todo|ya es todo|eso sería todo)\b/i.test(t)
 }
 
 function primerNombre(fullName: string | null | undefined): string | null {
@@ -303,41 +308,51 @@ export async function POST(req: NextRequest) {
       respuesta = `¡Mucho gusto, ${name}! 😊\n\nTe haré unas preguntas rápidas para entender exactamente qué necesitas y orientarte bien 👇\n\n${PREGUNTAS.P1}`
     }
 
-    else if (['P1', 'P2', 'P3', 'P4'].includes(estado)) {
-      respuestas[estado] = texto
-      const transicion = await respuestaConversacional(name, historial, texto)
-      const nextEstado = NEXT_STATE[estado]
-      estado = nextEstado
-      respuesta = `${transicion}\n\n${PREGUNTAS[nextEstado]}`
+    else if (['P1', 'P2', 'P3'].includes(estado)) {
+      // Detectar despedida: no avanzar, responder con calidez
+      if (esDespadida(texto)) {
+        respuesta = `¡Fue un placer charlar contigo${name ? `, ${name}` : ''}! 😊 Cuando quieras continuar aquí estaré. ¡Que te vaya muy bien!`
+      } else {
+        respuestas[estado] = texto
+        const transicion = await respuestaConversacional(name, historial, texto)
+        const nextEstado = NEXT_STATE[estado]
+        estado = nextEstado
+        respuesta = `${transicion}\n\n${PREGUNTAS[nextEstado]}`
+      }
     }
 
-    else if (estado === 'P5') {
-      respuestas['P5'] = texto
-      estado = 'CLASIFICADO'
-      respuesta = `Gracias por compartir todo eso conmigo, ${name} 🙏\n\nDéjame analizar tu perfil para darte la mejor recomendación...`
+    else if (estado === 'P4') {
+      // Detectar despedida antes de la última pregunta
+      if (esDespadida(texto)) {
+        respuesta = `¡Un gusto hablar contigo${name ? `, ${name}` : ''}! 😊 Si en algún momento quieres retomar la conversación, aquí estaré. ¡Éxitos!`
+      } else {
+        respuestas['P4'] = texto
+        estado = 'CLASIFICADO'
+        respuesta = `Gracias por compartir todo eso conmigo, ${name} 🙏\n\nDéjame analizar tu perfil para darte la mejor recomendación...`
 
-      historial.push({ role: 'user', content: texto })
-      historial.push({ role: 'assistant', content: respuesta })
+        historial.push({ role: 'user', content: texto })
+        historial.push({ role: 'assistant', content: respuesta })
 
-      await (prisma as any).whatsappLead.update({
-        where: { phone },
-        data: { name, estado, respuestas, historial: historial.slice(-20), updatedAt: new Date() },
-      })
+        await (prisma as any).whatsappLead.update({
+          where: { phone },
+          data: { name, estado, respuestas, historial: historial.slice(-20), updatedAt: new Date() },
+        })
 
-      const clasificacion = await clasificarPerfil(name || 'Trader', respuestas)
+        const clasificacion = await clasificarPerfil(name || 'Trader', respuestas)
 
-      await (prisma as any).whatsappLead.update({
-        where: { phone },
-        data: {
-          estado: 'CTA',
-          perfil: clasificacion.perfil,
-          productoUrl: clasificacion.productoUrl,
-          historial: [...historial, { role: 'assistant', content: clasificacion.mensaje }].slice(-20),
-          updatedAt: new Date(),
-        },
-      })
+        await (prisma as any).whatsappLead.update({
+          where: { phone },
+          data: {
+            estado: 'CTA',
+            perfil: clasificacion.perfil,
+            productoUrl: clasificacion.productoUrl,
+            historial: [...historial, { role: 'assistant', content: clasificacion.mensaje }].slice(-20),
+            updatedAt: new Date(),
+          },
+        })
 
-      return NextResponse.json({ ok: true, messages: [respuesta, clasificacion.mensaje] })
+        return NextResponse.json({ ok: true, messages: [respuesta, clasificacion.mensaje] })
+      }
     }
 
     else if (estado === 'CTA') {

@@ -53,8 +53,7 @@ const PREGUNTAS: Record<string, string> = {
   P1: '¿Tienes trabajo/ingresos? ¿Has invertido antes?',
   P2: '¿Qué buscas principalmente?',
   P3: '¿Cuánto tiempo libre tienes para aprender/practicar?',
-  P4: '¿Con qué capital planeas iniciar?',
-  P5: '¿Qué te ha frenado? ¿Qué buscas en un mentor?',
+  P4: '¿Qué te ha frenado? ¿Qué buscas en un programa de formación?',
 }
 
 function timeAgo(date: string) {
