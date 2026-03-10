@@ -328,7 +328,18 @@ export async function POST(req: NextRequest) {
         const transicion = await respuestaConversacional(name, historial, texto)
         const nextEstado = NEXT_STATE[estado]
         estado = nextEstado
-        respuesta = `${transicion}\n\n${PREGUNTAS[nextEstado]}`
+
+        historial.push({ role: 'user', content: texto })
+        historial.push({ role: 'assistant', content: transicion })
+        historial.push({ role: 'assistant', content: PREGUNTAS[nextEstado] })
+
+        await (prisma as any).whatsappLead.update({
+          where: { phone },
+          data: { name, estado, respuestas, historial: historial.slice(-20), updatedAt: new Date() },
+        })
+
+        // Dos mensajes separados: primero la empatía, luego la pregunta
+        return NextResponse.json({ ok: true, messages: [transicion, PREGUNTAS[nextEstado]] })
       }
     }
 
