@@ -240,6 +240,8 @@ model WhatsappLead {
   respuestas      Json?                   // { p1: "...", p2: "...", ... }
   historial       Json?                   // [{ role, content }] últimos 20 msgs
   productoUrl     String?
+  followups       Int      @default(0)    // cuántos follow-ups se han enviado
+  lastFollowup    DateTime?               // fecha del último follow-up enviado
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
