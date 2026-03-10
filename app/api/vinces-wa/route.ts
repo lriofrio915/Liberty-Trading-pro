@@ -190,7 +190,7 @@ export async function POST(req: NextRequest) {
     if (!message?.trim()) return NextResponse.json({ ok: false, error: 'Empty message' })
 
     const phone = cleanPhone(rawPhone)
-    let texto = message.trim()
+    const texto = message.trim()
 
     // ── Buscar o crear lead ──────────────────────────────────────────────────
     let lead = await (prisma as any).whatsappLead.findUnique({ where: { phone } })

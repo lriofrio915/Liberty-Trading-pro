@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts'
+import { YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

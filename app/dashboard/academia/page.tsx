@@ -19,11 +19,9 @@ export default async function AcademiaPage() {
 
   let lecciones: any[] = []
   let completados: string[] = []
-  let dbUserId: string | null = null
 
   try {
     const dbUser = await prisma.user.findUnique({ where: { authId: user?.id } })
-    dbUserId = dbUser?.id ?? null
 
     // Admin sees all (published + unpublished), students only see published
     lecciones = await prisma.leccion.findMany({
