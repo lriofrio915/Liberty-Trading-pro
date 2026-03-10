@@ -3,8 +3,8 @@ import { prisma } from '@/lib/prisma'
 
 // ── Producto links ─────────────────────────────────────────────────────────────
 const LINKS = {
-  APRENDIZ: process.env.HOTMART_LINK_ACADEMIA || 'https://libertytrading.pro/academia',
-  TRADER:   process.env.HOTMART_LINK_CLUB     || 'https://libertytrading.pro/club',
+  APRENDIZ: process.env.HOTMART_LINK_ACADEMIA || 'https://hotm.io/NLcSS1',  // Mentoría Integral
+  TRADER:   process.env.HOTMART_LINK_CLUB     || 'https://hotm.io/HhAyjc',  // Especialización Futuros
 }
 
 // ── Preguntas de la entrevista ─────────────────────────────────────────────────
@@ -68,12 +68,12 @@ async function clasificarPerfil(name: string, respuestas: Record<string, string>
 
 ${resumen}
 
-Basándote en sus respuestas, clasifícalo como:
-- APRENDIZ: no tiene experiencia o necesita base sólida antes de operar → ofrecerle la Academia
-- TRADER: ya opera o tiene experiencia suficiente → ofrecerle el Club/Pro
+Clasifica al prospecto:
+- APRENDIZ: quiere aprender desde cero, poca experiencia, quiere entender mercados, abrir cuenta en broker y comprar sus primeros activos → producto: Mentoría Integral
+- TRADER: ya opera o tiene experiencia, quiere especializarse en futuros y convertirse en trader profesional → producto: Especialización en Futuros
 
-Responde en este JSON exacto:
-{"perfil":"APRENDIZ"|"TRADER","mensaje":"[mensaje personalizado de 3-4 oraciones explicando por qué ese producto es para él, con tono cálido y motivador, terminando con el link]"}
+Responde SOLO este JSON:
+{"perfil":"APRENDIZ"|"TRADER","mensaje":"[3-4 oraciones personalizadas, cálidas y motivadoras explicando por qué ESE producto es perfecto para él según sus respuestas. Termina mencionando el link.]"}
 
 No incluyas nada más que el JSON.`
 
