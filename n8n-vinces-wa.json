@@ -153,13 +153,13 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://EVOLUTION_API_URL/message/sendText/NOMBRE_INSTANCIA",
+        "url": "https://evo.nexus-ia.com.es/message/sendText/vinces",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "TU_EVOLUTION_API_KEY"
+              "value": "157B8ABC2B63-46DE-B38C-05C3C3ACAA3A"
             },
             {
               "name": "Content-Type",
