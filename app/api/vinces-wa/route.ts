@@ -168,6 +168,46 @@ async function callAI(messages: { role: string; content: string }[]): Promise<st
   return data.choices?.[0]?.message?.content || ''
 }
 
+// ── Notificar a Luis cuando un lead llega a CTA ───────────────────────────────
+
+const LUIS_PHONE = process.env.LUIS_PHONE || '593988835806' // formato sin + ni espacios
+
+async function notificarLuis(lead: {
+  name: string | null
+  phone: string
+  perfil: string
+  respuestas: Record<string, string>
+}) {
+  try {
+    const perfilLabel = lead.perfil === 'INTEGRAL' ? '📘 Mentoría Integral' : '📊 Maestría en Futuros'
+    const resumen = Object.entries(lead.respuestas)
+      .map(([k, v]) => `• ${PREGUNTAS[k]}\n  → ${v}`)
+      .join('\n\n')
+
+    const msg =
+      `🔔 *Nuevo lead listo para cierre*\n\n` +
+      `👤 *Nombre:* ${lead.name || 'sin nombre'}\n` +
+      `📱 *WhatsApp:* +${lead.phone}\n` +
+      `🎯 *Perfil:* ${perfilLabel}\n\n` +
+      `📋 *Respuestas del formulario:*\n\n${resumen}\n\n` +
+      `_Este lead ya recibió el link de pago de Vinces. Puedes hacer seguimiento directo._`
+
+    await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
+      method: 'POST',
+      headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        number: LUIS_PHONE,
+        text: msg,
+      }),
+      signal: AbortSignal.timeout(15000),
+    })
+
+    console.log('[Vinces WA] Notificación enviada a Luis para lead:', lead.phone)
+  } catch (e: any) {
+    console.error('[Vinces WA] Error notificando a Luis:', e?.message)
+  }
+}
+
 // ── Clasificar perfil ─────────────────────────────────────────────────────────
 
 async function clasificarPerfil(name: string, respuestas: Record<string, string>) {
@@ -372,6 +412,9 @@ export async function POST(req: NextRequest) {
             updatedAt: new Date(),
           },
         })
+
+        // Notificar a Luis (fire-and-forget)
+        notificarLuis({ name, phone, perfil: clasificacion.perfil, respuestas }).catch(() => {})
 
         return NextResponse.json({ ok: true, messages: [respuesta, clasificacion.mensaje] })
       }
