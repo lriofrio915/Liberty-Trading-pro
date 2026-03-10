@@ -182,14 +182,26 @@ export async function POST(req: NextRequest) {
 
     if (!rawPhone) return NextResponse.json({ ok: false, error: 'Missing phone' })
 
+    const phone = cleanPhone(rawPhone)
+
     // ── Transcribir audio si es nota de voz ──────────────────────────────────
     if (isAudio && rawMessage) {
-      message = await transcribirAudio(rawMessage)
+      const transcripcion = await transcribirAudio(rawMessage)
+      // Si la transcripción falló (empieza con [), responder amigablemente sin avanzar estado
+      if (!transcripcion || transcripcion.startsWith('[')) {
+        const nombreGuardado = primerNombre(
+          ((await (prisma as any).whatsappLead.findUnique({ where: { phone } }))?.name) || pushName
+        )
+        return NextResponse.json({
+          ok: true,
+          messages: [`${nombreGuardado ? `¡Hola ${nombreGuardado}! ` : ''}Recibí tu nota de voz pero tuve un problema al procesarla 😅 ¿Puedes escribirme tu mensaje? Te respondo de inmediato.`],
+        })
+      }
+      message = transcripcion
     }
 
     if (!message?.trim()) return NextResponse.json({ ok: false, error: 'Empty message' })
 
-    const phone = cleanPhone(rawPhone)
     const texto = message.trim()
 
     // ── Buscar o crear lead ──────────────────────────────────────────────────
@@ -203,7 +215,8 @@ export async function POST(req: NextRequest) {
     const historial: { role: string; content: string }[] = (lead.historial as any) || []
     const respuestas: Record<string, string> = (lead.respuestas as any) || {}
     let { estado } = lead
-    let name: string | null = lead.name
+    // Siempre usar solo el primer nombre, aunque el DB tenga nombre completo
+    let name: string | null = primerNombre(lead.name)
     let respuesta = ''
 
     // ── Máquina de estados ───────────────────────────────────────────────────
