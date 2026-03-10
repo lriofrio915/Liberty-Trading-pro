@@ -46,33 +46,18 @@ async function transcribirAudio(rawMessage: any): Promise<string> {
   }
 
   try {
-    // 1. Descargar audio vía Evolution API
-    const dlRes = await fetch(
-      `${EVO_URL}/chat/getBase64FromMediaMessage/${EVO_INSTANCE}`,
-      {
-        method: 'POST',
-        headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: rawMessage }),
-        signal: AbortSignal.timeout(15000),
-      }
-    )
-
-    if (!dlRes.ok) {
-      const txt = await dlRes.text()
-      console.error(`[Vinces WA] Evolution getBase64 error ${dlRes.status}:`, txt.slice(0, 300))
-      return ''
-    }
-
-    const dlData = await dlRes.json()
-    // Evolution API puede devolver el base64 en distintos campos según versión
-    const base64: string = dlData.base64 || dlData.data || dlData.result || ''
+    // El base64 ya viene incluido en el audioMessage del webhook de Evolution API
+    const audioMsg = rawMessage?.message?.audioMessage || rawMessage?.message?.pttMessage
+    const base64: string = audioMsg?.base64 || ''
 
     if (!base64) {
-      console.error('[Vinces WA] Evolution no devolvió base64:', JSON.stringify(dlData).slice(0, 300))
+      console.error('[Vinces WA] No se encontró base64 en el audioMessage:', JSON.stringify(rawMessage?.message || {}).slice(0, 200))
       return ''
     }
 
-    // 2. Construir multipart manualmente (evita bugs de Blob/FormData en Node.js)
+    console.log('[Vinces WA] base64 encontrado, longitud:', base64.length)
+
+    // Construir multipart manualmente (evita bugs de Blob/FormData en Node.js)
     const audioBuffer = Buffer.from(base64, 'base64')
     const boundary = `----WA${Date.now()}`
     const CRLF = '\r\n'
