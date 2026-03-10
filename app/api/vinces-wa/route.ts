@@ -76,26 +76,16 @@ async function transcribirAudio(rawMessage: any): Promise<string> {
 
     console.log('[Vinces WA] base64 listo, longitud:', base64.length)
 
-    // Construir multipart manualmente (evita bugs de Blob/FormData en Node.js)
     const audioBuffer = Buffer.from(base64, 'base64')
-    const boundary = `----WA${Date.now()}`
-    const CRLF = '\r\n'
-
-    const body = Buffer.concat([
-      Buffer.from(`--${boundary}${CRLF}Content-Disposition: form-data; name="file"; filename="audio.ogg"${CRLF}Content-Type: audio/ogg${CRLF}${CRLF}`),
-      audioBuffer,
-      Buffer.from(`${CRLF}--${boundary}${CRLF}Content-Disposition: form-data; name="model"${CRLF}${CRLF}whisper-large-v3`),
-      Buffer.from(`${CRLF}--${boundary}${CRLF}Content-Disposition: form-data; name="language"${CRLF}${CRLF}es`),
-      Buffer.from(`${CRLF}--${boundary}--${CRLF}`),
-    ])
+    const formData = new FormData()
+    formData.append('file', new Blob([audioBuffer], { type: 'audio/ogg' }), 'audio.ogg')
+    formData.append('model', 'whisper-large-v3')
+    formData.append('language', 'es')
 
     const transcRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${groqKey}`,
-        'Content-Type': `multipart/form-data; boundary=${boundary}`,
-      },
-      body,
+      headers: { Authorization: `Bearer ${groqKey}` },
+      body: formData,
       signal: AbortSignal.timeout(30000),
     })
 
