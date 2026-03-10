@@ -46,16 +46,35 @@ async function transcribirAudio(rawMessage: any): Promise<string> {
   }
 
   try {
-    // El base64 ya viene incluido en el audioMessage del webhook de Evolution API
     const audioMsg = rawMessage?.message?.audioMessage || rawMessage?.message?.pttMessage
-    const base64: string = audioMsg?.base64 || ''
+    let base64: string = audioMsg?.base64 || ''
+
+    // Si Evolution API no incluye base64 en el webhook, pedirlo explícitamente
+    if (!base64) {
+      console.log('[Vinces WA] base64 no en payload, llamando getBase64FromMediaMessage...')
+      const evoRes = await fetch(`${EVO_URL}/chat/getBase64FromMediaMessage/${EVO_INSTANCE}`, {
+        method: 'POST',
+        headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: rawMessage, convertToMp4: false }),
+        signal: AbortSignal.timeout(30000),
+      })
+      if (evoRes.ok) {
+        const evoData = await evoRes.json()
+        base64 = evoData.base64 || ''
+        console.log('[Vinces WA] base64 obtenido de Evolution API, longitud:', base64.length)
+      } else {
+        const txt = await evoRes.text()
+        console.error(`[Vinces WA] Evolution getBase64 error ${evoRes.status}:`, txt.slice(0, 300))
+        return ''
+      }
+    }
 
     if (!base64) {
-      console.error('[Vinces WA] No se encontró base64 en el audioMessage:', JSON.stringify(rawMessage?.message || {}).slice(0, 200))
+      console.error('[Vinces WA] No se pudo obtener base64 del audio')
       return ''
     }
 
-    console.log('[Vinces WA] base64 encontrado, longitud:', base64.length)
+    console.log('[Vinces WA] base64 listo, longitud:', base64.length)
 
     // Construir multipart manualmente (evita bugs de Blob/FormData en Node.js)
     const audioBuffer = Buffer.from(base64, 'base64')
