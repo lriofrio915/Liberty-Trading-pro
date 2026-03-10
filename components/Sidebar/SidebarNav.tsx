@@ -140,10 +140,13 @@ function UserMenu({ email }: { email: string }) {
   )
 }
 
+const ADMIN_EMAIL = 'lriofrio915@gmail.com'
+
 // ── Main nav ───────────────────────────────────────────────────────────────────
 
 export default function SidebarNav({ email }: { email: string }) {
   const pathname = usePathname()
+  const isAdmin = email === ADMIN_EMAIL
 
   return (
     <nav className="flex-1 px-3 py-6 flex flex-col">
@@ -162,6 +165,19 @@ export default function SidebarNav({ email }: { email: string }) {
             <span>{item.label}</span>
           </Link>
         ))}
+        {isAdmin && (
+          <Link
+            href="/dashboard/leads"
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer text-sm ${
+              pathname === '/dashboard/leads'
+                ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-400'
+                : 'text-gray-400 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <span className="text-base">📱</span>
+            <span>Leads WA</span>
+          </Link>
+        )}
       </div>
 
       {/* Bottom section */}
