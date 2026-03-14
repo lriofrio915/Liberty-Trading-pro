@@ -91,7 +91,7 @@ function computeStats(plan: TradingPlan, retiros: Retiro[]) {
   const now = new Date()
   const meses = Math.max(
     1,
-    (now.getFullYear() - primeraFecha.getFullYear()) * 12 + (now.getMonth() - primeraFecha.getMonth())
+    (now.getFullYear() - primeraFecha.getFullYear()) * 12 + (now.getMonth() - primeraFecha.getMonth()) + 1
   )
 
   const dataFeedTotal = (plan.dataFeedMensual ?? 0) * meses
