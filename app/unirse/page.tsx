@@ -61,10 +61,15 @@ export default function Unirse() {
 
     const cleanedPhone = normalizePhone(phone)
 
-    // Validaciones visibles
-    if (!nombre.trim()) return
+    console.log('[Form] Submit iniciado', { nombre: nombre.trim(), phone, cleanedPhone, cleanedLen: cleanedPhone.length, plan })
+
+    if (!nombre.trim()) {
+      console.log('[Form] Bloqueado: nombre vacío')
+      return
+    }
     if (cleanedPhone.length < 7) {
-      setPhoneError('Ingresa tu número de WhatsApp (mínimo 7 dígitos)')
+      console.log('[Form] Bloqueado: teléfono corto', cleanedPhone.length)
+      setPhoneError('Ingresa tu número de WhatsApp completo con código de país (ej: 593991234567)')
       return
     }
 
@@ -73,12 +78,10 @@ export default function Unirse() {
     setPhoneError('')
 
     try {
-      // Usar siempre www para evitar el redirect 307 de Cloudflare en POSTs
-      const apiBase = typeof window !== 'undefined'
-        ? `https://www.${window.location.hostname.replace(/^www\./, '')}/api/leads/capture`
-        : '/api/leads/capture'
+      const url = '/api/leads/capture'
+      console.log('[Form] Enviando a:', url, { name: nombre.trim(), phone: cleanedPhone, plan })
 
-      const res = await fetch(apiBase, {
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -88,15 +91,20 @@ export default function Unirse() {
           plan,
         }),
       })
+
+      console.log('[Form] Respuesta status:', res.status, res.ok)
       const json = await res.json()
+      console.log('[Form] Respuesta body:', json)
+
       if (json.ok) {
         setFormState('success')
       } else {
         setErrorMsg(json.error || 'Hubo un error. Intenta de nuevo.')
         setFormState('error')
       }
-    } catch {
-      setErrorMsg('Sin conexión. Intenta de nuevo.')
+    } catch (err: any) {
+      console.error('[Form] Error fetch:', err?.message, err)
+      setErrorMsg(`Error: ${err?.message || 'Sin conexión'}`)
       setFormState('error')
     }
   }
