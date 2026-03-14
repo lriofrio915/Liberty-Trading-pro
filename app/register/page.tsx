@@ -52,6 +52,16 @@ function RegisterForm() {
 
   const update = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }))
 
+  function handlePhoneChange(raw: string) {
+    const digits = raw.replace(/[^\d]/g, '').slice(0, 12)
+    let formatted = ''
+    if (digits.length > 0)  formatted = `+${digits.slice(0, 3)}`
+    if (digits.length > 3)  formatted += ` ${digits.slice(3, 5)}`
+    if (digits.length > 5)  formatted += ` ${digits.slice(5, 8)}`
+    if (digits.length > 8)  formatted += ` ${digits.slice(8, 12)}`
+    update('phone', formatted)
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4"
       style={{ background: 'var(--bg-primary)' }}>
@@ -68,7 +78,7 @@ function RegisterForm() {
             <div>
               <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">Nombre completo</label>
               <input type="text" required value={form.name} onChange={(e) => update('name', e.target.value)}
-                className="input" placeholder="Luis Riofrio" />
+                className="input" placeholder="Carlos Mendoza" />
             </div>
             <div>
               <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">Email</label>
@@ -76,8 +86,8 @@ function RegisterForm() {
                 className="input" placeholder="tu@email.com" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">WhatsApp (opcional)</label>
-              <input type="tel" value={form.phone} onChange={(e) => update('phone', e.target.value)}
+              <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">WhatsApp</label>
+              <input type="tel" value={form.phone} onChange={(e) => handlePhoneChange(e.target.value)}
                 className="input" placeholder="+593 99 000 0000" />
             </div>
             <div>
