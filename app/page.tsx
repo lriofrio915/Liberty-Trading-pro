@@ -53,7 +53,7 @@ export default function LandingPage() {
               {
                 num: '04',
                 icon: '💡',
-                title: 'Señales de Inversión',
+                title: 'Reportes de Inversión',
                 desc: 'Reportes y análisis de oportunidades en acciones y ETFs — entrada sugerida, objetivo, stop loss y contexto fundamental para que tomes tu propia decisión.',
                 badge: 'Club',
               },
@@ -124,7 +124,7 @@ export default function LandingPage() {
                 desc: [
                   'Accedes a toda la formación desde cero hasta futuros Nasdaq',
                   'Mentorías 1:1 con Luis cada mes para avanzar más rápido',
-                  'Señales reales para aprender con operaciones en vivo',
+                  'Reportes de oportunidades para aprender con contexto real del mercado',
                   'Coaching diario de Vinces IA para mejorar cada semana',
                 ],
               },

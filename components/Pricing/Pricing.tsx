@@ -73,11 +73,11 @@ export default function Pricing() {
           {/* Card 2 — Anual DESTACADO */}
           <div className="relative rounded-2xl overflow-hidden border border-[var(--gold)] glow-gold-sm"
             style={{ background: 'rgba(201,168,76,0.04)' }}>
-            <div className="absolute top-3 right-3">
-              <span className="btn-gold text-[10px] py-1 px-3 rounded-full tracking-widest">MEJOR VALOR</span>
-            </div>
             <div className="p-7">
-              <div className="label-mono mb-2 text-[var(--gold)]">Anual · Pago único al año</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="label-mono text-[var(--gold)]">Anual · Pago único al año</div>
+                <span className="btn-gold text-[10px] py-1 px-3 rounded-full tracking-widest flex-shrink-0 ml-2">MEJOR VALOR</span>
+              </div>
               <h3 className="headline text-3xl text-[var(--text-primary)] mb-1">Club Anual</h3>
               <p className="text-xs text-[var(--text-secondary)] mb-5 leading-relaxed">
                 Para quien ya decidió que el trading es su camino. Paga una vez al año y
@@ -130,7 +130,7 @@ export default function Pricing() {
             },
             {
               q: '¿Y si ya sé trading?',
-              a: 'Las señales reales, el track record de Luis, el coaching con Vinces IA y las mentorías 1:1 te dan ventaja operativa inmediata.',
+              a: 'El track record real de Luis, los reportes de oportunidades, el coaching con Vinces IA y las mentorías 1:1 te dan ventaja operativa inmediata.',
             },
           ].map((item) => (
             <div key={item.q} className="card p-5">
