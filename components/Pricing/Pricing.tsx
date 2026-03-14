@@ -2,14 +2,16 @@
 
 import Link from 'next/link'
 
-const PRO_FEATURES = [
-  'Vinces IA — coaching personalizado diario',
-  'Revisión 1:1 con Luis cada 15 días (2 veces al mes)',
-  'Acceso completo a tu historial operativo',
-  'Reportes PDF semanales y mensuales',
-  'Oportunidades de inversión en acciones',
-  'Monitor Mundial — geopolítica en tiempo real',
-  'Acceso de por vida a la comunidad',
+const ALL_FEATURES = [
+  { icon: '🎓', text: 'Mentoría Integral de Mercados Financieros (desde cero)' },
+  { icon: '📈', text: 'Especialización en Day Trading — Futuros NQ/MNQ Nasdaq' },
+  { icon: '🤝', text: 'Mentorías 1:1 personalizadas con Luis cada mes' },
+  { icon: '🤖', text: 'Vinces IA — coaching diario personalizado con IA' },
+  { icon: '💡', text: 'Señales de inversión en acciones, ETFs y criptoactivos' },
+  { icon: '🌐', text: 'Monitor Mundial — geopolítica y macro en tiempo real' },
+  { icon: '📊', text: 'Track record verificable — operaciones reales de Luis' },
+  { icon: '📄', text: 'Reportes de rendimiento semanales y mensuales' },
+  { icon: '👥', text: 'Comunidad privada activa — acceso mientras seas miembro' },
 ]
 
 export default function Pricing() {
@@ -17,156 +19,121 @@ export default function Pricing() {
     <section id="precios" className="py-24 px-4">
       <div className="max-w-6xl mx-auto">
 
-        {/* ── SECCIÓN 1: PROGRAMAS DE FORMACIÓN ──────── */}
-        <div className="mb-20">
-          <div className="mb-12">
-            <div className="label-mono mb-3">Programas de Formación</div>
-            <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)]">
-              Formación <span className="gradient-gold">con Luis</span>
-            </h2>
-            <p className="text-[var(--text-secondary)] mt-4 max-w-lg">
-              Comienza con uno de los programas de formación. Pago único, acceso completo.
-              Disponibles en Hotmart.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            {/* Card 1 — Mentoría */}
-            <div className="card-panel relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none opacity-5"
-                style={{ background: 'radial-gradient(circle, var(--gold) 0%, transparent 70%)' }} />
-              <div className="label-mono mb-2">2 meses · Pago único</div>
-              <h3 className="headline text-3xl text-[var(--text-primary)] mb-3">
-                Mentoría Integral de<br />Mercados Financieros
-              </h3>
-              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-4">
-                Para inversores que quieren aprender acciones, ETFs y cripto desde cero
-                con acompañamiento directo de Luis.
-              </p>
-              <ul className="space-y-1.5 mb-6 text-sm text-[var(--text-secondary)]">
-                {[
-                  'Clases 1:1 personalizadas con Luis',
-                  'Acciones, ETFs y criptoactivos',
-                  'Análisis fundamental y técnico',
-                  '2 meses de acceso + revisiones',
-                  'Apertura de cuenta IBKR paso a paso',
-                  'Acceso al mercado americano desde Latam',
-                ].map(f => (
-                  <li key={f} className="flex items-center gap-2">
-                    <span className="text-[var(--gold)] text-xs">✓</span>{f}
-                  </li>
-                ))}
-              </ul>
-              <div className="flex items-end justify-between mb-5">
-                <div>
-                  <div className="label-mono mb-1">Inversión</div>
-                  <div className="text-4xl font-bold text-white"
-                    style={{ fontFamily: 'var(--font-serif)' }}>
-                    $489 <span className="text-base font-normal text-[var(--text-muted)]">USD</span>
-                  </div>
-                </div>
-              </div>
-              <a href="https://go.hotmart.com/R104429889B" target="_blank" rel="noopener noreferrer"
-                className="btn-outline text-sm py-3 px-6 rounded-lg w-full text-center block">
-                Ver en Hotmart →
-              </a>
-            </div>
-
-            {/* Card 2 — Especialización DESTACADO */}
-            <div className="relative rounded-2xl overflow-hidden border border-[var(--gold)] glow-gold-sm"
-              style={{ background: 'rgba(201,168,76,0.04)' }}>
-              <div className="absolute top-3 right-3">
-                <span className="btn-gold text-[10px] py-1 px-3 rounded-full tracking-widest">DESTACADO</span>
-              </div>
-              <div className="p-7">
-                <div className="label-mono mb-2 text-[var(--gold)]">12 meses · Acceso anual</div>
-                <h3 className="headline text-3xl text-[var(--text-primary)] mb-3">
-                  Especialización en<br />Trading Intradía NQ/MNQ
-                </h3>
-                <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-4">
-                  Para traders que quieren profesionalizarse en futuros de Nasdaq (NQ/MNQ)
-                  con operativa institucional real. El camino completo.
-                </p>
-                <ul className="space-y-1.5 mb-6 text-sm text-[var(--text-secondary)]">
-                  {[
-                    'Futuros NQ/MNQ — CME',
-                    'Price Action + gestión de riesgo',
-                    'Vinces IA incluido',
-                    'Coaching diario con Luis',
-                    '12 meses de acceso completo',
-                    'Comunidad y seguimiento continuo',
-                  ].map(f => (
-                    <li key={f} className="flex items-center gap-2">
-                      <span className="text-[var(--gold)] text-xs">✓</span>{f}
-                    </li>
-                  ))}
-                </ul>
-                <div className="flex items-end justify-between mb-5">
-                  <div>
-                    <div className="label-mono mb-1">Inversión</div>
-                    <div className="text-4xl font-bold text-white"
-                      style={{ fontFamily: 'var(--font-serif)' }}>
-                      $1,049 <span className="text-base font-normal text-[var(--text-muted)]">USD</span>
-                    </div>
-                  </div>
-                </div>
-                <a href="https://go.hotmart.com/R33067457O" target="_blank" rel="noopener noreferrer"
-                  className="btn-gold text-sm py-3 px-6 rounded-lg w-full text-center block">
-                  Ver Especialización en Hotmart →
-                </a>
-              </div>
-            </div>
-
-          </div>
+        {/* Header */}
+        <div className="mb-14 text-center">
+          <div className="label-mono mb-3">Club Liberty Trading</div>
+          <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)]">
+            Una suscripción,<br />
+            <span className="gradient-gold">acceso a todo</span>
+          </h2>
+          <p className="text-[var(--text-secondary)] mt-4 max-w-xl mx-auto">
+            Aprende trading de cero a profesional con Luis Riofrio. Paga mientras quieras pertenecer al club —
+            sin compromisos, sin contratos largos.
+          </p>
         </div>
 
-        {/* ── DIVIDER + BRIDGE TEXT ───────────────────── */}
-        <div className="flex items-center gap-4 mb-14">
-          <div className="flex-1 h-px bg-[var(--border)]" />
-          <div className="text-center px-6">
-            <div className="label-mono mb-2 text-[var(--gold)]">Plan de Continuidad</div>
-            <p className="text-sm text-[var(--text-secondary)] max-w-sm">
-              ¿Ya completaste tu programa? Continúa con acceso
-              mensual a todas las herramientas y coaching continuo.
-            </p>
-          </div>
-          <div className="flex-1 h-px bg-[var(--border)]" />
-        </div>
+        {/* ── SUBSCRIPTION CARDS ───────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 max-w-3xl mx-auto">
 
-        {/* ── SECCIÓN 2: PLAN DE CONTINUIDAD ─────────── */}
-        <div className="mb-16 flex justify-center">
-          <div className="w-full max-w-md relative rounded-2xl overflow-hidden border border-[var(--gold)] glow-gold-sm"
+          {/* Card 1 — Mensual */}
+          <div className="card-panel relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none opacity-5"
+              style={{ background: 'radial-gradient(circle, var(--gold) 0%, transparent 70%)' }} />
+
+            <div className="label-mono mb-2">Mensual · Cancela cuando quieras</div>
+            <h3 className="headline text-3xl text-[var(--text-primary)] mb-1">Club Mensual</h3>
+            <p className="text-xs text-[var(--text-secondary)] mb-5 leading-relaxed">
+              Ideal si quieres probar el trading sin comprometer demasiado. Con un solo mes ya sabrás si esto es para ti —
+              y si decides quedarte, sigue pagando mes a mes.
+            </p>
+
+            <div className="flex items-baseline gap-1 mb-6">
+              <span className="text-5xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>$79</span>
+              <span className="label-mono text-sm">/mes</span>
+            </div>
+
+            <ul className="space-y-2 mb-8">
+              {ALL_FEATURES.map((f) => (
+                <li key={f.text} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
+                  <span className="flex-shrink-0 mt-0.5">{f.icon}</span>
+                  <span>{f.text}</span>
+                </li>
+              ))}
+            </ul>
+
+            <Link href="/register?plan=club"
+              className="btn-outline text-sm py-3.5 px-6 rounded-lg w-full text-center block">
+              Empezar por $79/mes →
+            </Link>
+            <p className="text-center label-mono text-[10px] mt-3">Sin permanencia · Cancela cuando quieras</p>
+          </div>
+
+          {/* Card 2 — Anual DESTACADO */}
+          <div className="relative rounded-2xl overflow-hidden border border-[var(--gold)] glow-gold-sm"
             style={{ background: 'rgba(201,168,76,0.04)' }}>
-            <div className="absolute top-4 right-4">
-              <span className="btn-gold text-[10px] py-1 px-3 rounded-full tracking-widest">
-                MÁS POPULAR
-              </span>
+            <div className="absolute top-3 right-3">
+              <span className="btn-gold text-[10px] py-1 px-3 rounded-full tracking-widest">MEJOR VALOR</span>
             </div>
-            <div className="p-8">
-              <div className="label-mono mb-2 text-[var(--gold)]">PRO + VINCES</div>
-              <div className="headline text-2xl text-[var(--text-primary)] mb-1">
-                Para alumnos que completaron un programa
+            <div className="p-7">
+              <div className="label-mono mb-2 text-[var(--gold)]">Anual · Pago único al año</div>
+              <h3 className="headline text-3xl text-[var(--text-primary)] mb-1">Club Anual</h3>
+              <p className="text-xs text-[var(--text-secondary)] mb-5 leading-relaxed">
+                Para quien ya decidió que el trading es su camino. Paga una vez al año y
+                accede a todo sin interrupciones — te ahorras $299 vs el plan mensual.
+              </p>
+
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-5xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>$649</span>
+                <span className="label-mono text-sm">/año</span>
               </div>
-              <div className="flex items-baseline gap-1 mt-4 mb-6">
-                <span className="text-5xl font-bold text-white"
-                  style={{ fontFamily: 'var(--font-serif)' }}>$49</span>
-                <span className="label-mono text-sm">/mes</span>
+              <div className="flex items-center gap-2 mb-6">
+                <span className="text-[var(--text-muted)] text-sm line-through">$948</span>
+                <span className="text-[10px] font-mono text-green-400 border border-green-800 rounded-full px-2 py-0.5">
+                  Ahorras $299
+                </span>
+                <span className="label-mono text-[10px]">≈ $54/mes</span>
               </div>
-              <ul className="space-y-3 mb-8">
-                {PRO_FEATURES.map((f) => (
-                  <li key={f} className="flex items-start gap-2.5">
-                    <span className="text-[var(--gold)] mt-0.5 text-sm flex-shrink-0">✓</span>
-                    <span className="text-sm text-[var(--text-secondary)]">{f}</span>
+
+              <ul className="space-y-2 mb-8">
+                {ALL_FEATURES.map((f) => (
+                  <li key={f.text} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
+                    <span className="flex-shrink-0 mt-0.5">{f.icon}</span>
+                    <span>{f.text}</span>
                   </li>
                 ))}
               </ul>
+
               <Link href="/register?plan=pro"
                 className="btn-gold text-sm py-3.5 px-6 rounded-lg w-full text-center block">
-                Activar Plan PRO →
+                Unirme al Club Anual →
               </Link>
+              <p className="text-center label-mono text-[10px] mt-3">Pago único por 12 meses completos</p>
             </div>
           </div>
+
+        </div>
+
+        {/* ── FAQ OBJECIONES ───────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-16 max-w-4xl mx-auto">
+          {[
+            {
+              q: '¿Y si no me gusta?',
+              a: 'Con un mes ($79) ya tienes suficiente para saber si el trading es para ti. Nada que perder vs un curso de $1,000+ sin garantía.',
+            },
+            {
+              q: '¿Sirve si soy completamente nuevo?',
+              a: 'Sí, la formación empieza desde cero. La Mentoría Integral te lleva desde abrir tu primera cuenta hasta entender el mercado.',
+            },
+            {
+              q: '¿Y si ya sé trading?',
+              a: 'Las señales reales, el track record de Luis, el coaching con Vinces IA y las mentorías 1:1 te dan ventaja operativa inmediata.',
+            },
+          ].map((item) => (
+            <div key={item.q} className="card p-5">
+              <div className="text-sm font-bold text-[var(--text-primary)] mb-2">{item.q}</div>
+              <div className="text-sm text-[var(--text-secondary)] leading-relaxed">{item.a}</div>
+            </div>
+          ))}
         </div>
 
         {/* ── PORTFOLIO IBKR ─────────────────────────── */}
@@ -176,7 +143,7 @@ export default function Pricing() {
             style={{ background: 'radial-gradient(circle, var(--gold) 0%, transparent 70%)' }} />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start relative">
             <div>
-              <div className="label-mono mb-2 text-[var(--gold)]">Sin mensualidad</div>
+              <div className="label-mono mb-2 text-[var(--gold)]">Sin mensualidad — Solo para capital propio</div>
               <div className="headline text-3xl text-[var(--text-primary)] mb-3">
                 Gestión de Portafolio<br />
                 <span className="gradient-gold">vía Interactive Brokers</span>

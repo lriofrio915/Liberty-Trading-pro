@@ -1,26 +1,53 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import TickerBar from '@/components/TickerBar/TickerBar'
 
-const WA_LINK = 'https://wa.me/+593996691586?text=Hola%20Luis%2C%20quiero%20información%20sobre%20Liberty%20Trading%20Pro'
+const WA_LINK = 'https://wa.me/+593996691586?text=Hola%20Luis%2C%20quiero%20información%20sobre%20Liberty%20Trading%20Club'
 
-const TRACK_RECORD = [
-  { metric: 'Rendimiento YTD', value: '+11.94%', sub: '2026', positive: true },
-  { metric: 'Win Rate', value: '71.4%', sub: '10/14 trades', positive: true },
-  { metric: 'Profit Factor', value: '2.55x', sub: 'Gross P/L ratio', positive: true },
-  { metric: 'Instrumento', value: 'NQ/MNQ', sub: 'Futuros CME', positive: null },
-]
+interface TrackRecord {
+  totalTrades: number
+  wins: number
+  losses: number
+  winRate: number
+  profitFactor: number
+  totalNetPnl: number
+  rendimientoYTD: number
+  recentSessions: {
+    date: string
+    instrumento: string
+    direccion: string
+    resultado: string
+    pnlNeto: number
+  }[]
+}
 
-const TRADE_LOG = [
-  { date: '28 Feb', sym: 'NQ1!', dir: 'LONG', res: 'WIN', pnl: '+$1,240' },
-  { date: '27 Feb', sym: 'MNQ1!', dir: 'SHORT', res: 'WIN', pnl: '+$860' },
-  { date: '26 Feb', sym: 'NQ1!', dir: 'LONG', res: 'LOSS', pnl: '-$480' },
-  { date: '25 Feb', sym: 'NQ1!', dir: 'LONG', res: 'WIN', pnl: '+$2,100' },
-  { date: '24 Feb', sym: 'MNQ1!', dir: 'SHORT', res: 'WIN', pnl: '+$620' },
-]
+function formatDate(iso: string) {
+  const d = new Date(iso)
+  return d.toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })
+}
+
+function formatPnl(pnl: number) {
+  const abs = Math.abs(pnl).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  return pnl >= 0 ? `+$${abs}` : `-$${abs}`
+}
 
 export default function Hero() {
+  const [data, setData] = useState<TrackRecord | null>(null)
+
+  useEffect(() => {
+    fetch('/api/public-track-record')
+      .then((r) => r.json())
+      .then((d) => setData(d))
+      .catch(() => {})
+  }, [])
+
+  const ytd = data ? (data.rendimientoYTD >= 0 ? `+${data.rendimientoYTD.toFixed(2)}%` : `${data.rendimientoYTD.toFixed(2)}%`) : '—'
+  const winRate = data ? `${data.winRate}%` : '—'
+  const pf = data ? `${data.profitFactor}x` : '—'
+  const tradesStr = data ? `${data.wins}/${data.totalTrades}` : '—'
+
   return (
     <>
       {/* Ticker */}
@@ -38,7 +65,7 @@ export default function Hero() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-20 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-            {/* LEFT: Headline + CTAs */}
+            {/* LEFT: Headline + Subscription pitch */}
             <div>
               {/* Badge */}
               <div className="inline-flex items-center gap-2.5 border border-[var(--gold-dark)] rounded-full px-4 py-1.5 mb-10"
@@ -50,39 +77,45 @@ export default function Hero() {
               </div>
 
               <h1 className="headline text-6xl sm:text-7xl lg:text-8xl text-[var(--text-primary)] mb-6">
-                Invierte como<br />
-                <span className="gradient-gold">los que saben</span>
+                Aprende trading<br />
+                <span className="gradient-gold">con el que opera</span>
               </h1>
 
               <p className="text-base text-[var(--text-secondary)] max-w-lg mb-8 leading-relaxed"
                 style={{ fontFamily: 'var(--font-sans)' }}>
-                Oportunidades de inversión en acciones y ETFs, coaching personalizado con IA
-                y gestión directa de tu portafolio en Interactive Brokers.
-                Resultados verificables. Transparencia total.
+                Accede a la formación completa — desde cero hasta trader profesional de futuros Nasdaq —
+                junto a mentorías 1:1, señales de inversión reales y coaching con IA. Todo por una sola suscripción mensual.
               </p>
 
-              {/* Mini stats */}
-              <div className="flex gap-6 mb-10">
+              {/* Value props */}
+              <div className="flex flex-wrap gap-2 mb-8">
                 {[
-                  { val: '+11.94%', lbl: 'YTD 2026' },
-                  { val: '71.4%', lbl: 'Win Rate' },
-                  { val: '2.55x', lbl: 'Profit Factor' },
-                ].map((s) => (
-                  <div key={s.lbl}>
-                    <div className="text-2xl font-bold text-[var(--gold)] font-serif"
-                      style={{ fontFamily: 'var(--font-serif)' }}>
-                      {s.val}
-                    </div>
-                    <div className="label-mono mt-0.5">{s.lbl}</div>
+                  { icon: '🎓', label: 'Mentoría 1:1 con Luis' },
+                  { icon: '📊', label: 'Señales de inversión reales' },
+                  { icon: '🤖', label: 'IA Vinces — coaching 24/7' },
+                  { icon: '📈', label: 'Futuros NQ/MNQ Nasdaq' },
+                ].map((v) => (
+                  <div key={v.label}
+                    className="flex items-center gap-1.5 border border-[var(--border)] rounded-full px-3 py-1.5"
+                    style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <span className="text-sm">{v.icon}</span>
+                    <span className="text-xs text-[var(--text-secondary)] font-mono">{v.label}</span>
                   </div>
                 ))}
               </div>
 
+              {/* Price teaser */}
+              <div className="flex items-baseline gap-2 mb-8">
+                <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>$79</span>
+                <span className="label-mono">/mes</span>
+                <span className="text-[var(--text-muted)] text-sm ml-1">· o $649/año y ahorra $300</span>
+              </div>
+
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-3">
-                <Link href="/register?plan=club"
+                <Link href="#precios"
                   className="btn-gold text-sm py-3.5 px-7 rounded-lg">
-                  Comenzar Ahora →
+                  Unirme al Club →
                 </Link>
                 <a href={WA_LINK} target="_blank" rel="noopener noreferrer"
                   className="btn-outline text-sm py-3.5 px-7 rounded-lg inline-flex items-center gap-2">
@@ -92,23 +125,32 @@ export default function Hero() {
                   Hablar con Luis
                 </a>
               </div>
+
+              <p className="label-mono text-[10px] mt-4 text-[var(--text-muted)]">
+                Sin compromisos — cancela cuando quieras
+              </p>
             </div>
 
-            {/* RIGHT: Track Record Panel */}
+            {/* RIGHT: Track Record Panel — Real Data */}
             <div className="hidden lg:block">
               <div className="track-panel p-0 overflow-hidden">
                 {/* Header */}
                 <div className="px-5 py-3.5 border-b border-[var(--border)] flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[var(--green)] pulse-dot" />
-                    <span className="label-mono">Track Record — YTD 2026</span>
+                    <span className="label-mono">Track Record Luis Riofrio — YTD {new Date().getFullYear()}</span>
                   </div>
-                  <span className="label-mono text-[10px]">Verificado</span>
+                  <span className="label-mono text-[10px]">Tiempo Real</span>
                 </div>
 
                 {/* KPI grid */}
                 <div className="grid grid-cols-2 border-b border-[var(--border)]">
-                  {TRACK_RECORD.map((k, i) => (
+                  {[
+                    { metric: 'Rendimiento YTD', value: ytd, sub: `${new Date().getFullYear()} · Capital propio`, positive: data ? data.rendimientoYTD >= 0 : null },
+                    { metric: 'Win Rate', value: winRate, sub: `${tradesStr} trades ganados`, positive: true },
+                    { metric: 'Profit Factor', value: pf, sub: 'Gross P/L ratio', positive: true },
+                    { metric: 'Instrumento', value: 'MNQ', sub: 'Futuros CME Nasdaq', positive: null },
+                  ].map((k, i) => (
                     <div key={i}
                       className={`px-5 py-4 ${i % 2 === 0 ? 'border-r border-[var(--border)]' : ''} ${i < 2 ? 'border-b border-[var(--border)]' : ''}`}>
                       <div className="label-mono mb-1.5">{k.metric}</div>
@@ -123,36 +165,50 @@ export default function Hero() {
 
                 {/* Trade log */}
                 <div className="px-5 py-3 border-b border-[var(--border)]">
-                  <span className="label-mono">Últimas Operaciones</span>
+                  <span className="label-mono">Últimas Operaciones Reales</span>
                 </div>
                 <div>
-                  {TRADE_LOG.map((t, i) => (
-                    <div key={i}
-                      className={`flex items-center justify-between px-5 py-2.5 ${i < TRADE_LOG.length - 1 ? 'border-b border-[var(--border)]' : ''} hover:bg-[var(--bg-hover)] transition-colors`}>
-                      <div className="flex items-center gap-3">
-                        <span className="label-mono text-[9px]">{t.date}</span>
-                        <span className="font-mono-custom text-sm font-medium">{t.sym}</span>
-                        <span className={`text-[10px] font-mono-custom px-1.5 py-0.5 rounded ${t.dir === 'LONG' ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}`}>
-                          {t.dir}
-                        </span>
+                  {!data ? (
+                    // Skeleton
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="flex items-center justify-between px-5 py-2.5 border-b border-[var(--border)] last:border-b-0">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-3 rounded bg-[var(--bg-hover)] animate-pulse" />
+                          <div className="w-14 h-4 rounded bg-[var(--bg-hover)] animate-pulse" />
+                          <div className="w-10 h-4 rounded bg-[var(--bg-hover)] animate-pulse" />
+                        </div>
+                        <div className="w-16 h-4 rounded bg-[var(--bg-hover)] animate-pulse" />
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`text-[10px] font-mono-custom font-bold ${t.res === 'WIN' ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
-                          {t.res}
-                        </span>
-                        <span className={`font-mono-custom text-sm font-bold ${t.pnl.startsWith('+') ? 'positive' : 'negative'}`}>
-                          {t.pnl}
-                        </span>
+                    ))
+                  ) : (
+                    data.recentSessions.map((t, i) => (
+                      <div key={i}
+                        className={`flex items-center justify-between px-5 py-2.5 ${i < data.recentSessions.length - 1 ? 'border-b border-[var(--border)]' : ''} hover:bg-[var(--bg-hover)] transition-colors`}>
+                        <div className="flex items-center gap-3">
+                          <span className="label-mono text-[9px]">{formatDate(t.date)}</span>
+                          <span className="font-mono-custom text-sm font-medium">{t.instrumento}</span>
+                          <span className={`text-[10px] font-mono-custom px-1.5 py-0.5 rounded ${t.direccion === 'LONG' ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}`}>
+                            {t.direccion}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`text-[10px] font-mono-custom font-bold ${t.resultado === 'WIN' ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
+                            {t.resultado}
+                          </span>
+                          <span className={`font-mono-custom text-sm font-bold ${t.pnlNeto >= 0 ? 'positive' : 'negative'}`}>
+                            {formatPnl(t.pnlNeto)}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
 
                 {/* Footer */}
                 <div className="px-5 py-3 flex items-center justify-between">
-                  <span className="label-mono text-[9px]">Datos YTD — Actualizados mensualmente</span>
+                  <span className="label-mono text-[9px]">Datos tomados de la BD — se actualizan con cada operación</span>
                   <Link href="/register" className="label-mono text-[10px] text-[var(--gold)] hover:underline">
-                    Ver completo →
+                    Ver historial completo →
                   </Link>
                 </div>
               </div>

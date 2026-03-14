@@ -5,7 +5,7 @@ import Footer from '@/components/Footer/Footer'
 import Link from 'next/link'
 
 const WA = 'https://wa.me/+593996691586?text=Hola%20Luis%2C%20me%20interesa%20el%20servicio%20P2P%20de%20USDT%2FBTC'
-const VINCES_WA = 'https://wa.me/18287149177?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20los%20programas%20de%20trading'
+const VINCES_WA = 'https://wa.me/18287149177?text=Hola%2C%20quiero%20información%20sobre%20el%20Club%20Liberty%20Trading'
 
 export default function LandingPage() {
   return (
@@ -13,15 +13,18 @@ export default function LandingPage() {
       <Navbar />
       <Hero />
 
-      {/* ─── SERVICIOS ──────────────────────────────────────── */}
+      {/* ─── QUÉ INCLUYE LA SUSCRIPCIÓN ──────────────────────── */}
       <section id="servicios" className="py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="mb-14">
-            <div className="label-mono mb-3">Lo que ofrecemos</div>
+            <div className="label-mono mb-3">Todo en una suscripción</div>
             <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)]">
               Todo lo que necesitas para<br />
               <span className="gradient-gold">operar con ventaja</span>
             </h2>
+            <p className="text-[var(--text-secondary)] mt-4 max-w-lg">
+              Con tu membresía mensual o anual accedes a cada una de estas herramientas desde el primer día.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -29,44 +32,44 @@ export default function LandingPage() {
               {
                 num: '01',
                 icon: '🎓',
-                title: 'Liberty Academy',
-                desc: 'Especialización en Trading de Futuros (12 meses) y Mentoría Integral de Mercados Financieros (2 meses). Formación estructurada con Luis Riofrio.',
-                badge: 'Formación',
+                title: 'Formación Completa',
+                desc: 'Desde cero hasta trader profesional. Mentoría Integral de Mercados Financieros + Especialización en Day Trading de Futuros NQ/MNQ — todo incluido.',
+                badge: 'Academia',
               },
               {
                 num: '02',
-                icon: '🤖',
-                title: 'Vinces Coach IA',
-                desc: 'Tu mentor de trading personal con inteligencia artificial. Analiza tu operativa diaria, detecta patrones y genera reportes personalizados de coaching.',
-                badge: 'IA',
+                icon: '🤝',
+                title: 'Mentorías 1:1 con Luis',
+                desc: 'Sesiones personalizadas con Luis Riofrio cada mes mientras mantengas tu membresía activa. Revisión de tu operativa, dudas y estrategia en vivo.',
+                badge: 'Mentoría',
               },
               {
                 num: '03',
-                icon: '📊',
-                title: 'Club de Inversión',
-                desc: 'Oportunidades en acciones y ETFs para inversión a mediano y largo plazo. Análisis fundamental de empresas, no señales de day trading.',
-                badge: 'Club',
+                icon: '🤖',
+                title: 'Vinces Coach IA',
+                desc: 'Tu mentor de trading con inteligencia artificial. Analiza tu operativa diaria, detecta patrones de error y genera reportes de coaching personalizados.',
+                badge: 'IA',
               },
               {
                 num: '04',
-                icon: '🏦',
-                title: 'Gestión de Portafolio IBKR',
-                desc: 'Luis replica su operativa en tu cuenta de Interactive Brokers mediante NinjaTrader 8. Sin mensualidad — 1% gestión + 30% sobre ganancias.',
-                badge: 'Premium',
+                icon: '💡',
+                title: 'Señales de Inversión',
+                desc: 'Oportunidades en acciones, ETFs y criptoactivos con análisis completo — entrada, objetivo, stop loss y contexto fundamental. Señales de Luis en tiempo real.',
+                badge: 'Club',
               },
               {
                 num: '05',
-                icon: '💱',
-                title: 'P2P Cripto',
-                desc: 'Compra y vende USDT y BTC directamente con Luis por WhatsApp. Disponible en Ecuador y Latinoamérica. Rápido, seguro, sin intermediarios.',
-                badge: 'P2P',
+                icon: '📊',
+                title: 'Track Record Real',
+                desc: 'Accede al historial operativo completo de Luis Riofrio — cada operación con datos reales. Transparencia total, incluyendo pérdidas.',
+                badge: 'Verificado',
               },
               {
                 num: '06',
                 icon: '🌐',
                 title: 'Monitor Mundial',
-                desc: 'Seguimiento de eventos geopolíticos y macroeconómicos que impactan los mercados. Información en tiempo real para tomar mejores decisiones.',
-                badge: 'Free',
+                desc: 'Seguimiento de eventos geopolíticos y macroeconómicos que impactan los mercados en tiempo real para tomar mejores decisiones de trading.',
+                badge: 'Live',
               },
             ].map((s) => (
               <div key={s.num}
@@ -86,148 +89,82 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── LIBERTY ACADEMY ────────────────────────────────── */}
-      <section id="academia" className="py-24 px-4 border-y border-[var(--border)]"
+      {/* ─── PARA QUIÉN ES ────────────────────────────────── */}
+      <section id="para-quien" className="py-24 px-4 border-y border-[var(--border)]"
         style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-6xl mx-auto">
           <div className="mb-14 text-center">
-            <div className="label-mono mb-3">Formación estructurada</div>
+            <div className="label-mono mb-3">¿Esto es para mí?</div>
             <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)]">
-              Liberty <span className="gradient-gold">Academy</span>
+              Para <span className="gradient-gold">cualquier punto de partida</span>
             </h2>
             <p className="text-[var(--text-secondary)] mt-4 max-w-lg mx-auto">
-              Programas de formación intensiva en trading de futuros con Luis Riofrio como mentor directo.
+              No importa si nunca has invertido un dólar o si ya operas con cuenta propia.
+              La suscripción se adapta a donde estás.
             </p>
           </div>
 
-          {/* ¿Cuál es tu punto de partida? */}
-          <div className="text-center mb-12">
-            <p className="text-gray-400 text-sm font-mono tracking-widest uppercase mb-4">
-              ¿Cuál es tu punto de partida?
-            </p>
-            <div className="flex justify-center gap-8 flex-wrap">
-              <div className="text-center">
-                <div className="text-yellow-400 font-mono text-xs tracking-widest mb-1">
-                  → NUEVO EN INVERSIONES
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                tag: 'NUEVO EN INVERSIONES',
+                icon: '🌱',
+                title: 'El curioso que quiere probar',
+                desc: [
+                  'Pagas $79 y descubres en 1 mes si el trading es para ti',
+                  'Si no te convence, cancelas — sin perder miles en un curso',
+                  'Si te engancha, sigues: ya tienes las bases para avanzar',
+                  'La formación empieza desde abrir tu primera cuenta de broker',
+                ],
+              },
+              {
+                tag: 'QUIERO APRENDER EN SERIO',
+                icon: '📚',
+                title: 'El que ya decidió aprender',
+                desc: [
+                  'Accedes a toda la formación desde cero hasta futuros Nasdaq',
+                  'Mentorías 1:1 con Luis cada mes para avanzar más rápido',
+                  'Señales reales para aprender con operaciones en vivo',
+                  'Coaching diario de Vinces IA para mejorar cada semana',
+                ],
+              },
+              {
+                tag: 'QUIERO SER TRADER PROFESIONAL',
+                icon: '🏆',
+                title: 'El que hace del trading su vida',
+                desc: [
+                  'El plan anual a $649 te da 12 meses completos por $54/mes',
+                  'Especialización profunda en futuros NQ/MNQ de Nasdaq',
+                  'Revisión continua de tu operativa con Luis cada mes',
+                  'Track record propio verificable para crecer como profesional',
+                ],
+              },
+            ].map((card) => (
+              <div key={card.tag} className="card-panel relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-40 h-40 opacity-5"
+                  style={{ background: 'radial-gradient(circle, var(--gold) 0%, transparent 70%)' }} />
+                <div className="text-4xl mb-3">{card.icon}</div>
+                <div className="inline-block label-mono text-[9px] px-2 py-0.5 border border-[var(--gold-dark)] rounded-full text-[var(--gold)] mb-3">
+                  {card.tag}
                 </div>
-                <div className="text-gray-500 text-xs">Mentoría Integral</div>
+                <h3 className="headline text-2xl text-[var(--text-primary)] mb-4">{card.title}</h3>
+                <ul className="space-y-2">
+                  {card.desc.map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
+                      <span className="text-[var(--gold)] mt-0.5 flex-shrink-0">✓</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="text-gray-600 font-mono">|</div>
-              <div className="text-center">
-                <div className="text-yellow-400 font-mono text-xs tracking-widest mb-1">
-                  → QUIERO SER TRADER PROFESIONAL
-                </div>
-                <div className="text-gray-500 text-xs">Especialización Day Trading</div>
-              </div>
-            </div>
+            ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Card 1 — Mentoría Integral */}
-            <div className="card-panel relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 opacity-5"
-                style={{ background: 'radial-gradient(circle, var(--gold) 0%, transparent 70%)' }} />
-              <div className="label-mono mb-2 text-[var(--gold)]">2 Meses</div>
-              <div className="inline-block label-mono text-[9px] px-2 py-0.5 border border-[var(--gold-dark)] rounded-full text-[var(--gold)] mb-3">
-                IDEAL PARA PRINCIPIANTES
-              </div>
-              <h3 className="headline text-3xl text-[var(--text-primary)] mb-1">
-                Mentoría Integral<br />de Inversión
-              </h3>
-              <p className="text-xs text-[var(--gold)] font-mono tracking-wider mb-4">Para quien empieza desde cero</p>
-              <p className="text-sm text-[var(--text-secondary)] mb-5 leading-relaxed">
-                Si nunca has invertido y quieres aprender con bases sólidas,
-                este programa es para ti. Aprenderás a moverte con confianza
-                en los mercados financieros.
-              </p>
-              <ul className="space-y-1.5 mb-6">
-                {[
-                  'Apertura de cuenta en broker de EEUU (IBKR) paso a paso',
-                  'Trading a mediano y largo plazo',
-                  'Estrategia Dollar Cost Average en bolsa y cripto',
-                  'Acciones, ETFs, bonos y criptoactivos',
-                  'Intercambio y custodia de activos digitales',
-                  'Clases 1:1 personalizadas con Luis',
-                  'Soporte continuo vía WhatsApp',
-                  'Acceso a comunidad privada de por vida',
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-xs text-[var(--text-secondary)]">
-                    <span className="text-[var(--gold)] mt-0.5 flex-shrink-0">✓</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <div className="label-mono mb-1">Inversión</div>
-                  <div className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>
-                    $489
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="label-mono mb-1">Duración</div>
-                  <div className="text-sm font-medium">2 meses · Online</div>
-                </div>
-              </div>
-              <a href="https://go.hotmart.com/R104429889B" target="_blank" rel="noopener noreferrer"
-                className="btn-outline text-sm py-3 px-6 rounded-lg w-full text-center block">
-                Ver Mentoría en Hotmart →
-              </a>
-            </div>
-
-            {/* Card 2 — Especialización Day Trading */}
-            <div className="card-panel relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 opacity-5"
-                style={{ background: 'radial-gradient(circle, var(--gold) 0%, transparent 70%)' }} />
-              <div className="label-mono mb-2 text-[var(--gold)]">12 Meses</div>
-              <div className="inline-block label-mono text-[9px] px-2 py-0.5 border border-[var(--gold-dark)] rounded-full text-[var(--gold)] mb-3">
-                MÁS COMPLETO — INCLUYE MENTORÍA INTEGRAL
-              </div>
-              <h3 className="headline text-3xl text-[var(--text-primary)] mb-1">
-                Especialización en<br />Day Trading
-              </h3>
-              <p className="text-xs text-[var(--gold)] font-mono tracking-wider mb-4">Futuros Nasdaq NQ/MNQ · Conviértete en trader profesional</p>
-              <p className="text-sm text-[var(--text-secondary)] mb-5 leading-relaxed">
-                Para quien quiere hacer del trading su profesión. Sin importar
-                si partes desde cero — este programa de 12 meses te lleva desde
-                los fundamentos hasta operar futuros del Nasdaq con método,
-                disciplina y datos reales.
-              </p>
-              <ul className="space-y-1.5 mb-6">
-                {[
-                  'Todo lo del programa Mentoría Integral incluido',
-                  'Entrenamiento completo en Day Trading de Futuros NQ/MNQ',
-                  'NinjaTrader 8: configuración y operativa profesional',
-                  'Sistema de trading con reglas claras de entrada y salida',
-                  'Gestión de riesgo y psicología del trader',
-                  'Agente Vinces IA: coaching personalizado diario',
-                  'Revisión semanal de operativas con Luis',
-                  'Track récord verificable con capturas reales',
-                  'Reportes de rendimiento semanales y mensuales',
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-xs text-[var(--text-secondary)]">
-                    <span className="text-[var(--gold)] mt-0.5 flex-shrink-0">✓</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <div className="label-mono mb-1">Inversión</div>
-                  <div className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>
-                    $1,049
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="label-mono mb-1">Duración</div>
-                  <div className="text-sm font-medium">12 meses · Online</div>
-                </div>
-              </div>
-              <a href="https://go.hotmart.com/R33067457O" target="_blank" rel="noopener noreferrer"
-                className="btn-gold text-sm py-3 px-6 rounded-lg w-full text-center block">
-                Ver Especialización en Hotmart →
-              </a>
-            </div>
+          <div className="text-center mt-12">
+            <Link href="#precios"
+              className="btn-gold text-sm py-3.5 px-10 rounded-lg inline-block">
+              Ver planes y precios →
+            </Link>
           </div>
         </div>
       </section>
@@ -237,7 +174,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-start">
             <div>
-              <div className="label-mono mb-3 text-[var(--gold)]">Coaching con IA</div>
+              <div className="label-mono mb-3 text-[var(--gold)]">Incluido en tu membresía</div>
               <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)] mb-5">
                 Vinces Coach<br /><span className="gradient-gold">Inteligencia Artificial</span>
               </h2>
@@ -246,8 +183,8 @@ export default function LandingPage() {
                 evalúa tu disciplina y genera reportes de coaching personalizados. Es tu mentor
                 disponible las 24 horas.
               </p>
-              <Link href="/register?plan=pro" className="btn-gold text-sm py-3.5 px-7 rounded-lg">
-                Activar Vinces IA →
+              <Link href="#precios" className="btn-gold text-sm py-3.5 px-7 rounded-lg">
+                Incluido desde $79/mes →
               </Link>
             </div>
 
@@ -271,8 +208,8 @@ export default function LandingPage() {
                 },
                 {
                   n: '04',
-                  title: 'Revisión 1:1 con Luis (PRO)',
-                  desc: 'Una vez al mes, revisión en vivo de tu operativa con Luis Riofrio.',
+                  title: 'Revisión 1:1 con Luis',
+                  desc: 'Una vez al mes, revisión en vivo de tu operativa con Luis Riofrio — incluida en tu membresía.',
                 },
               ].map((step) => (
                 <div key={step.n} className="flex gap-4 card p-4">
@@ -315,7 +252,7 @@ export default function LandingPage() {
                   '🤝 Fundador de Liberty Trading Club',
                   '🏦 Gestor de portafolios vía IBKR + NinjaTrader 8',
                   '💱 Operador P2P USDT y BTC — Ecuador y Latinoamérica',
-                  '🎓 Mentor con 2 programas activos en Hotmart',
+                  '🎓 Mentor con más de 5 años formando traders en Latinoamérica',
                 ].map((c) => (
                   <div key={c} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
                     <span>{c}</span>
@@ -332,25 +269,8 @@ export default function LandingPage() {
               </a>
             </div>
 
-            {/* Stats grid */}
+            {/* Quote + commitment */}
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { value: '+11.94%', label: 'Rendimiento YTD 2026', color: 'var(--gold)' },
-                  { value: '71.4%', label: 'Win Rate verificado', color: 'var(--green)' },
-                  { value: '2.55x', label: 'Profit Factor', color: 'var(--gold)' },
-                  { value: '10/14', label: 'Trades ganados 2026', color: 'var(--green)' },
-                ].map((s) => (
-                  <div key={s.label} className="card text-center py-5">
-                    <div className="text-3xl font-bold mb-1"
-                      style={{ fontFamily: 'var(--font-serif)', color: s.color }}>
-                      {s.value}
-                    </div>
-                    <div className="label-mono text-[10px]">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-
               {/* Quote */}
               <div className="card border-l-2 border-[var(--gold)] rounded-xl pl-5">
                 <p className="headline text-lg text-[var(--text-secondary)] italic mb-2">
@@ -358,6 +278,24 @@ export default function LandingPage() {
                   No vendo sueños — muestro datos reales.&rdquo;
                 </p>
                 <div className="label-mono text-[10px]">— Luis Riofrio, Emporium Quality Funds</div>
+              </div>
+
+              {/* Why subscription */}
+              <div className="card p-5">
+                <div className="label-mono mb-3 text-[var(--gold)]">¿Por qué suscripción y no un curso?</div>
+                <ul className="space-y-2">
+                  {[
+                    'Los mercados cambian — tu formación debe actualizarse con ellos',
+                    'Una mentoría mensual vale más que un curso grabado de hace 2 años',
+                    'Pagas mientras aprendes — no un curso caro que quizás no terminas',
+                    'Prueba con $79 en lugar de arriesgar $1,000 en algo desconocido',
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
+                      <span className="text-[var(--gold)] mt-0.5 flex-shrink-0">✓</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>
@@ -415,15 +353,11 @@ export default function LandingPage() {
         title="Hablar con Vinces IA"
         className="fixed bottom-24 right-6 z-50 flex items-center gap-2.5 group"
       >
-        {/* Tooltip */}
         <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
           Hablar con Vinces IA
         </span>
-
-        {/* Botón */}
         <div className="relative w-14 h-14 rounded-full shadow-2xl flex items-center justify-center"
           style={{ background: '#25D366' }}>
-          {/* Ping animado */}
           <span className="absolute inset-0 rounded-full animate-ping opacity-30"
             style={{ background: '#25D366' }} />
           <svg className="w-7 h-7 text-white relative z-10" fill="currentColor" viewBox="0 0 24 24">
