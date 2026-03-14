@@ -28,46 +28,10 @@ const ALL_FEATURES = [
 type Plan = 'MENSUAL' | 'ANUAL'
 type FormState = 'idle' | 'loading' | 'success' | 'error'
 
-function PhoneField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [prefix, setPrefix] = useState('+593')
-  const [local, setLocal] = useState('')
-
-  function handlePrefix(v: string) {
-    setPrefix(v)
-    onChange(v.replace('+', '') + local)
-  }
-  function handleLocal(v: string) {
-    const digits = v.replace(/\D/g, '')
-    setLocal(digits)
-    onChange(prefix.replace('+', '') + digits)
-  }
-
-  return (
-    <div className="flex gap-2">
-      <select
-        value={prefix}
-        onChange={(e) => handlePrefix(e.target.value)}
-        className="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-3 py-3 text-sm text-[var(--text-secondary)] focus:outline-none focus:border-[var(--gold)] transition-colors w-28 flex-shrink-0">
-        <option value="+593">🇪🇨 +593</option>
-        <option value="+57">🇨🇴 +57</option>
-        <option value="+51">🇵🇪 +51</option>
-        <option value="+56">🇨🇱 +56</option>
-        <option value="+52">🇲🇽 +52</option>
-        <option value="+54">🇦🇷 +54</option>
-        <option value="+58">🇻🇪 +58</option>
-        <option value="+1">🇺🇸 +1</option>
-        <option value="+34">🇪🇸 +34</option>
-      </select>
-      <input
-        type="tel"
-        placeholder="99 669 1586"
-        value={local}
-        onChange={(e) => handleLocal(e.target.value)}
-        required
-        className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--gold)] transition-colors"
-      />
-    </div>
-  )
+function normalizePhone(raw: string): string {
+  // Quita todo excepto dígitos y el + inicial
+  const digits = raw.replace(/[^\d+]/g, '').replace(/\+/g, '')
+  return digits
 }
 
 export default function Unirse() {
@@ -77,6 +41,7 @@ export default function Unirse() {
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [formState, setFormState] = useState<FormState>('idle')
+  const [phoneError, setPhoneError] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
@@ -86,18 +51,37 @@ export default function Unirse() {
       .catch(() => {})
   }, [])
 
+  function handlePhoneChange(v: string) {
+    setPhone(v)
+    setPhoneError('')
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!nombre.trim() || phone.length < 8) return
+
+    const cleanedPhone = normalizePhone(phone)
+
+    // Validaciones visibles
+    if (!nombre.trim()) return
+    if (cleanedPhone.length < 7) {
+      setPhoneError('Ingresa tu número de WhatsApp (mínimo 7 dígitos)')
+      return
+    }
 
     setFormState('loading')
     setErrorMsg('')
+    setPhoneError('')
 
     try {
       const res = await fetch('/api/leads/capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: nombre.trim(), phone, email: email.trim(), plan }),
+        body: JSON.stringify({
+          name: nombre.trim(),
+          phone: cleanedPhone,
+          email: email.trim(),
+          plan,
+        }),
       })
       const json = await res.json()
       if (json.ok) {
@@ -151,7 +135,7 @@ export default function Unirse() {
             Un solo pago mensual, acceso a todo. Cancela cuando quieras.
           </p>
 
-          {/* Live metrics strip */}
+          {/* Live metrics */}
           {data && (
             <div className="flex flex-wrap justify-center gap-6 mt-8">
               {[
@@ -176,10 +160,8 @@ export default function Unirse() {
 
           {/* LEFT — Features + Plan selector */}
           <div>
-            {/* Plan cards */}
             <div className="label-mono mb-4">Elige tu plan</div>
             <div className="grid grid-cols-2 gap-3 mb-8">
-              {/* Mensual */}
               <button type="button" onClick={() => setPlan('MENSUAL')}
                 className={`rounded-xl border p-4 text-left transition-all ${
                   plan === 'MENSUAL'
@@ -191,25 +173,21 @@ export default function Unirse() {
                 <div className="label-mono text-[10px] mt-0.5">/mes · cancela cuando quieras</div>
               </button>
 
-              {/* Anual */}
               <button type="button" onClick={() => setPlan('ANUAL')}
-                className={`rounded-xl border p-4 text-left transition-all relative overflow-hidden ${
+                className={`rounded-xl border p-4 text-left transition-all ${
                   plan === 'ANUAL'
                     ? 'border-[var(--gold)] bg-[rgba(201,168,76,0.06)]'
                     : 'border-[var(--border)] hover:border-[var(--gold-dark)]'
                 }`}>
                 <div className="flex items-center justify-between mb-1">
                   <div className="label-mono text-[10px]">Anual</div>
-                  <span className="text-[9px] font-mono bg-[var(--gold)] text-black px-2 py-0.5 rounded-full font-bold">
-                    -$299
-                  </span>
+                  <span className="text-[9px] font-mono bg-[var(--gold)] text-black px-2 py-0.5 rounded-full font-bold">-$299</span>
                 </div>
                 <div className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>$649</div>
                 <div className="label-mono text-[10px] mt-0.5">/año · ~$54/mes</div>
               </button>
             </div>
 
-            {/* Features */}
             <div className="label-mono mb-4">Todo incluido en ambos planes</div>
             <ul className="space-y-2.5">
               {ALL_FEATURES.map((f) => (
@@ -224,7 +202,7 @@ export default function Unirse() {
               style={{ background: 'rgba(255,255,255,0.02)' }}>
               <span className="text-[var(--green)] mt-0.5 flex-shrink-0">✓</span>
               <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                Track record de Luis verificable y público. Sin fórmulas mágicas — trading real con disciplina y método probado.{' '}
+                Track record de Luis verificable y público.{' '}
                 <Link href="/track-record/cmmjkgdt800004kjq1zep8qc9" className="text-[var(--gold)] hover:underline">
                   Ver historial completo →
                 </Link>
@@ -242,7 +220,7 @@ export default function Unirse() {
                   ¡Listo, {nombre}!
                 </h2>
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-6">
-                  Vinces te escribirá por WhatsApp en los próximos minutos para orientarte.<br />
+                  Vinces te escribirá por WhatsApp en los próximos minutos.<br />
                   Revisa también tu email — te enviamos la confirmación.
                 </p>
                 <div className="space-y-3">
@@ -268,15 +246,17 @@ export default function Unirse() {
                   Reserva tu lugar
                 </h2>
                 <p className="text-xs text-[var(--text-muted)] mb-6 leading-relaxed">
-                  Vinces te escribirá por WhatsApp en minutos para orientarte y resolver tus dudas antes de que te suscribas.
+                  Vinces te escribirá por WhatsApp en minutos para orientarte antes de que te suscribas.
                 </p>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+
+                  {/* Nombre */}
                   <div>
-                    <label className="label-mono text-[10px] block mb-1.5">Nombre</label>
+                    <label className="label-mono text-[10px] block mb-1.5">Nombre *</label>
                     <input
                       type="text"
-                      placeholder="Luis Riofrío"
+                      placeholder="Tu nombre"
                       value={nombre}
                       onChange={(e) => setNombre(e.target.value)}
                       required
@@ -284,12 +264,30 @@ export default function Unirse() {
                     />
                   </div>
 
+                  {/* WhatsApp — campo simple */}
                   <div>
-                    <label className="label-mono text-[10px] block mb-1.5">WhatsApp</label>
-                    <PhoneField value={phone} onChange={setPhone} />
-                    <p className="label-mono text-[9px] mt-1">Vinces te escribirá a este número</p>
+                    <label className="label-mono text-[10px] block mb-1.5">
+                      WhatsApp * <span className="text-[var(--text-muted)]">(con código de país)</span>
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="593991234567  ó  +1 828 714 9177"
+                      value={phone}
+                      onChange={(e) => handlePhoneChange(e.target.value)}
+                      className={`w-full bg-[var(--bg-secondary)] border rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none transition-colors ${
+                        phoneError ? 'border-[var(--red)]' : 'border-[var(--border)] focus:border-[var(--gold)]'
+                      }`}
+                    />
+                    {phoneError ? (
+                      <p className="text-xs text-[var(--red)] mt-1">{phoneError}</p>
+                    ) : (
+                      <p className="label-mono text-[9px] mt-1">
+                        Escribe el número completo con código de país — Vinces te escribirá aquí
+                      </p>
+                    )}
                   </div>
 
+                  {/* Email */}
                   <div>
                     <label className="label-mono text-[10px] block mb-1.5">Email</label>
                     <input
@@ -302,6 +300,7 @@ export default function Unirse() {
                     <p className="label-mono text-[9px] mt-1">Te enviamos confirmación por correo</p>
                   </div>
 
+                  {/* Plan */}
                   <div>
                     <label className="label-mono text-[10px] block mb-2">Plan de interés</label>
                     <div className="grid grid-cols-2 gap-2">
@@ -313,9 +312,7 @@ export default function Unirse() {
                               : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--gold-dark)]'
                           }`}>
                           {p === 'MENSUAL' ? '$79/mes' : '$649/año'}
-                          {p === 'ANUAL' && (
-                            <span className="ml-1 text-[9px] text-[var(--green)]">-$299</span>
-                          )}
+                          {p === 'ANUAL' && <span className="ml-1 text-[9px] text-[var(--green)]">-$299</span>}
                         </button>
                       ))}
                     </div>
@@ -325,7 +322,9 @@ export default function Unirse() {
                     <p className="text-xs text-[var(--red)]">{errorMsg}</p>
                   )}
 
-                  <button type="submit" disabled={formState === 'loading'}
+                  <button
+                    type="submit"
+                    disabled={formState === 'loading'}
                     className="btn-gold text-sm py-3.5 px-6 rounded-lg w-full font-bold disabled:opacity-60 disabled:cursor-not-allowed">
                     {formState === 'loading'
                       ? 'Enviando...'
@@ -333,7 +332,7 @@ export default function Unirse() {
                   </button>
 
                   <p className="label-mono text-[10px] text-center">
-                    Sin compromisos · Cancela cuando quieras · Vinces te orienta antes de pagar
+                    Sin compromisos · Vinces te orienta antes de que pagues
                   </p>
                 </form>
               </div>
@@ -345,18 +344,9 @@ export default function Unirse() {
         {/* Objeciones */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-16">
           {[
-            {
-              q: '¿Y si no me gusta?',
-              a: 'Con un mes ($79) tienes más que suficiente para saber si el trading es para ti. Sin riesgo vs un curso de $1,000+ sin garantía.',
-            },
-            {
-              q: '¿Sirve si soy nuevo?',
-              a: 'Sí. La formación empieza desde cero. Luis te lleva desde abrir tu primera cuenta hasta operar con disciplina y método.',
-            },
-            {
-              q: '¿Cuándo empieza?',
-              a: 'Inmediatamente después de suscribirte tienes acceso a todo. Vinces te guía en los primeros pasos.',
-            },
+            { q: '¿Y si no me gusta?', a: 'Con un mes ($79) tienes suficiente para saber si el trading es para ti.' },
+            { q: '¿Sirve si soy nuevo?', a: 'Sí. La formación empieza desde cero. Luis te lleva desde abrir tu primera cuenta hasta operar con disciplina.' },
+            { q: '¿Cuándo empieza?', a: 'Inmediatamente después de suscribirte tienes acceso a todo. Vinces te guía en los primeros pasos.' },
           ].map((item) => (
             <div key={item.q} className="card p-5">
               <div className="text-sm font-bold text-[var(--text-primary)] mb-2">{item.q}</div>
@@ -365,7 +355,6 @@ export default function Unirse() {
           ))}
         </div>
 
-        {/* Footer mínimo */}
         <div className="border-t border-[var(--border)] mt-16 pt-8 text-center">
           <p className="label-mono text-[10px] text-[var(--text-muted)]">
             © {new Date().getFullYear()} Liberty Trading Pro · Las inversiones implican riesgo. Resultados pasados no garantizan rendimientos futuros.
