@@ -19,6 +19,7 @@ function RegisterForm() {
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
   const router = useRouter()
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -46,8 +47,7 @@ function RegisterForm() {
       body: JSON.stringify({ ...form, plan: plan.toUpperCase(), authId: data.user?.id }),
     })
 
-    router.push('/dashboard')
-    router.refresh()
+    setSuccess(true)
   }
 
   const update = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }))
@@ -73,6 +73,20 @@ function RegisterForm() {
           </div>
         </div>
 
+        {success ? (
+          <div className="card-gold text-center space-y-4">
+            <div className="text-4xl">✉️</div>
+            <h2 className="text-xl font-bold text-[var(--text-primary)]">Revisa tu correo</h2>
+            <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+              Te enviamos un enlace de confirmación a<br />
+              <span className="text-[var(--gold)] font-medium">{form.email}</span>
+            </p>
+            <p className="text-xs text-[var(--text-muted)]">
+              Haz clic en el enlace del correo para activar tu cuenta y acceder al dashboard.
+              Si no lo ves, revisa tu carpeta de spam.
+            </p>
+          </div>
+        ) : (
         <div className="card-gold">
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
@@ -113,6 +127,7 @@ function RegisterForm() {
             <Link href="/login" className="text-[var(--gold)] hover:underline">Ingresar</Link>
           </div>
         </div>
+        )}
       </div>
     </div>
   )
