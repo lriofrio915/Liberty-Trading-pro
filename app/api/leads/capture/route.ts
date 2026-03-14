@@ -138,13 +138,9 @@ export async function POST(req: NextRequest) {
       where: { phone: cleanedPhone },
     })
 
-    // Leads ya convertidos (VENDIDO): solo notificar a Luis, no reiniciar
     const yaConvertido = existing?.estado === 'VENDIDO'
 
-    // Siempre guardar/actualizar el lead con el plan de interés
-    // Solo reiniciamos la conversación si es lead nuevo o si no está en medio de una
-    const enConversacionActiva = existing && ['P1', 'P2', 'P3', 'P4', 'CLASIFICADO', 'CTA'].includes(existing.estado)
-
+    // El formulario siempre reinicia la conversación (excepto leads ya vendidos)
     await (prisma as any).whatsappLead.upsert({
       where: { phone: cleanedPhone },
       create: {
@@ -157,19 +153,18 @@ export async function POST(req: NextRequest) {
       },
       update: {
         name: name.trim(),
-        // Si ya está en conversación activa o vendido, no tocamos el estado
-        ...(enConversacionActiva || yaConvertido ? {} : {
+        perfil: planNorm,
+        updatedAt: new Date(),
+        ...(yaConvertido ? {} : {
           estado: 'P1',
           respuestas: { planInteres: planLabel },
           historial: [],
         }),
-        perfil: planNorm,
-        updatedAt: new Date(),
       },
     })
 
-    // 1. WA al lead — SIEMPRE directo desde la API, sin depender de n8n
-    if (!enConversacionActiva && !yaConvertido) {
+    // 1. WA al lead — siempre, salvo leads ya vendidos
+    if (!yaConvertido) {
       const planCtx = planNorm === 'ANUAL'
         ? 'Vi que te interesa el Club Anual — la mejor opción si ya decidiste que el trading es tu camino. '
         : 'Vi que te interesa el Club Mensual — perfecto para empezar sin compromisos. '
@@ -193,7 +188,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Notificar a Luis
-    const tipoLead = yaConvertido ? '♻️ Lead ya convertido (recontacto)' : enConversacionActiva ? '🔄 Lead en conversación activa' : '📥 Nuevo lead'
+    const tipoLead = yaConvertido ? '♻️ Lead ya convertido (recontacto)' : existing ? '🔄 Lead conocido (nuevo intento)' : '📥 Nuevo lead'
     const msgLuis =
       `${tipoLead} — *formulario web*\n\n` +
       `👤 *Nombre:* ${name.trim()}\n` +
@@ -206,7 +201,7 @@ export async function POST(req: NextRequest) {
       console.error('[Capture] Error notif Luis:', e?.message)
     )
 
-    // 4. n8n — opcional, solo para automatizaciones adicionales
+    // 4. n8n
     if (N8N_WEBHOOK) {
       fetch(N8N_WEBHOOK, {
         method: 'POST',
