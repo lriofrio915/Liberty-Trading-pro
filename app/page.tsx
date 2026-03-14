@@ -54,7 +54,7 @@ export default function LandingPage() {
                 num: '04',
                 icon: '💡',
                 title: 'Señales de Inversión',
-                desc: 'Oportunidades en acciones, ETFs y criptoactivos con análisis completo — entrada, objetivo, stop loss y contexto fundamental. Señales de Luis en tiempo real.',
+                desc: 'Reportes y análisis de oportunidades en acciones y ETFs — entrada sugerida, objetivo, stop loss y contexto fundamental para que tomes tu propia decisión.',
                 badge: 'Club',
               },
               {

@@ -77,23 +77,23 @@ export default function Hero() {
               </div>
 
               <h1 className="headline text-6xl sm:text-7xl lg:text-8xl text-[var(--text-primary)] mb-6">
-                Aprende trading<br />
-                <span className="gradient-gold">con el que opera</span>
+                Trading real<br />
+                <span className="gradient-gold">con quien opera</span>
               </h1>
 
               <p className="text-base text-[var(--text-secondary)] max-w-lg mb-8 leading-relaxed"
                 style={{ fontFamily: 'var(--font-sans)' }}>
-                Accede a la formación completa — desde cero hasta trader profesional de futuros Nasdaq —
-                junto a mentorías 1:1, señales de inversión reales y coaching con IA. Todo por una sola suscripción mensual.
+                Formación completa de cero a trader profesional, mentorías 1:1 con Luis Riofrio,
+                reportes de oportunidades en acciones y ETFs, y coaching con IA. Todo en una sola membresía.
               </p>
 
               {/* Value props */}
               <div className="flex flex-wrap gap-2 mb-8">
                 {[
                   { icon: '🎓', label: 'Mentoría 1:1 con Luis' },
-                  { icon: '📊', label: 'Señales de inversión reales' },
+                  { icon: '📋', label: 'Reportes de oportunidades' },
                   { icon: '🤖', label: 'IA Vinces — coaching 24/7' },
-                  { icon: '📈', label: 'Futuros NQ/MNQ Nasdaq' },
+                  { icon: '📈', label: 'Futuros NQ/MNQ (CME)' },
                 ].map((v) => (
                   <div key={v.label}
                     className="flex items-center gap-1.5 border border-[var(--border)] rounded-full px-3 py-1.5"
@@ -205,10 +205,15 @@ export default function Hero() {
                 </div>
 
                 {/* Footer */}
-                <div className="px-5 py-3 flex items-center justify-between">
-                  <span className="label-mono text-[9px]">Datos tomados de la BD — se actualizan con cada operación</span>
-                  <Link href="/register" className="label-mono text-[10px] text-[var(--gold)] hover:underline">
-                    Ver historial completo →
+                <div className="px-5 py-3 border-t border-[var(--border)] space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)]" />
+                    <span className="label-mono text-[9px]">Datos de BD — se actualizan con cada operación</span>
+                  </div>
+                  <Link
+                    href="/track-record/cmmjkgdt800004kjq1zep8qc9"
+                    className="label-mono text-[10px] text-[var(--gold)] hover:underline block">
+                    Ver historial completo de Luis Riofrio →
                   </Link>
                 </div>
               </div>

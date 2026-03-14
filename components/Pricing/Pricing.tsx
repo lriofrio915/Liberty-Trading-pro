@@ -7,7 +7,7 @@ const ALL_FEATURES = [
   { icon: '📈', text: 'Especialización en Day Trading — Futuros NQ/MNQ Nasdaq' },
   { icon: '🤝', text: 'Mentorías 1:1 personalizadas con Luis cada mes' },
   { icon: '🤖', text: 'Vinces IA — coaching diario personalizado con IA' },
-  { icon: '💡', text: 'Señales de inversión en acciones, ETFs y criptoactivos' },
+  { icon: '💡', text: 'Reportes de oportunidades en acciones y ETFs' },
   { icon: '🌐', text: 'Monitor Mundial — geopolítica y macro en tiempo real' },
   { icon: '📊', text: 'Track record verificable — operaciones reales de Luis' },
   { icon: '📄', text: 'Reportes de rendimiento semanales y mensuales' },

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 
 const WA = 'https://wa.me/+593996691586'
+const VINCES_WA = 'https://wa.me/18287149177'
 const IG = 'https://instagram.com/libertytradingclub'
 const FB = 'https://facebook.com/libertytradingclub'
 
@@ -53,8 +54,8 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {[
                 { href: '#servicios', label: 'Servicios' },
-                { href: '#academia', label: 'Liberty Academy' },
-                { href: '#precios', label: 'Planes' },
+                { href: '#para-quien', label: 'Para quién es' },
+                { href: '#precios', label: 'Planes y precios' },
                 { href: '/p2p', label: 'P2P Cripto' },
                 { href: '/login', label: 'Ingresar' },
               ].map((link) => (
@@ -75,7 +76,19 @@ export default function Footer() {
               <li>
                 <a href={WA} target="_blank" rel="noopener noreferrer"
                   className="text-sm text-[var(--text-muted)] hover:text-[var(--gold)] transition-colors">
-                  +593 99 669 1586
+                  Luis: +593 99 669 1586
+                </a>
+              </li>
+              <li>
+                <a href={VINCES_WA} target="_blank" rel="noopener noreferrer"
+                  className="text-sm text-[var(--text-muted)] hover:text-[var(--gold)] transition-colors">
+                  Vinces / Soporte: +1 828 714 9177
+                </a>
+              </li>
+              <li>
+                <a href="mailto:soporte@libertytrading.pro"
+                  className="text-sm text-[var(--text-muted)] hover:text-[var(--gold)] transition-colors">
+                  soporte@libertytrading.pro
                 </a>
               </li>
               <li>
