@@ -62,13 +62,13 @@ export default function Hero() {
             style={{ background: 'radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%)' }} />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-20 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-14 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
 
             {/* LEFT: Headline + Subscription pitch */}
             <div>
               {/* Badge */}
-              <div className="inline-flex items-center gap-2.5 border border-[var(--gold-dark)] rounded-full px-4 py-1.5 mb-10"
+              <div className="inline-flex items-center gap-2.5 border border-[var(--gold-dark)] rounded-full px-4 py-1.5 mb-6"
                 style={{ background: 'rgba(201,168,76,0.06)' }}>
                 <span className="w-2 h-2 rounded-full bg-[var(--green)] pulse-dot" />
                 <span className="font-mono-custom text-[11px] text-[var(--gold)] tracking-wider">
@@ -83,9 +83,8 @@ export default function Hero() {
 
               <p className="text-base text-[var(--text-secondary)] max-w-lg mb-8 leading-relaxed"
                 style={{ fontFamily: 'var(--font-sans)' }}>
-                Formación completa de cero a trader profesional, track record verificable, trading de futuros NQ/MNQ,
-                mentorías 1:1 con Luis Riofrio, reportes de oportunidades en acciones y ETFs,
-                y coaching con IA. Todo en una sola membresía.
+                Accede a todo mientras seas miembro. Sin cursos caros de pago único, sin compromisos largos.
+                Un solo pago mensual — cancela cuando quieras.
               </p>
 
               {/* Value props */}
