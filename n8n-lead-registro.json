@@ -39,7 +39,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\nconst name     = body.name     || 'amigo';\nconst phone    = body.phone    || '';\nconst plan     = body.plan     || 'MENSUAL';\nconst planLabel = body.planLabel || (plan === 'ANUAL' ? 'Club Anual ($649/año)' : 'Club Mensual ($79/mes)');\n\nconst planCtx = plan === 'ANUAL'\n  ? 'Vi que te interesa el Club Anual — la mejor opción si ya decidiste que el trading es tu camino. '\n  : 'Vi que te interesa el Club Mensual — perfecto para empezar sin compromisos. ';\n\nconst mensaje =\n  `¡Hola ${name}! 👋 Soy Vinces, el asistente del Club Liberty Trading.\\n\\n` +\n  `${planCtx}` +\n  `Luis me entrenó para orientar a personas que quieren aprender a invertir o hacer trading profesional.\\n\\n` +\n  `¿Me permites hacerte unas preguntas rápidas para asegurarme de que el club es lo que necesitas? 🎯`;\n\nreturn [{ json: { phone, name, plan, planLabel, mensaje } }];"
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\nconst name      = body.name      || 'amigo';\nconst phone     = body.phone     || '';\nconst plan      = body.plan      || 'MENSUAL';\nconst planLabel = body.planLabel || (plan === 'ANUAL' ? 'Club Anual ($649/año)' : 'Club Mensual ($79/mes)');\n\nconst planCtx = plan === 'ANUAL'\n  ? 'Vi que te interesa el Club Anual — la mejor opción si ya decidiste que el trading es tu camino. '\n  : 'Vi que te interesa el Club Mensual — perfecto para empezar sin compromisos. ';\n\nconst mensaje =\n  `¡Hola ${name}! 👋 Soy Vinces, el asistente del Club Liberty Trading.\\n\\n` +\n  `${planCtx}` +\n  `Luis me entrenó para orientar a personas que quieren aprender a invertir o hacer trading profesional.\\n\\n` +\n  `¿Me permites hacerte unas preguntas rápidas para asegurarme de que el club es lo que necesitas? 🎯`;\n\nreturn [{ json: { phone, name, plan, planLabel, mensaje } }];"
       },
       "id": "node-build-msg",
       "name": "Construir mensaje de bienvenida",
@@ -50,9 +50,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://evo.nexus-ia.com.es/message/sendText/vinces",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "https://evo.nexus-ia.com.es/message/sendText/vinces",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -67,18 +65,8 @@
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "number",
-              "value": "={{ $json.phone }}"
-            },
-            {
-              "name": "text",
-              "value": "={{ $json.mensaje }}"
-            }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $json.phone, text: $json.mensaje }) }}",
         "options": {
           "timeout": 15000
         }
@@ -91,7 +79,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $('Webhook — Formulario Unirse').first().json.body || $('Webhook — Formulario Unirse').first().json;\n\nconst name     = body.name     || 'sin nombre';\nconst phone    = body.phone    || 'sin teléfono';\nconst email    = body.email    || 'no proporcionado';\nconst planLabel = body.planLabel || 'Club Mensual ($79/mes)';\n\nconst msg =\n  `📥 *Nuevo lead desde el formulario web*\\n\\n` +\n  `👤 *Nombre:* ${name}\\n` +\n  `📱 *WhatsApp:* +${phone}\\n` +\n  `📧 *Email:* ${email}\\n` +\n  `🎯 *Plan de interés:* ${planLabel}\\n\\n` +\n  `_Vinces ya le escribió. Puedes hacer seguimiento directo._`;\n\nreturn [{ json: { msg } }];"
+        "jsCode": "const body = $('Webhook — Formulario Unirse').first().json.body || $('Webhook — Formulario Unirse').first().json;\n\nconst name      = body.name      || 'sin nombre';\nconst phone     = body.phone     || 'sin teléfono';\nconst email     = body.email     || 'no proporcionado';\nconst planLabel = body.planLabel || 'Club Mensual ($79/mes)';\n\nconst msg =\n  `📥 *Nuevo lead desde el formulario web*\\n\\n` +\n  `👤 *Nombre:* ${name}\\n` +\n  `📱 *WhatsApp:* +${phone}\\n` +\n  `📧 *Email:* ${email}\\n` +\n  `🎯 *Plan de interés:* ${planLabel}\\n\\n` +\n  `_Vinces ya le escribió. Puedes hacer seguimiento directo._`;\n\nreturn [{ json: { msg } }];"
       },
       "id": "node-build-luis-msg",
       "name": "Construir notif para Luis",
@@ -102,7 +90,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://evo.nexus-ia.com.es/message/sendText/vinces",
+        "url": "https://evo.nexus-ia.com.es/message/sendText/vinces",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -117,18 +105,8 @@
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "number",
-              "value": "593996691586"
-            },
-            {
-              "name": "text",
-              "value": "={{ $json.msg }}"
-            }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: '593996691586', text: $json.msg }) }}",
         "options": {
           "timeout": 15000
         }
@@ -180,5 +158,5 @@
   "tags": ["liberty-trading", "leads", "whatsapp"],
   "triggerCount": 0,
   "updatedAt": "2026-03-14T00:00:00.000Z",
-  "versionId": "1"
+  "versionId": "2"
 }
