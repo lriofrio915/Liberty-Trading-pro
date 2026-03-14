@@ -43,13 +43,6 @@ function RegisterForm() {
       return
     }
 
-    // Create user in DB
-    await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, plan: plan.toUpperCase(), authId: data.user?.id }),
-    })
-
     setSuccess(true)
   }
 
