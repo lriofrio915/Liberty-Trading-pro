@@ -168,45 +168,27 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // 1. Email de confirmación al lead (siempre, no importa si ya existe)
-    if (email?.includes('@')) {
-      sendConfirmationEmail(name.trim(), email.trim(), planNorm).catch((e) =>
-        console.error('[Capture] Error email confirmación:', e?.message)
-      )
-    }
-
-    // 2. Disparar n8n webhook — n8n envía el WA de bienvenida con delay
-    // Si ya está en conversación activa, n8n notifica a Luis pero no envía WA al lead
-    if (N8N_WEBHOOK) {
-      fetch(N8N_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          phone: cleanedPhone,
-          email: email?.trim() || '',
-          plan: planNorm,
-          planLabel,
-          sendWAToLead: !enConversacionActiva && !yaConvertido,
-          ts: new Date().toISOString(),
-        }),
-        // Sin timeout: es fire-and-forget, n8n puede tardar (tiene nodo Wait)
-        // Si cortamos la conexión antes de que n8n responda, cancela el workflow
-      }).catch((e) => console.error('[Capture] Error n8n webhook:', e?.message))
-    } else if (!enConversacionActiva && !yaConvertido) {
-      // Fallback: enviar WA directamente si no hay n8n configurado
+    // 1. WA al lead — SIEMPRE directo desde la API, sin depender de n8n
+    if (!enConversacionActiva && !yaConvertido) {
       const planCtx = planNorm === 'ANUAL'
         ? 'Vi que te interesa el Club Anual — la mejor opción si ya decidiste que el trading es tu camino. '
         : 'Vi que te interesa el Club Mensual — perfecto para empezar sin compromisos. '
 
-      const mensaje =
+      const mensajeLead =
         `¡Hola ${name.trim()}! 👋 Soy Vinces, el asistente del Club Liberty Trading.\n\n` +
         `${planCtx}` +
-        `Te haré unas preguntas rápidas para orientarte mejor y asegurarme de que el club es lo que necesitas 🎯\n\n` +
+        `Te haré unas preguntas rápidas para orientarte y asegurarme de que el club es lo que necesitas 🎯\n\n` +
         `¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has tenido algún contacto con el trading o la inversión antes, o es algo completamente nuevo para ti?`
 
-      sendWA(cleanedPhone, mensaje).catch((e) =>
-        console.error('[Capture] Error enviando WA:', e?.message)
+      sendWA(cleanedPhone, mensajeLead).catch((e) =>
+        console.error('[Capture] Error WA lead:', e?.message)
+      )
+    }
+
+    // 2. Email de confirmación al lead
+    if (email?.includes('@')) {
+      sendConfirmationEmail(name.trim(), email.trim(), planNorm).catch((e) =>
+        console.error('[Capture] Error email:', e?.message)
       )
     }
 
@@ -218,11 +200,27 @@ export async function POST(req: NextRequest) {
       `📱 *WhatsApp:* +${cleanedPhone}\n` +
       `📧 *Email:* ${email || 'no proporcionado'}\n` +
       `🎯 *Plan de interés:* ${planLabel}\n\n` +
-      `_Vinces le escribirá en breve para iniciar la conversación._`
+      `_Vinces ya le escribió para iniciar la conversación._`
 
     sendWA(LUIS_PHONE, msgLuis).catch((e) =>
       console.error('[Capture] Error notif Luis:', e?.message)
     )
+
+    // 4. n8n — opcional, solo para automatizaciones adicionales
+    if (N8N_WEBHOOK) {
+      fetch(N8N_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: cleanedPhone,
+          email: email?.trim() || '',
+          plan: planNorm,
+          planLabel,
+          ts: new Date().toISOString(),
+        }),
+      }).catch((e) => console.error('[Capture] Error n8n:', e?.message))
+    }
 
     return NextResponse.json({ ok: true, status: 'created' })
   } catch (err: any) {
