@@ -61,10 +61,12 @@ export default function Pricing() {
               ))}
             </ul>
 
-            <Link href="/register?plan=club"
-              className="btn-outline text-sm py-3.5 px-6 rounded-lg w-full text-center block">
+            <a
+              href="https://pay.hotmart.com/R104900326X?checkoutMode=2"
+              onClick={() => false}
+              className="hotmart-fb hotmart__button-checkout btn-outline text-sm py-3.5 px-6 rounded-lg w-full text-center block">
               Empezar por $79/mes →
-            </Link>
+            </a>
             <p className="text-center label-mono text-[10px] mt-3">Sin permanencia · Cancela cuando quieras</p>
           </div>
 
@@ -103,10 +105,12 @@ export default function Pricing() {
                 ))}
               </ul>
 
-              <Link href="/register?plan=pro"
-                className="btn-gold text-sm py-3.5 px-6 rounded-lg w-full text-center block">
+              <a
+                href="https://pay.hotmart.com/L104900408S?checkoutMode=2"
+                onClick={() => false}
+                className="hotmart-fb hotmart__button-checkout btn-gold text-sm py-3.5 px-6 rounded-lg w-full text-center block">
                 Unirme al Club Anual →
-              </Link>
+              </a>
               <p className="text-center label-mono text-[10px] mt-3">Pago único por 12 meses completos</p>
             </div>
           </div>

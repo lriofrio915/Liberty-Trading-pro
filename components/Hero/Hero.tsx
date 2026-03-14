@@ -113,10 +113,12 @@ export default function Hero() {
 
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-3">
-                <Link href="#precios"
-                  className="btn-gold text-sm py-3.5 px-7 rounded-lg">
+                <a
+                  href="https://pay.hotmart.com/R104900326X?checkoutMode=2"
+                  onClick={() => false}
+                  className="hotmart-fb hotmart__button-checkout btn-gold text-sm py-3.5 px-7 rounded-lg text-center">
                   Unirme al Club →
-                </Link>
+                </a>
                 <a href={WA_LINK} target="_blank" rel="noopener noreferrer"
                   className="btn-outline text-sm py-3.5 px-7 rounded-lg inline-flex items-center gap-2">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">

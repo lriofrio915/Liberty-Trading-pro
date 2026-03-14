@@ -3,6 +3,7 @@ import { Cormorant_Garamond, DM_Mono, Syne } from 'next/font/google'
 import './globals.css'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import ScrollToTop from '@/components/ScrollToTop'
+import Script from 'next/script'
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -45,9 +46,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={`${cormorant.variable} ${dmMono.variable} ${syne.variable}`}>
+      <head>
+        <link rel="stylesheet" href="https://static.hotmart.com/css/hotmart-fb.min.css" />
+      </head>
       <body>
         <LanguageProvider>{children}</LanguageProvider>
         <ScrollToTop />
+        <Script
+          src="https://static.hotmart.com/checkout/widget.min.js"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   )
