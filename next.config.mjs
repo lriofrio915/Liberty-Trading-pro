@@ -15,6 +15,13 @@ const nextConfig = {
         ],
       },
       {
+        source: '/unirse',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Surrogate-Control', value: 'no-store' },
+        ],
+      },
+      {
         source: '/api/:path*',
         headers: [
           { key: 'Access-Control-Allow-Origin', value: '*' },

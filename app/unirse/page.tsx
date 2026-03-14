@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
@@ -56,20 +58,11 @@ export default function Unirse() {
     setPhoneError('')
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-
+  async function doSubmit() {
     const cleanedPhone = normalizePhone(phone)
 
-    alert(`[DEBUG] Submit ejecutado\nNombre: "${nombre}"\nPhone: "${phone}"\nClean: "${cleanedPhone}" (${cleanedPhone.length} dígitos)`)
-    console.log('[Form] Submit iniciado', { nombre: nombre.trim(), phone, cleanedPhone, cleanedLen: cleanedPhone.length, plan })
-
-    if (!nombre.trim()) {
-      console.log('[Form] Bloqueado: nombre vacío')
-      return
-    }
+    if (!nombre.trim()) return
     if (cleanedPhone.length < 7) {
-      console.log('[Form] Bloqueado: teléfono corto', cleanedPhone.length)
       setPhoneError('Ingresa tu número de WhatsApp completo con código de país (ej: 593991234567)')
       return
     }
@@ -79,10 +72,7 @@ export default function Unirse() {
     setPhoneError('')
 
     try {
-      const url = '/api/leads/capture'
-      console.log('[Form] Enviando a:', url, { name: nombre.trim(), phone: cleanedPhone, plan })
-
-      const res = await fetch(url, {
+      const res = await fetch('/api/leads/capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -92,11 +82,7 @@ export default function Unirse() {
           plan,
         }),
       })
-
-      console.log('[Form] Respuesta status:', res.status, res.ok)
       const json = await res.json()
-      console.log('[Form] Respuesta body:', json)
-
       if (json.ok) {
         setFormState('success')
       } else {
@@ -104,10 +90,14 @@ export default function Unirse() {
         setFormState('error')
       }
     } catch (err: any) {
-      console.error('[Form] Error fetch:', err?.message, err)
-      setErrorMsg(`Error: ${err?.message || 'Sin conexión'}`)
+      setErrorMsg(`Sin conexión. Intenta de nuevo.`)
       setFormState('error')
     }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    doSubmit()
   }
 
   const ytd = data
@@ -337,7 +327,8 @@ export default function Unirse() {
                   )}
 
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={doSubmit}
                     disabled={formState === 'loading'}
                     className="btn-gold text-sm py-3.5 px-6 rounded-lg w-full font-bold disabled:opacity-60 disabled:cursor-not-allowed">
                     {formState === 'loading'
