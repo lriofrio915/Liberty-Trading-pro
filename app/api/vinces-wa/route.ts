@@ -3,8 +3,8 @@ import { prisma } from '@/lib/prisma'
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const LINKS = {
-  INTEGRAL: process.env.HOTMART_LINK_ACADEMIA || 'https://hotm.io/NLcSS1',
-  FUTUROS:  process.env.HOTMART_LINK_CLUB     || 'https://hotm.io/HhAyjc',
+  MENSUAL: process.env.HOTMART_LINK_MENSUAL || 'https://pay.hotmart.com/R104900326X?checkoutMode=2',
+  ANUAL:   process.env.HOTMART_LINK_ANUAL   || 'https://pay.hotmart.com/L104900408S?checkoutMode=2',
 }
 
 const EVO_URL      = process.env.EVOLUTION_API_URL || 'https://evo.nexus-ia.com.es'
@@ -13,48 +13,60 @@ const EVO_KEY      = process.env.EVOLUTION_API_KEY  || '157B8ABC2B63-46DE-B38C-0
 
 // ── Contexto de Liberty Trading Pro ───────────────────────────────────────────
 const CONTEXTO_LUIS = `
-Eres Vinces, el asistente de ventas de Liberty Trading Pro — academia de trading fundada por Luis Riofrío.
+Eres Vinces, el asistente de ventas de Liberty Trading Pro — club de trading fundado por Luis Riofrío.
 
 SOBRE LUIS RIOFRÍO (el formador):
 - Trader intradia especializado en futuros del Nasdaq (NQ/MNQ) con NinjaTrader 8
+- Operador Financiero en Emporium Quality Funds con track record verificable y público
 - Estrategias: rompimiento y consecución (futuros intradia) | Dollar Cost Average (inversión a largo plazo)
 - NO enseña fórmulas mágicas. Enseña disciplina, consistencia, un método probado y un sistema que funciona
 - Honesto: el trading implica riesgo, no hay garantías de rentabilidad
 
-PROGRAMA 1 — Mentoría Integral de Inversión (2 meses, 1 a 1):
-- PARA QUIÉN: personas con trabajo/ingresos estables, que no tienen mucho tiempo libre, que quieren hacer crecer su capital e invertir con método. Perfil: adultos maduros, emprendedores, profesionales ocupados que quieren aprender a abrir cuentas en brokers, comprar acciones, ETFs, cripto, bonos, materias primas, construir un portafolio diversificado.
-- QUÉ APRENDEN: estrategia Dollar Cost Average, diversificación de portafolio, apertura de cuenta en Interactive Brokers, exchanges cripto, gestión de capital, conversiones USD/cripto.
-- FORMATO: clases 1 a 1 en vivo (ritmo adaptado), soporte por WhatsApp todo el programa, acceso de por vida a comunidad privada con análisis y oportunidades.
-- LINK: ${LINKS.INTEGRAL}
+MODELO DE NEGOCIO — Club Liberty Trading (suscripción mensual o anual):
+Hay UN solo club con TODO incluido. El miembro elige cómo pagar:
 
-PROGRAMA 2 — Maestría en Trading Intradía de Futuros NQ/MNQ (1 año):
-- PARA QUIÉN: personas que quieren hacer del trading su profesión o estilo de vida, que tienen tiempo para practicar y operar, que buscan cambiar de carrera, generar track record profesional, conseguir trabajo como operadores. Personas que ven el trading a largo plazo como su medio de vida.
-- QUÉ APRENDEN: sistema completo de trading intradia en NQ/MNQ con NinjaTrader 8, lectura de mercado, ejecución, gestión de posición, disciplina, métricas. El sistema opera en la apertura del mercado americano (9:30am NY) pero el alumno puede adaptarlo a su horario.
-- FORMATO: clases 1 a 1 con Luis, biblioteca de videos, mentoring grupal, comunidad privada, y Vinces IA como mentor de métricas (registra track record, win rate, profit factor, etc.)
-- LINK: ${LINKS.FUTUROS}
+CLUB MENSUAL — $79/mes (cancela cuando quieras):
+- Ideal para quien quiere probar antes de comprometerse largo plazo
+- Sin permanencia ni contratos. Puedes cancelar en cualquier momento.
+- LINK: ${LINKS.MENSUAL}
 
-CLAVE DE CLASIFICACIÓN:
-- ¿Quiere INVERTIR su capital y tiene trabajo? → Mentoría Integral
-- ¿Quiere VIVIR DEL TRADING y tiene tiempo para dedicarse? → Maestría en Futuros
+CLUB ANUAL — $649/año (pago único, equivale a ~$54/mes):
+- Ahorras $299 vs pagar mes a mes ($948 vs $649)
+- Ideal para quien ya decidió que el trading es su camino y quiere la mejor tarifa
+- LINK: ${LINKS.ANUAL}
+
+QUÉ INCLUYE EL CLUB (ambos planes tienen TODO):
+- Mentoría Integral de Mercados Financieros (desde cero hasta invertir con método)
+- Especialización en Day Trading — Futuros NQ/MNQ Nasdaq con NinjaTrader 8
+- Mentorías 1:1 personalizadas con Luis cada mes
+- Vinces IA — coaching diario personalizado con inteligencia artificial (24/7)
+- Reportes de oportunidades en acciones y ETFs
+- Monitor Mundial — geopolítica y macro en tiempo real
+- Track record verificable — operaciones reales de Luis publicadas
+- Reportes de rendimiento semanales y mensuales
+- Comunidad privada activa
+
+CLAVE DE RECOMENDACIÓN DE PLAN:
+- ¿Quiere probar primero o tiene presupuesto ajustado? → Club Mensual ($79/mes)
+- ¿Ya está decidido y quiere el mejor precio? → Club Anual ($649/año, ahorra $299)
 
 PARA QUIÉN NO ES (compártelo con naturalidad si el contexto lo amerita, nunca de forma agresiva):
 - NO es para quien busca ingresos inmediatos o "resultados ya". El trading es un proceso que toma tiempo.
 - NO es para personas endeudadas que dependen del trading para salir de sus problemas financieros urgentes. La presión económica extrema impide tomar buenas decisiones en el mercado y puede empeorar su situación.
-- NO es para personas incumplidas o indisciplinadas que no están dispuestas a comprometerse con el proceso. El nivel de compromiso que el trading exige es alto.
+- NO es para personas incumplidas o indisciplinadas que no están dispuestas a comprometerse con el proceso.
 
 PARA QUIÉN SÍ ES:
 - Personas comprometidas, decididas y entusiastas con el aprendizaje.
 - Personas disciplinadas o con predisposición real a desarrollar disciplina.
-- No se requiere ser perfecto, pero sí tener la actitud y voluntad de convertirse en ello.
-- Si alguien menciona urgencia económica extrema o deudas graves, Vinces debe ser honesto y empático: reconocer su situación, explicar con respeto que el trading no es la solución inmediata para eso, y sugerir que primero estabilicen su situación financiera antes de invertir en formación.
+- Si alguien menciona urgencia económica extrema o deudas graves, Vinces debe ser honesto y empático: reconocer su situación, explicar que el trading no es la solución inmediata para eso, y sugerir que primero estabilicen su situación financiera.
 `
 
 // ── Preguntas rediseñadas ─────────────────────────────────────────────────────
 const PREGUNTAS: Record<string, string> = {
-  P1: '¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has invertido antes o es algo completamente nuevo para ti?',
-  P2: '¿Cuál de estas opciones describe mejor lo que buscas?\n\n1️⃣ Aprender a invertir mis ahorros y hacer crecer mi capital (sin dejar mi trabajo)\n2️⃣ Convertirme en trader profesional y vivir del trading\n3️⃣ Generar ingresos extras operando en mis tiempos libres\n4️⃣ Aún no tengo claro, quiero orientación',
-  P3: '¿Cuánto tiempo libre tienes al día o a la semana para dedicarle al aprendizaje y práctica?',
-  P4: 'Y para cerrar: ¿qué te ha frenado hasta ahora para dar el paso? ¿Qué sería lo más importante para ti en un programa de formación?',
+  P1: '¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has tenido algún contacto con el trading o la inversión antes, o es algo completamente nuevo para ti?',
+  P2: '¿Cuál de estas opciones describe mejor lo que buscas?\n\n1️⃣ Aprender a invertir mis ahorros y hacer crecer mi capital\n2️⃣ Convertirme en trader profesional y vivir del trading\n3️⃣ Generar ingresos adicionales operando a tiempo parcial\n4️⃣ Aún no tengo claro, quiero orientarme primero',
+  P3: '¿Cuánto tiempo libre tienes al día o a la semana para dedicarle al aprendizaje y la práctica?',
+  P4: 'Por último: ¿qué te ha frenado hasta ahora para dar el paso? ¿Y qué sería lo más importante para ti al unirte a un club de trading?',
 }
 
 const NEXT_STATE: Record<string, string> = {
@@ -179,7 +191,7 @@ async function notificarLuis(lead: {
   respuestas: Record<string, string>
 }) {
   try {
-    const perfilLabel = lead.perfil === 'INTEGRAL' ? '📘 Mentoría Integral' : '📊 Maestría en Futuros'
+    const perfilLabel = lead.perfil === 'ANUAL' ? '⭐ Club Anual ($649/año)' : '📅 Club Mensual ($79/mes)'
     const resumen = Object.entries(lead.respuestas)
       .map(([k, v]) => `• ${PREGUNTAS[k]}\n  → ${v}`)
       .join('\n\n')
@@ -221,37 +233,40 @@ Analizaste la conversación con ${name}:
 
 ${resumen}
 
-Basándote en el contexto de Liberty Trading Pro, clasifica a ${name} en uno de estos dos perfiles:
-- INTEGRAL: quiere invertir su capital, tiene trabajo/ingresos, no tiene mucho tiempo libre, perfil inversor → Mentoría Integral
-- FUTUROS: quiere vivir del trading, tiene tiempo para dedicarse, quiere cambio de carrera o trading como profesión → Maestría en Futuros
+Basándote en su perfil, recomiéndale el plan de pago más adecuado del Club Liberty Trading:
+- MENSUAL: para quien quiere probar primero, tiene dudas sobre el compromiso, presupuesto más ajustado, o simplemente prefiere ir mes a mes ($79/mes)
+- ANUAL: para quien ya está decidido, quiere el mejor precio, y ve el trading como un camino serio ($649/año, ahorra $299)
+
+Recuerda: ambos planes incluyen exactamente lo mismo. La diferencia es solo el precio y el compromiso.
 
 Responde SOLO este JSON (sin texto adicional):
-{"perfil":"INTEGRAL","mensaje":"texto"}
+{"perfil":"MENSUAL","mensaje":"texto"}
 
 Reglas del mensaje:
 - 3 oraciones personalizadas basadas en lo que dijo ${name}
 - Cálido, empático, muestra que entendiste su situación
-- Explica brevemente POR QUÉ ese programa es el ideal para él/ella
+- Explica por qué ese plan es el más adecuado para su momento actual
+- Menciona el precio del plan recomendado
 - Sin links, sin asteriscos, sin markdown, sin emojis en exceso
-- Termina con una invitación a revisar el programa`
+- Termina con una invitación a revisar el plan`
 
   const raw = await callAI([{ role: 'user', content: prompt }])
 
   try {
     const parsed = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] || '{}')
-    const perfil: 'INTEGRAL' | 'FUTUROS' = parsed.perfil === 'FUTUROS' ? 'FUTUROS' : 'INTEGRAL'
+    const perfil: 'MENSUAL' | 'ANUAL' = parsed.perfil === 'ANUAL' ? 'ANUAL' : 'MENSUAL'
     const url = LINKS[perfil]
-    const producto = perfil === 'FUTUROS' ? 'Maestría en Trading Intradía de Futuros' : 'Mentoría Integral de Inversión'
+    const planLabel = perfil === 'ANUAL' ? 'Club Anual — $649/año (ahorras $299)' : 'Club Mensual — $79/mes (cancela cuando quieras)'
     const mensajeLimpio = (parsed.mensaje || '')
       .replace(/https?:\/\/\S+/g, '')
       .replace(/\[.*?\]\(.*?\)/g, '')
       .trim()
-    return { perfil, mensaje: `${mensajeLimpio}\n\n👉 ${producto}:\n${url}`, productoUrl: url }
+    return { perfil, mensaje: `${mensajeLimpio}\n\n👉 ${planLabel}:\n${url}`, productoUrl: url }
   } catch {
     return {
-      perfil: 'INTEGRAL' as const,
-      mensaje: `Basado en lo que me contaste, creo que el mejor punto de partida es nuestra Mentoría Integral de Inversión. 🎓\n\n👉 Mentoría Integral de Inversión:\n${LINKS.INTEGRAL}`,
-      productoUrl: LINKS.INTEGRAL,
+      perfil: 'MENSUAL' as const,
+      mensaje: `Basado en lo que me contaste, el mejor punto de partida es el Club Mensual de Liberty Trading. 🎓\n\n👉 Club Mensual — $79/mes (cancela cuando quieras):\n${LINKS.MENSUAL}`,
+      productoUrl: LINKS.MENSUAL,
     }
   }
 }
@@ -346,17 +361,17 @@ export async function POST(req: NextRequest) {
       name = primerNombre(pushName)
       if (name) {
         estado = 'P1'
-        respuesta = `¡Hola ${name}! 👋 Soy Vinces, el asistente de Liberty Trading Pro.\n\nMe alegra que hayas llegado hasta aquí. Para orientarte de la mejor forma, voy a hacerte unas preguntas rápidas 🎯\n\n${PREGUNTAS.P1}`
+        respuesta = `¡Hola ${name}! 👋 Soy Vinces, el asistente del Club Liberty Trading.\n\nMe alegra que hayas llegado hasta aquí. Para orientarte de la mejor forma, voy a hacerte unas preguntas rápidas 🎯\n\n${PREGUNTAS.P1}`
       } else {
         estado = 'NOMBRE'
-        respuesta = '¡Hola! 👋 Soy Vinces, el asistente de Liberty Trading Pro.\n\nEstoy aquí para ayudarte a encontrar el camino correcto en el mundo de las inversiones y el trading.\n\n¿Cómo te llamas?'
+        respuesta = '¡Hola! 👋 Soy Vinces, el asistente del Club Liberty Trading.\n\nEstoy aquí para ayudarte a encontrar tu camino en el mundo del trading y la inversión.\n\n¿Cómo te llamas?'
       }
     }
 
     else if (estado === 'NOMBRE') {
       name = primerNombre(texto)
       estado = 'P1'
-      respuesta = `¡Mucho gusto, ${name}! 😊\n\nTe haré unas preguntas rápidas para entender exactamente qué necesitas y orientarte bien 👇\n\n${PREGUNTAS.P1}`
+      respuesta = `¡Mucho gusto, ${name}! 😊\n\nTe haré unas preguntas rápidas para entender qué buscas y recomendarte el plan que mejor se adapte a ti 👇\n\n${PREGUNTAS.P1}`
     }
 
     else if (['P1', 'P2', 'P3'].includes(estado)) {
@@ -423,7 +438,7 @@ export async function POST(req: NextRequest) {
     else if (estado === 'CTA') {
       const system = `${CONTEXTO_LUIS}
 
-Estás hablando con ${name || 'un prospecto'} que ya recibió tu recomendación de programa. Responde sus dudas con calidez y precisión usando el contexto de Liberty Trading Pro. Si pregunta precios o fechas de inicio, dile que Luis le dará esa información al contactarlo directamente. Si muestra interés en inscribirse, refuerza positivamente. Sin markdown, sin asteriscos, máximo 3 oraciones.`
+Estás hablando con ${name || 'un prospecto'} que ya recibió tu recomendación de plan. Responde sus dudas con calidez y precisión usando el contexto de Liberty Trading Pro. Si pregunta sobre qué incluye el club, recuérdale que ambos planes tienen todo incluido. Si pregunta la diferencia entre mensual y anual, explica que es solo el precio: $79/mes vs $649/año (ahorra $299). Si muestra interés en suscribirse, refuerza positivamente. Sin markdown, sin asteriscos, máximo 3 oraciones.`
 
       respuesta = await callAI([
         { role: 'system', content: system },
@@ -435,7 +450,7 @@ Estás hablando con ${name || 'un prospecto'} que ya recibió tu recomendación 
     }
 
     else if (estado === 'VENDIDO') {
-      respuesta = `¡Excelente decisión, ${name}! 🎉 Luis se pondrá en contacto contigo muy pronto para darte todos los detalles y comenzar. ¡Bienvenido a Liberty Trading Pro!`
+      respuesta = `¡Excelente decisión, ${name}! 🎉 Bienvenido al Club Liberty Trading. Luis estará pendiente y podrás comenzar de inmediato. ¡A operar!`
     }
 
     historial.push({ role: 'user', content: texto })
