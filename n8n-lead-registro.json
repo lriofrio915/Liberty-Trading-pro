@@ -5,7 +5,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "liberty-lead-registro",
-        "responseMode": "lastNode",
+        "responseMode": "responseNode",
         "options": {}
       },
       "id": "node-webhook",
@@ -28,6 +28,16 @@
     },
     {
       "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst body = raw.body || raw;\n\nconst name      = body.name      || 'amigo';\nconst phone     = String(body.phone || '').replace(/[^0-9]/g, '');\nconst plan      = body.plan      || 'MENSUAL';\nconst planLabel = body.planLabel || (plan === 'ANUAL' ? 'Club Anual ($649/año)' : 'Club Mensual ($79/mes)');\nconst email     = body.email     || 'no proporcionado';\n\nconst planCtx = plan === 'ANUAL'\n  ? 'Vi que te interesa el Club Anual — la mejor opción si ya decidiste que el trading es tu camino. '\n  : 'Vi que te interesa el Club Mensual — perfecto para empezar sin compromisos. ';\n\nconst mensajeLead =\n  `¡Hola ${name}! 👋 Soy Vinces, el asistente del Club Liberty Trading.\\n\\n` +\n  `${planCtx}` +\n  `Luis me entrenó para orientar a personas que quieren aprender a invertir o hacer trading profesional.\\n\\n` +\n  `¿Me permites hacerte unas preguntas rápidas para asegurarme de que el club es lo que necesitas? 🎯`;\n\nconst mensajeLuis =\n  `📥 *Nuevo lead desde el formulario web*\\n\\n` +\n  `👤 *Nombre:* ${name}\\n` +\n  `📱 *WhatsApp:* +${phone}\\n` +\n  `📧 *Email:* ${email}\\n` +\n  `🎯 *Plan de interés:* ${planLabel}\\n\\n` +\n  `_Vinces le escribirá en breve para iniciar la conversación._`;\n\nreturn [{\n  json: {\n    phone,\n    name,\n    plan,\n    planLabel,\n    email,\n    mensajeLead,\n    mensajeLuis\n  }\n}];"
+      },
+      "id": "node-build-msg",
+      "name": "Extraer datos y construir mensajes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
         "amount": 1,
         "unit": "minutes"
       },
@@ -35,16 +45,6 @@
       "name": "Esperar 1 minuto",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1,
-      "position": [460, 300]
-    },
-    {
-      "parameters": {
-        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\nconst name      = body.name      || 'amigo';\nconst phone     = body.phone     || '';\nconst plan      = body.plan      || 'MENSUAL';\nconst planLabel = body.planLabel || (plan === 'ANUAL' ? 'Club Anual ($649/año)' : 'Club Mensual ($79/mes)');\n\nconst planCtx = plan === 'ANUAL'\n  ? 'Vi que te interesa el Club Anual — la mejor opción si ya decidiste que el trading es tu camino. '\n  : 'Vi que te interesa el Club Mensual — perfecto para empezar sin compromisos. ';\n\nconst mensaje =\n  `¡Hola ${name}! 👋 Soy Vinces, el asistente del Club Liberty Trading.\\n\\n` +\n  `${planCtx}` +\n  `Luis me entrenó para orientar a personas que quieren aprender a invertir o hacer trading profesional.\\n\\n` +\n  `¿Me permites hacerte unas preguntas rápidas para asegurarme de que el club es lo que necesitas? 🎯`;\n\nreturn [{ json: { phone, name, plan, planLabel, mensaje } }];"
-      },
-      "id": "node-build-msg",
-      "name": "Construir mensaje de bienvenida",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
       "position": [680, 300]
     },
     {
@@ -57,16 +57,24 @@
             {
               "name": "apikey",
               "value": "157B8ABC2B63-46DE-B38C-05C3C3ACAA3A"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
             }
           ]
         },
         "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ number: $json.phone, text: $json.mensaje }) }}",
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.mensajeLead }}"
+            }
+          ]
+        },
         "options": {
           "timeout": 15000
         }
@@ -75,17 +83,7 @@
       "name": "Enviar WA a Lead (Vinces)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [900, 300]
-    },
-    {
-      "parameters": {
-        "jsCode": "const body = $('Webhook — Formulario Unirse').first().json.body || $('Webhook — Formulario Unirse').first().json;\n\nconst name      = body.name      || 'sin nombre';\nconst phone     = body.phone     || 'sin teléfono';\nconst email     = body.email     || 'no proporcionado';\nconst planLabel = body.planLabel || 'Club Mensual ($79/mes)';\n\nconst msg =\n  `📥 *Nuevo lead desde el formulario web*\\n\\n` +\n  `👤 *Nombre:* ${name}\\n` +\n  `📱 *WhatsApp:* +${phone}\\n` +\n  `📧 *Email:* ${email}\\n` +\n  `🎯 *Plan de interés:* ${planLabel}\\n\\n` +\n  `_Vinces ya le escribió. Puedes hacer seguimiento directo._`;\n\nreturn [{ json: { msg } }];"
-      },
-      "id": "node-build-luis-msg",
-      "name": "Construir notif para Luis",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [900, 480]
+      "position": [900, 200]
     },
     {
       "parameters": {
@@ -97,16 +95,24 @@
             {
               "name": "apikey",
               "value": "157B8ABC2B63-46DE-B38C-05C3C3ACAA3A"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
             }
           ]
         },
         "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ number: '593996691586', text: $json.msg }) }}",
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "593996691586"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.mensajeLuis }}"
+            }
+          ]
+        },
         "options": {
           "timeout": 15000
         }
@@ -115,7 +121,7 @@
       "name": "Notificar a Luis",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [1120, 480]
+      "position": [900, 400]
     }
   ],
   "connections": {
@@ -123,6 +129,13 @@
       "main": [
         [
           { "node": "Responder 200", "type": "main", "index": 0 },
+          { "node": "Extraer datos y construir mensajes", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Extraer datos y construir mensajes": {
+      "main": [
+        [
           { "node": "Esperar 1 minuto", "type": "main", "index": 0 }
         ]
       ]
@@ -130,21 +143,7 @@
     "Esperar 1 minuto": {
       "main": [
         [
-          { "node": "Construir mensaje de bienvenida", "type": "main", "index": 0 }
-        ]
-      ]
-    },
-    "Construir mensaje de bienvenida": {
-      "main": [
-        [
           { "node": "Enviar WA a Lead (Vinces)", "type": "main", "index": 0 },
-          { "node": "Construir notif para Luis", "type": "main", "index": 0 }
-        ]
-      ]
-    },
-    "Construir notif para Luis": {
-      "main": [
-        [
           { "node": "Notificar a Luis", "type": "main", "index": 0 }
         ]
       ]
@@ -158,5 +157,5 @@
   "tags": ["liberty-trading", "leads", "whatsapp"],
   "triggerCount": 0,
   "updatedAt": "2026-03-14T00:00:00.000Z",
-  "versionId": "2"
+  "versionId": "3"
 }
