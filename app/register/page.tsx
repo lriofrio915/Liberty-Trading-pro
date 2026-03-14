@@ -31,7 +31,10 @@ function RegisterForm() {
     const { data, error: err } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-      options: { data: { name: form.name, phone: form.phone, plan: plan.toUpperCase() } },
+      options: {
+        data: { name: form.name, phone: form.phone, plan: plan.toUpperCase() },
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      },
     })
 
     if (err) {

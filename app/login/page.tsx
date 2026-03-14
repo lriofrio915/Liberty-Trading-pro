@@ -1,16 +1,18 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const confirmed = searchParams.get('confirmed') === '1'
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,6 +40,12 @@ export default function LoginPage() {
           <Link href="/" className="text-2xl font-black gradient-gold">Liberty Trading Pro</Link>
           <p className="text-[var(--text-secondary)] mt-2 text-sm">Ingresa a tu cuenta</p>
         </div>
+
+        {confirmed && (
+          <div className="mb-4 rounded-lg border border-green-700/50 bg-green-950/30 px-4 py-3 text-sm text-green-400">
+            ✓ Email confirmado — ya puedes iniciar sesión
+          </div>
+        )}
 
         <div className="card-gold">
           <form onSubmit={handleLogin} className="space-y-5">
@@ -85,5 +93,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }
