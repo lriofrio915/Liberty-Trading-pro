@@ -61,6 +61,7 @@ export default function Unirse() {
 
     const cleanedPhone = normalizePhone(phone)
 
+    alert(`[DEBUG] Submit ejecutado\nNombre: "${nombre}"\nPhone: "${phone}"\nClean: "${cleanedPhone}" (${cleanedPhone.length} dígitos)`)
     console.log('[Form] Submit iniciado', { nombre: nombre.trim(), phone, cleanedPhone, cleanedLen: cleanedPhone.length, plan })
 
     if (!nombre.trim()) {
