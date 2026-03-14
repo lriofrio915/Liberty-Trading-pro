@@ -73,7 +73,12 @@ export default function Unirse() {
     setPhoneError('')
 
     try {
-      const res = await fetch('/api/leads/capture', {
+      // Usar siempre www para evitar el redirect 307 de Cloudflare en POSTs
+      const apiBase = typeof window !== 'undefined'
+        ? `https://www.${window.location.hostname.replace(/^www\./, '')}/api/leads/capture`
+        : '/api/leads/capture'
+
+      const res = await fetch(apiBase, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
