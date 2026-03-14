@@ -5,7 +5,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "liberty-lead-registro",
-        "responseMode": "responseNode",
+        "responseMode": "onReceived",
         "options": {}
       },
       "id": "node-webhook",
@@ -128,7 +128,6 @@
     "Webhook — Formulario Unirse": {
       "main": [
         [
-          { "node": "Responder 200", "type": "main", "index": 0 },
           { "node": "Extraer datos y construir mensajes", "type": "main", "index": 0 }
         ]
       ]

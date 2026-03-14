@@ -134,15 +134,17 @@ export async function POST(req: NextRequest) {
     const planNorm: 'MENSUAL' | 'ANUAL' = plan === 'ANUAL' ? 'ANUAL' : 'MENSUAL'
     const planLabel = planNorm === 'ANUAL' ? 'Club Anual ($649/año)' : 'Club Mensual ($79/mes)'
 
-    // Si ya está avanzado en el flujo, no reiniciar
     const existing = await (prisma as any).whatsappLead.findUnique({
       where: { phone: cleanedPhone },
     })
-    if (existing && !['NUEVO', 'NOMBRE'].includes(existing.estado)) {
-      return NextResponse.json({ ok: true, status: 'existing' })
-    }
 
-    // Upsert lead — arrancamos en P1 porque ya tenemos el nombre
+    // Leads ya convertidos (VENDIDO): solo notificar a Luis, no reiniciar
+    const yaConvertido = existing?.estado === 'VENDIDO'
+
+    // Siempre guardar/actualizar el lead con el plan de interés
+    // Solo reiniciamos la conversación si es lead nuevo o si no está en medio de una
+    const enConversacionActiva = existing && ['P1', 'P2', 'P3', 'P4', 'CLASIFICADO', 'CTA'].includes(existing.estado)
+
     await (prisma as any).whatsappLead.upsert({
       where: { phone: cleanedPhone },
       create: {
@@ -155,15 +157,18 @@ export async function POST(req: NextRequest) {
       },
       update: {
         name: name.trim(),
-        estado: 'P1',
+        // Si ya está en conversación activa o vendido, no tocamos el estado
+        ...(enConversacionActiva || yaConvertido ? {} : {
+          estado: 'P1',
+          respuestas: { planInteres: planLabel },
+          historial: [],
+        }),
         perfil: planNorm,
-        respuestas: { planInteres: planLabel },
-        historial: [],
         updatedAt: new Date(),
       },
     })
 
-    // 1. Email de confirmación al lead (fire-and-forget)
+    // 1. Email de confirmación al lead (siempre, no importa si ya existe)
     if (email?.includes('@')) {
       sendConfirmationEmail(name.trim(), email.trim(), planNorm).catch((e) =>
         console.error('[Capture] Error email confirmación:', e?.message)
@@ -171,6 +176,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Disparar n8n webhook — n8n envía el WA de bienvenida con delay
+    // Si ya está en conversación activa, n8n notifica a Luis pero no envía WA al lead
     if (N8N_WEBHOOK) {
       fetch(N8N_WEBHOOK, {
         method: 'POST',
@@ -181,11 +187,13 @@ export async function POST(req: NextRequest) {
           email: email?.trim() || '',
           plan: planNorm,
           planLabel,
+          sendWAToLead: !enConversacionActiva && !yaConvertido,
           ts: new Date().toISOString(),
         }),
-        signal: AbortSignal.timeout(10000),
+        // Sin timeout: es fire-and-forget, n8n puede tardar (tiene nodo Wait)
+        // Si cortamos la conexión antes de que n8n responda, cancela el workflow
       }).catch((e) => console.error('[Capture] Error n8n webhook:', e?.message))
-    } else {
+    } else if (!enConversacionActiva && !yaConvertido) {
       // Fallback: enviar WA directamente si no hay n8n configurado
       const planCtx = planNorm === 'ANUAL'
         ? 'Vi que te interesa el Club Anual — la mejor opción si ya decidiste que el trading es tu camino. '
@@ -203,8 +211,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Notificar a Luis
+    const tipoLead = yaConvertido ? '♻️ Lead ya convertido (recontacto)' : enConversacionActiva ? '🔄 Lead en conversación activa' : '📥 Nuevo lead'
     const msgLuis =
-      `📥 *Nuevo lead desde el formulario web*\n\n` +
+      `${tipoLead} — *formulario web*\n\n` +
       `👤 *Nombre:* ${name.trim()}\n` +
       `📱 *WhatsApp:* +${cleanedPhone}\n` +
       `📧 *Email:* ${email || 'no proporcionado'}\n` +
