@@ -1,8 +1,50 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 
-export const revalidate = 1800 // revalidate every 30 min
+export const revalidate = 1800
+
+export async function generateMetadata(
+  { params }: { params: { userId: string } }
+): Promise<Metadata> {
+  const user = await prisma.user.findUnique({
+    where: { id: params.userId },
+    select: { name: true },
+  })
+  const sessions = await prisma.tradingSession.findMany({
+    where: { userId: params.userId },
+    select: { resultado: true, pnlNeto: true },
+  })
+
+  const name = user?.name?.includes('@') ? 'Trader' : (user?.name ?? 'Trader')
+  const total = sessions.length
+  const wins = sessions.filter(s => s.resultado === 'WIN').length
+  const winRate = total > 0 ? Math.round((wins / total) * 10) / 10 : 0
+  const pnl = sessions.reduce((a, s) => a + s.pnlNeto, 0)
+  const pnlStr = pnl >= 0 ? `+$${Math.round(pnl).toLocaleString()}` : `-$${Math.round(Math.abs(pnl)).toLocaleString()}`
+
+  const title = `Track Record de ${name} · Liberty Trading Pro`
+  const description = `${winRate}% Win Rate · ${pnlStr} P&L Neto · ${total} operaciones reales registradas. Datos verificables, sin filtros.`
+  const url = `${process.env.NEXT_PUBLIC_APP_URL}/track-record/${params.userId}`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: 'Liberty Trading Pro',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+  }
+}
 
 interface Session {
   id: string
