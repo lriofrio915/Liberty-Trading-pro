@@ -130,14 +130,14 @@ export default function VincesWidget() {
     <>
       {/* ── Chat panel ──────────────────────────────────────────────────── */}
       <div
-        className={`fixed bottom-44 right-8 z-50 flex flex-col transition-all duration-300 ease-in-out ${
+        className={`fixed bottom-44 md:bottom-44 right-4 md:right-8 z-50 flex flex-col transition-all duration-300 ease-in-out ${
           open
             ? 'opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 translate-y-4 pointer-events-none'
         }`}
         style={{
-          width: 'min(380px, calc(100vw - 24px))',
-          height: 'min(560px, calc(100vh - 120px))',
+          width: 'min(380px, calc(100vw - 16px))',
+          height: 'min(560px, calc(100dvh - 160px))',
         }}
       >
         <div
@@ -254,7 +254,7 @@ export default function VincesWidget() {
       <button
         onClick={() => setOpen((v) => !v)}
         title="Vinces AI"
-        className="fixed bottom-28 right-8 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 active:scale-95"
+        className="fixed bottom-20 md:bottom-28 right-4 md:right-8 z-50 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 active:scale-95"
         style={{
           background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)',
           boxShadow: '0 4px 28px rgba(201,168,76,0.5), 0 0 0 2px rgba(201,168,76,0.3)',

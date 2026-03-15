@@ -353,7 +353,7 @@ export default function DashboardClient({
       {metricas ? (
         <>
           {/* Fila 1 — KPIs principales */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4">
             {/* Trades totales */}
             <div className="card">
               <div className="label-mono text-xs mb-3 text-[var(--text-muted)]">Trades Totales</div>
@@ -429,7 +429,7 @@ export default function DashboardClient({
           </div>
 
           {/* Fila 2 — KPIs secundarios */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
             {/* Win Rate Long/Short */}
             <div className="card">
               <div className="label-mono text-xs mb-3 text-[var(--text-muted)]">Win Rate Dirección</div>
@@ -480,7 +480,7 @@ export default function DashboardClient({
           </div>
         </>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="card h-24" style={{ background: 'var(--bg-secondary)' }} />
           ))}
@@ -495,7 +495,7 @@ export default function DashboardClient({
           </div>
 
           {/* PnL breakdown — 3 cards */}
-          <div className="grid grid-cols-3 gap-4 mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
             <div>
               <div className="text-xs text-[var(--text-muted)] mb-1">PnL Bruto</div>
               <div className="text-xl font-black" style={{ color: fin.pnlBruto >= 0 ? 'var(--green)' : 'var(--red)' }}>
@@ -530,7 +530,7 @@ export default function DashboardClient({
 
           {/* Capital al inicio/fin del período */}
           <div className="border-t border-[var(--border)] pt-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <div className="text-xs text-[var(--text-muted)] mb-1">Capital al inicio</div>
                 <div className="text-lg font-black text-white">

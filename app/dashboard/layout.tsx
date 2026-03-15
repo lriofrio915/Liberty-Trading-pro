@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import SidebarNav from '@/components/Sidebar/SidebarNav'
-import { navItems } from '@/components/Sidebar/navConfig'
+import MobileNav from '@/components/Sidebar/MobileNav'
 import VincesWidget from '@/components/VincesWidget/VincesWidget'
 import ThemeProvider from '@/components/ThemeProvider'
 
@@ -19,34 +19,28 @@ export default async function DashboardLayout({
   return (
     <ThemeProvider>
       <div className="min-h-screen flex" style={{ background: 'var(--bg-primary)' }}>
-        {/* Sidebar */}
-        <aside className="w-64 min-h-screen border-r border-[var(--border)] flex flex-col hidden md:flex"
+
+        {/* Desktop sidebar */}
+        <aside className="w-64 min-h-screen border-r border-[var(--border)] flex-col hidden md:flex"
           style={{ background: 'var(--bg-secondary)' }}>
           <div className="px-6 h-16 flex items-center border-b border-[var(--border)]">
             <Link href="/" className="text-lg font-black gradient-gold">Liberty Trading</Link>
           </div>
-
           <SidebarNav email={user.email ?? ''} />
         </aside>
 
         {/* Main */}
-        <main className="flex-1 overflow-auto">
-          {/* Mobile header */}
-          <div className="md:hidden border-b border-[var(--border)] px-4 h-14 flex items-center justify-between"
-            style={{ background: 'var(--bg-secondary)' }}>
-            <Link href="/" className="text-base font-black gradient-gold">Liberty Trading</Link>
-            <div className="flex gap-2 overflow-x-auto">
-              {navItems.slice(0, 3).map((item) => (
-                <Link key={item.href} href={item.href}
-                  className="text-xl p-1 text-[var(--text-secondary)] hover:text-[var(--gold)]">
-                  {item.icon}
-                </Link>
-              ))}
-            </div>
-          </div>
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Mobile nav (top bar + drawer + bottom tabs) */}
+          <MobileNav email={user.email ?? ''} />
 
-          <div className="p-4 md:p-8">{children}</div>
-        </main>
+          <main className="flex-1 overflow-auto">
+            {/* Extra bottom padding on mobile for the tab bar */}
+            <div className="p-4 md:p-8 pb-24 md:pb-8">
+              {children}
+            </div>
+          </main>
+        </div>
 
         <VincesWidget />
       </div>

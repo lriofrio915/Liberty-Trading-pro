@@ -75,7 +75,7 @@ function normalizePnl(pnl: number, resultado: string): number {
 
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   return (
-    <div className="fixed bottom-6 right-6 z-50 animate-fadeIn">
+    <div className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-50 animate-fadeIn">
       <div className="card border-[var(--gold-dark)] px-5 py-3 flex items-center gap-3 shadow-xl">
         <span className="text-[var(--green)] text-lg">✓</span>
         <span className="text-sm font-medium">{message}</span>
@@ -491,8 +491,8 @@ export default function TrackRecordClient({
 
       {/* Import preview modal */}
       {importRows && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
-          <div className="w-full max-w-3xl rounded-2xl border border-[var(--border)] flex flex-col" style={{ background: '#0d0d0d', maxHeight: '80vh' }}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
+          <div className="w-full max-w-3xl rounded-2xl border border-[var(--border)] flex flex-col" style={{ background: '#0d0d0d', maxHeight: '85vh' }}>
             <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
               <div>
                 <div className="font-bold text-[var(--text-primary)] mb-0.5">Vista previa de importación</div>
@@ -623,7 +623,7 @@ export default function TrackRecordClient({
       )}
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 mb-6">
         {initialPlans.length > 0 && (
           <select
             value={planSeleccionado}
@@ -663,7 +663,7 @@ export default function TrackRecordClient({
       </div>
 
       {/* Metrics — 3 cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6">
         {[
           { label: 'Win Rate', value: `${metrics.winRate.toFixed(1)}%`, color: metrics.winRate >= 50 ? 'var(--green)' : 'var(--red)' },
           { label: 'Total Trades', value: metrics.total, color: 'var(--gold)' },
@@ -690,8 +690,12 @@ export default function TrackRecordClient({
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
+            {/* Mobile scroll hint */}
+            <p className="md:hidden text-[10px] font-mono text-center mb-2" style={{ color: '#444' }}>
+              ← desliza para ver más →
+            </p>
+            <table className="w-full text-sm" style={{ minWidth: '560px' }}>
               <thead>
                 <tr className="border-b border-[var(--border)] bg-[var(--bg-secondary)]">
                   {['Fecha', 'Instrumento', 'Dir.', 'Resultado', 'P&L Neto', 'Contratos', ''].map(h => (
@@ -848,7 +852,7 @@ export default function TrackRecordClient({
       {/* ── Modal (New / Edit) ── */}
       {modalMode !== null && (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.85)' }}>
-          <div className="min-h-full flex justify-center px-4 py-12">
+          <div className="min-h-full flex justify-center px-4 py-6 md:py-12">
           <div className="card-panel w-full max-w-2xl h-fit relative">
             <button onClick={closeModal} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-white text-xl">✕</button>
 

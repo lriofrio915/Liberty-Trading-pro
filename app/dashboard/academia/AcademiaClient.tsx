@@ -37,7 +37,7 @@ function getVimeoId(url: string): string | null {
 
 function Toast({ message, onClose }: { message: string; onClose: () => void }) {
   return (
-    <div className="fixed bottom-6 right-6 z-[10000] animate-fadeIn">
+    <div className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-[10000] animate-fadeIn">
       <div className="card border-[var(--gold-dark)] px-5 py-3 flex items-center gap-3 shadow-xl">
         <span className="text-[var(--green)] text-lg">✓</span>
         <span className="text-sm font-medium">{message}</span>
@@ -183,7 +183,7 @@ export default function AcademiaClient({
             return (
               <div key={cat}>
                 <div className="label-mono text-[10px] text-[var(--gold)] mb-3 border-b border-[var(--border)] pb-2">{cat}</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {visible.map(l => (
                     <div
                       key={l.id}
@@ -220,9 +220,9 @@ export default function AcademiaClient({
       {mounted && selected && createPortal(
         <div
           onClick={e => e.target === e.currentTarget && setSelected(null)}
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 9999, overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 16px' }}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 9999, overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '16px' }}
         >
-          <div style={{ backgroundColor: '#111', border: '1px solid rgba(201,168,76,0.2)', width: '100%', maxWidth: '800px', position: 'relative', padding: '2rem', marginBottom: '40px' }}>
+          <div style={{ backgroundColor: '#111', border: '1px solid rgba(201,168,76,0.2)', width: '100%', maxWidth: '800px', position: 'relative', padding: '1.25rem', marginBottom: '16px', borderRadius: '12px' }}>
             <button onClick={() => setSelected(null)} style={{ position: 'absolute', top: '1rem', right: '1rem', color: '#666', fontSize: '1.25rem' }}>✕</button>
             <div className="label-mono text-[10px] text-[var(--gold)] mb-1">{selected.categoria}</div>
             <h2 className="headline text-2xl text-[var(--text-primary)] mb-4">{selected.titulo}</h2>
@@ -275,9 +275,9 @@ export default function AcademiaClient({
       {mounted && modalMode !== null && createPortal(
         <div
           onClick={e => e.target === e.currentTarget && closeModal()}
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 10000, overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 16px' }}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 10000, overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '16px' }}
         >
-          <div style={{ backgroundColor: '#111', border: '1px solid rgba(201,168,76,0.2)', width: '100%', maxWidth: '680px', padding: '2rem', position: 'relative', marginBottom: '40px' }}>
+          <div style={{ backgroundColor: '#111', border: '1px solid rgba(201,168,76,0.2)', width: '100%', maxWidth: '680px', padding: '1.25rem', position: 'relative', marginBottom: '16px', borderRadius: '12px' }}>
             <button onClick={closeModal} style={{ position: 'absolute', top: '1rem', right: '1rem', color: '#666', fontSize: '1.25rem' }}>✕</button>
             <div className="label-mono mb-1 text-[var(--gold)]">{modalMode === 'edit' ? 'Editar Leccion' : 'Nueva Leccion'}</div>
             <h2 className="headline text-2xl text-[var(--text-primary)] mb-6">
@@ -288,7 +288,7 @@ export default function AcademiaClient({
                 <label className="label-mono text-[10px] block mb-1.5">Titulo *</label>
                 <input type="text" value={form.titulo} onChange={e => set('titulo', e.target.value)} className="input text-sm" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="label-mono text-[10px] block mb-1.5">Categoria</label>
                   <select value={form.categoria} onChange={e => set('categoria', e.target.value)} className="input text-sm">

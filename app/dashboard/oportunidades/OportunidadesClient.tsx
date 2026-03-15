@@ -109,7 +109,7 @@ function OppCard({ opp, isAdmin, onDelete, onStatusChange }: {
       </div>
 
       {/* Price grid */}
-      <div className="grid grid-cols-3 gap-2 mb-3">
+      <div className="grid grid-cols-3 gap-1.5 mb-3">
         {[
           { label: 'Entrada', value: `$${opp.precioEntrada}`, color: '' },
           { label: 'Objetivo', value: `$${opp.precioObjetivo}`, color: 'text-green-400' },
@@ -409,7 +409,7 @@ export default function OportunidadesClient({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {activeOpps.map((opp) => (
             <OppCard
               key={opp.id}
