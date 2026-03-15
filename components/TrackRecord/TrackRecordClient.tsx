@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useRef, useCallback } from 'react'
+import * as XLSX from 'xlsx'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -122,6 +123,87 @@ export default function TrackRecordClient({
     navigator.clipboard.writeText(publicUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  // ── Export CSV ───────────────────────────────────────────────────────────────
+
+  function exportCSV() {
+    const headers = ['fecha', 'instrumento', 'direccion', 'resultado', 'pnl_neto', 'pnl_bruto', 'comisiones', 'contratos', 'entry_price', 'exit_price', 'siguio_plan', 'sentimiento', 'notas']
+    const rows = filtered.map(s => [
+      new Date(s.date).toLocaleDateString('en-CA', { timeZone: 'America/Guayaquil' }),
+      s.instrumento,
+      s.direccion,
+      s.resultado,
+      s.pnlNeto,
+      s.pnlBruto,
+      s.comisiones,
+      s.contratos,
+      s.entryPrice ?? '',
+      s.exitPrice ?? '',
+      s.siguioPlan,
+      s.sentimiento ?? '',
+      s.notas ?? '',
+    ])
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `track-record-${new Date().toLocaleDateString('en-CA')}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  // ── Import ───────────────────────────────────────────────────────────────────
+
+  const importRef = useRef<HTMLInputElement>(null)
+  const [importRows, setImportRows] = useState<Record<string, string>[] | null>(null)
+  const [importing, setImporting] = useState(false)
+  const [importError, setImportError] = useState('')
+
+  function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImportError('')
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const data = new Uint8Array(ev.target!.result as ArrayBuffer)
+        const wb = XLSX.read(data, { type: 'array', cellDates: true })
+        const ws = wb.Sheets[wb.SheetNames[0]]
+        const json: Record<string, string>[] = XLSX.utils.sheet_to_json(ws, { defval: '' })
+        if (json.length === 0) { setImportError('El archivo está vacío o no tiene filas.'); return }
+        setImportRows(json)
+      } catch {
+        setImportError('No se pudo leer el archivo. Verifica que sea CSV o Excel válido.')
+      }
+    }
+    reader.readAsArrayBuffer(file)
+    e.target.value = ''
+  }
+
+  async function confirmImport() {
+    if (!importRows) return
+    setImporting(true)
+    setImportError('')
+    try {
+      const res = await fetch('/api/sessions/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rows: importRows }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Error al importar')
+      setToast(`✓ ${json.imported} operaciones importadas`)
+      setImportRows(null)
+      // Refresh sessions
+      const s = await fetch('/api/sessions').then(r => r.json())
+      if (s.sessions) setSessions(s.sessions)
+    } catch (err: any) {
+      setImportError(err.message)
+    } finally {
+      setImporting(false)
+    }
   }
 
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null)
@@ -373,20 +455,97 @@ export default function TrackRecordClient({
           <h1 className="text-3xl font-black mb-1"><span className="gradient-gold">Track Record</span></h1>
           <p className="text-[var(--text-secondary)] text-sm">Historial completo de operaciones</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           {userId && (
             <button
               onClick={() => setShowShare(s => !s)}
-              className="btn-outline py-2.5 px-4 rounded-lg text-sm flex items-center gap-2"
+              className="btn-outline py-2.5 px-4 rounded-lg text-sm"
             >
               🔗 Compartir
             </button>
           )}
+          <button
+            onClick={exportCSV}
+            className="btn-outline py-2.5 px-4 rounded-lg text-sm"
+          >
+            ⬇ Exportar CSV
+          </button>
+          <button
+            onClick={() => importRef.current?.click()}
+            className="btn-outline py-2.5 px-4 rounded-lg text-sm"
+          >
+            ⬆ Importar
+          </button>
+          <input
+            ref={importRef}
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            className="hidden"
+            onChange={handleImportFile}
+          />
           <button onClick={openNew} className="btn-gold py-2.5 px-5 rounded-lg text-sm">
             ➕ Nueva Operación
           </button>
         </div>
       </div>
+
+      {/* Import preview modal */}
+      {importRows && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
+          <div className="w-full max-w-3xl rounded-2xl border border-[var(--border)] flex flex-col" style={{ background: '#0d0d0d', maxHeight: '80vh' }}>
+            <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
+              <div>
+                <div className="font-bold text-[var(--text-primary)] mb-0.5">Vista previa de importación</div>
+                <div className="text-xs text-[var(--text-muted)]">{importRows.length} filas detectadas — primeras 5 mostradas</div>
+              </div>
+              <button onClick={() => { setImportRows(null); setImportError('') }} className="text-[var(--text-muted)] hover:text-white text-xl">×</button>
+            </div>
+
+            <div className="overflow-auto flex-1 p-4">
+              <table className="w-full text-xs font-mono">
+                <thead>
+                  <tr className="border-b border-[var(--border)]">
+                    {Object.keys(importRows[0]).slice(0, 8).map(k => (
+                      <th key={k} className="text-left py-2 px-3 text-[var(--text-muted)] whitespace-nowrap">{k}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {importRows.slice(0, 5).map((row, i) => (
+                    <tr key={i} className="border-b border-[var(--border)] border-opacity-50">
+                      {Object.values(row).slice(0, 8).map((v, j) => (
+                        <td key={j} className="py-2 px-3 text-[var(--text-secondary)] whitespace-nowrap">{String(v)}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {importError && (
+              <div className="mx-6 mb-2 text-xs text-[var(--red)] bg-red-950/30 border border-red-900/40 rounded-lg px-4 py-2">
+                {importError}
+              </div>
+            )}
+
+            <div className="p-5 border-t border-[var(--border)]">
+              <div className="text-xs text-[var(--text-muted)] mb-4 leading-relaxed">
+                Columnas requeridas: <span className="text-[var(--gold)]">fecha, instrumento, direccion, resultado, pnl_neto</span>.
+                Opcionales: contratos, entry_price, exit_price, comisiones, notas.<br />
+                Valores de resultado: WIN / LOSS / BREAKEVEN. Dirección: LONG / SHORT.
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button onClick={() => { setImportRows(null); setImportError('') }} className="btn-outline py-2 px-5 rounded-lg text-sm">
+                  Cancelar
+                </button>
+                <button onClick={confirmImport} disabled={importing} className="btn-gold py-2 px-5 rounded-lg text-sm disabled:opacity-60">
+                  {importing ? 'Importando...' : `Importar ${importRows.length} operaciones`}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Share panel */}
       {showShare && publicUrl && (
