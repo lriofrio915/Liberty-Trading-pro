@@ -8,6 +8,7 @@ export default async function TrackRecordPage() {
 
   let sessions: any[] = []
   let plans: { id: string; name: string }[] = []
+  let userId = ''
 
   try {
     if (user) {
@@ -20,6 +21,7 @@ export default async function TrackRecordPage() {
           name: (user.user_metadata?.name as string) || user.email?.split('@')[0] || 'Trader',
         },
       })
+      userId = dbUser.id
       ;[sessions, plans] = await Promise.all([
         prisma.tradingSession.findMany({
           where: { userId: dbUser.id },
@@ -34,5 +36,5 @@ export default async function TrackRecordPage() {
     }
   } catch {}
 
-  return <TrackRecordClient initialSessions={sessions} initialPlans={plans} />
+  return <TrackRecordClient initialSessions={sessions} initialPlans={plans} userId={userId} />
 }

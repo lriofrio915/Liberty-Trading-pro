@@ -89,9 +89,11 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
 export default function TrackRecordClient({
   initialSessions,
   initialPlans = [],
+  userId = '',
 }: {
   initialSessions: Session[]
   initialPlans: { id: string; name: string }[]
+  userId?: string
 }) {
   const [sessions, setSessions] = useState<Session[]>(initialSessions)
 
@@ -109,6 +111,18 @@ export default function TrackRecordClient({
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [toast, setToast] = useState('')
+  const [showShare, setShowShare] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const publicUrl = userId
+    ? `${process.env.NEXT_PUBLIC_APP_URL}/track-record/${userId}`
+    : ''
+
+  function copyLink() {
+    navigator.clipboard.writeText(publicUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null)
   const [screenshotPreview, setScreenshotPreview] = useState('')
@@ -359,10 +373,81 @@ export default function TrackRecordClient({
           <h1 className="text-3xl font-black mb-1"><span className="gradient-gold">Track Record</span></h1>
           <p className="text-[var(--text-secondary)] text-sm">Historial completo de operaciones</p>
         </div>
-        <button onClick={openNew} className="btn-gold py-2.5 px-5 rounded-lg text-sm">
-          ➕ Nueva Operación
-        </button>
+        <div className="flex items-center gap-3">
+          {userId && (
+            <button
+              onClick={() => setShowShare(s => !s)}
+              className="btn-outline py-2.5 px-4 rounded-lg text-sm flex items-center gap-2"
+            >
+              🔗 Compartir
+            </button>
+          )}
+          <button onClick={openNew} className="btn-gold py-2.5 px-5 rounded-lg text-sm">
+            ➕ Nueva Operación
+          </button>
+        </div>
       </div>
+
+      {/* Share panel */}
+      {showShare && publicUrl && (
+        <div className="mb-6 rounded-xl border border-[var(--gold-dark)] p-5"
+          style={{ background: 'rgba(201,168,76,0.04)' }}>
+          <div className="flex items-start justify-between gap-4 mb-3">
+            <div>
+              <div className="label-mono text-[10px] text-[var(--gold)] mb-1">Tu link público de Track Record</div>
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                Comparte tus resultados reales. Cualquiera con este link puede ver tus estadísticas.
+              </p>
+            </div>
+            <button onClick={() => setShowShare(false)} className="text-[var(--text-muted)] hover:text-white text-lg leading-none mt-0.5">×</button>
+          </div>
+
+          {/* URL */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-3 py-2.5 font-mono text-xs text-[var(--text-muted)] truncate">
+              {publicUrl}
+            </div>
+            <button
+              onClick={copyLink}
+              className="btn-gold py-2.5 px-4 rounded-lg text-xs whitespace-nowrap"
+            >
+              {copied ? '✓ Copiado' : 'Copiar link'}
+            </button>
+          </div>
+
+          {/* Social share buttons */}
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('Mi track record real de trading — sin filtros 📈')}&url=${encodeURIComponent(publicUrl)}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--gold)] transition-colors"
+            >
+              𝕏 Twitter / X
+            </a>
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent('Mi track record real de trading 📈 ' + publicUrl)}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--gold)] transition-colors"
+            >
+              💬 WhatsApp
+            </a>
+            <a
+              href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publicUrl)}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--gold)] transition-colors"
+            >
+              💼 LinkedIn
+            </a>
+            <a
+              href={publicUrl}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--gold)] transition-colors"
+            >
+              👁 Ver página pública
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-6">
