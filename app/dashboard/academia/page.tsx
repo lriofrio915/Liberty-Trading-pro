@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import AcademiaClient from './AcademiaClient'
+import VideoSemanaWidget from '@/components/VideoSemana/VideoSemanaWidget'
 
 const ADMIN_EMAIL = 'lriofrio915@gmail.com'
 const CATEGORIAS = [
@@ -19,11 +20,19 @@ export default async function AcademiaPage() {
 
   let lecciones: any[] = []
   let completados: string[] = []
+  let videoSemana: any = null
 
   try {
-    const dbUser = await prisma.user.findUnique({ where: { authId: user?.id } })
+    const [dbUser, video] = await Promise.all([
+      prisma.user.findUnique({ where: { authId: user?.id } }),
+      prisma.videoSemana.findFirst({
+        where: isAdmin ? {} : { publicado: true },
+        orderBy: { semana: 'desc' },
+      }),
+    ])
 
-    // Admin sees all (published + unpublished), students only see published
+    videoSemana = video
+
     lecciones = await prisma.leccion.findMany({
       where: isAdmin ? {} : { publicado: true },
       orderBy: [{ categoria: 'asc' }, { orden: 'asc' }],
@@ -39,11 +48,22 @@ export default async function AcademiaPage() {
   } catch {}
 
   return (
-    <AcademiaClient
-      initialLecciones={lecciones}
-      completados={completados}
-      isAdmin={isAdmin}
-      categorias={CATEGORIAS}
-    />
+    <div>
+      <VideoSemanaWidget
+        initialVideo={videoSemana ? {
+          ...videoSemana,
+          semana: videoSemana.semana.toISOString(),
+          creadoEn: undefined,
+        } : null}
+        isAdmin={isAdmin}
+        appUrl={process.env.NEXT_PUBLIC_APP_URL ?? ''}
+      />
+      <AcademiaClient
+        initialLecciones={lecciones}
+        completados={completados}
+        isAdmin={isAdmin}
+        categorias={CATEGORIAS}
+      />
+    </div>
   )
 }

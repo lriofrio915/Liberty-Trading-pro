@@ -38,6 +38,8 @@ model User {
   weeklyReports  WeeklyReport[]
   monthlyReports MonthlyReport[]
   conversations  VincesConversation[]
+  posts          Post[]
+  postComments   PostComment[]
 }
 
 model TradingPlan {
@@ -254,4 +256,47 @@ model VincesConversation {
   context   String?
   sessionId String?
   createdAt DateTime @default(now())
+}
+
+model Post {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  tipo        String        // OPERATIVA | TRACK_RECORD | EXITO | RETIRO | ANALISIS
+  contenido   String        @db.Text
+  imageUrl    String?
+  creadoEn    DateTime      @default(now())
+
+  likes       PostLike[]
+  comentarios PostComment[]
+}
+
+model PostLike {
+  id       String   @id @default(cuid())
+  userId   String
+  postId   String
+  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  creadoEn DateTime @default(now())
+
+  @@unique([userId, postId])
+}
+
+model PostComment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  contenido String
+  creadoEn  DateTime @default(now())
+}
+
+model VideoSemana {
+  id          String   @id @default(cuid())
+  titulo      String
+  descripcion String?
+  youtubeUrl  String
+  semana      DateTime // fecha de inicio de la semana que cubre
+  publicado   Boolean  @default(true)
+  creadoEn    DateTime @default(now())
 }
