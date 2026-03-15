@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { getEffectiveAccess } from '@/lib/access'
+import { redirect } from 'next/navigation'
 import RetirosClient from './RetirosClient'
 
 export default async function RetirosPage() {
@@ -12,6 +14,8 @@ export default async function RetirosPage() {
 
   try {
     const dbUser = await prisma.user.findUnique({ where: { authId: user?.id } })
+    const access = getEffectiveAccess({ plan: dbUser?.plan ?? 'FREE', trialEndsAt: dbUser?.trialEndsAt ?? null })
+    if (!access.canAccessClub) redirect('/dashboard/upgrade')
     if (dbUser) {
       ;[retiros, plans, sessions] = await Promise.all([
         prisma.retiro.findMany({

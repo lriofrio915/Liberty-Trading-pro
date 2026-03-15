@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { getEffectiveAccess } from '@/lib/access'
+import { redirect } from 'next/navigation'
 import AcademiaClient from './AcademiaClient'
 import VideoSemanaWidget from '@/components/VideoSemana/VideoSemanaWidget'
 
@@ -24,7 +26,7 @@ export default async function AcademiaPage() {
 
   try {
     const [dbUser, video] = await Promise.all([
-      prisma.user.findUnique({ where: { authId: user?.id } }),
+      prisma.user.findUnique({ where: { authId: user?.id }, }),
       prisma.videoSemana.findFirst({
         where: isAdmin ? {} : { publicado: true },
         orderBy: { semana: 'desc' },
@@ -32,6 +34,9 @@ export default async function AcademiaPage() {
     ])
 
     videoSemana = video
+
+    const access = getEffectiveAccess({ plan: dbUser?.plan ?? 'FREE', trialEndsAt: dbUser?.trialEndsAt ?? null })
+    if (!isAdmin && !access.canAccessClub) redirect('/dashboard/upgrade')
 
     lecciones = await prisma.leccion.findMany({
       where: isAdmin ? {} : { publicado: true },

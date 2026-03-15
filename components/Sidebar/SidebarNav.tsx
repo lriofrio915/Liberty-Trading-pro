@@ -144,7 +144,7 @@ const ADMIN_EMAIL = 'lriofrio915@gmail.com'
 
 // ── Main nav ───────────────────────────────────────────────────────────────────
 
-export default function SidebarNav({ email }: { email: string }) {
+export default function SidebarNav({ email, canAccessClub }: { email: string; canAccessClub: boolean }) {
   const pathname = usePathname()
   const isAdmin = email === ADMIN_EMAIL
 
@@ -162,7 +162,10 @@ export default function SidebarNav({ email }: { email: string }) {
             }`}
           >
             <span className="text-base">{item.icon}</span>
-            <span>{item.label}</span>
+            <span className="flex-1">{item.label}</span>
+            {item.requiresClub && !canAccessClub && (
+              <span className="text-[10px]" style={{ color: '#444' }}>🔒</span>
+            )}
           </Link>
         ))}
         {isAdmin && (

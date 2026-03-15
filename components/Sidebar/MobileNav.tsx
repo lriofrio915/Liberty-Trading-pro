@@ -45,7 +45,7 @@ function ThemeToggle() {
   )
 }
 
-export default function MobileNav({ email }: { email: string }) {
+export default function MobileNav({ email, canAccessClub }: { email: string; canAccessClub: boolean }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const isAdmin = email === ADMIN_EMAIL
@@ -120,6 +120,7 @@ export default function MobileNav({ email }: { email: string }) {
           <div className="space-y-0.5">
             {allNavItems.map(item => {
               const active = pathname === item.href
+              const locked = 'requiresClub' in item && item.requiresClub && !canAccessClub
               return (
                 <Link
                   key={item.href}
@@ -131,8 +132,9 @@ export default function MobileNav({ email }: { email: string }) {
                   }`}
                 >
                   <span className="text-lg w-6 flex-shrink-0 text-center">{item.icon}</span>
-                  <span>{item.label}</span>
-                  {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-yellow-400" />}
+                  <span className="flex-1">{item.label}</span>
+                  {locked && <span className="text-[10px]" style={{ color: '#444' }}>🔒</span>}
+                  {active && !locked && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-yellow-400" />}
                 </Link>
               )
             })}

@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { getEffectiveAccess } from '@/lib/access'
+import { redirect } from 'next/navigation'
 import TrackRecordClient from '@/components/TrackRecord/TrackRecordClient'
 
 export default async function TrackRecordPage() {
@@ -21,6 +23,8 @@ export default async function TrackRecordPage() {
           name: (user.user_metadata?.name as string) || user.email?.split('@')[0] || 'Trader',
         },
       })
+      const access = getEffectiveAccess({ plan: dbUser?.plan ?? 'FREE', trialEndsAt: dbUser?.trialEndsAt ?? null })
+      if (!access.canAccessClub) redirect('/dashboard/upgrade')
       userId = dbUser.id
       ;[sessions, plans] = await Promise.all([
         prisma.tradingSession.findMany({

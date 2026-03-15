@@ -32,6 +32,7 @@ model User {
   hotmartId String?
   authId    String?  @unique
   createdAt DateTime @default(now())
+  trialEndsAt DateTime?
 
   tradingPlans   TradingPlan[]
   sessions       TradingSession[]

@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { getEffectiveAccess } from '@/lib/access'
+import { redirect } from 'next/navigation'
 import OportunidadesClient from './OportunidadesClient'
 
 const ADMIN_EMAIL = 'lriofrio915@gmail.com'
@@ -16,6 +18,8 @@ export default async function OportunidadesPage() {
 
   try {
     const dbUser = await prisma.user.findUnique({ where: { authId: user?.id } })
+    const access = getEffectiveAccess({ plan: dbUser?.plan ?? 'FREE', trialEndsAt: dbUser?.trialEndsAt ?? null })
+    if (!isAdmin && !access.canAccessClub) redirect('/dashboard/upgrade')
     userPlan = dbUser?.plan || 'FREE'
     const userLevel = PLAN_ORDER[userPlan] ?? 0
 
