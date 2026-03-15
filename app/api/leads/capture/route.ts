@@ -8,7 +8,8 @@ const EVO_URL      = process.env.EVOLUTION_API_URL  || 'https://evo.nexus-ia.com
 const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || 'vinces'
 const EVO_KEY      = process.env.EVOLUTION_API_KEY  || '157B8ABC2B63-46DE-B38C-05C3C3ACAA3A'
 const LUIS_PHONE   = process.env.LUIS_PHONE         || '593996691586'
-const N8N_WEBHOOK  = process.env.N8N_WEBHOOK_LEADS  || ''
+const N8N_WEBHOOK         = process.env.N8N_WEBHOOK_LEADS   || ''
+const N8N_WEBHOOK_LANDING = process.env.N8N_WEBHOOK_LANDING || ''
 
 const LINKS = {
   MENSUAL: process.env.HOTMART_LINK_MENSUAL || 'https://pay.hotmart.com/R104900326X?checkoutMode=2',
@@ -120,7 +121,7 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, phone, email, plan } = await req.json()
+    const { name, phone, email, plan, source } = await req.json()
 
     if (!name || !phone) {
       return NextResponse.json({ error: 'Nombre y teléfono requeridos' }, { status: 400 })
@@ -201,9 +202,10 @@ export async function POST(req: NextRequest) {
       console.error('[Capture] Error notif Luis:', e?.message)
     )
 
-    // 4. n8n
-    if (N8N_WEBHOOK) {
-      fetch(N8N_WEBHOOK, {
+    // 4. n8n — use landing webhook when source === 'landing', else default
+    const webhookUrl = source === 'landing' ? (N8N_WEBHOOK_LANDING || N8N_WEBHOOK) : N8N_WEBHOOK
+    if (webhookUrl) {
+      fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -212,6 +214,7 @@ export async function POST(req: NextRequest) {
           email: email?.trim() || '',
           plan: planNorm,
           planLabel,
+          source: source || 'web',
           ts: new Date().toISOString(),
         }),
       }).catch((e) => console.error('[Capture] Error n8n:', e?.message))
