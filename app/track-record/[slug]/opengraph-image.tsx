@@ -6,16 +6,27 @@ export const revalidate = 1800
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-export default async function OgImage({ params }: { params: { userId: string } }) {
-  const user = await prisma.user.findUnique({
-    where: { id: params.userId },
-    select: { name: true },
+async function findUser(slugOrId: string) {
+  const bySlug = await prisma.user.findUnique({
+    where: { slug: slugOrId },
+    select: { id: true, name: true },
   })
+  if (bySlug) return bySlug
+  return prisma.user.findUnique({
+    where: { id: slugOrId },
+    select: { id: true, name: true },
+  })
+}
 
-  const sessions = await prisma.tradingSession.findMany({
-    where: { userId: params.userId },
-    select: { resultado: true, pnlNeto: true },
-  })
+export default async function OgImage({ params }: { params: { slug: string } }) {
+  const user = await findUser(params.slug)
+
+  const sessions = user
+    ? await prisma.tradingSession.findMany({
+        where: { userId: user.id },
+        select: { resultado: true, pnlNeto: true },
+      })
+    : []
 
   const name = user?.name?.includes('@') ? 'Trader' : (user?.name ?? 'Trader')
   const total = sessions.length
@@ -41,10 +52,8 @@ export default async function OgImage({ params }: { params: { userId: string } }
           fontFamily: 'serif',
         }}
       >
-        {/* Top border accent */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: '#C9A84C', display: 'flex' }} />
 
-        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div style={{ fontSize: 14, color: '#4a4642', letterSpacing: 4, textTransform: 'uppercase', fontFamily: 'sans-serif' }}>
@@ -62,7 +71,6 @@ export default async function OgImage({ params }: { params: { userId: string } }
           </div>
         </div>
 
-        {/* Stats */}
         <div style={{ display: 'flex', gap: 24 }}>
           {[
             { label: 'WIN RATE', value: `${winRate}%`, color: winRate >= 50 ? '#22c55e' : '#ef4444' },
@@ -86,7 +94,6 @@ export default async function OgImage({ params }: { params: { userId: string } }
           ))}
         </div>
 
-        {/* Footer */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: 13, color: '#333', fontFamily: 'sans-serif' }}>
             libertytrading.pro

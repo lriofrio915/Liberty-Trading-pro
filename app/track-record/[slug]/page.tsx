@@ -6,19 +6,34 @@ import PublicChart from '@/components/TrackRecord/PublicChart'
 
 export const revalidate = 1800
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Busca usuario por slug (ej: "luis-riofrio") o por ID como fallback (URLs antiguas) */
+async function findUser(slugOrId: string) {
+  const bySlug = await prisma.user.findUnique({
+    where: { slug: slugOrId },
+    select: { id: true, name: true, slug: true, createdAt: true, avatarUrl: true, bio: true, country: true, tradingStyle: true },
+  })
+  if (bySlug) return bySlug
+
+  return prisma.user.findUnique({
+    where: { id: slugOrId },
+    select: { id: true, name: true, slug: true, createdAt: true, avatarUrl: true, bio: true, country: true, tradingStyle: true },
+  })
+}
+
 // ── Meta ──────────────────────────────────────────────────────────────────────
 
 export async function generateMetadata(
-  { params }: { params: { userId: string } }
+  { params }: { params: { slug: string } }
 ): Promise<Metadata> {
-  const user = await prisma.user.findUnique({
-    where: { id: params.userId },
-    select: { name: true, bio: true, tradingStyle: true },
-  })
-  const sessions = await prisma.tradingSession.findMany({
-    where: { userId: params.userId },
-    select: { resultado: true, pnlNeto: true },
-  })
+  const user = await findUser(params.slug)
+  const sessions = user
+    ? await prisma.tradingSession.findMany({
+        where: { userId: user.id },
+        select: { resultado: true, pnlNeto: true },
+      })
+    : []
 
   const name = user?.name?.includes('@') ? 'Trader' : (user?.name ?? 'Trader')
   const total = sessions.length
@@ -31,7 +46,8 @@ export async function generateMetadata(
   const description = user?.bio
     ? `${user.bio} · ${winRate}% Win Rate · ${pnlStr} P&L Neto · ${total} operaciones verificadas.`
     : `${winRate}% Win Rate · ${pnlStr} P&L Neto · ${total} operaciones reales verificadas. Sin filtros.`
-  const url = `${process.env.NEXT_PUBLIC_APP_URL}/track-record/${params.userId}`
+  const urlSlug = user?.slug ?? params.slug
+  const url = `${process.env.NEXT_PUBLIC_APP_URL}/track-record/${urlSlug}`
 
   return {
     title,
@@ -87,24 +103,18 @@ const CAT_META: Record<string, { icon: string; label: string }> = {
 
 // ── Data fetch ────────────────────────────────────────────────────────────────
 
-async function getTraderProfile(userId: string) {
-  const user = await (prisma as any).user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true, name: true, createdAt: true,
-      avatarUrl: true, bio: true, country: true, tradingStyle: true,
-    },
-  })
+async function getTraderProfile(slugOrId: string) {
+  const user = await findUser(slugOrId)
   if (!user) return null
 
   const sessions: Session[] = await prisma.tradingSession.findMany({
-    where: { userId },
+    where: { userId: user.id },
     orderBy: { date: 'asc' },
     select: { id: true, date: true, instrumento: true, direccion: true, resultado: true, pnlNeto: true, contratos: true },
   })
 
-  const certificates: Certificate[] = await (prisma as any).certificate.findMany({
-    where: { userId, public: true },
+  const certificates: Certificate[] = await prisma.certificate.findMany({
+    where: { userId: user.id, public: true },
     orderBy: { createdAt: 'desc' },
     select: { id: true, title: true, category: true, fileUrl: true, fileType: true, issuedBy: true, issuedDate: true },
   })
@@ -155,7 +165,7 @@ async function getTraderProfile(userId: string) {
 
   return {
     user,
-    sessions: sessionsByDate, // descending for table
+    sessions: sessionsByDate,
     metrics: {
       totalTrades: sessions.length,
       wins: wins.length,
@@ -176,8 +186,8 @@ async function getTraderProfile(userId: string) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default async function PublicTrackRecordPage({ params }: { params: { userId: string } }) {
-  const data = await getTraderProfile(params.userId)
+export default async function PublicTrackRecordPage({ params }: { params: { slug: string } }) {
+  const data = await getTraderProfile(params.slug)
   if (!data) notFound()
 
   const { user, sessions, metrics, monthlyData, certificates } = data
@@ -229,7 +239,6 @@ export default async function PublicTrackRecordPage({ params }: { params: { user
               <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 900, color: '#fff', lineHeight: 1.1 }}>
                 {displayName}
               </h1>
-              {/* Verified badge */}
               <span style={{
                 background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
                 color: '#22c55e', fontSize: 10, fontFamily: 'monospace', padding: '3px 10px',
@@ -374,7 +383,6 @@ export default async function PublicTrackRecordPage({ params }: { params: { user
                         onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.4)')}
                         onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
                       >
-                        {/* Thumbnail or icon */}
                         <div style={{
                           height: 110, background: '#111',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -399,7 +407,6 @@ export default async function PublicTrackRecordPage({ params }: { params: { user
                             </div>
                           )}
                         </div>
-                        {/* Info */}
                         <div style={{ padding: '12px 14px' }}>
                           <div style={{
                             display: 'inline-block', fontSize: 9, fontFamily: 'monospace',

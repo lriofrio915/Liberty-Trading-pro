@@ -26,6 +26,7 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   name         String
+  slug         String?  @unique   // e.g. "luis-riofrio" — URL pública del track record
   phone        String?
   plan         Plan     @default(FREE)
   active       Boolean  @default(true)
