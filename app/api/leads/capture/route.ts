@@ -164,22 +164,7 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // 1. WA al lead — siempre, salvo leads ya vendidos
-    if (!yaConvertido) {
-      const planCtx = planNorm === 'ANUAL'
-        ? 'Vi que te interesa el Club Anual — la mejor opción si ya decidiste que el trading es tu camino. '
-        : 'Vi que te interesa el Club Mensual — perfecto para empezar sin compromisos. '
-
-      const mensajeLead =
-        `¡Hola ${name.trim()}! 👋 Soy Vinces, el asistente del Club Liberty Trading.\n\n` +
-        `${planCtx}` +
-        `Te haré unas preguntas rápidas para orientarte y asegurarme de que el club es lo que necesitas 🎯\n\n` +
-        `¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has tenido algún contacto con el trading o la inversión antes, o es algo completamente nuevo para ti?`
-
-      sendWA(cleanedPhone, mensajeLead).catch((e) =>
-        console.error('[Capture] Error WA lead:', e?.message)
-      )
-    }
+    // 1. WA al lead — lo maneja el flujo de n8n (formulario-landing) para evitar duplicados
 
     // 2. Email de confirmación al lead
     if (email?.includes('@')) {

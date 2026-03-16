@@ -12,7 +12,7 @@ const HOTMART = {
   ANUAL:   'https://pay.hotmart.com/L104900408S?checkoutMode=2',
 }
 const VINCES_WA = 'https://wa.me/18287149177?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20el%20Club%20Liberty%20Trading'
-const TRACK_RECORD_URL = '/track-record/cmmjkgdt800004kjq1zep8qc9'
+const TRACK_RECORD_URL = '/track-record/luis-riofrio'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

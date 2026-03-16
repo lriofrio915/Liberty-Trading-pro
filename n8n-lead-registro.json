@@ -1,160 +1,147 @@
 {
-  "name": "Liberty Trading — Registro de Lead (Formulario Web)",
+  "name": "Liberty Trading — Formulario Landing → Lead WA",
   "nodes": [
     {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "liberty-lead-registro",
-        "responseMode": "onReceived",
-        "options": {}
-      },
       "id": "node-webhook",
-      "name": "Webhook — Formulario Unirse",
+      "name": "Webhook — Formulario Landing",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [240, 300],
-      "webhookId": "liberty-lead-registro"
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "formulario-landing",
+        "responseMode": "onReceived",
+        "options": {}
+      }
     },
     {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "{ \"ok\": true }"
-      },
-      "id": "node-respond",
-      "name": "Responder 200",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [460, 480]
-    },
-    {
-      "parameters": {
-        "jsCode": "const raw = $input.first().json;\nconst body = raw.body || raw;\n\nconst name      = body.name      || 'amigo';\nconst phone     = String(body.phone || '').replace(/[^0-9]/g, '');\nconst plan      = body.plan      || 'MENSUAL';\nconst planLabel = body.planLabel || (plan === 'ANUAL' ? 'Club Anual ($649/año)' : 'Club Mensual ($79/mes)');\nconst email     = body.email     || 'no proporcionado';\n\nconst planCtx = plan === 'ANUAL'\n  ? 'Vi que te interesa el Club Anual — la mejor opción si ya decidiste que el trading es tu camino. '\n  : 'Vi que te interesa el Club Mensual — perfecto para empezar sin compromisos. ';\n\nconst mensajeLead =\n  `¡Hola ${name}! 👋 Soy Vinces, el asistente del Club Liberty Trading.\\n\\n` +\n  `${planCtx}` +\n  `Luis me entrenó para orientar a personas que quieren aprender a invertir o hacer trading profesional.\\n\\n` +\n  `¿Me permites hacerte unas preguntas rápidas para asegurarme de que el club es lo que necesitas? 🎯`;\n\nconst mensajeLuis =\n  `📥 *Nuevo lead desde el formulario web*\\n\\n` +\n  `👤 *Nombre:* ${name}\\n` +\n  `📱 *WhatsApp:* +${phone}\\n` +\n  `📧 *Email:* ${email}\\n` +\n  `🎯 *Plan de interés:* ${planLabel}\\n\\n` +\n  `_Vinces le escribirá en breve para iniciar la conversación._`;\n\nreturn [{\n  json: {\n    phone,\n    name,\n    plan,\n    planLabel,\n    email,\n    mensajeLead,\n    mensajeLuis\n  }\n}];"
-      },
-      "id": "node-build-msg",
-      "name": "Extraer datos y construir mensajes",
+      "id": "node-extract",
+      "name": "Extraer datos del formulario",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 300]
-    },
-    {
+      "position": [460, 300],
       "parameters": {
-        "amount": 1,
-        "unit": "minutes"
-      },
-      "id": "node-wait",
-      "name": "Esperar 1 minuto",
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1,
-      "position": [680, 300]
+        "jsCode": "const raw = $input.first().json;\nconst body = raw.body || raw;\n\nconst name  = (body.name  || 'amigo').trim();\nconst phone = String(body.phone || '').replace(/[^0-9]/g, '');\nconst plan  = body.plan || 'MENSUAL';\nconst source = body.source || 'landing';\n\nif (!phone || phone.length < 8) {\n  return [{ json: { skip: true } }];\n}\n\nconst mensajeBienvenida =\n  `Hola ${name} 👋\\n\\n` +\n  `Gracias por tu interés en el Club Liberty Trading.\\n\\n` +\n  `Luis Riofrío es un trader activo con track record verificable en el Nasdaq — no enseña teoría, comparte exactamente lo que él mismo hace cada día.\\n\\n` +\n  `Todo lo que incluye el club:\\n` +\n  `🎓 Academia completa — desde cero hasta operar con disciplina\\n` +\n  `📈 Day trading en Futuros NQ/MNQ del Nasdaq\\n` +\n  `🤝 Mentorías 1:1 con Luis cada mes\\n` +\n  `🤖 Vinces IA — coaching personalizado 24/7\\n` +\n  `🎯 Señales y oportunidades en acciones, ETFs y futuros\\n` +\n  `👥 Comunidad privada de traders activos\\n` +\n  `📊 Track record público y verificable\\n\\n` +\n  `Una pregunta: ¿qué es lo que más te motiva a aprender trading? ¿Generar un ingreso extra, hacer crecer tus ahorros o buscar independencia financiera?`;\n\nreturn [{\n  json: { name, phone, plan, source, mensajeBienvenida, skip: false }\n}];"
+      }
     },
     {
+      "id": "node-skip-check",
+      "name": "¿Datos válidos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-skip",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": false,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "node-create-lead",
+      "name": "Crear lead en BD (P1)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.libertytrading.pro/api/bot/lead",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $json.name, phone: $json.phone, plan: $json.plan, source: $json.source }) }}",
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "node-send-wa",
+      "name": "Enviar mensaje bienvenida WA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1120, 200],
       "parameters": {
         "method": "POST",
         "url": "https://evo.nexus-ia.com.es/message/sendText/vinces",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "157B8ABC2B63-46DE-B38C-05C3C3ACAA3A"
-            }
+            { "name": "apikey", "value": "157B8ABC2B63-46DE-B38C-05C3C3ACAA3A" },
+            { "name": "Content-Type", "value": "application/json" }
           ]
         },
         "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "keypair",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "number",
-              "value": "={{ $json.phone }}"
-            },
-            {
-              "name": "text",
-              "value": "={{ $json.mensajeLead }}"
-            }
-          ]
-        },
-        "options": {
-          "timeout": 15000
-        }
-      },
-      "id": "node-send-wa-lead",
-      "name": "Enviar WA a Lead (Vinces)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [900, 200]
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $('Extraer datos del formulario').first().json.phone, text: $('Extraer datos del formulario').first().json.mensajeBienvenida }) }}",
+        "options": { "timeout": 15000 }
+      }
     },
     {
+      "id": "node-update-p2",
+      "name": "Actualizar estado → P2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1340, 200],
       "parameters": {
-        "method": "POST",
-        "url": "https://evo.nexus-ia.com.es/message/sendText/vinces",
+        "method": "PATCH",
+        "url": "=https://www.libertytrading.pro/api/bot/lead/{{ $('Extraer datos del formulario').first().json.phone }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "apikey",
-              "value": "157B8ABC2B63-46DE-B38C-05C3C3ACAA3A"
-            }
+            { "name": "Content-Type", "value": "application/json" }
           ]
         },
         "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "keypair",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "number",
-              "value": "593996691586"
-            },
-            {
-              "name": "text",
-              "value": "={{ $json.mensajeLuis }}"
-            }
-          ]
-        },
-        "options": {
-          "timeout": 15000
-        }
-      },
-      "id": "node-notif-luis",
-      "name": "Notificar a Luis",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [900, 400]
+        "specifyBody": "json",
+        "jsonBody": "{ \"estado\": \"P2\" }",
+        "options": { "timeout": 15000 }
+      }
     }
   ],
   "connections": {
-    "Webhook — Formulario Unirse": {
+    "Webhook — Formulario Landing": {
       "main": [
-        [
-          { "node": "Extraer datos y construir mensajes", "type": "main", "index": 0 }
-        ]
+        [{ "node": "Extraer datos del formulario", "type": "main", "index": 0 }]
       ]
     },
-    "Extraer datos y construir mensajes": {
+    "Extraer datos del formulario": {
       "main": [
-        [
-          { "node": "Esperar 1 minuto", "type": "main", "index": 0 }
-        ]
+        [{ "node": "¿Datos válidos?", "type": "main", "index": 0 }]
       ]
     },
-    "Esperar 1 minuto": {
+    "¿Datos válidos?": {
       "main": [
-        [
-          { "node": "Enviar WA a Lead (Vinces)", "type": "main", "index": 0 },
-          { "node": "Notificar a Luis", "type": "main", "index": 0 }
-        ]
+        [{ "node": "Crear lead en BD (P1)", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Crear lead en BD (P1)": {
+      "main": [
+        [{ "node": "Enviar mensaje bienvenida WA", "type": "main", "index": 0 }]
+      ]
+    },
+    "Enviar mensaje bienvenida WA": {
+      "main": [
+        [{ "node": "Actualizar estado → P2", "type": "main", "index": 0 }]
       ]
     }
   },
-  "pinData": {},
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "saveManualExecutions": true
   },
   "staticData": null,
-  "tags": ["liberty-trading", "leads", "whatsapp"],
-  "triggerCount": 0,
-  "updatedAt": "2026-03-14T00:00:00.000Z",
-  "versionId": "3"
+  "tags": ["liberty-trading", "leads", "whatsapp", "landing"]
 }
