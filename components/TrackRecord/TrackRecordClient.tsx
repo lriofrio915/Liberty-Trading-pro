@@ -112,7 +112,6 @@ export default function TrackRecordClient({
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [toast, setToast] = useState('')
-  const [showShare, setShowShare] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const publicUrl = userId
@@ -456,25 +455,17 @@ export default function TrackRecordClient({
           <p className="text-[var(--text-secondary)] text-sm">Historial completo de operaciones</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {userId && (
-            <button
-              onClick={() => setShowShare(s => !s)}
-              className="btn-outline py-2.5 px-4 rounded-lg text-sm"
-            >
-              🔗 Compartir
-            </button>
-          )}
           <button
             onClick={exportCSV}
             className="btn-outline py-2.5 px-4 rounded-lg text-sm"
           >
-            ⬇ Exportar CSV
+            ⬆ Exportar CSV
           </button>
           <button
             onClick={() => importRef.current?.click()}
             className="btn-outline py-2.5 px-4 rounded-lg text-sm"
           >
-            ⬆ Importar
+            ⬇ Importar
           </button>
           <input
             ref={importRef}
@@ -547,18 +538,17 @@ export default function TrackRecordClient({
         </div>
       )}
 
-      {/* Share panel */}
-      {showShare && publicUrl && (
+      {/* Share panel — siempre visible cuando hay userId */}
+      {publicUrl && (
         <div className="mb-6 rounded-xl border border-[var(--gold-dark)] p-5"
           style={{ background: 'rgba(201,168,76,0.04)' }}>
-          <div className="flex items-start justify-between gap-4 mb-3">
+          <div className="flex items-start gap-4 mb-3">
             <div>
               <div className="label-mono text-[10px] text-[var(--gold)] mb-1">Tu link público de Track Record</div>
               <p className="text-xs text-[var(--text-muted)] leading-relaxed">
-                Comparte tus resultados reales. Cualquiera con este link puede ver tus estadísticas.
+                Comparte tus resultados reales. Cualquiera con este link puede ver tus estadísticas verificadas.
               </p>
             </div>
-            <button onClick={() => setShowShare(false)} className="text-[var(--text-muted)] hover:text-white text-lg leading-none mt-0.5">×</button>
           </div>
 
           {/* URL */}

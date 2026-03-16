@@ -49,11 +49,32 @@ export async function generateMetadata(
   const urlSlug = user?.slug ?? params.slug
   const url = `${process.env.NEXT_PUBLIC_APP_URL}/track-record/${urlSlug}`
 
+  const ogImage = {
+    url: `${process.env.NEXT_PUBLIC_APP_URL}/track-record/${urlSlug}/opengraph-image`,
+    width: 1200,
+    height: 630,
+    alt: `Track Record de ${name} — Liberty Trading Pro`,
+  }
+
   return {
     title,
     description,
-    openGraph: { title, description, url, siteName: 'Liberty Trading Pro', type: 'profile' },
-    twitter: { card: 'summary_large_image', title, description },
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://libertytrading.pro'),
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: 'Liberty Trading Pro',
+      type: 'profile',
+      locale: 'es_EC',
+      images: [ogImage],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage.url],
+    },
   }
 }
 
