@@ -164,31 +164,17 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // 1. WA al lead — directo desde la API (n8n recibe el webhook después para su propio flujo)
-    if (!yaConvertido) {
-      const planCtx = planNorm === 'ANUAL'
-        ? 'Vi que te interesa el Club Anual — la mejor opción si ya decidiste que el trading es tu camino. '
-        : 'Vi que te interesa el Club Mensual — perfecto para empezar sin compromisos. '
+    // Construir mensajes
+    const planCtx = planNorm === 'ANUAL'
+      ? 'Vi que te interesa el Club Anual — la mejor opción si ya decidiste que el trading es tu camino. '
+      : 'Vi que te interesa el Club Mensual — perfecto para empezar sin compromisos. '
 
-      const mensajeLead =
-        `¡Hola ${name.trim()}! 👋 Soy Vinces, el asistente del Club Liberty Trading.\n\n` +
-        `${planCtx}` +
-        `Te haré unas preguntas rápidas para orientarte y asegurarme de que el club es lo que necesitas 🎯\n\n` +
-        `¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has tenido algún contacto con el trading o la inversión antes, o es algo completamente nuevo para ti?`
+    const mensajeLead =
+      `¡Hola ${name.trim()}! 👋 Soy Vinces, el asistente del Club Liberty Trading.\n\n` +
+      `${planCtx}` +
+      `Te haré unas preguntas rápidas para orientarte y asegurarme de que el club es lo que necesitas 🎯\n\n` +
+      `¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has tenido algún contacto con el trading o la inversión antes, o es algo completamente nuevo para ti?`
 
-      sendWA(cleanedPhone, mensajeLead).catch((e) =>
-        console.error('[Capture] Error WA lead:', e?.message)
-      )
-    }
-
-    // 2. Email de confirmación al lead
-    if (email?.includes('@')) {
-      sendConfirmationEmail(name.trim(), email.trim(), planNorm).catch((e) =>
-        console.error('[Capture] Error email:', e?.message)
-      )
-    }
-
-    // 3. Notificar a Luis
     const tipoLead = yaConvertido ? '♻️ Lead ya convertido (recontacto)' : existing ? '🔄 Lead conocido (nuevo intento)' : '📥 Nuevo lead'
     const msgLuis =
       `${tipoLead} — *formulario web*\n\n` +
@@ -198,14 +184,27 @@ export async function POST(req: NextRequest) {
       `🎯 *Plan de interés:* ${planLabel}\n\n` +
       `_Vinces ya le escribió para iniciar la conversación._`
 
-    sendWA(LUIS_PHONE, msgLuis).catch((e) =>
-      console.error('[Capture] Error notif Luis:', e?.message)
-    )
+    // URL de n8n con fallback hardcodeado para que nunca quede vacío
+    const n8nUrl = (source === 'landing' ? N8N_WEBHOOK_LANDING : N8N_WEBHOOK)
+      || 'https://n8n.nexus-ia.com.es/webhook/formulario-landing'
 
-    // 4. n8n — use landing webhook when source === 'landing', else default
-    const webhookUrl = source === 'landing' ? (N8N_WEBHOOK_LANDING || N8N_WEBHOOK) : N8N_WEBHOOK
-    if (webhookUrl) {
-      fetch(webhookUrl, {
+    // Ejecutar todas las llamadas externas en paralelo con await antes de responder.
+    // En Vercel serverless el contexto se cierra al hacer return — fire-and-forget no garantiza ejecución.
+    // Promise.allSettled asegura que todos completen (o fallen) antes de devolver la respuesta.
+    await Promise.allSettled([
+      // 1. WA al lead
+      yaConvertido ? Promise.resolve() : sendWA(cleanedPhone, mensajeLead),
+
+      // 2. Email de confirmación
+      email?.includes('@')
+        ? sendConfirmationEmail(name.trim(), email.trim(), planNorm)
+        : Promise.resolve(),
+
+      // 3. Notificar a Luis
+      sendWA(LUIS_PHONE, msgLuis),
+
+      // 4. Webhook n8n
+      fetch(n8nUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -217,8 +216,9 @@ export async function POST(req: NextRequest) {
           source: source || 'web',
           ts: new Date().toISOString(),
         }),
-      }).catch((e) => console.error('[Capture] Error n8n:', e?.message))
-    }
+        signal: AbortSignal.timeout(10000),
+      }),
+    ])
 
     return NextResponse.json({ ok: true, status: 'created' })
   } catch (err: any) {
