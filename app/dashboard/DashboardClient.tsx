@@ -519,12 +519,7 @@ export default function DashboardClient({
               <div className="text-xl font-black" style={{ color: fin.pnlNetoReal >= 0 ? 'var(--green)' : 'var(--red)' }}>
                 {fmtMoney(fin.pnlNetoReal)}
               </div>
-              <div
-                className="text-[10px] font-bold mt-0.5"
-                style={{ color: fin.rendimientoPct >= 0 ? 'var(--green)' : 'var(--red)' }}
-              >
-                {fmtPct(fin.rendimientoPct)} rendimiento
-              </div>
+              <div className="text-[10px] text-[var(--text-muted)] mt-0.5">Bruto − comisiones − fees</div>
             </div>
           </div>
 
@@ -550,12 +545,6 @@ export default function DashboardClient({
                 <div className="text-xs text-[var(--text-muted)] mb-1">Variación</div>
                 <div
                   className="text-lg font-black"
-                  style={{ color: fin.variacionPct >= 0 ? 'var(--green)' : 'var(--red)' }}
-                >
-                  {fmtMoney(fin.capitalFinalPeriodo - fin.capitalInicialPeriodo)}
-                </div>
-                <div
-                  className="text-[10px] font-bold"
                   style={{ color: fin.variacionPct >= 0 ? 'var(--green)' : 'var(--red)' }}
                 >
                   {fmtPct(fin.variacionPct)}
