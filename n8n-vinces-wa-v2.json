@@ -86,7 +86,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://libertytrading.pro/api/vinces-wa",
+        "url": "https://www.libertytrading.pro/api/vinces-wa",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

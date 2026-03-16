@@ -23,16 +23,20 @@ enum Plan {
 // ─── MODELS ───────────────────────────────────────
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  phone     String?
-  plan      Plan     @default(FREE)
-  active    Boolean  @default(true)
-  hotmartId String?
-  authId    String?  @unique
-  createdAt DateTime @default(now())
-  trialEndsAt DateTime?
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  phone        String?
+  plan         Plan     @default(FREE)
+  active       Boolean  @default(true)
+  hotmartId    String?
+  authId       String?  @unique
+  createdAt    DateTime @default(now())
+  trialEndsAt  DateTime?
+  avatarUrl    String?
+  bio          String?
+  country      String?
+  tradingStyle String?
 
   tradingPlans   TradingPlan[]
   sessions       TradingSession[]
@@ -41,6 +45,7 @@ model User {
   conversations  VincesConversation[]
   posts          Post[]
   postComments   PostComment[]
+  certificates   Certificate[]
 }
 
 model TradingPlan {
@@ -290,6 +295,20 @@ model PostComment {
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   contenido String
   creadoEn  DateTime @default(now())
+}
+
+model Certificate {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  title      String
+  category   String   // FONDEO | RETIRO | MERITO | ACADEMICO | DIPLOMA | OTRO
+  fileUrl    String
+  fileType   String   @default("image") // image | pdf
+  issuedBy   String?
+  issuedDate String?
+  public     Boolean  @default(true)
+  createdAt  DateTime @default(now())
 }
 
 model VideoSemana {

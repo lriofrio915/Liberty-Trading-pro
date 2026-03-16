@@ -2,15 +2,18 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import PublicChart from '@/components/TrackRecord/PublicChart'
 
 export const revalidate = 1800
+
+// ── Meta ──────────────────────────────────────────────────────────────────────
 
 export async function generateMetadata(
   { params }: { params: { userId: string } }
 ): Promise<Metadata> {
   const user = await prisma.user.findUnique({
     where: { id: params.userId },
-    select: { name: true },
+    select: { name: true, bio: true, tradingStyle: true },
   })
   const sessions = await prisma.tradingSession.findMany({
     where: { userId: params.userId },
@@ -24,27 +27,21 @@ export async function generateMetadata(
   const pnl = sessions.reduce((a, s) => a + s.pnlNeto, 0)
   const pnlStr = pnl >= 0 ? `+$${Math.round(pnl).toLocaleString()}` : `-$${Math.round(Math.abs(pnl)).toLocaleString()}`
 
-  const title = `Track Record de ${name} · Liberty Trading Pro`
-  const description = `${winRate}% Win Rate · ${pnlStr} P&L Neto · ${total} operaciones reales registradas. Datos verificables, sin filtros.`
+  const title = `${name} — Perfil Público del Operador · Liberty Trading Pro`
+  const description = user?.bio
+    ? `${user.bio} · ${winRate}% Win Rate · ${pnlStr} P&L Neto · ${total} operaciones verificadas.`
+    : `${winRate}% Win Rate · ${pnlStr} P&L Neto · ${total} operaciones reales verificadas. Sin filtros.`
   const url = `${process.env.NEXT_PUBLIC_APP_URL}/track-record/${params.userId}`
 
   return {
     title,
     description,
-    openGraph: {
-      title,
-      description,
-      url,
-      siteName: 'Liberty Trading Pro',
-      type: 'website',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-    },
+    openGraph: { title, description, url, siteName: 'Liberty Trading Pro', type: 'profile' },
+    twitter: { card: 'summary_large_image', title, description },
   }
 }
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Session {
   id: string
@@ -56,12 +53,21 @@ interface Session {
   contratos: number
 }
 
+interface Certificate {
+  id: string
+  title: string
+  category: string
+  fileUrl: string
+  fileType: string
+  issuedBy?: string | null
+  issuedDate?: string | null
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
 function formatDate(d: Date) {
   return new Date(d).toLocaleDateString('es-EC', {
-    timeZone: 'America/Guayaquil',
-    day: '2-digit',
-    month: 'short',
-    year: '2-digit',
+    timeZone: 'America/Guayaquil', day: '2-digit', month: 'short', year: '2-digit',
   })
 }
 
@@ -70,45 +76,86 @@ function formatPnl(pnl: number) {
   return pnl >= 0 ? `+$${abs}` : `-$${abs}`
 }
 
-async function getTrackRecord(userId: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, name: true },
-  })
+const CAT_META: Record<string, { icon: string; label: string }> = {
+  FONDEO:    { icon: '🏆', label: 'Prueba de Fondeo' },
+  RETIRO:    { icon: '💰', label: 'Retiro de Fondos' },
+  MERITO:    { icon: '⭐', label: 'Mérito / Distinción' },
+  ACADEMICO: { icon: '📜', label: 'Certificado Académico' },
+  DIPLOMA:   { icon: '🎓', label: 'Diploma' },
+  OTRO:      { icon: '📄', label: 'Logro' },
+}
 
+// ── Data fetch ────────────────────────────────────────────────────────────────
+
+async function getTraderProfile(userId: string) {
+  const user = await (prisma as any).user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true, name: true, createdAt: true,
+      avatarUrl: true, bio: true, country: true, tradingStyle: true,
+    },
+  })
   if (!user) return null
 
   const sessions: Session[] = await prisma.tradingSession.findMany({
     where: { userId },
-    orderBy: { date: 'desc' },
-    select: {
-      id: true,
-      date: true,
-      instrumento: true,
-      direccion: true,
-      resultado: true,
-      pnlNeto: true,
-      contratos: true,
-    },
+    orderBy: { date: 'asc' },
+    select: { id: true, date: true, instrumento: true, direccion: true, resultado: true, pnlNeto: true, contratos: true },
+  })
+
+  const certificates: Certificate[] = await (prisma as any).certificate.findMany({
+    where: { userId, public: true },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, title: true, category: true, fileUrl: true, fileType: true, issuedBy: true, issuedDate: true },
   })
 
   if (sessions.length === 0) {
-    return { user, sessions: [], metrics: null }
+    return { user, sessions: [], metrics: null, monthlyData: [], certificates }
   }
 
-  const wins = sessions.filter((s) => s.resultado === 'WIN')
-  const losses = sessions.filter((s) => s.resultado === 'LOSS')
+  // ── Core metrics ─────────────────────────────────────────────────────────
+  const wins = sessions.filter(s => s.resultado === 'WIN')
+  const losses = sessions.filter(s => s.resultado === 'LOSS')
   const winRate = (wins.length / sessions.length) * 100
   const grossWins = wins.reduce((sum, s) => sum + Math.abs(s.pnlNeto), 0)
   const grossLosses = losses.reduce((sum, s) => sum + Math.abs(s.pnlNeto), 0)
   const profitFactor = grossLosses > 0 ? grossWins / grossLosses : grossWins > 0 ? 999 : 0
   const totalNetPnl = sessions.reduce((sum, s) => sum + s.pnlNeto, 0)
-  const firstTrade = sessions[sessions.length - 1].date
-  const lastTrade = sessions[0].date
+  const bestTrade = Math.max(...sessions.map(s => s.pnlNeto))
+  const worstTrade = Math.min(...sessions.map(s => s.pnlNeto))
+
+  // ── Streak ───────────────────────────────────────────────────────────────
+  const sessionsByDate = [...sessions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  let winStreak = 0
+  for (const s of sessionsByDate) {
+    if (s.resultado === 'WIN') winStreak++
+    else break
+  }
+
+  // ── Monthly data for chart ────────────────────────────────────────────────
+  const monthlyMap: Record<string, { month: string; pnl: number; trades: number; wins: number }> = {}
+  for (const s of sessions) {
+    const d = new Date(s.date)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    if (!monthlyMap[key]) {
+      monthlyMap[key] = {
+        month: d.toLocaleDateString('es-EC', { month: 'short', year: '2-digit', timeZone: 'America/Guayaquil' }),
+        pnl: 0, trades: 0, wins: 0,
+      }
+    }
+    monthlyMap[key].pnl += s.pnlNeto
+    monthlyMap[key].trades++
+    if (s.resultado === 'WIN') monthlyMap[key].wins++
+  }
+
+  const monthlyData = Object.entries(monthlyMap)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, v]) => ({ ...v, pnl: Math.round(v.pnl * 100) / 100 }))
+    .slice(-12)
 
   return {
     user,
-    sessions,
+    sessions: sessionsByDate, // descending for table
     metrics: {
       totalTrades: sessions.length,
       wins: wins.length,
@@ -116,120 +163,291 @@ async function getTrackRecord(userId: string) {
       winRate: Math.round(winRate * 10) / 10,
       profitFactor: Math.round(profitFactor * 100) / 100,
       totalNetPnl: Math.round(totalNetPnl * 100) / 100,
-      firstTrade,
-      lastTrade,
+      bestTrade: Math.round(bestTrade * 100) / 100,
+      worstTrade: Math.round(worstTrade * 100) / 100,
+      firstTrade: sessions[0].date,
+      lastTrade: sessions[sessions.length - 1].date,
+      winStreak,
     },
+    monthlyData,
+    certificates,
   }
 }
 
-export default async function PublicTrackRecordPage({
-  params,
-}: {
-  params: { userId: string }
-}) {
-  const data = await getTrackRecord(params.userId)
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export default async function PublicTrackRecordPage({ params }: { params: { userId: string } }) {
+  const data = await getTraderProfile(params.userId)
   if (!data) notFound()
 
-  const { user, sessions, metrics } = data
-
-  const displayName = user.name.includes('@') ? 'Trader' : user.name
+  const { user, sessions, metrics, monthlyData, certificates } = data
+  const displayName = user.name?.includes('@') ? 'Trader' : (user.name ?? 'Trader')
+  const memberSince = new Date(user.createdAt).toLocaleDateString('es-EC', {
+    year: 'numeric', month: 'long',
+  })
 
   return (
-    <main className="min-h-screen" style={{ background: 'var(--bg-primary, #080808)' }}>
+    <main className="min-h-screen" style={{ background: '#080808', color: '#f0ece4' }}>
 
-      {/* Header */}
-      <div className="border-b border-[var(--border,#1a1a1a)] px-4 py-4 flex items-center justify-between max-w-5xl mx-auto">
-        <Link href="/" className="headline text-lg gradient-gold">Liberty Trading Pro</Link>
-        <span className="label-mono text-[10px] text-[var(--text-muted,#555)]">Track Record Público</span>
-      </div>
+      {/* ── Nav ─────────────────────────────────────────────────────────────── */}
+      <nav style={{ borderBottom: '1px solid #141414' }}>
+        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/" style={{ fontFamily: 'Georgia, serif', fontSize: 18, fontWeight: 700, color: '#C9A84C', letterSpacing: 1 }}>
+            Liberty Trading Pro
+          </Link>
+          <div className="flex items-center gap-2">
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e', display: 'inline-block' }} />
+            <span style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: 2, color: '#444', textTransform: 'uppercase' }}>
+              Perfil Público Verificado
+            </span>
+          </div>
+        </div>
+      </nav>
 
       <div className="max-w-5xl mx-auto px-4 py-12">
 
-        {/* Title */}
-        <div className="mb-10">
-          <div className="label-mono mb-2 text-[var(--gold,#C9A84C)]">Track Record Verificable</div>
-          <h1 className="headline text-4xl sm:text-5xl text-white mb-2">
-            {displayName}
-          </h1>
-          {metrics && (
-            <p className="text-sm text-[var(--text-muted,#555)]">
-              {formatDate(metrics.firstTrade)} → {formatDate(metrics.lastTrade)} · {metrics.totalTrades} operaciones registradas
+        {/* ── Hero ──────────────────────────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row gap-8 items-start mb-12">
+          {/* Avatar */}
+          <div style={{
+            width: 100, height: 100, borderRadius: '50%', flexShrink: 0,
+            border: '2px solid #C9A84C', overflow: 'hidden',
+            background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <span style={{ fontSize: 40, fontWeight: 900, color: '#C9A84C', fontFamily: 'Georgia, serif' }}>
+                {displayName.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 900, color: '#fff', lineHeight: 1.1 }}>
+                {displayName}
+              </h1>
+              {/* Verified badge */}
+              <span style={{
+                background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
+                color: '#22c55e', fontSize: 10, fontFamily: 'monospace', padding: '3px 10px',
+                borderRadius: 20, letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap',
+              }}>
+                ✓ Verificado
+              </span>
+            </div>
+
+            {(user.tradingStyle || user.country) && (
+              <p style={{ color: '#888', fontSize: 14, marginBottom: 8, fontFamily: 'monospace' }}>
+                {user.tradingStyle}{user.tradingStyle && user.country ? ' · ' : ''}{user.country}
+              </p>
+            )}
+
+            {user.bio && (
+              <p style={{ color: '#aaa', fontSize: 14, lineHeight: 1.7, maxWidth: 560, marginBottom: 12 }}>
+                {user.bio}
+              </p>
+            )}
+
+            <p style={{ color: '#444', fontSize: 11, fontFamily: 'monospace' }}>
+              Operador desde {memberSince}
+              {metrics && ` · ${metrics.totalTrades} operaciones registradas · Última op. ${formatDate(metrics.lastTrade)}`}
             </p>
-          )}
+          </div>
         </div>
 
         {!metrics ? (
-          <div className="text-center py-20">
-            <div className="text-4xl mb-4">📊</div>
-            <p className="text-[var(--text-muted,#555)]">Aún no hay operaciones registradas.</p>
+          <div style={{ textAlign: 'center', padding: '80px 0' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+            <p style={{ color: '#555' }}>Aún no hay operaciones registradas.</p>
           </div>
         ) : (
           <>
-            {/* Metrics grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            {/* ── Key metrics ─────────────────────────────────────────────── */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 12 }}>
               {[
                 {
                   label: 'Win Rate',
                   value: `${metrics.winRate}%`,
-                  sub: `${metrics.wins}/${metrics.totalTrades} trades`,
+                  sub: `${metrics.wins} de ${metrics.totalTrades} trades`,
                   color: metrics.winRate >= 50 ? '#22c55e' : '#ef4444',
                 },
                 {
                   label: 'Profit Factor',
-                  value: `${metrics.profitFactor}x`,
+                  value: metrics.profitFactor === 999 ? '∞' : `${metrics.profitFactor}x`,
                   sub: 'Ganancias / Pérdidas',
                   color: '#C9A84C',
                 },
                 {
-                  label: 'P&L Total Neto',
+                  label: 'P&L Neto Total',
                   value: formatPnl(metrics.totalNetPnl),
-                  sub: 'Suma de todas las operaciones',
+                  sub: 'Suma real de operaciones',
                   color: metrics.totalNetPnl >= 0 ? '#22c55e' : '#ef4444',
                 },
                 {
                   label: 'Total Operaciones',
                   value: String(metrics.totalTrades),
-                  sub: `${metrics.wins} ganadoras · ${metrics.losses} perdedoras`,
+                  sub: `${metrics.wins} wins · ${metrics.losses} losses`,
                   color: '#C9A84C',
                 },
-              ].map((m) => (
-                <div key={m.label}
-                  className="rounded-xl border p-5"
-                  style={{
-                    background: 'rgba(255,255,255,0.02)',
-                    borderColor: 'rgba(255,255,255,0.07)',
-                  }}>
-                  <div className="text-[10px] font-mono tracking-widest uppercase mb-2"
-                    style={{ color: '#555' }}>
+              ].map(m => (
+                <div key={m.label} style={{
+                  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)',
+                  borderRadius: 16, padding: '20px 20px 16px',
+                }}>
+                  <div style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: 2, color: '#444', textTransform: 'uppercase', marginBottom: 10 }}>
                     {m.label}
                   </div>
-                  <div className="text-3xl font-black mb-1"
-                    style={{ color: m.color, fontFamily: 'Georgia, serif' }}>
+                  <div style={{ fontFamily: 'Georgia, serif', fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 900, color: m.color, marginBottom: 4, lineHeight: 1 }}>
                     {m.value}
                   </div>
-                  <div className="text-[10px] font-mono" style={{ color: '#444' }}>{m.sub}</div>
+                  <div style={{ fontSize: 10, fontFamily: 'monospace', color: '#444' }}>{m.sub}</div>
                 </div>
               ))}
             </div>
 
-            {/* Sessions table */}
-            <div className="rounded-xl border overflow-hidden"
-              style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-              <div className="px-5 py-3 border-b flex items-center gap-2"
-                style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.07)' }}>
-                <span className="w-2 h-2 rounded-full bg-green-400" style={{ boxShadow: '0 0 6px #22c55e' }} />
-                <span className="text-[10px] font-mono tracking-widest uppercase" style={{ color: '#555' }}>
-                  Historial completo de operaciones
+            {/* Secondary stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 32 }}>
+              {[
+                { label: 'Mejor Trade', value: formatPnl(metrics.bestTrade), color: '#22c55e' },
+                { label: 'Peor Trade', value: formatPnl(metrics.worstTrade), color: '#ef4444' },
+                { label: 'Racha Ganadora', value: `${metrics.winStreak} seguidos`, color: '#C9A84C' },
+                { label: 'Breakevens', value: String(metrics.totalTrades - metrics.wins - metrics.losses), color: '#888' },
+              ].map(m => (
+                <div key={m.label} style={{
+                  background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)',
+                  borderRadius: 10, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4,
+                }}>
+                  <div style={{ fontSize: 9, fontFamily: 'monospace', color: '#444', letterSpacing: 2, textTransform: 'uppercase' }}>{m.label}</div>
+                  <div style={{ fontFamily: 'monospace', fontWeight: 700, color: m.color, fontSize: 14 }}>{m.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Monthly chart ────────────────────────────────────────────── */}
+            {monthlyData.length > 1 && (
+              <div style={{
+                background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: 16, padding: '24px', marginBottom: 32,
+              }}>
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: 2, color: '#444', textTransform: 'uppercase', marginBottom: 4 }}>
+                    Rendimiento Mensual
+                  </div>
+                  <div style={{ fontSize: 13, color: '#888' }}>
+                    Últimos {monthlyData.length} meses · P&L neto por período
+                  </div>
+                </div>
+                <PublicChart data={monthlyData} />
+              </div>
+            )}
+
+            {/* ── Certificates ─────────────────────────────────────────────── */}
+            {certificates.length > 0 && (
+              <div style={{ marginBottom: 32 }}>
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: 2, color: '#444', textTransform: 'uppercase', marginBottom: 4 }}>
+                    Credenciales & Logros
+                  </div>
+                  <div style={{ fontSize: 13, color: '#888' }}>
+                    Certificados verificados del operador
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+                  {certificates.map(cert => {
+                    const cat = CAT_META[cert.category] ?? CAT_META.OTRO
+                    const isPdf = cert.fileType === 'pdf'
+                    return (
+                      <a
+                        key={cert.id}
+                        href={cert.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
+                          borderRadius: 12, overflow: 'hidden', display: 'block',
+                          textDecoration: 'none', transition: 'border-color 0.2s',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.4)')}
+                        onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
+                      >
+                        {/* Thumbnail or icon */}
+                        <div style={{
+                          height: 110, background: '#111',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          overflow: 'hidden', position: 'relative',
+                        }}>
+                          {!isPdf && cert.fileUrl ? (
+                            <img
+                              src={cert.fileUrl}
+                              alt={cert.title}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <span style={{ fontSize: 40 }}>{cat.icon}</span>
+                          )}
+                          {isPdf && (
+                            <div style={{
+                              position: 'absolute', top: 8, right: 8,
+                              background: 'rgba(0,0,0,0.6)', borderRadius: 4,
+                              padding: '2px 6px', fontSize: 9, fontFamily: 'monospace', color: '#888',
+                            }}>
+                              PDF
+                            </div>
+                          )}
+                        </div>
+                        {/* Info */}
+                        <div style={{ padding: '12px 14px' }}>
+                          <div style={{
+                            display: 'inline-block', fontSize: 9, fontFamily: 'monospace',
+                            padding: '2px 8px', borderRadius: 10, marginBottom: 6,
+                            background: 'rgba(201,168,76,0.1)', color: '#C9A84C',
+                          }}>
+                            {cat.icon} {cat.label}
+                          </div>
+                          <p style={{ fontSize: 13, fontWeight: 600, color: '#e0dcd4', lineHeight: 1.4, marginBottom: 4 }}>
+                            {cert.title}
+                          </p>
+                          {(cert.issuedBy || cert.issuedDate) && (
+                            <p style={{ fontSize: 11, fontFamily: 'monospace', color: '#555' }}>
+                              {cert.issuedBy}{cert.issuedBy && cert.issuedDate ? ' · ' : ''}{cert.issuedDate}
+                            </p>
+                          )}
+                        </div>
+                      </a>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── Trade history ─────────────────────────────────────────────── */}
+            <div style={{
+              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: 16, overflow: 'hidden', marginBottom: 32,
+            }}>
+              <div style={{
+                padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)',
+                background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', gap: 10,
+              }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e', display: 'inline-block', flexShrink: 0 }} />
+                <span style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: 2, color: '#555', textTransform: 'uppercase' }}>
+                  Historial completo · {sessions.length} operaciones registradas
                 </span>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      {['Fecha', 'Instrumento', 'Dirección', 'Resultado', 'P&L Neto', 'Contratos'].map((h) => (
-                        <th key={h}
-                          className="text-left py-3 px-4 text-[10px] font-mono tracking-widest uppercase"
-                          style={{ color: '#444' }}>
+                      {['Fecha', 'Instrumento', 'Dirección', 'Resultado', 'P&L Neto', 'Contratos'].map(h => (
+                        <th key={h} style={{
+                          textAlign: 'left', padding: '12px 16px',
+                          fontSize: 9, fontFamily: 'monospace', letterSpacing: 2,
+                          color: '#3a3a3a', textTransform: 'uppercase',
+                        }}>
                           {h}
                         </th>
                       ))}
@@ -237,42 +455,42 @@ export default async function PublicTrackRecordPage({
                   </thead>
                   <tbody>
                     {sessions.map((s, i) => (
-                      <tr key={s.id}
-                        style={{
-                          borderBottom: i < sessions.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                        }}>
-                        <td className="py-3 px-4 font-mono text-xs" style={{ color: '#666' }}>
+                      <tr key={s.id} style={{ borderBottom: i < sessions.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                        <td style={{ padding: '10px 16px', fontFamily: 'monospace', fontSize: 11, color: '#555' }}>
                           {formatDate(s.date)}
                         </td>
-                        <td className="py-3 px-4 font-mono font-bold text-white">
+                        <td style={{ padding: '10px 16px', fontFamily: 'monospace', fontWeight: 700, color: '#e0dcd4' }}>
                           {s.instrumento}
                         </td>
-                        <td className="py-3 px-4">
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                            s.direccion === 'LONG'
-                              ? 'bg-green-950 text-green-400'
-                              : 'bg-red-950 text-red-400'
-                          }`}>
+                        <td style={{ padding: '10px 16px' }}>
+                          <span style={{
+                            fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
+                            background: s.direccion === 'LONG' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+                            color: s.direccion === 'LONG' ? '#22c55e' : '#ef4444',
+                          }}>
                             {s.direccion}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                            s.resultado === 'WIN'
-                              ? 'bg-green-950 text-green-400'
-                              : s.resultado === 'LOSS'
-                              ? 'bg-red-950 text-red-400'
-                              : 'bg-yellow-950 text-yellow-400'
-                          }`}>
+                        <td style={{ padding: '10px 16px' }}>
+                          <span style={{
+                            fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
+                            background: s.resultado === 'WIN'
+                              ? 'rgba(34,197,94,0.1)'
+                              : s.resultado === 'LOSS' ? 'rgba(239,68,68,0.1)' : 'rgba(234,179,8,0.1)',
+                            color: s.resultado === 'WIN'
+                              ? '#22c55e'
+                              : s.resultado === 'LOSS' ? '#ef4444' : '#eab308',
+                          }}>
                             {s.resultado}
                           </span>
                         </td>
-                        <td className={`py-3 px-4 font-mono font-bold ${
-                          s.pnlNeto >= 0 ? 'text-green-400' : 'text-red-400'
-                        }`}>
+                        <td style={{
+                          padding: '10px 16px', fontFamily: 'monospace', fontWeight: 700,
+                          color: s.pnlNeto >= 0 ? '#22c55e' : '#ef4444',
+                        }}>
                           {formatPnl(s.pnlNeto)}
                         </td>
-                        <td className="py-3 px-4 font-mono text-xs" style={{ color: '#666' }}>
+                        <td style={{ padding: '10px 16px', fontFamily: 'monospace', fontSize: 11, color: '#555' }}>
                           {s.contratos}
                         </td>
                       </tr>
@@ -281,26 +499,32 @@ export default async function PublicTrackRecordPage({
                 </table>
               </div>
             </div>
-
-            {/* Footer note */}
-            <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <p className="text-xs font-mono" style={{ color: '#444' }}>
-                Datos en tiempo real · Generado por{' '}
-                <Link href="/" className="hover:text-[#C9A84C] transition-colors" style={{ color: '#666' }}>
-                  Liberty Trading Pro
-                </Link>
-              </p>
-              <Link href="/#precios"
-                className="text-xs font-mono px-4 py-2 rounded-lg border transition-colors"
-                style={{
-                  borderColor: '#C9A84C',
-                  color: '#C9A84C',
-                }}>
-                Unirme al Club →
-              </Link>
-            </div>
           </>
         )}
+
+        {/* ── Footer ──────────────────────────────────────────────────────────── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+            <p style={{ fontSize: 11, fontFamily: 'monospace', color: '#333' }}>
+              Datos en tiempo real · Verificado por{' '}
+              <Link href="/" style={{ color: '#555', textDecoration: 'none' }} className="hover:text-[#C9A84C]">
+                Liberty Trading Pro
+              </Link>
+              {' · '}Las inversiones implican riesgo. Resultados pasados no garantizan rendimientos futuros.
+            </p>
+            <Link
+              href="/unirse"
+              style={{
+                border: '1px solid #C9A84C', color: '#C9A84C', borderRadius: 8,
+                padding: '8px 20px', fontSize: 12, fontFamily: 'monospace',
+                textDecoration: 'none', whiteSpace: 'nowrap',
+              }}
+            >
+              Unirme al Club →
+            </Link>
+          </div>
+        </div>
+
       </div>
     </main>
   )

@@ -44,7 +44,7 @@ export default function Pricing() {
             <h3 className="headline text-3xl text-[var(--text-primary)] mb-1">Club Mensual</h3>
             <p className="text-xs text-[var(--text-secondary)] mb-5 leading-relaxed">
               Ideal si quieres probar el trading sin comprometer demasiado. Con un solo mes ya sabrás si esto es para ti —
-              y si decides quedarte, sigue pagando mes a mes.
+              y si decides quedarte.
             </p>
 
             <div className="flex items-baseline gap-1 mb-6">
