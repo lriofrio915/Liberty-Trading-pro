@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { navItems } from './navConfig'
+import { navItems, navGroups } from './navConfig'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
 const ADMIN_EMAIL = 'lriofrio915@gmail.com'
@@ -65,10 +65,7 @@ export default function MobileNav({ email, canAccessClub }: { email: string; can
     window.location.href = '/'
   }
 
-  const allNavItems = [
-    ...navItems,
-    ...(isAdmin ? [{ href: '/dashboard/leads', icon: '📱', label: 'Leads WA' }] : []),
-  ]
+  const adminItem = isAdmin ? { href: '/dashboard/leads', icon: '📱', label: 'Leads WA', requiresClub: false } : null
 
   return (
     <>
@@ -116,51 +113,78 @@ export default function MobileNav({ email, canAccessClub }: { email: string; can
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <div className="space-y-0.5">
-            {allNavItems.map(item => {
-              const active = pathname === item.href
-              const locked = 'requiresClub' in item && item.requiresClub && !canAccessClub
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all text-sm font-medium ${
-                    active
-                      ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-400'
-                      : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                  }`}
-                >
-                  <span className="text-lg w-6 flex-shrink-0 text-center">{item.icon}</span>
-                  <span className="flex-1">{item.label}</span>
-                  {locked && <span className="text-[10px]" style={{ color: '#444' }}>🔒</span>}
-                  {active && !locked && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-yellow-400" />}
-                </Link>
-              )
-            })}
-          </div>
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+          {navGroups.map((group, gi) => (
+            <div key={gi}>
+              {group.label && (
+                <p className="px-4 mb-1.5 text-[9px] uppercase tracking-widest font-semibold"
+                  style={{ color: 'var(--text-muted)', opacity: 0.5 }}>
+                  {group.label}
+                </p>
+              )}
+              <div className="space-y-0.5">
+                {group.items.map(item => {
+                  const active = pathname === item.href
+                  const locked = item.requiresClub && !canAccessClub
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium ${
+                        active
+                          ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-400'
+                          : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      <span className="text-lg w-6 flex-shrink-0 text-center">{item.icon}</span>
+                      <span className="flex-1">{item.label}</span>
+                      {locked && <span className="text-[10px]" style={{ color: '#444' }}>🔒</span>}
+                      {active && !locked && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-yellow-400" />}
+                    </Link>
+                  )
+                })}
+                {gi === navGroups.length - 1 && adminItem && (
+                  <Link
+                    href={adminItem.href}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium ${
+                      pathname === adminItem.href
+                        ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-400'
+                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <span className="text-lg w-6 flex-shrink-0 text-center">{adminItem.icon}</span>
+                    <span className="flex-1">{adminItem.label}</span>
+                  </Link>
+                )}
+              </div>
+            </div>
+          ))}
 
-          {/* Divider */}
-          <div className="border-t my-4" style={{ borderColor: 'var(--border)' }} />
-
-          {/* Secondary links */}
-          <div className="space-y-0.5">
-            {[
-              { href: '/dashboard/profile', icon: '👤', label: 'Mi Perfil' },
-              { href: '/dashboard/conocimiento', icon: '📚', label: 'Conocimiento' },
-              { href: '/dashboard/retiros', icon: '💸', label: 'Retiros' },
-            ].map(item => {
-              const active = pathname === item.href
-              return (
-                <Link key={item.href} href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${
-                    active ? 'bg-yellow-500/20 text-yellow-400' : 'text-gray-500 hover:bg-white/5 hover:text-white'
-                  }`}>
-                  <span className="text-base w-6 flex-shrink-0 text-center">{item.icon}</span>
-                  {item.label}
-                </Link>
-              )
-            })}
+          {/* Ajustes */}
+          <div>
+            <p className="px-4 mb-1.5 text-[9px] uppercase tracking-widest font-semibold"
+              style={{ color: 'var(--text-muted)', opacity: 0.5 }}>
+              Ajustes
+            </p>
+            <div className="space-y-0.5">
+              {[
+                { href: '/dashboard/profile',      icon: '👤', label: 'Mi Perfil'     },
+                { href: '/dashboard/conocimiento',  icon: '📚', label: 'Conocimiento'  },
+                { href: '/dashboard/retiros',       icon: '💸', label: 'Retiros'       },
+              ].map(item => {
+                const active = pathname === item.href
+                return (
+                  <Link key={item.href} href={item.href}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium ${
+                      active ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-400' : 'text-gray-500 hover:bg-white/5 hover:text-white'
+                    }`}>
+                    <span className="text-lg w-6 flex-shrink-0 text-center">{item.icon}</span>
+                    <span className="flex-1">{item.label}</span>
+                    {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-yellow-400" />}
+                  </Link>
+                )
+              })}
+            </div>
           </div>
         </nav>
 

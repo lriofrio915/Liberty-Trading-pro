@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
-import { navItems } from './navConfig'
+import { navGroups } from './navConfig'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
 // ── Theme toggle ───────────────────────────────────────────────────────────────
@@ -149,38 +149,52 @@ export default function SidebarNav({ email, canAccessClub }: { email: string; ca
   const isAdmin = email === ADMIN_EMAIL
 
   return (
-    <nav className="flex-1 px-3 py-6 flex flex-col">
-      <div className="space-y-1 flex-1">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer text-sm ${
-              pathname === item.href
-                ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-400'
-                : 'text-gray-400 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <span className="text-base">{item.icon}</span>
-            <span className="flex-1">{item.label}</span>
-            {item.requiresClub && !canAccessClub && (
-              <span className="text-[10px]" style={{ color: '#444' }}>🔒</span>
+    <nav className="flex-1 px-3 py-4 flex flex-col">
+      <div className="flex-1 space-y-5">
+        {navGroups.map((group, gi) => (
+          <div key={gi}>
+            {group.label && (
+              <p className="px-4 mb-1.5 text-[9px] uppercase tracking-widest font-semibold"
+                style={{ color: 'var(--text-muted)', opacity: 0.5 }}>
+                {group.label}
+              </p>
             )}
-          </Link>
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const active = pathname === item.href
+                const locked = item.requiresClub && !canAccessClub
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-sm ${
+                      active
+                        ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-400'
+                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <span className="text-base">{item.icon}</span>
+                    <span className="flex-1">{item.label}</span>
+                    {locked && <span className="text-[10px]" style={{ color: '#444' }}>🔒</span>}
+                  </Link>
+                )
+              })}
+              {gi === navGroups.length - 1 && isAdmin && (
+                <Link
+                  href="/dashboard/leads"
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-sm ${
+                    pathname === '/dashboard/leads'
+                      ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-400'
+                      : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  <span className="text-base">📱</span>
+                  <span>Leads WA</span>
+                </Link>
+              )}
+            </div>
+          </div>
         ))}
-        {isAdmin && (
-          <Link
-            href="/dashboard/leads"
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer text-sm ${
-              pathname === '/dashboard/leads'
-                ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-400'
-                : 'text-gray-400 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <span className="text-base">📱</span>
-            <span>Leads WA</span>
-          </Link>
-        )}
       </div>
 
       {/* Bottom section */}
