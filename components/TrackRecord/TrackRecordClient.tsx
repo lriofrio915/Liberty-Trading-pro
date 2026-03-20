@@ -113,6 +113,9 @@ export default function TrackRecordClient({
   const [deleting, setDeleting] = useState(false)
   const [toast, setToast] = useState('')
   const [copied, setCopied] = useState(false)
+  const [shareModal, setShareModal] = useState<{ session: Session; mensaje: string } | null>(null)
+  const [socialModal, setSocialModal] = useState(false)
+  const [postingCommunity, setPostingCommunity] = useState(false)
 
   const publicUrl = userId
     ? `${process.env.NEXT_PUBLIC_APP_URL}/track-record/${userId}`
@@ -402,7 +405,7 @@ export default function TrackRecordClient({
         if (data.session) {
           setSessions(prev => [data.session, ...prev])
           closeModal()
-          showToast('Operación registrada correctamente')
+          setShareModal({ session: data.session, mensaje: '' })
         } else {
           throw new Error(data.error || 'Error al guardar')
         }
@@ -432,6 +435,29 @@ export default function TrackRecordClient({
     } finally {
       setDeleting(false)
     }
+  }
+
+  // ── Share to community ───────────────────────────────────────────────────────
+
+  const handleShareCommunity = async () => {
+    if (!shareModal) return
+    setPostingCommunity(true)
+    const { session, mensaje } = shareModal
+    const emoji = session.resultado === 'WIN' ? '✅' : session.resultado === 'LOSS' ? '❌' : '⚖️'
+    const tradeInfo = `${emoji} ${session.instrumento} ${session.direccion} — ${session.resultado} | PnL: $${session.pnlNeto.toFixed(2)}`
+    const contenido = mensaje.trim() ? `${mensaje.trim()}\n\n${tradeInfo}` : tradeInfo
+    await fetch('/api/comunidad', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tipo: 'OPERATIVA',
+        contenido,
+        imageUrl: session.screenshotUrl || undefined,
+      }),
+    })
+    setPostingCommunity(false)
+    setShareModal(null)
+    setSocialModal(true)
   }
 
   // ── PnL input color ──────────────────────────────────────────────────────────
@@ -1085,6 +1111,142 @@ export default function TrackRecordClient({
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
+
+      {/* ── Modal 1: Compartir en comunidad ──────────────────────────────── */}
+      {shareModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.85)' }}>
+          <div className="w-full max-w-md rounded-2xl border overflow-hidden"
+            style={{ background: '#0e0e0e', borderColor: 'rgba(255,255,255,0.08)' }}>
+
+            {/* Header */}
+            <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-white">📊 Publicar en la comunidad</h3>
+                <button
+                  onClick={() => { setShareModal(null); showToast('Operación registrada correctamente') }}
+                  className="text-[#555] hover:text-white transition-colors text-lg"
+                >✕</button>
+              </div>
+              <p className="text-xs mt-1" style={{ color: '#555' }}>
+                Tu trade acaba de guardarse. ¿Quieres compartirlo con la comunidad?
+              </p>
+            </div>
+
+            {/* Trade preview */}
+            <div className="px-5 pt-4 pb-2">
+              <div className="rounded-lg px-4 py-3 text-xs font-mono" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ color: shareModal.session.resultado === 'WIN' ? '#22c55e' : shareModal.session.resultado === 'LOSS' ? '#ef4444' : '#888' }}>
+                  {shareModal.session.resultado === 'WIN' ? '✅' : shareModal.session.resultado === 'LOSS' ? '❌' : '⚖️'}{' '}
+                  {shareModal.session.instrumento} {shareModal.session.direccion} — {shareModal.session.resultado}
+                </span>
+                <span className="ml-2" style={{ color: shareModal.session.pnlNeto >= 0 ? '#22c55e' : '#ef4444' }}>
+                  | PnL: ${shareModal.session.pnlNeto.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {/* Message input */}
+            <div className="px-5 py-3">
+              <p className="text-[10px] font-mono uppercase tracking-widest mb-2" style={{ color: '#555' }}>
+                Agrega un mensaje (opcional)
+              </p>
+              <textarea
+                value={shareModal.mensaje}
+                onChange={e => setShareModal(m => m ? { ...m, mensaje: e.target.value } : m)}
+                rows={4}
+                autoFocus
+                placeholder="Describe tu operación: qué viste, si seguiste el plan, aprendizajes..."
+                className="w-full bg-transparent text-sm leading-relaxed resize-none outline-none rounded-lg px-3 py-2 border focus:border-[#C9A84C]"
+                style={{ borderColor: 'rgba(255,255,255,0.08)', color: '#ccc' }}
+              />
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3 px-5 py-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
+              <button
+                onClick={handleShareCommunity}
+                disabled={postingCommunity}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-40"
+                style={{ background: '#C9A84C', color: '#080808' }}
+              >
+                {postingCommunity ? 'Publicando...' : '📢 Publicar en comunidad'}
+              </button>
+              <button
+                onClick={() => { setShareModal(null); showToast('Operación registrada correctamente') }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-mono transition-colors"
+                style={{ border: '1px solid rgba(255,255,255,0.1)', color: '#666' }}
+              >
+                No, gracias
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal 2: Compartir en redes sociales ─────────────────────────── */}
+      {socialModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.85)' }}>
+          <div className="w-full max-w-sm rounded-2xl border overflow-hidden"
+            style={{ background: '#0e0e0e', borderColor: 'rgba(255,255,255,0.08)' }}>
+
+            {/* Header */}
+            <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-white">¡Publicado en la comunidad!</h3>
+                <button onClick={() => { setSocialModal(false); showToast('¡Publicado en la comunidad!') }}
+                  className="text-[#555] hover:text-white transition-colors text-lg">✕</button>
+              </div>
+              <p className="text-xs mt-1" style={{ color: '#555' }}>
+                ¿También quieres compartirlo en Facebook o Instagram?
+              </p>
+            </div>
+
+            {/* Social buttons */}
+            <div className="px-5 py-5 flex flex-col gap-3">
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(publicUrl || window.location.href)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-80"
+                style={{ background: '#1877F2', color: '#fff' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                Compartir en Facebook
+              </a>
+
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(publicUrl || window.location.href)
+                  setSocialModal(false)
+                  showToast('Enlace copiado — pégalo en Instagram')
+                }}
+                className="flex items-center justify-center gap-3 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-80"
+                style={{ background: 'linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', color: '#fff' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                </svg>
+                Copiar enlace para Instagram
+              </button>
+            </div>
+
+            {/* Skip */}
+            <div className="px-5 pb-4">
+              <button
+                onClick={() => { setSocialModal(false); showToast('¡Publicado en la comunidad!') }}
+                className="w-full py-2 text-xs font-mono transition-colors"
+                style={{ color: '#444' }}
+              >
+                No, ya terminé
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
