@@ -169,7 +169,6 @@ interface ModalProps {
 function PlanModal({ mode, form, set, saving, onSubmit, onClose }: ModalProps) {
   return createPortal(
     <div
-      onClick={e => e.target === e.currentTarget && onClose()}
       style={{
         position: 'fixed',
         inset: 0,
@@ -193,15 +192,6 @@ function PlanModal({ mode, form, set, saving, onSubmit, onClose }: ModalProps) {
           padding: '2rem',
         }}
       >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          style={{ position: 'absolute', top: '1rem', right: '1rem', color: '#666', fontSize: '1.25rem', lineHeight: 1 }}
-          onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-          onMouseLeave={e => (e.currentTarget.style.color = '#666')}
-        >
-          ✕
-        </button>
 
         <div className="label-mono mb-1 text-[var(--gold)]">
           {mode === 'edit' ? 'Editar Plan' : 'Nuevo Plan'}
@@ -437,7 +427,7 @@ function PlanModal({ mode, form, set, saving, onSubmit, onClose }: ModalProps) {
             {saving ? 'Guardando...' : mode === 'edit' ? 'Guardar cambios' : 'Crear plan'}
           </button>
           <button onClick={onClose} className="btn-outline py-3 px-5 rounded-lg">
-            Cancelar
+            Volver
           </button>
         </div>
       </div>

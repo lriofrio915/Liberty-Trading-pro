@@ -844,7 +844,6 @@ export default function TrackRecordClient({
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.85)' }}>
           <div className="min-h-full flex justify-center px-4 py-6 md:py-12">
           <div className="card-panel w-full max-w-2xl h-fit relative">
-            <button onClick={closeModal} className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-white text-xl">✕</button>
 
             <div className="label-mono mb-1 text-[var(--gold)]">
               {modalMode === 'edit' ? 'Editar Operación' : 'Nueva Operación'}
@@ -1051,7 +1050,7 @@ export default function TrackRecordClient({
                   : modalMode === 'edit' ? 'Guardar cambios' : 'Guardar Operación'}
               </button>
               <button onClick={closeModal} className="btn-outline py-3 px-5 rounded-lg">
-                Cancelar
+                Volver
               </button>
             </div>
           </div>
