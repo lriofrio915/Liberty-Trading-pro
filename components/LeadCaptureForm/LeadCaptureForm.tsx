@@ -4,15 +4,20 @@ import { useState } from 'react'
 
 interface Props {
   programa?: 'INTEGRAL' | 'FUTUROS'
+  plan?: 'MENSUAL' | 'ANUAL'
   title?: string
   subtitle?: string
 }
 
 export default function LeadCaptureForm({
   programa,
+  plan,
   title = '¿Es este programa para ti?',
   subtitle = 'Déjanos tus datos y Vinces IA te contacta por WhatsApp para orientarte sin compromiso.',
 }: Props) {
+  const planToSend: 'MENSUAL' | 'ANUAL' =
+    plan ?? (programa === 'FUTUROS' ? 'ANUAL' : 'MENSUAL')
+
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -29,7 +34,7 @@ export default function LeadCaptureForm({
       const res = await fetch('/api/leads/capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), phone: phone.trim(), programa }),
+        body: JSON.stringify({ name: name.trim(), phone: phone.trim(), plan: planToSend }),
       })
 
       const data = await res.json()

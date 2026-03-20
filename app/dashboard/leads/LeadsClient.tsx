@@ -96,7 +96,16 @@ const ESTADO_COLOR: Record<string, string> = {
 
 const PERFIL_COLOR: Record<string, string> = {
   INTEGRAL: 'bg-purple-500/20 text-purple-400',
-  FUTUROS: 'bg-cyan-500/20 text-cyan-400',
+  FUTUROS:  'bg-cyan-500/20 text-cyan-400',
+  MENSUAL:  'bg-purple-500/20 text-purple-400',
+  ANUAL:    'bg-cyan-500/20 text-cyan-400',
+}
+
+const PERFIL_LABEL: Record<string, string> = {
+  INTEGRAL: 'Plan Pro Mensual',
+  FUTUROS:  'Plan Pro Anual',
+  MENSUAL:  'Plan Pro Mensual',
+  ANUAL:    'Plan Pro Anual',
 }
 
 const PLAN_COLOR: Record<string, string> = {
@@ -175,7 +184,7 @@ function LeadModal({ lead, onClose, onDelete, onResetEstado }: {
             <div className="flex items-center gap-2">
               {lead.perfil && (
                 <span className={`text-xs px-2 py-1 rounded-full font-medium ${PERFIL_COLOR[lead.perfil] || 'bg-gray-500/20 text-gray-400'}`}>
-                  {lead.perfil === 'FUTUROS' ? 'Maestría Futuros' : 'Mentoría Integral'}
+                  {PERFIL_LABEL[lead.perfil] || lead.perfil}
                 </span>
               )}
               <span className={`text-xs px-2 py-1 rounded-full font-medium ${ESTADO_COLOR[lead.estado] || 'bg-gray-500/20 text-gray-400'}`}>
@@ -509,8 +518,10 @@ function LeadsTab() {
   const totalPages = Math.ceil(total / 20)
   const vendidos = stats?.porEstado.find(e => e.estado === 'VENDIDO')?._count?.estado || 0
   const enCTA    = stats?.porEstado.find(e => e.estado === 'CTA')?._count?.estado || 0
-  const integral = stats?.porPerfil.find(e => e.perfil === 'INTEGRAL')?._count?.perfil || 0
-  const futuros  = stats?.porPerfil.find(e => e.perfil === 'FUTUROS')?._count?.perfil || 0
+  const integral = (stats?.porPerfil.find(e => e.perfil === 'INTEGRAL')?._count?.perfil || 0) +
+                   (stats?.porPerfil.find(e => e.perfil === 'MENSUAL')?._count?.perfil || 0)
+  const futuros  = (stats?.porPerfil.find(e => e.perfil === 'FUTUROS')?._count?.perfil || 0) +
+                   (stats?.porPerfil.find(e => e.perfil === 'ANUAL')?._count?.perfil || 0)
 
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
 
@@ -587,11 +598,11 @@ function LeadsTab() {
       {(integral > 0 || futuros > 0) && (
         <div className="grid grid-cols-2 gap-4">
           <div className="card rounded-xl p-4 border-l-2 border-purple-500">
-            <p className="text-xs text-[var(--text-muted)] mb-1">Mentoría Integral</p>
+            <p className="text-xs text-[var(--text-muted)] mb-1">Plan Pro Mensual</p>
             <p className="text-xl font-black text-purple-400">{integral} leads</p>
           </div>
           <div className="card rounded-xl p-4 border-l-2 border-cyan-500">
-            <p className="text-xs text-[var(--text-muted)] mb-1">Maestría Futuros</p>
+            <p className="text-xs text-[var(--text-muted)] mb-1">Plan Pro Anual</p>
             <p className="text-xl font-black text-cyan-400">{futuros} leads</p>
           </div>
         </div>
@@ -608,8 +619,10 @@ function LeadsTab() {
             </select>
             <select value={filtroPerfil} onChange={e => { setFiltroPerfil(e.target.value); setPage(1) }} className="input text-sm py-2 px-3 rounded-lg">
               <option value="">Todos los perfiles</option>
-              <option value="INTEGRAL">Mentoría Integral</option>
-              <option value="FUTUROS">Maestría Futuros</option>
+              <option value="MENSUAL">Plan Pro Mensual</option>
+              <option value="INTEGRAL">Plan Pro Mensual (legacy)</option>
+              <option value="ANUAL">Plan Pro Anual</option>
+              <option value="FUTUROS">Plan Pro Anual (legacy)</option>
             </select>
             {(filtroEstado || filtroPerfil) && (
               <button onClick={() => { setFiltroEstado(''); setFiltroPerfil(''); setPage(1) }} className="text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] px-3 py-2 rounded-lg border border-[var(--border)] transition-colors">
@@ -655,7 +668,7 @@ function LeadsTab() {
                       <td className="px-4 py-3 hidden md:table-cell">
                         {lead.perfil ? (
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${PERFIL_COLOR[lead.perfil] || 'bg-gray-500/20 text-gray-400'}`}>
-                            {lead.perfil === 'FUTUROS' ? 'Futuros' : 'Integral'}
+                            {PERFIL_LABEL[lead.perfil] || lead.perfil}
                           </span>
                         ) : <span className="text-[var(--text-muted)] text-xs">—</span>}
                       </td>

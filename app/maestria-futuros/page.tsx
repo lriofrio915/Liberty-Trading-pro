@@ -1,15 +1,10 @@
 import Navbar from '@/components/Navbar/Navbar'
 import Footer from '@/components/Footer/Footer'
 import LeadCaptureForm from '@/components/LeadCaptureForm/LeadCaptureForm'
+import PersonalContactForm from '@/components/PersonalContactForm/PersonalContactForm'
+import VincesWidget from '@/components/VincesWidget/VincesWidget'
 
-const HOTMART = 'https://go.hotmart.com/R33067457O'
-const VINCES_WA = 'https://wa.me/18287149177?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20la%20Maestr%C3%ADa%20en%20Futuros%20NQ%2FMNQ'
-
-const WA_ICON = (
-  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.464 3.488"/>
-  </svg>
-)
+const HOTMART_ANUAL = 'https://pay.hotmart.com/L104900408S?checkoutMode=2'
 
 export default function MaestriaFuturosPage() {
   return (
@@ -30,7 +25,7 @@ export default function MaestriaFuturosPage() {
               style={{ background: 'rgba(201,168,76,0.06)' }}>
               <span className="w-2 h-2 rounded-full bg-[var(--green)] pulse-dot" />
               <span className="font-mono-custom text-[11px] text-[var(--gold)] tracking-wider uppercase">
-                12 Meses · Futuros NQ/MNQ · NinjaTrader 8
+                Plan Pro Anual · Mejor valor · ~$54/mes · Futuros NQ/MNQ
               </span>
             </div>
 
@@ -40,17 +35,17 @@ export default function MaestriaFuturosPage() {
             </h1>
 
             <p className="text-lg text-[var(--text-secondary)] max-w-2xl mb-10 leading-relaxed">
-              Maestría en Trading Intradía de Futuros NQ/MNQ — el programa de 12 meses donde
-              Luis Riofrio te entrena con su sistema real para operar el Nasdaq con disciplina,
-              método y datos verificables.
+              Accede al Club Liberty Trading Pro con el <strong className="text-[var(--text-primary)]">Plan Pro Anual</strong> —
+              el sistema completo de Luis para operar Futuros Nasdaq (NQ/MNQ), mentoría 1 a 1,
+              Vinces IA y todo el contenido de inversión. Un pago al año, acceso a todo.
             </p>
 
             {/* Stats */}
             <div className="flex flex-wrap gap-8 mb-12">
               {[
-                { val: '12 meses', lbl: 'Programa completo' },
-                { val: '1 a 1', lbl: 'Con Luis' },
-                { val: '$1,049', lbl: 'Inversión única' },
+                { val: '$649', lbl: 'por año' },
+                { val: '~$54', lbl: 'al mes' },
+                { val: 'Ahorras $299', lbl: 'vs mensual' },
                 { val: 'NQ/MNQ', lbl: 'Instrumento CME' },
               ].map((s) => (
                 <div key={s.lbl}>
@@ -80,27 +75,70 @@ export default function MaestriaFuturosPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <a href={HOTMART} target="_blank" rel="noopener noreferrer"
+              <a href={HOTMART_ANUAL} target="_blank" rel="noopener noreferrer"
                 className="btn-gold text-sm py-4 px-8 rounded-lg">
-                Quiero inscribirme — $1,049 →
+                Suscribirme al Plan Anual — $649 →
               </a>
-              <a href={VINCES_WA} target="_blank" rel="noopener noreferrer"
+              <a href="#contacto-vinces"
                 className="btn-outline text-sm py-4 px-8 rounded-lg inline-flex items-center justify-center gap-2">
-                {WA_ICON}
-                Tengo dudas, quiero hablar
+                <svg viewBox="0 0 36 36" fill="none" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="7" y="7" width="22" height="16" rx="4" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5"/>
+                  <circle cx="13" cy="15" r="2.5" fill="currentColor"/>
+                  <circle cx="23" cy="15" r="2.5" fill="currentColor"/>
+                </svg>
+                Hablar con Vinces primero
               </a>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── PARA QUIÉN ES ──────────────────────────────────────── */}
-      <section className="py-24 px-4 border-y border-[var(--border)]"
+      {/* ─── QUÉ INCLUYE EL PLAN ────────────────────────────────── */}
+      <section className="py-16 px-4 border-y border-[var(--border)]"
         style={{ background: 'var(--bg-secondary)' }}>
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="label-mono mb-2">Plan Pro Anual — $649/año · ~$54/mes</div>
+            <h2 className="headline text-4xl text-[var(--text-primary)]">
+              Todo incluido.<br /><span className="gradient-gold">Sin excepciones.</span>
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { icon: '📈', title: 'Sistema NQ/MNQ completo', desc: 'El sistema real de Luis: rompimiento y consecución en Futuros Nasdaq. Clases 1 a 1.' },
+              { icon: '🎓', title: 'Mentoría Integral incluida', desc: 'Portafolio en acciones, ETFs y cripto. Todo el contenido de inversión sin costo adicional.' },
+              { icon: '🤖', title: 'Vinces IA como coach diario', desc: 'Registra tus trades, calcula métricas y genera reportes de coaching personalizados cada semana.' },
+              { icon: '👥', title: 'Mentoring grupal + 1a1', desc: 'Sesiones grupales de análisis de mercado y revisiones 1 a 1 con Luis cada mes.' },
+              { icon: '🌐', title: 'Comunidad + Monitor Mundial', desc: 'Acceso a la comunidad privada activa y al monitor geopolítico y macro de Luis.' },
+              { icon: '💰', title: 'Máximo ahorro', desc: 'Pagas $649/año en vez de $948 (12 × $79). Ahorras $299 con el mismo acceso completo.' },
+            ].map((f) => (
+              <div key={f.title} className="card py-7">
+                <div className="text-3xl mb-3">{f.icon}</div>
+                <h3 className="font-bold text-sm mb-2">{f.title}</h3>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 p-6 rounded-xl border border-[var(--gold-dark)] text-center"
+            style={{ background: 'rgba(201,168,76,0.04)' }}>
+            <p className="text-sm text-[var(--text-secondary)]">
+              ¿Prefieres empezar sin compromisos anuales?{' '}
+              <a href="/mentoria-integral" className="text-[var(--gold)] hover:underline font-semibold">
+                Prueba el Plan Pro Mensual ($79/mes)
+              </a>{' '}
+              y actualiza a anual cuando estés seguro.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── PARA QUIÉN ES ──────────────────────────────────────── */}
+      <section className="py-24 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14">
             <div>
-              <div className="label-mono mb-3 text-[var(--gold)]">Este programa es para ti si…</div>
+              <div className="label-mono mb-3 text-[var(--gold)]">Este plan es para ti si…</div>
               <h2 className="headline text-4xl text-[var(--text-primary)] mb-8">
                 Quieres vivir del<br />trading como profesión
               </h2>
@@ -110,8 +148,8 @@ export default function MaestriaFuturosPage() {
                   'Tienes tiempo para practicar y operar (al menos en la apertura del mercado)',
                   'Estás dispuesto a construir un track record profesional verificable',
                   'Buscas disciplina, método y sistema — no señales ni atajos',
-                  'Quieres ser considerado como operador en fondos o empresas de prop trading',
-                  'Te comprometes a un proceso serio de 12 meses con Luis como mentor',
+                  'Quieres ser considerado como operador en fondos o prop trading',
+                  'Ya sabes que esto es tu camino y quieres el mejor precio posible',
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
                     <span className="text-[var(--gold)] mt-0.5 flex-shrink-0 text-base">✓</span>
@@ -152,12 +190,13 @@ export default function MaestriaFuturosPage() {
       </section>
 
       {/* ─── QUÉ APRENDERÁS ─────────────────────────────────────── */}
-      <section className="py-24 px-4">
+      <section className="py-24 px-4 border-y border-[var(--border)]"
+        style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-5xl mx-auto">
           <div className="mb-14 text-center">
-            <div className="label-mono mb-3">Sistema completo</div>
+            <div className="label-mono mb-3">Sistema completo — incluido en tu suscripción</div>
             <h2 className="headline text-5xl text-[var(--text-primary)]">
-              Lo que construirás<br />en <span className="gradient-gold">12 meses</span>
+              Lo que construirás<br />con tu <span className="gradient-gold">membresía anual</span>
             </h2>
           </div>
 
@@ -206,43 +245,13 @@ export default function MaestriaFuturosPage() {
               {
                 n: '09',
                 title: 'Mentoría Integral incluida',
-                desc: 'Todo el contenido de inversión (DCA, IBKR, portafolio) está incluido en este programa sin costo adicional.',
+                desc: 'Todo el contenido de inversión (DCA, IBKR, portafolio) está incluido en tu suscripción sin costo adicional.',
               },
             ].map((m) => (
               <div key={m.n} className="card hover:border-[var(--gold-dark)] transition-all group">
                 <div className="label-mono text-[10px] text-[var(--gold)] mb-2">{m.n}</div>
                 <h3 className="font-bold text-sm mb-2 group-hover:text-[var(--gold)] transition-colors">{m.title}</h3>
                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{m.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── FORMATO ────────────────────────────────────────────── */}
-      <section className="py-24 px-4 border-y border-[var(--border)]"
-        style={{ background: 'var(--bg-secondary)' }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="mb-14 text-center">
-            <div className="label-mono mb-3">Cómo funciona</div>
-            <h2 className="headline text-5xl text-[var(--text-primary)]">
-              Formato del <span className="gradient-gold">programa</span>
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              { icon: '🎯', title: 'Clases 1 a 1 con Luis', desc: 'Sesiones personalizadas en vivo adaptadas a tu progreso y horario.' },
-              { icon: '📚', title: 'Biblioteca de videos', desc: 'Acceso a todo el material grabado: teoría, análisis y revisiones de operativas.' },
-              { icon: '🤖', title: 'Vinces IA diario', desc: 'El agente de IA analiza tus trades, métricas y genera reportes de coaching cada semana.' },
-              { icon: '👥', title: 'Mentoring grupal', desc: 'Sesiones grupales para análisis de mercado, preguntas y revisión de trades en comunidad.' },
-              { icon: '🌐', title: 'Comunidad privada', desc: 'Acceso a la comunidad con análisis diarios, oportunidades y traders en formación.' },
-              { icon: '💬', title: 'Soporte WhatsApp', desc: 'Acceso directo a Luis durante todo el año. Dudas técnicas y seguimiento continuo.' },
-            ].map((f) => (
-              <div key={f.title} className="card py-7">
-                <div className="text-3xl mb-3">{f.icon}</div>
-                <h3 className="font-bold text-sm mb-2">{f.title}</h3>
-                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -324,8 +333,12 @@ export default function MaestriaFuturosPage() {
           <div className="space-y-4">
             {[
               {
+                q: '¿Cuánto cuesta el Plan Pro Anual?',
+                a: '$649 al año, un único pago. Equivale a ~$54/mes. Frente al Plan Mensual ($79 × 12 = $948), ahorras $299.',
+              },
+              {
                 q: '¿Necesito experiencia previa en trading?',
-                a: 'No necesariamente. El programa incluye la Mentoría Integral, así que empieza desde bases sólidas y avanza hasta trading intradia profesional.',
+                a: 'No necesariamente. La suscripción incluye el contenido de Mentoría Integral, así que empieza desde bases sólidas y avanza hasta trading intradia profesional.',
               },
               {
                 q: '¿Qué horario necesito tener disponible?',
@@ -336,16 +349,12 @@ export default function MaestriaFuturosPage() {
                 a: 'Computadora, conexión a internet y capital simulado para practicar. NinjaTrader 8 tiene cuenta demo gratuita. No necesitas capital real hasta que estés listo.',
               },
               {
-                q: '¿Cuánto capital necesito para operar el NQ real?',
-                a: 'El MNQ (micro) requiere menos capital que el NQ. Luis te guía en cuándo y cómo hacer la transición del simulador a cuenta real según tu desempeño.',
-              },
-              {
                 q: '¿Qué es Vinces IA y cómo me ayuda?',
                 a: 'Vinces es el agente de IA integrado en la plataforma que registra tus operaciones, calcula métricas (win rate, profit factor, drawdown) y genera reportes de coaching semanales.',
               },
               {
-                q: '¿El programa realmente dura 12 meses?',
-                a: 'Sí. Convertirse en trader profesional no es un proceso de semanas. 12 meses es el tiempo real que Luis considera necesario para desarrollar consistencia y criterio.',
+                q: '¿Puedo empezar con el Plan Mensual y cambiar al Anual?',
+                a: 'Sí. Puedes empezar con el Plan Mensual ($79/mes) para probar sin compromiso y cuando estés seguro, cambiar al Plan Anual y aprovechar el ahorro.',
               },
             ].map((faq) => (
               <div key={faq.q} className="card">
@@ -357,62 +366,65 @@ export default function MaestriaFuturosPage() {
         </div>
       </section>
 
-      {/* ─── FORMULARIO CAPTACIÓN ───────────────────────────────── */}
-      <section className="py-24 px-4">
+      {/* ─── FORMULARIO VINCES ──────────────────────────────────── */}
+      <section id="contacto-vinces" className="py-24 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
             <div>
               <div className="label-mono mb-3 text-[var(--gold)]">Sin compromiso</div>
               <h2 className="headline text-4xl text-[var(--text-primary)] mb-5">
                 ¿Tienes dudas?<br />Vinces IA te orienta<br />
-                <span className="gradient-gold">gratis por WhatsApp</span>
+                <span className="gradient-gold">en segundos</span>
               </h2>
               <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
-                Deja tu nombre y número. Vinces IA te escribe en segundos,
-                entiende tu perfil y te dice si la Maestría en Futuros es para ti —
-                sin presión y sin venderte nada que no necesites.
+                Deja tu nombre y número. Vinces IA te escribe por WhatsApp,
+                evalúa tu perfil y te dice si el Plan Pro Anual es lo que necesitas —
+                y si no, te redirige al plan correcto.
               </p>
               <div className="space-y-2">
                 {[
                   '✓ Responde en segundos, cualquier hora',
                   '✓ Evalúa si tienes el perfil para trading profesional',
-                  '✓ Si no eres el perfil, te redirige al programa correcto',
+                  '✓ Si el Plan Mensual se adapta mejor, te lo dice',
                 ].map((item) => (
                   <p key={item} className="text-sm text-[var(--text-secondary)] font-mono">{item}</p>
                 ))}
               </div>
             </div>
             <LeadCaptureForm
-              programa="FUTUROS"
+              plan="ANUAL"
               title="Habla con Vinces IA ahora"
-              subtitle="Deja tus datos y te contactamos por WhatsApp en segundos."
+              subtitle="Deja tus datos y Vinces te contacta por WhatsApp en segundos."
             />
           </div>
         </div>
       </section>
 
       {/* ─── CTA FINAL ──────────────────────────────────────────── */}
-      <section className="py-32 px-4">
+      <section className="py-24 px-4 border-y border-[var(--border)]"
+        style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-3xl mx-auto text-center">
-          <div className="label-mono mb-4 text-[var(--gold)]">Maestría en Trading Intradía de Futuros NQ/MNQ</div>
+          <div className="label-mono mb-4 text-[var(--gold)]">Plan Pro Anual · Liberty Trading Pro</div>
           <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)] mb-6">
-            12 meses para<br />cambiar tu carrera<br />
-            <span className="gradient-gold">para siempre</span>
+            Todo el sistema.<br />Un solo pago.<br />
+            <span className="gradient-gold">$649/año</span>
           </h2>
-          <p className="text-[var(--text-secondary)] mb-10 max-w-lg mx-auto leading-relaxed">
+          <p className="text-[var(--text-secondary)] mb-4 max-w-lg mx-auto leading-relaxed">
             El sistema real de Luis. Clases 1 a 1. Vinces IA como mentor de métricas.
-            Track record verificable desde el primer día — $1,049 únicos.
+            Track record verificable desde el primer día.
+          </p>
+          <p className="text-sm text-[var(--text-muted)] mb-10">
+            ~$54/mes · Ahorras $299 frente al Plan Mensual
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-            <a href={HOTMART} target="_blank" rel="noopener noreferrer"
+            <a href={HOTMART_ANUAL} target="_blank" rel="noopener noreferrer"
               className="btn-gold text-sm py-4 px-10 rounded-xl">
-              Inscribirme ahora — $1,049 →
+              Suscribirme al Plan Anual — $649 →
             </a>
-            <a href={VINCES_WA} target="_blank" rel="noopener noreferrer"
-              className="btn-outline text-sm py-4 px-8 rounded-xl inline-flex items-center justify-center gap-2">
-              {WA_ICON}
-              Hablar con Vinces IA
+            <a href="#contacto-luis"
+              className="btn-outline text-sm py-4 px-8 rounded-xl">
+              Prefiero que Luis me contacte
             </a>
           </div>
 
@@ -422,22 +434,44 @@ export default function MaestriaFuturosPage() {
         </div>
       </section>
 
+      {/* ─── CONTACTO PERSONAL LUIS ─────────────────────────────── */}
+      <section id="contacto-luis" className="py-24 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+            <div>
+              <div className="label-mono mb-3 text-[var(--gold)]">Trato personal</div>
+              <h2 className="headline text-4xl text-[var(--text-primary)] mb-5">
+                ¿Prefieres hablar<br />directamente con Luis?
+              </h2>
+              <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
+                Si tienes preguntas específicas sobre el Plan Pro Anual o quieres
+                una orientación personalizada antes de comprometerte,
+                <strong className="text-[var(--text-primary)]"> Luis Riofrio te contactará directamente</strong>{' '}
+                por WhatsApp o email. Sin automatizaciones.
+              </p>
+              <div className="space-y-2">
+                {[
+                  '✓ Luis revisa tu caso personalmente',
+                  '✓ Te orienta sobre qué plan se adapta mejor a ti',
+                  '✓ Respuesta en menos de 24 horas',
+                ].map((item) => (
+                  <p key={item} className="text-sm text-[var(--text-secondary)] font-mono">{item}</p>
+                ))}
+              </div>
+            </div>
+            <PersonalContactForm
+              plan="ANUAL"
+              title="Quiero que Luis me contacte"
+              subtitle="Deja tus datos y Luis Riofrio se pondrá en contacto contigo personalmente."
+            />
+          </div>
+        </div>
+      </section>
+
       <Footer />
 
-      {/* ─── BOTÓN FLOTANTE VINCES ──────────────────────────────── */}
-      <a href={VINCES_WA} target="_blank" rel="noopener noreferrer"
-        title="Hablar con Vinces IA" className="fixed bottom-24 right-6 z-50 flex items-center gap-2.5 group">
-        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-primary)] text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
-          Hablar con Vinces IA
-        </span>
-        <div className="relative w-14 h-14 rounded-full shadow-2xl flex items-center justify-center"
-          style={{ background: '#25D366' }}>
-          <span className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ background: '#25D366' }} />
-          <svg className="w-7 h-7 text-white relative z-10" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.464 3.488"/>
-          </svg>
-        </div>
-      </a>
+      {/* ─── VINCES WIDGET FLOTANTE ─────────────────────────────── */}
+      <VincesWidget mode="landing" />
     </main>
   )
 }
