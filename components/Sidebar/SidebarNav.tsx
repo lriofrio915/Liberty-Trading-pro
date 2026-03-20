@@ -188,8 +188,8 @@ export default function SidebarNav({ email, canAccessClub }: { email: string; ca
                       : 'text-gray-400 hover:bg-white/5 hover:text-white'
                   }`}
                 >
-                  <span className="text-base">📱</span>
-                  <span>Leads WA</span>
+                  <span className="text-base">⚙️</span>
+                  <span>Administración</span>
                 </Link>
               )}
             </div>

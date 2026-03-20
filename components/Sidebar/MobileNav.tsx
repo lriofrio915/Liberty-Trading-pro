@@ -65,7 +65,7 @@ export default function MobileNav({ email, canAccessClub }: { email: string; can
     window.location.href = '/'
   }
 
-  const adminItem = isAdmin ? { href: '/dashboard/leads', icon: '📱', label: 'Leads WA', requiresClub: false } : null
+  const adminItem = isAdmin ? { href: '/dashboard/leads', icon: '⚙️', label: 'Administración', requiresClub: false } : null
 
   return (
     <>
