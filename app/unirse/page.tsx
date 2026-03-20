@@ -429,7 +429,7 @@ export default function UnirsePage() {
               {/* Card header */}
               <div className="px-6 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
                 <div className="text-[10px] font-mono tracking-widest uppercase mb-1" style={{ color: '#C9A84C' }}>
-                  {plan === 'ANUAL' ? 'Club Anual · $649/año' : 'Club Mensual · $79/mes'}
+                  {plan === 'ANUAL' ? 'Plan Pro Anual · $649/año' : 'Plan Pro Mensual · $79/mes'}
                 </div>
                 <h2 className="text-xl font-black text-white" style={{ fontFamily: 'Georgia, serif' }}>
                   Reserva tu lugar

@@ -1,19 +1,5 @@
 'use client'
 
-import Link from 'next/link'
-
-const ALL_FEATURES = [
-  { icon: '🎓', text: 'Mentoría Integral de Mercados Financieros (desde cero)' },
-  { icon: '📈', text: 'Especialización en Day Trading — Futuros NQ/MNQ Nasdaq' },
-  { icon: '🤝', text: 'Mentorías 1:1 personalizadas con Luis cada mes' },
-  { icon: '🤖', text: 'Vinces IA — coaching diario personalizado con IA' },
-  { icon: '💡', text: 'Reportes de oportunidades en acciones y ETFs' },
-  { icon: '🌐', text: 'Monitor Mundial — geopolítica y macro en tiempo real' },
-  { icon: '📊', text: 'Track record verificable — operaciones reales de Luis' },
-  { icon: '📄', text: 'Reportes de rendimiento semanales y mensuales' },
-  { icon: '👥', text: 'Comunidad privada activa — acceso mientras seas miembro' },
-]
-
 export default function Pricing() {
   return (
     <section id="precios" className="py-24 px-4">
@@ -21,30 +7,29 @@ export default function Pricing() {
 
         {/* Header */}
         <div className="mb-14 text-center">
-          <div className="label-mono mb-3">Club Liberty Trading</div>
+          <div className="label-mono mb-3">Plan Pro · Liberty Trading</div>
           <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)]">
             Una suscripción,<br />
             <span className="gradient-gold">acceso a todo</span>
           </h2>
           <p className="text-[var(--text-secondary)] mt-4 max-w-xl mx-auto">
-            Aprende trading de cero a profesional con Luis Riofrio. Paga mientras quieras pertenecer al club —
+            Aprende trading de cero a profesional con Luis Riofrio. Paga mientras quieras pertenecer —
             sin compromisos, sin contratos largos.
           </p>
         </div>
 
-        {/* ── SUBSCRIPTION CARDS ───────────────────────── */}
+        {/* ── PLANES ───────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 max-w-3xl mx-auto">
 
-          {/* Card 1 — Mensual */}
+          {/* Plan Mensual */}
           <div className="card-panel relative overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none opacity-5"
               style={{ background: 'radial-gradient(circle, var(--gold) 0%, transparent 70%)' }} />
 
             <div className="label-mono mb-2">Mensual · Cancela cuando quieras</div>
-            <h3 className="headline text-3xl text-[var(--text-primary)] mb-1">Club Mensual</h3>
+            <h3 className="headline text-3xl text-[var(--text-primary)] mb-1">Pro Mensual</h3>
             <p className="text-xs text-[var(--text-secondary)] mb-5 leading-relaxed">
-              Ideal si quieres probar el trading sin comprometer demasiado. Con un solo mes ya sabrás si esto es para ti —
-              y si decides quedarte.
+              Ideal si quieres probar el trading sin comprometer demasiado. Con un solo mes ya sabrás si esto es para ti.
             </p>
 
             <div className="flex items-baseline gap-1 mb-6">
@@ -53,7 +38,17 @@ export default function Pricing() {
             </div>
 
             <ul className="space-y-2 mb-8">
-              {ALL_FEATURES.map((f) => (
+              {[
+                { icon: '🎓', text: 'Mentoría Integral de Mercados Financieros (desde cero)' },
+                { icon: '📈', text: 'Especialización en Day Trading — Futuros NQ/MNQ Nasdaq' },
+                { icon: '🤝', text: 'Mentorías 1:1 personalizadas con Luis cada mes' },
+                { icon: '🤖', text: 'Vinces IA — coaching diario personalizado con IA' },
+                { icon: '💡', text: 'Reportes de oportunidades en acciones y ETFs' },
+                { icon: '🌐', text: 'Monitor Mundial — geopolítica y macro en tiempo real' },
+                { icon: '📊', text: 'Track record verificable — operaciones reales de Luis' },
+                { icon: '📄', text: 'Reportes de rendimiento semanales y mensuales' },
+                { icon: '👥', text: 'Comunidad privada activa' },
+              ].map((f) => (
                 <li key={f.text} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
                   <span className="flex-shrink-0 mt-0.5">{f.icon}</span>
                   <span>{f.text}</span>
@@ -65,12 +60,12 @@ export default function Pricing() {
               href="https://pay.hotmart.com/R104900326X?checkoutMode=2"
               onClick={() => false}
               className="hotmart-fb hotmart__button-checkout btn-outline text-sm py-3.5 px-6 rounded-lg w-full text-center block">
-              Empezar por $79/mes →
+              Unirme al Plan Pro Mensual →
             </a>
             <p className="text-center label-mono text-[10px] mt-3">Sin permanencia · Cancela cuando quieras</p>
           </div>
 
-          {/* Card 2 — Anual DESTACADO */}
+          {/* Plan Anual DESTACADO */}
           <div className="relative rounded-2xl overflow-hidden border border-[var(--gold)] glow-gold-sm"
             style={{ background: 'rgba(201,168,76,0.04)' }}>
             <div className="p-7">
@@ -78,10 +73,10 @@ export default function Pricing() {
                 <div className="label-mono text-[var(--gold)]">Anual · Pago único al año</div>
                 <span className="btn-gold text-[10px] py-1 px-3 rounded-full tracking-widest flex-shrink-0 ml-2">MEJOR VALOR</span>
               </div>
-              <h3 className="headline text-3xl text-[var(--text-primary)] mb-1">Club Anual</h3>
+              <h3 className="headline text-3xl text-[var(--text-primary)] mb-1">Pro Anual</h3>
               <p className="text-xs text-[var(--text-secondary)] mb-5 leading-relaxed">
-                Para quien ya decidió que el trading es su camino. Paga una vez al año y
-                accede a todo sin interrupciones — te ahorras $299 vs el plan mensual.
+                Para quien ya decidió que el trading es su camino. Paga una vez al año —
+                te ahorras $299 vs el plan mensual.
               </p>
 
               <div className="flex items-baseline gap-2 mb-1">
@@ -97,7 +92,17 @@ export default function Pricing() {
               </div>
 
               <ul className="space-y-2 mb-8">
-                {ALL_FEATURES.map((f) => (
+                {[
+                  { icon: '🎓', text: 'Mentoría Integral de Mercados Financieros (desde cero)' },
+                  { icon: '📈', text: 'Especialización en Day Trading — Futuros NQ/MNQ Nasdaq' },
+                  { icon: '🤝', text: 'Mentorías 1:1 personalizadas con Luis cada mes' },
+                  { icon: '🤖', text: 'Vinces IA — coaching diario personalizado con IA' },
+                  { icon: '💡', text: 'Reportes de oportunidades en acciones y ETFs' },
+                  { icon: '🌐', text: 'Monitor Mundial — geopolítica y macro en tiempo real' },
+                  { icon: '📊', text: 'Track record verificable — operaciones reales de Luis' },
+                  { icon: '📄', text: 'Reportes de rendimiento semanales y mensuales' },
+                  { icon: '👥', text: 'Comunidad privada activa' },
+                ].map((f) => (
                   <li key={f.text} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
                     <span className="flex-shrink-0 mt-0.5">{f.icon}</span>
                     <span>{f.text}</span>
@@ -109,7 +114,7 @@ export default function Pricing() {
                 href="https://pay.hotmart.com/L104900408S?checkoutMode=2"
                 onClick={() => false}
                 className="hotmart-fb hotmart__button-checkout btn-gold text-sm py-3.5 px-6 rounded-lg w-full text-center block">
-                Unirme al Club Anual →
+                Unirme al Plan Pro Anual →
               </a>
               <p className="text-center label-mono text-[10px] mt-3">Pago único por 12 meses completos</p>
             </div>

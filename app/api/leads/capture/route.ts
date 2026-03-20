@@ -30,7 +30,7 @@ async function sendWA(phone: string, text: string) {
 }
 
 async function sendConfirmationEmail(name: string, email: string, plan: string) {
-  const planLabel = plan === 'ANUAL' ? 'Club Anual ($649/año)' : 'Club Mensual ($79/mes)'
+  const planLabel = plan === 'ANUAL' ? 'Plan Pro Anual ($649/año)' : 'Plan Pro Mensual ($79/mes)'
   const planLink  = plan === 'ANUAL' ? LINKS.ANUAL : LINKS.MENSUAL
 
   await resend.emails.send({
@@ -84,7 +84,7 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
           <a href="${planLink}"
             style="display:inline-block;background:#C9A84C;color:#000;font-weight:700;font-size:14px;
                    padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;">
-            Unirme al ${plan === 'ANUAL' ? 'Club Anual' : 'Club Mensual'} →
+            Unirme al ${plan === 'ANUAL' ? 'Plan Pro Anual' : 'Plan Pro Mensual'} →
           </a>
         </div>
 
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
     }
 
     const planNorm: 'MENSUAL' | 'ANUAL' = plan === 'ANUAL' ? 'ANUAL' : 'MENSUAL'
-    const planLabel = planNorm === 'ANUAL' ? 'Club Anual ($649/año)' : 'Club Mensual ($79/mes)'
+    const planLabel = planNorm === 'ANUAL' ? 'Plan Pro Anual ($649/año)' : 'Plan Pro Mensual ($79/mes)'
 
     const existing = await (prisma as any).whatsappLead.findUnique({
       where: { phone: cleanedPhone },
@@ -166,8 +166,8 @@ export async function POST(req: NextRequest) {
 
     // Construir mensajes
     const planCtx = planNorm === 'ANUAL'
-      ? 'Vi que te interesa el Club Anual — la mejor opción si ya decidiste que el trading es tu camino. '
-      : 'Vi que te interesa el Club Mensual — perfecto para empezar sin compromisos. '
+      ? 'Vi que te interesa el Plan Pro Anual — la mejor opción si ya decidiste que el trading es tu camino. '
+      : 'Vi que te interesa el Plan Pro Mensual — perfecto para empezar sin compromisos. '
 
     const mensajeLead =
       `¡Hola ${name.trim()}! 👋 Soy Vinces, el asistente del Club Liberty Trading.\n\n` +

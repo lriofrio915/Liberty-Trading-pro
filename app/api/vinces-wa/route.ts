@@ -47,8 +47,8 @@ QUÉ INCLUYE EL CLUB (ambos planes tienen TODO):
 - Comunidad privada activa
 
 CLAVE DE RECOMENDACIÓN DE PLAN:
-- ¿Quiere probar primero o tiene presupuesto ajustado? → Club Mensual ($79/mes)
-- ¿Ya está decidido y quiere el mejor precio? → Club Anual ($649/año, ahorra $299)
+- ¿Quiere probar primero o tiene presupuesto ajustado? → Plan Pro Mensual ($79/mes)
+- ¿Ya está decidido y quiere el mejor precio? → Plan Pro Anual ($649/año, ahorra $299)
 
 PARA QUIÉN NO ES (compártelo con naturalidad si el contexto lo amerita, nunca de forma agresiva):
 - NO es para quien busca ingresos inmediatos o "resultados ya". El trading es un proceso que toma tiempo.
@@ -191,7 +191,7 @@ async function notificarLuis(lead: {
   respuestas: Record<string, string>
 }) {
   try {
-    const perfilLabel = lead.perfil === 'ANUAL' ? '⭐ Club Anual ($649/año)' : '📅 Club Mensual ($79/mes)'
+    const perfilLabel = lead.perfil === 'ANUAL' ? '⭐ Plan Pro Anual ($649/año)' : '📅 Plan Pro Mensual ($79/mes)'
     const resumen = Object.entries(lead.respuestas)
       .map(([k, v]) => `• ${PREGUNTAS[k]}\n  → ${v}`)
       .join('\n\n')
@@ -256,7 +256,7 @@ Reglas del mensaje:
     const parsed = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] || '{}')
     const perfil: 'MENSUAL' | 'ANUAL' = parsed.perfil === 'ANUAL' ? 'ANUAL' : 'MENSUAL'
     const url = LINKS[perfil]
-    const planLabel = perfil === 'ANUAL' ? 'Club Anual — $649/año (ahorras $299)' : 'Club Mensual — $79/mes (cancela cuando quieras)'
+    const planLabel = perfil === 'ANUAL' ? 'Plan Pro Anual — $649/año (ahorras $299)' : 'Plan Pro Mensual — $79/mes (cancela cuando quieras)'
     const mensajeLimpio = (parsed.mensaje || '')
       .replace(/https?:\/\/\S+/g, '')
       .replace(/\[.*?\]\(.*?\)/g, '')
@@ -265,7 +265,7 @@ Reglas del mensaje:
   } catch {
     return {
       perfil: 'MENSUAL' as const,
-      mensaje: `Basado en lo que me contaste, el mejor punto de partida es el Club Mensual de Liberty Trading. 🎓\n\n👉 Club Mensual — $79/mes (cancela cuando quieras):\n${LINKS.MENSUAL}`,
+      mensaje: `Basado en lo que me contaste, el mejor punto de partida es el Plan Pro Mensual de Liberty Trading. 🎓\n\n👉 Plan Pro Mensual — $79/mes (cancela cuando quieras):\n${LINKS.MENSUAL}`,
       productoUrl: LINKS.MENSUAL,
     }
   }
