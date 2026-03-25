@@ -167,6 +167,15 @@ async function getTraderProfile(slugOrId: string) {
   const avgLoss = losses.length ? grossLosses / losses.length : 0
   const rrPromedio = avgLoss > 0 ? avgWin / avgLoss : 0
 
+  // ── Max Drawdown ─────────────────────────────────────────────────────────
+  let peak = 0, maxDrawdown = 0, balance = 0
+  for (const s of sessions) {
+    balance += s.pnlNeto
+    if (balance > peak) peak = balance
+    const dd = peak - balance
+    if (dd > maxDrawdown) maxDrawdown = dd
+  }
+
   // ── Streaks (máximo histórico) ────────────────────────────────────────────
   const sessionsByDate = [...sessions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   let winStreak = 0, curWin = 0
@@ -215,6 +224,7 @@ async function getTraderProfile(slugOrId: string) {
       winStreak,
       lossStreak,
       rrPromedio: Math.round(rrPromedio * 100) / 100,
+      maxDrawdown: Math.round(maxDrawdown * 100) / 100,
     },
     monthlyData,
     certificates,
@@ -316,6 +326,7 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
             {/* ── Key metrics ─────────────────────────────────────────────── */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 12 }}>
               {[
+                // Row 1
                 {
                   label: 'Win Rate',
                   value: `${metrics.winRate}%`,
@@ -323,17 +334,12 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                   color: metrics.winRate >= 50 ? '#22c55e' : '#ef4444',
                 },
                 {
-                  label: 'Profit Factor',
-                  value: metrics.profitFactor === 999 ? '∞' : `${metrics.profitFactor}x`,
-                  sub: 'Ganancias / Pérdidas',
-                  color: '#C9A84C',
+                  label: 'R:R Promedio',
+                  value: `1:${metrics.rrPromedio.toFixed(2)}`,
+                  sub: 'Ganancia media / Pérdida media',
+                  color: metrics.rrPromedio >= 1 ? '#22c55e' : '#C9A84C',
                 },
-                {
-                  label: 'P&L Neto Total',
-                  value: formatPnl(metrics.totalNetPnl),
-                  sub: 'Suma real de operaciones',
-                  color: metrics.totalNetPnl >= 0 ? '#22c55e' : '#ef4444',
-                },
+                // Row 2
                 {
                   label: 'Total Operaciones',
                   value: String(metrics.totalTrades),
@@ -341,10 +347,23 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                   color: '#C9A84C',
                 },
                 {
-                  label: 'R:R Promedio',
-                  value: `1:${metrics.rrPromedio.toFixed(2)}`,
-                  sub: 'Ganancia media / Pérdida media',
-                  color: metrics.rrPromedio >= 1 ? '#22c55e' : '#C9A84C',
+                  label: 'Profit Factor',
+                  value: metrics.profitFactor === 999 ? '∞' : `${metrics.profitFactor}x`,
+                  sub: 'Ganancias / Pérdidas',
+                  color: '#C9A84C',
+                },
+                // Row 3
+                {
+                  label: 'P&L Neto Total',
+                  value: formatPnl(metrics.totalNetPnl),
+                  sub: 'Suma real de operaciones',
+                  color: metrics.totalNetPnl >= 0 ? '#22c55e' : '#ef4444',
+                },
+                {
+                  label: 'Drawdown Máx.',
+                  value: `-$${metrics.maxDrawdown.toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
+                  sub: 'Caída máx. desde pico',
+                  color: '#ef4444',
                 },
               ].map(m => (
                 <div key={m.label} style={{
@@ -500,7 +519,7 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      {['Fecha', 'Instrumento', 'Dirección', 'Resultado', 'P&L Neto', 'Cuenta'].map(h => (
+                      {['Fecha', 'P&L Neto', 'Cuenta'].map(h => (
                         <th key={h} style={{
                           textAlign: 'left', padding: '12px 16px',
                           fontSize: 9, fontFamily: 'monospace', letterSpacing: 2,
@@ -516,31 +535,6 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                       <tr key={s.id} style={{ borderBottom: i < sessions.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                         <td style={{ padding: '10px 16px', fontFamily: 'monospace', fontSize: 11, color: '#555' }}>
                           {formatDate(s.date)}
-                        </td>
-                        <td style={{ padding: '10px 16px', fontFamily: 'monospace', fontWeight: 700, color: '#e0dcd4' }}>
-                          {s.instrumento}
-                        </td>
-                        <td style={{ padding: '10px 16px' }}>
-                          <span style={{
-                            fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
-                            background: s.direccion === 'LONG' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-                            color: s.direccion === 'LONG' ? '#22c55e' : '#ef4444',
-                          }}>
-                            {s.direccion}
-                          </span>
-                        </td>
-                        <td style={{ padding: '10px 16px' }}>
-                          <span style={{
-                            fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
-                            background: s.resultado === 'WIN'
-                              ? 'rgba(34,197,94,0.1)'
-                              : s.resultado === 'LOSS' ? 'rgba(239,68,68,0.1)' : 'rgba(234,179,8,0.1)',
-                            color: s.resultado === 'WIN'
-                              ? '#22c55e'
-                              : s.resultado === 'LOSS' ? '#ef4444' : '#eab308',
-                          }}>
-                            {s.resultado}
-                          </span>
                         </td>
                         <td style={{
                           padding: '10px 16px', fontFamily: 'monospace', fontWeight: 700,
