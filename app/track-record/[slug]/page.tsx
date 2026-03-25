@@ -162,6 +162,11 @@ async function getTraderProfile(slugOrId: string) {
     if (s.resultado === 'WIN') winStreak++
     else break
   }
+  let lossStreak = 0
+  for (const s of sessionsByDate) {
+    if (s.resultado === 'LOSS') lossStreak++
+    else break
+  }
 
   // ── Monthly data for chart ────────────────────────────────────────────────
   const monthlyMap: Record<string, { month: string; pnl: number; trades: number; wins: number }> = {}
@@ -199,6 +204,7 @@ async function getTraderProfile(slugOrId: string) {
       firstTrade: sessions[0].date,
       lastTrade: sessions[sessions.length - 1].date,
       winStreak,
+      lossStreak,
     },
     monthlyData,
     certificates,
@@ -352,7 +358,7 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                 { label: 'Mejor Trade', value: formatPnl(metrics.bestTrade), color: '#22c55e' },
                 { label: 'Peor Trade', value: formatPnl(metrics.worstTrade), color: '#ef4444' },
                 { label: 'Racha Ganadora', value: `${metrics.winStreak} seguidos`, color: '#C9A84C' },
-                { label: 'Breakevens', value: String(metrics.totalTrades - metrics.wins - metrics.losses), color: '#888' },
+                { label: 'Racha Perdedora', value: `${metrics.lossStreak} seguidos`, color: '#ef4444' },
               ].map(m => (
                 <div key={m.label} style={{
                   background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)',
