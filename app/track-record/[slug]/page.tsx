@@ -247,6 +247,7 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
 
   return (
     <main className="min-h-screen" style={{ background: '#080808', color: '#f0ece4' }}>
+      <style>{`.cert-card:hover { border-color: rgba(201,168,76,0.4) !important; }`}</style>
 
       {/* ── Nav ─────────────────────────────────────────────────────────────── */}
       <nav style={{ borderBottom: '1px solid #141414' }}>
@@ -446,14 +447,13 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                         href={cert.fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
+                        className="cert-card"
                         style={{
                           background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
                           borderRadius: 12, overflow: 'hidden', display: 'block',
                           textDecoration: 'none', transition: 'border-color 0.2s',
                           cursor: 'pointer',
                         }}
-                        onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.4)')}
-                        onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
                       >
                         <div style={{
                           height: 110, background: '#111',
