@@ -342,23 +342,33 @@ export default function ProfilePage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-3 mb-6">
         {[
-          { label: 'Total Trades', value: stats.totalTrades, color: 'var(--gold)' },
+          { label: 'Total Trades', value: String(stats.totalTrades), color: 'var(--gold)' },
           { label: 'Win Rate', value: `${stats.winRate}%`, color: stats.winRate >= 50 ? 'var(--green)' : 'var(--red)' },
           { label: 'P&L Total', value: `${stats.pnlTotal >= 0 ? '+' : ''}$${stats.pnlTotal.toFixed(0)}`, color: stats.pnlTotal >= 0 ? 'var(--green)' : 'var(--red)' },
         ].map(s => (
-          <div key={s.label} className="card text-center py-4">
-            <div className="text-2xl font-black mb-1" style={{ color: s.color, fontFamily: 'var(--font-serif)' }}>{s.value}</div>
-            <div className="label-mono text-[10px]">{s.label}</div>
+          <div key={s.label} className="card text-center py-4 px-2 overflow-hidden">
+            <div
+              className="font-black mb-1 leading-tight"
+              style={{
+                color: s.color,
+                fontFamily: 'var(--font-serif)',
+                fontSize: 'clamp(16px, 4vw, 26px)',
+                wordBreak: 'break-all',
+              }}
+            >
+              {s.value}
+            </div>
+            <div className="label-mono text-[9px] leading-tight">{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Public track record link */}
       {stats.totalTrades > 0 && (
-        <div className="card p-4 mb-6 flex items-center justify-between gap-3">
-          <div>
+        <div className="card p-4 mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-[var(--text-primary)]">Tu Track Record Público</p>
             <p className="text-[11px] text-[var(--text-muted)] font-mono truncate mt-0.5">{publicTrackUrl}</p>
           </div>
@@ -366,7 +376,7 @@ export default function ProfilePage() {
             href={`/track-record/${user?.id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-gold py-2 px-4 rounded-lg text-xs whitespace-nowrap"
+            className="btn-gold py-2 px-4 rounded-lg text-xs whitespace-nowrap self-start sm:self-auto"
           >
             Ver perfil →
           </a>
