@@ -103,7 +103,7 @@ interface Certificate {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function formatDate(d: Date) {
+function formatDate(d: Date | string) {
   return new Date(d).toLocaleDateString('es-EC', {
     timeZone: 'America/Guayaquil', day: '2-digit', month: 'short', year: '2-digit',
   })
@@ -140,7 +140,9 @@ async function getTraderProfile(slugOrId: string) {
   })
   const sessions: Session[] = rawSessions.map(s => ({
     ...s,
+    date: new Date(s.date),
     accountName: s.plan?.accountName ?? null,
+    plan: undefined,
   }))
 
   const certificates: Certificate[] = await prisma.certificate.findMany({
@@ -219,8 +221,8 @@ async function getTraderProfile(slugOrId: string) {
       totalNetPnl: Math.round(totalNetPnl * 100) / 100,
       bestTrade: Math.round(bestTrade * 100) / 100,
       worstTrade: Math.round(worstTrade * 100) / 100,
-      firstTrade: sessions[0].date,
-      lastTrade: sessions[sessions.length - 1].date,
+      firstTrade: sessions[0].date.toISOString(),
+      lastTrade: sessions[sessions.length - 1].date.toISOString(),
       winStreak,
       lossStreak,
       rrPromedio: Math.round(rrPromedio * 100) / 100,
