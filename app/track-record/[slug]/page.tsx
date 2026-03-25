@@ -238,53 +238,55 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
       <div className="max-w-5xl mx-auto px-4 py-12">
 
         {/* ── Hero ──────────────────────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row gap-8 items-start mb-12">
-          {/* Avatar */}
-          <div style={{
-            width: 100, height: 100, borderRadius: '50%', flexShrink: 0,
-            border: '2px solid #C9A84C', overflow: 'hidden',
-            background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            {user.avatarUrl ? (
-              <img src={user.avatarUrl} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <span style={{ fontSize: 40, fontWeight: 900, color: '#C9A84C', fontFamily: 'Georgia, serif' }}>
-                {displayName.charAt(0).toUpperCase()}
-              </span>
-            )}
-          </div>
-
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-3 mb-2">
-              <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 900, color: '#fff', lineHeight: 1.1 }}>
-                {displayName}
-              </h1>
-              <span style={{
-                background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
-                color: '#22c55e', fontSize: 10, fontFamily: 'monospace', padding: '3px 10px',
-                borderRadius: 20, letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap',
-              }}>
-                ✓ Verificado
-              </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 40 }}>
+          <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+            {/* Avatar */}
+            <div style={{
+              width: 80, height: 80, borderRadius: '50%', flexShrink: 0,
+              border: '2px solid #C9A84C', overflow: 'hidden',
+              background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontSize: 32, fontWeight: 900, color: '#C9A84C', fontFamily: 'Georgia, serif' }}>
+                  {displayName.charAt(0).toUpperCase()}
+                </span>
+              )}
             </div>
 
-            {(user.tradingStyle || user.country) && (
-              <p style={{ color: '#888', fontSize: 14, marginBottom: 8, fontFamily: 'monospace' }}>
-                {user.tradingStyle}{user.tradingStyle && user.country ? ' · ' : ''}{user.country}
-              </p>
-            )}
+            {/* Info */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 'clamp(24px, 5vw, 42px)', fontWeight: 900, color: '#fff', lineHeight: 1.1, margin: 0 }}>
+                  {displayName}
+                </h1>
+                <span style={{
+                  background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
+                  color: '#22c55e', fontSize: 10, fontFamily: 'monospace', padding: '3px 10px',
+                  borderRadius: 20, letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap',
+                }}>
+                  ✓ Verificado
+                </span>
+              </div>
 
-            {user.bio && (
-              <p style={{ color: '#aaa', fontSize: 14, lineHeight: 1.7, maxWidth: 560, marginBottom: 12 }}>
-                {user.bio}
-              </p>
-            )}
+              {(user.tradingStyle || user.country) && (
+                <p style={{ color: '#888', fontSize: 13, marginBottom: 6, fontFamily: 'monospace', margin: '0 0 6px 0' }}>
+                  {user.tradingStyle}{user.tradingStyle && user.country ? ' · ' : ''}{user.country}
+                </p>
+              )}
 
-            <p style={{ color: '#444', fontSize: 11, fontFamily: 'monospace' }}>
-              Operador desde {memberSince}
-              {metrics && ` · ${metrics.totalTrades} operaciones registradas · Última op. ${formatDate(metrics.lastTrade)}`}
-            </p>
+              {user.bio && (
+                <p style={{ color: '#aaa', fontSize: 14, lineHeight: 1.7, marginBottom: 10, margin: '0 0 10px 0' }}>
+                  {user.bio}
+                </p>
+              )}
+
+              <p style={{ color: '#444', fontSize: 11, fontFamily: 'monospace', margin: 0, wordBreak: 'break-word' }}>
+                Miembro desde {memberSince}
+                {metrics && ` · ${metrics.totalTrades} operaciones · Última op. ${formatDate(metrics.lastTrade)}`}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -296,7 +298,7 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
         ) : (
           <>
             {/* ── Key metrics ─────────────────────────────────────────────── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 12 }}>
               {[
                 {
                   label: 'Win Rate',
@@ -325,15 +327,21 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
               ].map(m => (
                 <div key={m.label} style={{
                   background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)',
-                  borderRadius: 16, padding: '20px 20px 16px',
+                  borderRadius: 16, padding: '16px 14px',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+                  overflow: 'hidden',
                 }}>
-                  <div style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: 2, color: '#444', textTransform: 'uppercase', marginBottom: 10 }}>
+                  <div style={{ fontSize: 9, fontFamily: 'monospace', letterSpacing: 2, color: '#444', textTransform: 'uppercase', marginBottom: 8 }}>
                     {m.label}
                   </div>
-                  <div style={{ fontFamily: 'Georgia, serif', fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 900, color: m.color, marginBottom: 4, lineHeight: 1 }}>
+                  <div style={{
+                    fontFamily: 'Georgia, serif', fontSize: 'clamp(20px, 5vw, 30px)', fontWeight: 900,
+                    color: m.color, marginBottom: 4, lineHeight: 1,
+                    wordBreak: 'break-all', maxWidth: '100%',
+                  }}>
                     {m.value}
                   </div>
-                  <div style={{ fontSize: 10, fontFamily: 'monospace', color: '#444' }}>{m.sub}</div>
+                  <div style={{ fontSize: 9, fontFamily: 'monospace', color: '#444', wordBreak: 'break-word' }}>{m.sub}</div>
                 </div>
               ))}
             </div>
