@@ -88,6 +88,7 @@ interface Session {
   resultado: string
   pnlNeto: number
   contratos: number
+  accountName: string | null
 }
 
 interface Certificate {
@@ -128,11 +129,19 @@ async function getTraderProfile(slugOrId: string) {
   const user = await findUser(slugOrId)
   if (!user) return null
 
-  const sessions: Session[] = await prisma.tradingSession.findMany({
+  const rawSessions = await prisma.tradingSession.findMany({
     where: { userId: user.id },
     orderBy: { date: 'asc' },
-    select: { id: true, date: true, instrumento: true, direccion: true, resultado: true, pnlNeto: true, contratos: true },
+    select: {
+      id: true, date: true, instrumento: true, direccion: true,
+      resultado: true, pnlNeto: true, contratos: true,
+      plan: { select: { accountName: true } },
+    },
   })
+  const sessions: Session[] = rawSessions.map(s => ({
+    ...s,
+    accountName: s.plan?.accountName ?? null,
+  }))
 
   const certificates: Certificate[] = await prisma.certificate.findMany({
     where: { userId: user.id, public: true },
@@ -154,6 +163,9 @@ async function getTraderProfile(slugOrId: string) {
   const totalNetPnl = sessions.reduce((sum, s) => sum + s.pnlNeto, 0)
   const bestTrade = Math.max(...sessions.map(s => s.pnlNeto))
   const worstTrade = Math.min(...sessions.map(s => s.pnlNeto))
+  const avgWin = wins.length ? grossWins / wins.length : 0
+  const avgLoss = losses.length ? grossLosses / losses.length : 0
+  const rrPromedio = avgLoss > 0 ? avgWin / avgLoss : 0
 
   // ── Streaks (máximo histórico) ────────────────────────────────────────────
   const sessionsByDate = [...sessions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -202,6 +214,7 @@ async function getTraderProfile(slugOrId: string) {
       lastTrade: sessions[sessions.length - 1].date,
       winStreak,
       lossStreak,
+      rrPromedio: Math.round(rrPromedio * 100) / 100,
     },
     monthlyData,
     certificates,
@@ -327,6 +340,12 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                   sub: `${metrics.wins} wins · ${metrics.losses} losses`,
                   color: '#C9A84C',
                 },
+                {
+                  label: 'R:R Promedio',
+                  value: `1:${metrics.rrPromedio.toFixed(2)}`,
+                  sub: 'Ganancia media / Pérdida media',
+                  color: metrics.rrPromedio >= 1 ? '#22c55e' : '#C9A84C',
+                },
               ].map(m => (
                 <div key={m.label} style={{
                   background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)',
@@ -354,8 +373,8 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
               {[
                 { label: 'Mejor Trade', value: formatPnl(metrics.bestTrade), color: '#22c55e' },
                 { label: 'Peor Trade', value: formatPnl(metrics.worstTrade), color: '#ef4444' },
-                { label: 'Racha Ganadora', value: `${metrics.winStreak} seguidos`, color: '#C9A84C' },
-                { label: 'Racha Perdedora', value: `${metrics.lossStreak} seguidos`, color: '#ef4444' },
+                { label: 'Racha Ganadora', value: `${metrics.winStreak} trades seguidos`, color: '#C9A84C' },
+                { label: 'Racha Perdedora', value: `${metrics.lossStreak} trades seguidos`, color: '#ef4444' },
               ].map(m => (
                 <div key={m.label} style={{
                   background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)',
@@ -481,7 +500,7 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      {['Fecha', 'Instrumento', 'Dirección', 'Resultado', 'P&L Neto', 'Contratos'].map(h => (
+                      {['Fecha', 'Instrumento', 'Dirección', 'Resultado', 'P&L Neto', 'Cuenta'].map(h => (
                         <th key={h} style={{
                           textAlign: 'left', padding: '12px 16px',
                           fontSize: 9, fontFamily: 'monospace', letterSpacing: 2,
@@ -529,8 +548,8 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                         }}>
                           {formatPnl(s.pnlNeto)}
                         </td>
-                        <td style={{ padding: '10px 16px', fontFamily: 'monospace', fontSize: 11, color: '#555' }}>
-                          {s.contratos}
+                        <td style={{ padding: '10px 16px', fontFamily: 'monospace', fontSize: 11, color: '#888' }}>
+                          {s.accountName ?? '—'}
                         </td>
                       </tr>
                     ))}
