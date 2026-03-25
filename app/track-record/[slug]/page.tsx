@@ -521,9 +521,9 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                       {['Fecha', 'P&L Neto', 'Cuenta'].map(h => (
                         <th key={h} style={{
-                          textAlign: 'left', padding: '12px 16px',
+                          textAlign: 'center', padding: '12px 16px',
                           fontSize: 9, fontFamily: 'monospace', letterSpacing: 2,
-                          color: '#3a3a3a', textTransform: 'uppercase',
+                          color: '#3a3a3a', textTransform: 'uppercase', whiteSpace: 'nowrap',
                         }}>
                           {h}
                         </th>
@@ -533,16 +533,17 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                   <tbody>
                     {sessions.map((s, i) => (
                       <tr key={s.id} style={{ borderBottom: i < sessions.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                        <td style={{ padding: '10px 16px', fontFamily: 'monospace', fontSize: 11, color: '#555' }}>
+                        <td style={{ padding: '10px 16px', fontFamily: 'monospace', fontSize: 11, color: '#555', textAlign: 'center', whiteSpace: 'nowrap' }}>
                           {formatDate(s.date)}
                         </td>
                         <td style={{
                           padding: '10px 16px', fontFamily: 'monospace', fontWeight: 700,
                           color: s.pnlNeto >= 0 ? '#22c55e' : '#ef4444',
+                          textAlign: 'center', whiteSpace: 'nowrap',
                         }}>
                           {formatPnl(s.pnlNeto)}
                         </td>
-                        <td style={{ padding: '10px 16px', fontFamily: 'monospace', fontSize: 11, color: '#888' }}>
+                        <td style={{ padding: '10px 16px', fontFamily: 'monospace', fontSize: 11, color: '#888', textAlign: 'center', whiteSpace: 'nowrap' }}>
                           {s.accountName ?? '—'}
                         </td>
                       </tr>
