@@ -155,17 +155,14 @@ async function getTraderProfile(slugOrId: string) {
   const bestTrade = Math.max(...sessions.map(s => s.pnlNeto))
   const worstTrade = Math.min(...sessions.map(s => s.pnlNeto))
 
-  // ── Streak ───────────────────────────────────────────────────────────────
+  // ── Streaks (máximo histórico) ────────────────────────────────────────────
   const sessionsByDate = [...sessions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-  let winStreak = 0
-  for (const s of sessionsByDate) {
-    if (s.resultado === 'WIN') winStreak++
-    else break
-  }
-  let lossStreak = 0
-  for (const s of sessionsByDate) {
-    if (s.resultado === 'LOSS') lossStreak++
-    else break
+  let winStreak = 0, curWin = 0
+  let lossStreak = 0, curLoss = 0
+  for (const s of [...sessions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())) {
+    if (s.resultado === 'WIN') { curWin++; curLoss = 0; if (curWin > winStreak) winStreak = curWin }
+    else if (s.resultado === 'LOSS') { curLoss++; curWin = 0; if (curLoss > lossStreak) lossStreak = curLoss }
+    else { curWin = 0; curLoss = 0 }
   }
 
   // ── Monthly data for chart ────────────────────────────────────────────────
