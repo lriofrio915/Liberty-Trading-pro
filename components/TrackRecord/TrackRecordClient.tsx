@@ -776,6 +776,13 @@ export default function TrackRecordClient({
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-0.5 justify-end">
                           <button
+                            onClick={e => { e.stopPropagation(); setShareModal({ session: s, mensaje: '' }) }}
+                            className="p-2 text-gray-400 hover:text-[#C9A84C] transition-colors rounded"
+                            title="Compartir en comunidad"
+                          >
+                            📢
+                          </button>
+                          <button
                             onClick={e => { e.stopPropagation(); openEdit(s) }}
                             className="p-2 text-gray-400 hover:text-yellow-400 transition-colors rounded"
                             title="Editar"
@@ -1117,7 +1124,8 @@ export default function TrackRecordClient({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.85)' }}>
           <div className="w-full max-w-md rounded-2xl border overflow-hidden"
-            style={{ background: '#0e0e0e', borderColor: 'rgba(255,255,255,0.08)' }}>
+            style={{ background: '#0e0e0e', borderColor: 'rgba(255,255,255,0.08)' }}
+            onClick={e => e.stopPropagation()}>
 
             {/* Header */}
             <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
