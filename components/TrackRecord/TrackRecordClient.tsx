@@ -162,6 +162,7 @@ export default function TrackRecordClient({
   const [importRows, setImportRows] = useState<Record<string, string>[] | null>(null)
   const [importing, setImporting] = useState(false)
   const [importError, setImportError] = useState('')
+  const [importPlanId, setImportPlanId] = useState('')
 
   function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -192,12 +193,13 @@ export default function TrackRecordClient({
       const res = await fetch('/api/sessions/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rows: importRows }),
+        body: JSON.stringify({ rows: importRows, planId: importPlanId || null }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Error al importar')
       setToast(`✓ ${json.imported} operaciones importadas`)
       setImportRows(null)
+      setImportPlanId('')
       // Refresh sessions
       const s = await fetch('/api/sessions').then(r => r.json())
       if (s.sessions) setSessions(s.sessions)
@@ -515,7 +517,7 @@ export default function TrackRecordClient({
                 <div className="font-bold text-[var(--text-primary)] mb-0.5">Vista previa de importación</div>
                 <div className="text-xs text-[var(--text-muted)]">{importRows.length} filas detectadas — primeras 5 mostradas</div>
               </div>
-              <button onClick={() => { setImportRows(null); setImportError('') }} className="text-[var(--text-muted)] hover:text-white text-xl">×</button>
+              <button onClick={() => { setImportRows(null); setImportError(''); setImportPlanId('') }} className="text-[var(--text-muted)] hover:text-white text-xl">×</button>
             </div>
 
             <div className="overflow-auto flex-1 p-4">
@@ -551,8 +553,21 @@ export default function TrackRecordClient({
                 Opcionales: contratos, entry_price, exit_price, comisiones, notas.<br />
                 Valores de resultado: WIN / LOSS / BREAKEVEN. Dirección: LONG / SHORT.
               </div>
+              {initialPlans.length > 0 && (
+                <div className="mb-4">
+                  <label className="label-mono text-[10px] block mb-1.5">Asignar al plan (opcional)</label>
+                  <select
+                    value={importPlanId}
+                    onChange={e => setImportPlanId(e.target.value)}
+                    className="input text-sm"
+                  >
+                    <option value="">Sin plan</option>
+                    {initialPlans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+              )}
               <div className="flex gap-3 justify-end">
-                <button onClick={() => { setImportRows(null); setImportError('') }} className="btn-outline py-2 px-5 rounded-lg text-sm">
+                <button onClick={() => { setImportRows(null); setImportError(''); setImportPlanId('') }} className="btn-outline py-2 px-5 rounded-lg text-sm">
                   Cancelar
                 </button>
                 <button onClick={confirmImport} disabled={importing} className="btn-gold py-2 px-5 rounded-lg text-sm disabled:opacity-60">

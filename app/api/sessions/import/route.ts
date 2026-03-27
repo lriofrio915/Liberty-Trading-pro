@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     const dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
     if (!dbUser) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
 
-    const { rows } = await req.json() as { rows: Record<string, string>[] }
+    const { rows, planId } = await req.json() as { rows: Record<string, string>[], planId?: string | null }
     if (!Array.isArray(rows) || rows.length === 0) {
       return NextResponse.json({ error: 'Sin filas para importar' }, { status: 400 })
     }
@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
         return prisma.tradingSession.create({
           data: {
             userId: dbUser.id,
+            planId: planId || null,
             date,
             instrumento: (r.instrumento ?? r.instrument ?? r.Instrumento ?? 'NQ').toUpperCase(),
             direccion: normalizeDireccion(r.direccion ?? r.direction ?? r.Direccion ?? 'LONG'),
