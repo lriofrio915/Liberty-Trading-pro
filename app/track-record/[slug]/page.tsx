@@ -114,6 +114,37 @@ function formatPnl(pnl: number) {
   return pnl >= 0 ? `+$${abs}` : `-$${abs}`
 }
 
+const MONTHS_ES: Record<string, number> = {
+  ene:1, enero:1, jan:1, january:1,
+  feb:2, febrero:2, february:2,
+  mar:3, marzo:3, march:3,
+  abr:4, abril:4, apr:4, april:4,
+  may:5, mayo:5,
+  jun:6, junio:6, june:6,
+  jul:7, julio:7, july:7,
+  ago:8, agosto:8, aug:8, august:8,
+  sep:9, sept:9, septiembre:9, september:9,
+  oct:10, octubre:10, october:10,
+  nov:11, noviembre:11, november:11,
+  dic:12, diciembre:12, dec:12, december:12,
+}
+
+function parseIssuedDate(str?: string | null): number {
+  if (!str) return 0
+  const s = str.trim()
+  // Solo año: "2026"
+  if (/^\d{4}$/.test(s)) return parseInt(s) * 100
+  // "Mes Año" o "Mes. Año": "Jun 2022", "Mayo 2025", "Ene. 2024"
+  const m = s.toLowerCase().replace('.', '').match(/^([a-záéíóúü]+)\s+(\d{4})$/)
+  if (m) {
+    const month = MONTHS_ES[m[1]] ?? 0
+    return parseInt(m[2]) * 100 + month
+  }
+  // Fallback: intentar Date.parse
+  const d = Date.parse(s)
+  return isNaN(d) ? 0 : Math.floor(d / 1000)
+}
+
 const CAT_META: Record<string, { icon: string; label: string }> = {
   FONDEO:    { icon: '🏆', label: 'Prueba de Fondeo' },
   RETIRO:    { icon: '💰', label: 'Retiro de Fondos' },
@@ -438,7 +469,7 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
-                  {certificates.map(cert => {
+                  {[...certificates].sort((a, b) => parseIssuedDate(b.issuedDate) - parseIssuedDate(a.issuedDate)).map(cert => {
                     const cat = CAT_META[cert.category] ?? CAT_META.OTRO
                     const isPdf = cert.fileType === 'pdf'
                     return (
