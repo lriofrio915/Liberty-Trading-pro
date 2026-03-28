@@ -40,6 +40,7 @@ export default function ProfilePage() {
   const router = useRouter()
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const certFileInputRef = useRef<HTMLInputElement>(null)
+  const editFileInputRef = useRef<HTMLInputElement>(null)
 
   const [data, setData]     = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -72,6 +73,17 @@ export default function ProfilePage() {
   const [certIssuedDate, setCertIssuedDate] = useState('')
   const [certUploading, setCertUploading]   = useState(false)
   const [certMsg, setCertMsg] = useState('')
+
+  // Edit certificate
+  const [editingCert, setEditingCert]       = useState<Certificate | null>(null)
+  const [editTitle, setEditTitle]           = useState('')
+  const [editCategory, setEditCategory]     = useState('FONDEO')
+  const [editIssuedBy, setEditIssuedBy]     = useState('')
+  const [editIssuedDate, setEditIssuedDate] = useState('')
+  const [editFile, setEditFile]             = useState<File | null>(null)
+  const [editPreview, setEditPreview]       = useState<string | null>(null)
+  const [editSaving, setEditSaving]         = useState(false)
+  const [editMsg, setEditMsg]               = useState('')
 
   useEffect(() => {
     fetch('/api/profile')
@@ -259,6 +271,71 @@ export default function ProfilePage() {
     const data = await res.json()
     if (data.certificate) {
       setCerts(prev => prev.map(c => c.id === cert.id ? data.certificate : c))
+    }
+  }
+
+  // ── Open edit modal ──────────────────────────────────────────────────────────
+
+  const openEditCert = (cert: Certificate) => {
+    setEditingCert(cert)
+    setEditTitle(cert.title)
+    setEditCategory(cert.category)
+    setEditIssuedBy(cert.issuedBy ?? '')
+    setEditIssuedDate(cert.issuedDate ?? '')
+    setEditFile(null)
+    setEditPreview(null)
+    setEditMsg('')
+  }
+
+  const handleEditFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setEditFile(file)
+    setEditPreview(file.type.startsWith('image/') ? URL.createObjectURL(file) : null)
+  }
+
+  // ── Save cert edit ────────────────────────────────────────────────────────────
+
+  const saveCertEdit = async () => {
+    if (!editingCert || !editTitle.trim()) {
+      setEditMsg('✗ El título es obligatorio'); return
+    }
+    setEditSaving(true)
+    setEditMsg('')
+    try {
+      let fileUrl = editingCert.fileUrl
+      let fileType = editingCert.fileType
+
+      if (editFile) {
+        const fd = new FormData()
+        fd.append('file', editFile)
+        const uploadRes = await fetch('/api/upload/document', { method: 'POST', body: fd })
+        const uploadData = await uploadRes.json()
+        if (!uploadData.url) throw new Error(uploadData.error || 'Error al subir archivo')
+        fileUrl = uploadData.url
+        fileType = uploadData.fileType
+      }
+
+      const res = await fetch(`/api/certificates/${editingCert.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: editTitle,
+          category: editCategory,
+          issuedBy: editIssuedBy,
+          issuedDate: editIssuedDate,
+          fileUrl,
+          fileType,
+        }),
+      })
+      const data = await res.json()
+      if (!data.certificate) throw new Error(data.error || 'Error al guardar')
+      setCerts(prev => prev.map(c => c.id === editingCert.id ? data.certificate : c))
+      setEditingCert(null)
+    } catch (err: any) {
+      setEditMsg('✗ ' + err.message)
+    } finally {
+      setEditSaving(false)
     }
   }
 
@@ -543,6 +620,74 @@ export default function ProfilePage() {
         </div>
 
         {/* Certificates list */}
+        {/* ── Edit modal ── */}
+        {editingCert && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
+            <div className="w-full max-w-md rounded-2xl border border-[var(--border)] flex flex-col" style={{ background: '#0d0d0d' }}>
+              <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
+                <span className="font-bold text-[var(--text-primary)]">Editar certificado</span>
+                <button onClick={() => setEditingCert(null)} className="text-[var(--text-muted)] hover:text-white text-xl">×</button>
+              </div>
+              <div className="p-5 space-y-3 overflow-y-auto" style={{ maxHeight: '70vh' }}>
+                {/* File picker */}
+                <div
+                  className="cursor-pointer text-center py-3 rounded-lg transition-colors hover:opacity-80"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+                  onClick={() => editFileInputRef.current?.click()}
+                >
+                  {editFile ? (
+                    editPreview
+                      ? <img src={editPreview} alt="preview" className="h-20 mx-auto rounded-lg object-cover mb-1" />
+                      : <div className="text-3xl mb-1">📄</div>
+                  ) : (
+                    editingCert.fileType !== 'pdf' && editingCert.fileUrl
+                      ? <img src={editingCert.fileUrl} alt="actual" className="h-20 mx-auto rounded-lg object-cover mb-1" />
+                      : <div className="text-3xl mb-1">📎</div>
+                  )}
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {editFile ? editFile.name : 'Clic para cambiar archivo (opcional)'}
+                  </p>
+                  <input
+                    ref={editFileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                    className="hidden"
+                    onChange={handleEditFileChange}
+                  />
+                </div>
+                {/* Fields */}
+                <div>
+                  <label className="label-mono text-[10px] block mb-1">Título *</label>
+                  <input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="input text-sm" />
+                </div>
+                <div>
+                  <label className="label-mono text-[10px] block mb-1">Categoría</label>
+                  <select value={editCategory} onChange={e => setEditCategory(e.target.value)} className="input text-sm">
+                    {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label-mono text-[10px] block mb-1">Emitido por</label>
+                  <input value={editIssuedBy} onChange={e => setEditIssuedBy(e.target.value)} className="input text-sm" placeholder="FTMO, Darwinex..." />
+                </div>
+                <div>
+                  <label className="label-mono text-[10px] block mb-1">Fecha</label>
+                  <input value={editIssuedDate} onChange={e => setEditIssuedDate(e.target.value)} className="input text-sm" placeholder="Ene 2024" />
+                </div>
+                {editMsg && (
+                  <p className={`text-xs font-medium ${editMsg.startsWith('✓') ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>{editMsg}</p>
+                )}
+              </div>
+              <div className="p-5 border-t border-[var(--border)] flex gap-3 justify-end">
+                <button onClick={() => setEditingCert(null)} className="btn-outline py-2 px-5 rounded-lg text-sm">Cancelar</button>
+                <button onClick={saveCertEdit} disabled={editSaving} className="btn-gold py-2 px-5 rounded-lg text-sm disabled:opacity-60">
+                  {editSaving ? 'Guardando...' : 'Guardar cambios'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {certs.length === 0 ? (
           <p className="text-[11px] text-[var(--text-muted)] text-center py-4">
             Aún no has añadido certificados. Sube tu primer logro arriba.
@@ -604,6 +749,14 @@ export default function ProfilePage() {
                     >
                       Ver
                     </a>
+                    {/* Edit */}
+                    <button
+                      onClick={() => openEditCert(cert)}
+                      className="text-[10px] font-mono px-2 py-1 rounded transition-colors hover:text-[var(--gold)]"
+                      style={{ color: '#555' }}
+                    >
+                      ✎
+                    </button>
                     {/* Delete */}
                     <button
                       onClick={() => deleteCert(cert.id)}

@@ -43,10 +43,18 @@ export async function PATCH(
       return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
     }
 
-    const { public: isPublic } = await req.json()
+    const body = await req.json()
+    const data: Record<string, unknown> = {}
+    if (body.public !== undefined) data.public = body.public
+    if (body.title !== undefined) data.title = body.title
+    if (body.category !== undefined) data.category = body.category
+    if (body.issuedBy !== undefined) data.issuedBy = body.issuedBy
+    if (body.issuedDate !== undefined) data.issuedDate = body.issuedDate
+    if (body.fileUrl !== undefined) data.fileUrl = body.fileUrl
+    if (body.fileType !== undefined) data.fileType = body.fileType
     const updated = await (prisma as any).certificate.update({
       where: { id: params.id },
-      data: { public: isPublic },
+      data,
     })
     return NextResponse.json({ certificate: updated })
   } catch (err: any) {
