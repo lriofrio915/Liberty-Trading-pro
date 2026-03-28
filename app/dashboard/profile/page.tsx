@@ -459,7 +459,7 @@ export default function ProfilePage() {
                 ) : (
                   <div className="text-4xl mb-2">📄</div>
                 )}
-                <p className="text-sm font-medium text-[var(--text-primary)]">{certFile.name}</p>
+                <p className="text-sm font-medium text-[var(--text-primary)] truncate max-w-full px-2">{certFile.name}</p>
                 <p className="text-[10px] text-[var(--text-muted)]">
                   {(certFile.size / 1024 / 1024).toFixed(2)} MB · {certFile.type === 'application/pdf' ? 'PDF' : 'Imagen'}
                 </p>

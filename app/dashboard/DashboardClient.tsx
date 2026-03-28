@@ -131,7 +131,7 @@ function calcularMetricas(sessions: Session[]): Metricas | null {
 }
 
 function fmtMoney(v: number) {
-  return `${v >= 0 ? '+' : ''}$${Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return `${v >= 0 ? '+' : ''}$${Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 }
 
 function fmtPct(v: number) {
@@ -387,12 +387,12 @@ export default function DashboardClient({
             </div>
 
             {/* PnL Neto Real */}
-            <div className="card">
+            <div className="card overflow-hidden">
               <div className="label-mono text-xs mb-3 text-[var(--text-muted)]">PnL Neto</div>
               {fin ? (
                 <>
                   <div
-                    className="text-2xl font-black"
+                    className="text-xl sm:text-2xl font-black truncate"
                     style={{ color: fin.pnlNetoReal >= 0 ? 'var(--green)' : 'var(--red)' }}
                   >
                     {fmtMoney(fin.pnlNetoReal)}
@@ -406,10 +406,10 @@ export default function DashboardClient({
                 </>
               ) : (
                 <div
-                  className="text-2xl font-black"
+                  className="text-xl sm:text-2xl font-black"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  $0.00
+                  $0
                 </div>
               )}
             </div>
@@ -507,8 +507,8 @@ export default function DashboardClient({
               <div className="text-xs text-[var(--text-muted)] mb-1">Comisiones + Data Feed</div>
               <div className="text-xl font-black text-red-400">
                 {(fin.comisionesTotal + fin.dataFeedTotal) > 0
-                  ? `-$${(fin.comisionesTotal + fin.dataFeedTotal).toFixed(2)}`
-                  : '$0.00'}
+                  ? `-$${Math.round(fin.comisionesTotal + fin.dataFeedTotal).toLocaleString('en-US')}`
+                  : '$0'}
               </div>
               <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
                 {sessionesFiltradas.length} trades · {fin.mesesTranscurridos} {fin.mesesTranscurridos === 1 ? 'mes' : 'meses'} feed
