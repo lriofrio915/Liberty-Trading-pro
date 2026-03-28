@@ -437,7 +437,7 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                     Certificados verificados del operador
                   </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
                   {certificates.map(cert => {
                     const cat = CAT_META[cert.category] ?? CAT_META.OTRO
                     const isPdf = cert.fileType === 'pdf'
@@ -452,7 +452,7 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                           background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
                           borderRadius: 12, overflow: 'hidden', display: 'block',
                           textDecoration: 'none', transition: 'border-color 0.2s',
-                          cursor: 'pointer',
+                          cursor: 'pointer', width: 220, flexShrink: 0,
                         }}
                       >
                         <div style={{
