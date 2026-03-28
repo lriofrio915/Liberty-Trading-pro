@@ -134,8 +134,8 @@ function parseIssuedDate(str?: string | null): number {
   const s = str.trim()
   // Solo año: "2026"
   if (/^\d{4}$/.test(s)) return parseInt(s) * 100
-  // "Mes Año" o "Mes. Año": "Jun 2022", "Mayo 2025", "Ene. 2024"
-  const m = s.toLowerCase().replace('.', '').match(/^([a-záéíóúü]+)\s+(\d{4})$/)
+  // "Mes Año" o "Mes. Año" (con posible texto extra): "Jun 2022", "Mayo 2025 I", "Ene. 2024"
+  const m = s.toLowerCase().replace('.', '').match(/([a-záéíóúü]+)\s+(\d{4})/)
   if (m) {
     const month = MONTHS_ES[m[1]] ?? 0
     return parseInt(m[2]) * 100 + month
