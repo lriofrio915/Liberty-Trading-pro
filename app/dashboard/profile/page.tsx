@@ -51,6 +51,7 @@ export default function ProfilePage() {
   const [bio, setBio]               = useState('')
   const [country, setCountry]       = useState('')
   const [tradingStyle, setTradingStyle] = useState('')
+  const [tradingSince, setTradingSince] = useState('')
   const [saving, setSaving]         = useState(false)
   const [saveMsg, setSaveMsg]       = useState('')
 
@@ -95,6 +96,7 @@ export default function ProfilePage() {
         setBio(d.user?.bio || '')
         setCountry(d.user?.country || '')
         setTradingStyle(d.user?.tradingStyle || '')
+        setTradingSince(d.user?.tradingSince ? String(d.user.tradingSince) : '')
         setCerts(d.certificates || [])
         setLoading(false)
       })
@@ -138,7 +140,7 @@ export default function ProfilePage() {
       const res = await fetch('/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, bio, country, tradingStyle }),
+        body: JSON.stringify({ name, phone, bio, country, tradingStyle, tradingSince: tradingSince || null }),
       })
       const d = await res.json()
       if (d.user) {
@@ -479,6 +481,19 @@ export default function ProfilePage() {
           <div>
             <label className="label-mono text-[10px] block mb-1.5">Estilo de Trading</label>
             <input type="text" value={tradingStyle} onChange={e => setTradingStyle(e.target.value)} className="input text-sm" placeholder="Day Trading · Futuros Nasdaq" />
+          </div>
+          <div>
+            <label className="label-mono text-[10px] block mb-1.5">Operando desde <span className="text-[var(--text-muted)]">(año)</span></label>
+            <input
+              type="number"
+              min={1990}
+              max={new Date().getFullYear()}
+              value={tradingSince}
+              onChange={e => setTradingSince(e.target.value)}
+              className="input text-sm"
+              placeholder={String(new Date().getFullYear() - 3)}
+            />
+            <p className="text-[10px] text-[var(--text-muted)] mt-1">Aparece como años de experiencia en tu perfil público.</p>
           </div>
           <div className="sm:col-span-2">
             <label className="label-mono text-[10px] block mb-1.5">Correo electrónico</label>

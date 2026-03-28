@@ -12,13 +12,13 @@ export const revalidate = 1800
 async function findUser(slugOrId: string) {
   const bySlug = await prisma.user.findUnique({
     where: { slug: slugOrId },
-    select: { id: true, name: true, slug: true, createdAt: true, avatarUrl: true, bio: true, country: true, tradingStyle: true },
+    select: { id: true, name: true, slug: true, createdAt: true, avatarUrl: true, bio: true, country: true, tradingStyle: true, tradingSince: true },
   })
   if (bySlug) return bySlug
 
   return prisma.user.findUnique({
     where: { id: slugOrId },
-    select: { id: true, name: true, slug: true, createdAt: true, avatarUrl: true, bio: true, country: true, tradingStyle: true },
+    select: { id: true, name: true, slug: true, createdAt: true, avatarUrl: true, bio: true, country: true, tradingStyle: true, tradingSince: true },
   })
 }
 
@@ -328,6 +328,19 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                 }}>
                   ✓ Verificado
                 </span>
+                {user.tradingSince && (() => {
+                  const years = new Date().getFullYear() - user.tradingSince
+                  return (
+                    <span style={{
+                      background: 'linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05))',
+                      border: '1px solid rgba(201,168,76,0.35)',
+                      color: '#C9A84C', fontSize: 10, fontFamily: 'monospace', padding: '3px 10px',
+                      borderRadius: 20, letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap',
+                    }}>
+                      ◆ {years === 1 ? '1 año' : `${years} años`} de experiencia
+                    </span>
+                  )
+                })()}
               </div>
 
               {(user.tradingStyle || user.country) && (

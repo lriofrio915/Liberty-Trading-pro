@@ -50,7 +50,7 @@ export async function PATCH(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { name, phone, avatarUrl, bio, country, tradingStyle } = await req.json()
+    const { name, phone, avatarUrl, bio, country, tradingStyle, tradingSince } = await req.json()
 
     const dbUser = await prisma.user.update({
       where: { authId: user.id },
@@ -61,6 +61,7 @@ export async function PATCH(req: NextRequest) {
         ...(bio !== undefined && { bio: bio?.trim() || null }),
         ...(country !== undefined && { country: country?.trim() || null }),
         ...(tradingStyle !== undefined && { tradingStyle: tradingStyle?.trim() || null }),
+        ...(tradingSince !== undefined && { tradingSince: tradingSince ? parseInt(tradingSince) : null }),
       },
     })
 

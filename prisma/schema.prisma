@@ -38,6 +38,7 @@ model User {
   bio          String?
   country      String?
   tradingStyle String?
+  tradingSince Int?
 
   tradingPlans   TradingPlan[]
   sessions       TradingSession[]
