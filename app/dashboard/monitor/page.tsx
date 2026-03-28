@@ -47,11 +47,11 @@ const TIMESPANS: { value: Timespan; label: string }[] = [
 ]
 
 const STRESS_CONFIG: Record<string, { label: string; desc: string; dangerIfHigh?: boolean }> = {
-  'VIX':        { label: 'VIX', desc: 'Volatilidad — miedo del mercado', dangerIfHigh: true },
-  '^VIX':       { label: 'VIX', desc: 'Volatilidad — miedo del mercado', dangerIfHigh: true },
+  'VIX':        { label: 'VIX', desc: 'Volatilidad — miedo del mercado' },
+  '^VIX':       { label: 'VIX', desc: 'Volatilidad — miedo del mercado' },
   'DXY':        { label: 'DXY', desc: 'Fortaleza del dólar USD' },
   'NQ Futures': { label: 'NQ',  desc: 'Apetito de riesgo' },
-  'Oro':        { label: 'Oro', desc: 'Refugio seguro — stress global', dangerIfHigh: true },
+  'Oro':        { label: 'Oro', desc: 'Refugio seguro — stress global' },
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
