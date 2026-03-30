@@ -21,6 +21,8 @@ const CONFIG = {
 }
 
 const MAX_STORED = 60
+const BTN_SIZE   = 56   // px — button width/height
+const POS_KEY    = 'vinces_widget_pos'
 
 interface LandingSession {
   name?: string
@@ -93,15 +95,124 @@ export default function VincesWidget({ mode = 'dashboard' }: Props) {
   const [hydrated, setHydrated] = useState(false)
   const [session, setSession]   = useState<LandingSession>({ captured: false })
 
+  // ── Drag state ──────────────────────────────────────────────────────────────
+  // pos === null means "not yet initialised" — widget is hidden until first render
+  const [pos, setPos]   = useState<{ x: number; y: number } | null>(null)
+  const posRef          = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
+  const dragging        = useRef(false)
+  const didDrag         = useRef(false)
+  const dragOrigin      = useRef({ mx: 0, my: 0, px: 0, py: 0 })
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef    = useRef<HTMLTextAreaElement>(null)
 
-  // Hydrate from localStorage
+  // ── Init position from localStorage or default bottom-right ────────────────
+  useEffect(() => {
+    const margin = 20
+    const defaultX = window.innerWidth  - BTN_SIZE - margin
+    const defaultY = window.innerHeight - BTN_SIZE - margin - 80 // clear mobile bottom nav
+
+    try {
+      const saved = localStorage.getItem(POS_KEY)
+      if (saved) {
+        const p = JSON.parse(saved) as { x: number; y: number }
+        const x = Math.min(Math.max(0, p.x), window.innerWidth  - BTN_SIZE)
+        const y = Math.min(Math.max(0, p.y), window.innerHeight - BTN_SIZE)
+        posRef.current = { x, y }
+        setPos({ x, y })
+        return
+      }
+    } catch {}
+
+    posRef.current = { x: defaultX, y: defaultY }
+    setPos({ x: defaultX, y: defaultY })
+  }, [])
+
+  // ── Drag handlers ───────────────────────────────────────────────────────────
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    // Only drag on primary button / single touch
+    if (e.button !== 0 && e.pointerType === 'mouse') return
+    dragging.current  = true
+    didDrag.current   = false
+    dragOrigin.current = {
+      mx: e.clientX,
+      my: e.clientY,
+      px: posRef.current.x,
+      py: posRef.current.y,
+    }
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    e.preventDefault()
+  }, [])
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current) return
+    const dx = e.clientX - dragOrigin.current.mx
+    const dy = e.clientY - dragOrigin.current.my
+
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) didDrag.current = true
+
+    const x = Math.min(Math.max(0, dragOrigin.current.px + dx), window.innerWidth  - BTN_SIZE)
+    const y = Math.min(Math.max(0, dragOrigin.current.py + dy), window.innerHeight - BTN_SIZE)
+    posRef.current = { x, y }
+    setPos({ x, y })
+  }, [])
+
+  const onPointerUp = useCallback(() => {
+    if (!dragging.current) return
+    dragging.current = false
+    // Persist final position
+    try { localStorage.setItem(POS_KEY, JSON.stringify(posRef.current)) } catch {}
+    // If it was a real drag (not a tap), suppress the click
+    // (click fires after pointerup; we handle toggle in onClick with didDrag check)
+  }, [])
+
+  const onButtonClick = useCallback(() => {
+    if (didDrag.current) { didDrag.current = false; return }
+    setOpen(v => !v)
+  }, [])
+
+  // ── Panel position — computed relative to button ────────────────────────────
+  function panelStyle(): React.CSSProperties {
+    if (!pos) return { display: 'none' }
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+
+    const panelW = Math.min(380, vw - 16)
+    const panelH = Math.min(580, vh - 120)
+    const gap     = 10
+
+    // Horizontal: right-align with button when on right half, else left-align
+    let left: number
+    if (pos.x + BTN_SIZE / 2 > vw / 2) {
+      left = Math.max(8, pos.x + BTN_SIZE - panelW)
+    } else {
+      left = Math.min(pos.x, vw - panelW - 8)
+    }
+
+    // Vertical: prefer above button, fall back to below
+    let top: number
+    if (pos.y >= panelH + gap) {
+      top = pos.y - panelH - gap
+    } else {
+      top = pos.y + BTN_SIZE + gap
+    }
+
+    return {
+      position: 'fixed',
+      left,
+      top,
+      width: panelW,
+      height: panelH,
+      zIndex: 50,
+    }
+  }
+
+  // ── Chat logic ──────────────────────────────────────────────────────────────
+
   useEffect(() => {
     const msgs = loadMessages(cfg.storageKey, cfg.initialMessage)
     const sess = loadSession(cfg.sessionKey)
 
-    // Re-attach payment links to last assistant message if lead was already captured
     if (sess.captured && msgs.length > 0) {
       const last = msgs[msgs.length - 1]
       if (last.role === 'assistant' && !last.links) {
@@ -151,7 +262,6 @@ export default function VincesWidget({ mode = 'dashboard' }: Props) {
           ...(data.links ? { links: data.links } : {}),
         }
 
-        // RAG indicator (dashboard mode)
         if (data.ragDocsFound > 0) {
           assistantMsg.content =
             `📚 *${data.ragDocsFound} doc${data.ragDocsFound > 1 ? 's' : ''} consultado${data.ragDocsFound > 1 ? 's' : ''}*\n\n` +
@@ -162,7 +272,6 @@ export default function VincesWidget({ mode = 'dashboard' }: Props) {
         setMessages(withReply)
         saveMessages(cfg.storageKey, withReply)
 
-        // Update lead session (landing mode)
         if (mode === 'landing' && (data.leadCaptured || data.extractedData)) {
           const newSession: LandingSession = {
             ...session,
@@ -208,20 +317,20 @@ export default function VincesWidget({ mode = 'dashboard' }: Props) {
     }
   }
 
-  if (!hydrated) return null
+  if (!hydrated || !pos) return null
 
   return (
     <>
       {/* ── Chat panel ─────────────────────────────────────────────────── */}
       <div
-        className={`fixed bottom-36 md:bottom-44 right-4 md:right-8 z-50 flex flex-col transition-all duration-300 ease-in-out ${
+        className={`transition-all duration-300 ease-in-out ${
           open
-            ? 'opacity-100 translate-y-0 pointer-events-auto'
-            : 'opacity-0 translate-y-4 pointer-events-none'
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
         }`}
         style={{
-          width: 'min(380px, calc(100vw - 16px))',
-          height: 'min(580px, calc(100dvh - 120px))',
+          ...panelStyle(),
+          transform: open ? 'scale(1) translateY(0)' : 'scale(0.97) translateY(6px)',
         }}
       >
         <div
@@ -287,7 +396,6 @@ export default function VincesWidget({ mode = 'dashboard' }: Props) {
                   )}
                 </div>
 
-                {/* Payment links — shown after lead is captured */}
                 {msg.links && (
                   <div className="mt-2 max-w-[85%] w-full space-y-2">
                     <a
@@ -358,12 +466,20 @@ export default function VincesWidget({ mode = 'dashboard' }: Props) {
         </div>
       </div>
 
-      {/* ── Floating toggle button ──────────────────────────────────────── */}
+      {/* ── Floating toggle button (draggable) ─────────────────────────── */}
       <button
-        onClick={() => setOpen((v) => !v)}
-        title="Hablar con Vinces AI"
-        className="fixed bottom-20 md:bottom-24 right-4 md:right-8 z-50 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 active:scale-95"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onClick={onButtonClick}
+        title="Hablar con Vinces AI — arrastra para mover"
+        className="z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform duration-150 hover:scale-110 active:scale-95"
         style={{
+          position: 'fixed',
+          left: pos.x,
+          top: pos.y,
+          cursor: dragging.current ? 'grabbing' : 'grab',
+          touchAction: 'none',
           background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)',
           boxShadow: '0 4px 28px rgba(201,168,76,0.5), 0 0 0 2px rgba(201,168,76,0.3)',
         }}
