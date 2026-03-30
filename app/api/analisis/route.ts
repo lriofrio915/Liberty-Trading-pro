@@ -66,37 +66,29 @@ async function fetchYahoo(symbol: string, name: string): Promise<PriceItem | nul
   }
 }
 
-async function fetchBinance(symbol: string, name: string, display: string): Promise<PriceItem | null> {
-  try {
-    const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`, {
-      signal: AbortSignal.timeout(6000),
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    const price = parseFloat(data.lastPrice ?? '0')
-    const changePct = parseFloat(data.priceChangePercent ?? '0')
-    const change = parseFloat(data.priceChange ?? '0')
-    return { symbol: display, name, price, change, changePct, up: change >= 0 }
-  } catch {
-    return null
-  }
-}
-
 async function fetchAllPrices(): Promise<PriceItem[]> {
   const results = await Promise.allSettled([
-    fetchYahoo('NQ=F', 'NQ Futures'),
-    fetchYahoo('GC=F', 'Oro'),
-    fetchYahoo('CL=F', 'Petróleo WTI'),
+    fetchYahoo('NQ=F',     'NQ Futures'),
+    fetchYahoo('GC=F',     'Oro'),
+    fetchYahoo('CL=F',     'Petróleo WTI'),
     fetchYahoo('EURUSD=X', 'EUR/USD'),
-    fetchYahoo('%5EVIX', 'VIX'),
-    fetchYahoo('DX=F', 'DXY'),
+    fetchYahoo('%5EVIX',   'VIX'),
+    fetchYahoo('DX=F',     'DXY'),
     fetchYahoo('USDMXN=X', 'USD/MXN'),
     fetchYahoo('USDCOP=X', 'USD/COP'),
-    fetchBinance('BTCUSDT', 'Bitcoin', 'BTC'),
-    fetchBinance('ETHUSDT', 'Ethereum', 'ETH'),
-    fetchBinance('SOLUSDT', 'Solana', 'SOL'),
+    // Crypto via Yahoo Finance (más confiable en serverless que Binance)
+    fetchYahoo('BTC-USD',  'Bitcoin'),
+    fetchYahoo('ETH-USD',  'Ethereum'),
+    fetchYahoo('SOL-USD',  'Solana'),
   ])
-  return results.flatMap(r => (r.status === 'fulfilled' && r.value ? [r.value] : []))
+  // Normalize crypto display symbols
+  const items = results.flatMap(r => (r.status === 'fulfilled' && r.value ? [r.value] : []))
+  return items.map(item => {
+    if (item.symbol === 'BTC-USD') return { ...item, symbol: 'BTC' }
+    if (item.symbol === 'ETH-USD') return { ...item, symbol: 'ETH' }
+    if (item.symbol === 'SOL-USD') return { ...item, symbol: 'SOL' }
+    return item
+  })
 }
 
 // ── OpenRouter agent call ──────────────────────────────────────────────────────
@@ -184,7 +176,7 @@ Incluye los 4 activos: DXY, EUR/USD, USD/MXN, USD/COP. DXY COMPRA = dólar fuert
       name: 'materiales' as const,
       system: `Eres un agente analista de commodities. Analiza Oro (GC=F) y Petróleo WTI (CL=F).
 RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
-{"activos":[{"simbolo":"GC=F","nombre":"Oro","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":72,"razon":"activo refugio con demanda sostenida","riesgo":"bajo","sector":"Materiales"},{"simbolo":"CL=F","nombre":"Petróleo WTI","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":60,"razon":"oferta y demanda equilibradas","riesgo":"medio","sector":"Materiales"}]}
+{"activos":[{"simbolo":"ORO","nombre":"Oro (Gold)","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":72,"razon":"activo refugio con demanda sostenida","riesgo":"bajo","sector":"Materiales"},{"simbolo":"WTI","nombre":"Petróleo WTI","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":60,"razon":"oferta y demanda equilibradas","riesgo":"medio","sector":"Materiales"}]}
 Oro es refugio seguro. Petróleo refleja demanda global y geopolítica.`,
       user: `${base}\n\n${riskNote}\n\nAnaliza Oro y Petróleo WTI con los datos proporcionados.`,
     },
