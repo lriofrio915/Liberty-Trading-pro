@@ -23,6 +23,7 @@ export const navGroups: NavGroup[] = [
   {
     label: 'Club',
     items: [
+      { href: '/dashboard/analisis',       icon: '🔍', label: 'Análisis',      requiresClub: true },
       { href: '/dashboard/oportunidades', icon: '🎯', label: 'Oportunidades', requiresClub: true },
       { href: '/dashboard/track-record',  icon: '📈', label: 'Track Record',  requiresClub: true },
       { href: '/dashboard/reportes',      icon: '📄', label: 'Reportes',      requiresClub: true },
