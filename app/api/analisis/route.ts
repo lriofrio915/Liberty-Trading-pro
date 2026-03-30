@@ -206,10 +206,35 @@ RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
 
 // ── Symbol matching for price injection ───────────────────────────────────────
 
+// Maps every possible symbol the AI might return → the exact symbol in our prices array
+const PRICE_LOOKUP: Record<string, string> = {
+  // Crypto
+  BTC: 'BTC', BITCOIN: 'BTC',
+  ETH: 'ETH', ETHEREUM: 'ETH', ETHER: 'ETH',
+  SOL: 'SOL', SOLANA: 'SOL',
+  // Acciones
+  NQ: 'NQ=F', 'NQ=F': 'NQ=F', 'NQ FUTURES': 'NQ=F', 'NASDAQ': 'NQ=F', 'NASDAQ 100': 'NQ=F',
+  VIX: '%5EVIX', '%5EVIX': '%5EVIX', 'ÍNDICE VIX': '%5EVIX',
+  // Divisas
+  DXY: 'DX=F', 'DX=F': 'DX=F', 'DOLLAR INDEX': 'DX=F', 'ÍNDICE DÓLAR': 'DX=F', 'DOLAR INDEX': 'DX=F',
+  'EUR/USD': 'EURUSD=X', EURUSD: 'EURUSD=X', 'EURUSD=X': 'EURUSD=X',
+  'USD/MXN': 'USDMXN=X', USDMXN: 'USDMXN=X', 'USDMXN=X': 'USDMXN=X', MXN: 'USDMXN=X',
+  'USD/COP': 'USDCOP=X', USDCOP: 'USDCOP=X', 'USDCOP=X': 'USDCOP=X', COP: 'USDCOP=X',
+  // Materiales
+  'GC=F': 'GC=F', ORO: 'GC=F', GOLD: 'GC=F', 'GOLD FUTURES': 'GC=F',
+  'CL=F': 'CL=F', WTI: 'CL=F', 'PETRÓLEO': 'CL=F', PETROLEO: 'CL=F', OIL: 'CL=F', 'PETRÓLEO WTI': 'CL=F', 'PETROLEO WTI': 'CL=F',
+}
+
 function matchPrice(asset: AssetAnalysis, prices: PriceItem[]): PriceItem | undefined {
-  const sym = asset.simbolo.toUpperCase()
+  const sym = asset.simbolo.toUpperCase().trim()
+
+  // 1. Direct lookup via explicit map
+  const mapped = PRICE_LOOKUP[sym]
+  if (mapped) return prices.find(p => p.symbol === mapped)
+
+  // 2. Fallback: try exact symbol or name contains
   return prices.find(p => {
-    const ps = p.symbol.toUpperCase().replace('=F', '').replace('=X', '').replace('%5E', '')
+    const ps = p.symbol.toUpperCase().replace(/=F|=X|%5E/g, '')
     return ps === sym || p.symbol.toUpperCase() === sym || p.name.toUpperCase().includes(sym)
   })
 }
