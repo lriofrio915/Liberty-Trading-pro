@@ -66,6 +66,15 @@ async function fetchYahoo(symbol: string, name: string): Promise<PriceItem | nul
   }
 }
 
+// DXY: tries spot index first (DX-Y.NYB), then futures (DX=F) as fallback
+async function fetchDXY(): Promise<PriceItem | null> {
+  const spot = await fetchYahoo('DX-Y.NYB', 'DXY')
+  if (spot) return { ...spot, symbol: 'DX=F' }
+  const fut = await fetchYahoo('DX=F', 'DXY')
+  if (fut) return fut
+  return null
+}
+
 async function fetchAllPrices(): Promise<PriceItem[]> {
   const results = await Promise.allSettled([
     fetchYahoo('NQ=F',     'NQ Futures'),
@@ -73,15 +82,13 @@ async function fetchAllPrices(): Promise<PriceItem[]> {
     fetchYahoo('CL=F',     'Petróleo WTI'),
     fetchYahoo('EURUSD=X', 'EUR/USD'),
     fetchYahoo('%5EVIX',   'VIX'),
-    fetchYahoo('DX=F',     'DXY'),
+    fetchDXY(),
     fetchYahoo('USDMXN=X', 'USD/MXN'),
     fetchYahoo('USDCOP=X', 'USD/COP'),
-    // Crypto via Yahoo Finance (más confiable en serverless que Binance)
     fetchYahoo('BTC-USD',  'Bitcoin'),
     fetchYahoo('ETH-USD',  'Ethereum'),
     fetchYahoo('SOL-USD',  'Solana'),
   ])
-  // Normalize crypto display symbols
   const items = results.flatMap(r => (r.status === 'fulfilled' && r.value ? [r.value] : []))
   return items.map(item => {
     if (item.symbol === 'BTC-USD') return { ...item, symbol: 'BTC' }
@@ -174,10 +181,11 @@ Incluye los 4 activos: DXY, EUR/USD, USD/MXN, USD/COP. DXY COMPRA = dólar fuert
     },
     {
       name: 'materiales' as const,
-      system: `Eres un agente analista de commodities. Analiza Oro (GC=F) y Petróleo WTI (CL=F).
-RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
-{"activos":[{"simbolo":"ORO","nombre":"Oro (Gold)","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":72,"razon":"activo refugio con demanda sostenida","riesgo":"bajo","sector":"Materiales"},{"simbolo":"WTI","nombre":"Petróleo WTI","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":60,"razon":"oferta y demanda equilibradas","riesgo":"medio","sector":"Materiales"}]}
-Oro es refugio seguro. Petróleo refleja demanda global y geopolítica.`,
+      system: `Eres un agente analista de commodities. Analiza Oro y Petróleo WTI.
+RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown.
+El campo "simbolo" DEBE ser exactamente "ORO" para el oro y "WTI" para el petróleo:
+{"activos":[{"simbolo":"ORO","nombre":"Oro","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":72,"razon":"activo refugio con demanda sostenida","riesgo":"bajo","sector":"Materiales"},{"simbolo":"WTI","nombre":"Petróleo WTI","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":60,"razon":"oferta y demanda equilibradas","riesgo":"medio","sector":"Materiales"}]}
+Oro es refugio seguro. Petróleo refleja demanda global y geopolítica. NUNCA uses GC=F ni CL=F como simbolo.`,
       user: `${base}\n\n${riskNote}\n\nAnaliza Oro y Petróleo WTI con los datos proporcionados.`,
     },
     {
