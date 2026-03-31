@@ -1,1 +1,13 @@
-{}
+{
+  "headers": [
+    {
+      "source": "/api/prices",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=15, stale-while-revalidate=30"
+        }
+      ]
+    }
+  ]
+}
