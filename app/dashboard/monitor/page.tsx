@@ -103,7 +103,7 @@ export default function MonitorPage() {
 
   const fetchPrices = useCallback(async () => {
     try {
-      const res = await fetch('/api/prices', { cache: 'no-store' })
+      const res = await fetch('/api/prices')
       const data = await res.json()
       if (data.prices?.length) setPrices(data.prices)
     } finally {
@@ -117,7 +117,7 @@ export default function MonitorPage() {
     fetchNews()
     fetchPrices()
     const newsTimer = setInterval(fetchNews, 120_000)
-    const pricesTimer = setInterval(fetchPrices, 30_000)
+    const pricesTimer = setInterval(fetchPrices, 60_000)
     return () => {
       clearInterval(newsTimer)
       clearInterval(pricesTimer)

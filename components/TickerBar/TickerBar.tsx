@@ -26,7 +26,7 @@ export default function TickerBar() {
 
   const fetchPrices = useCallback(async () => {
     try {
-      const res = await fetch('/api/prices', { cache: 'no-store' })
+      const res = await fetch('/api/prices')
       if (!res.ok) return
       const data = await res.json()
       if (data.prices?.length) {
@@ -41,7 +41,7 @@ export default function TickerBar() {
 
   useEffect(() => {
     fetchPrices()
-    const interval = setInterval(fetchPrices, 30_000)
+    const interval = setInterval(fetchPrices, 60_000)
     return () => clearInterval(interval)
   }, [fetchPrices])
 
