@@ -13,6 +13,7 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const confirmed = searchParams.get('confirmed') === '1'
+  const reset = searchParams.get('reset') === '1'
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,6 +48,12 @@ function LoginForm() {
           </div>
         )}
 
+        {reset && (
+          <div className="mb-4 rounded-lg border border-green-700/50 bg-green-950/30 px-4 py-3 text-sm text-green-400">
+            ✓ Contraseña actualizada con éxito — ya puedes iniciar sesión
+          </div>
+        )}
+
         <div className="card-gold">
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
@@ -62,7 +69,12 @@ function LoginForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">Contraseña</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-[var(--text-secondary)]">Contraseña</label>
+                <Link href="/forgot-password" className="text-xs text-[var(--text-muted)] hover:text-[var(--gold)] transition-colors">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
               <input
                 type="password"
                 required
