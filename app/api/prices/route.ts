@@ -20,6 +20,8 @@ let memCache: { prices: PriceItem[]; ts: number } | null = null
 
 const YAHOO_NAMES: Record<string, string> = {
   'NQ=F':     'NQ Futures',
+  '%5EGSPC':  'S&P 500',
+  '%5ERUT':   'Russell 2000',
   'GC=F':     'Oro',
   'CL=F':     'Petróleo WTI',
   'EURUSD=X': 'EUR/USD',
@@ -99,8 +101,10 @@ export async function GET() {
     )
   }
 
-  const [nq, gc, cl, eurusd, vix, dxy, cop, mxn, brl, btc, eth, sol] = await Promise.allSettled([
+  const [nq, sp500, rut, gc, cl, eurusd, vix, dxy, cop, mxn, brl, btc, eth, sol] = await Promise.allSettled([
     fetchYahoo('NQ=F'),
+    fetchYahoo('%5EGSPC'),
+    fetchYahoo('%5ERUT'),
     fetchYahoo('GC=F'),
     fetchYahoo('CL=F'),
     fetchYahoo('EURUSD=X'),
@@ -115,7 +119,7 @@ export async function GET() {
   ])
 
   const prices: PriceItem[] = []
-  for (const result of [nq, gc, cl, eurusd, vix, dxy, cop, mxn, brl, btc, eth, sol]) {
+  for (const result of [nq, sp500, rut, gc, cl, eurusd, vix, dxy, cop, mxn, brl, btc, eth, sol]) {
     if (result.status === 'fulfilled' && result.value) {
       prices.push(result.value)
     }

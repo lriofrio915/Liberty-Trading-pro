@@ -47,11 +47,13 @@ const TIMESPANS: { value: Timespan; label: string }[] = [
 ]
 
 const STRESS_CONFIG: Record<string, { label: string; desc: string; dangerIfHigh?: boolean }> = {
-  'VIX':        { label: 'VIX', desc: 'Volatilidad — miedo del mercado' },
-  '^VIX':       { label: 'VIX', desc: 'Volatilidad — miedo del mercado' },
-  'DXY':        { label: 'DXY', desc: 'Fortaleza del dólar USD' },
-  'NQ Futures': { label: 'NQ',  desc: 'Apetito de riesgo' },
-  'Oro':        { label: 'Oro', desc: 'Refugio seguro — stress global' },
+  'VIX':          { label: 'VIX',     desc: 'Volatilidad — miedo del mercado' },
+  '^VIX':         { label: 'VIX',     desc: 'Volatilidad — miedo del mercado' },
+  'DXY':          { label: 'DXY',     desc: 'Fortaleza del dólar USD' },
+  'NQ Futures':   { label: 'NQ',      desc: 'Apetito de riesgo tech' },
+  'S&P 500':      { label: 'S&P 500', desc: 'Índice amplio — 500 empresas EE.UU.' },
+  'Russell 2000': { label: 'Russell', desc: 'Small caps — apetito de riesgo secundario' },
+  'Oro':          { label: 'Oro',     desc: 'Refugio seguro — stress global' },
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -127,7 +129,7 @@ export default function MonitorPage() {
   // ── Stress indicators ───────────────────────────────────────────────────────
 
   const stressIndicators = useMemo(
-    () => prices.filter((p) => ['VIX', 'DXY', 'Oro', 'NQ Futures', '^VIX'].includes(p.name)),
+    () => prices.filter((p) => ['VIX', '^VIX', 'DXY', 'NQ Futures', 'S&P 500', 'Russell 2000', 'Oro'].includes(p.name)),
     [prices]
   )
 
@@ -150,9 +152,9 @@ export default function MonitorPage() {
       {/* ── Stress Indicators ── */}
       <div>
         <div className="label-mono mb-2.5 text-[var(--gold)]">Indicadores de stress del mercado</div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
           {pricesLoading
-            ? Array.from({ length: 4 }).map((_, i) => (
+            ? Array.from({ length: 7 }).map((_, i) => (
                 <div key={i} className="card h-20 animate-pulse" />
               ))
             : stressIndicators.map((p) => {
