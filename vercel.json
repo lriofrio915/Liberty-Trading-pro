@@ -9,5 +9,23 @@
         }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/morning-scan",
+      "schedule": "0 13 * * 1-5"
+    },
+    {
+      "path": "/api/cron/midday-prices",
+      "schedule": "0 16 * * 1-5"
+    },
+    {
+      "path": "/api/cron/close-prices",
+      "schedule": "0 19 * * 1-5"
+    },
+    {
+      "path": "/api/cron/bias-monitor",
+      "schedule": "*/30 13-19 * * 1-5"
+    }
   ]
 }

@@ -9,6 +9,8 @@ export const metadata = {
   description: '5 agentes de IA analizan en paralelo crypto, acciones, divisas y materiales para darte un sesgo claro y recomendación de compra/venta.',
 }
 
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim().toLowerCase())
+
 export default async function AnalisisPage() {
   const supabase = await createSupabaseServerClient()
   const {
@@ -30,5 +32,7 @@ export default async function AnalisisPage() {
 
   if (!access.canAccessClub) redirect('/dashboard/upgrade')
 
-  return <AnalisisClient />
+  const isAdmin = ADMIN_EMAILS.length > 0 && ADMIN_EMAILS.includes((user.email ?? '').toLowerCase())
+
+  return <AnalisisClient isAdmin={isAdmin} />
 }

@@ -322,3 +322,48 @@ model VideoSemana {
   publicado   Boolean  @default(true)
   creadoEn    DateTime @default(now())
 }
+
+// ─── LABORATORIO DE ESTRATEGIA ────────────────────────────────────────────────
+
+// Escaneo automático diario a las 9am ET (lunes a viernes)
+model MarketScan {
+  id           String   @id @default(cuid())
+  fecha        DateTime // fecha del escaneo (día a las 00:00 UTC)
+  hora         String   // "09:00 ET"
+  sesgogeneral String   // ALCISTA | BAJISTA | NEUTRAL
+  resumen      String?  @db.Text
+  riskProfile  String   @default("moderado")
+  createdAt    DateTime @default(now())
+
+  oportunidades ScanOpportunity[]
+}
+
+// Oportunidades detectadas con confianza >= 70% en el escaneo de las 9am
+model ScanOpportunity {
+  id        String     @id @default(cuid())
+  scanId    String
+  scan      MarketScan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  simbolo   String    // "NQ", "BTC", "SP500", "RUSSELL", etc.
+  nombre    String
+  sesgo     String    // COMPRA | VENTA (nunca NEUTRAL — filtrado en el cron)
+  confianza Int       // >= 70
+  precio9am Float     // precio al momento del scan (9am ET)
+  razon     String?   @db.Text
+  sector    String
+
+  // Cierre 1: 12pm ET (cron automático)
+  precio12pm      Float?
+  rendimiento12pm Float?  // % a favor del sesgo: positivo = ganó, negativo = perdió
+
+  // Cierre 2: 3pm ET (cron automático)
+  precio3pm      Float?
+  rendimiento3pm Float?
+
+  // Cierre 3: cambio de sesgo detectado automáticamente (bias-monitor cada 30 min)
+  precioSesgoFlip Float?  // precio cuando el sesgo se invirtió
+  horaSesgoFlip   String? // hora local del cambio detectado (ej: "11:30 ET")
+  rendimientoFlip Float?  // % de movimiento 9am → flip a favor del sesgo original
+
+  createdAt DateTime @default(now())
+}
