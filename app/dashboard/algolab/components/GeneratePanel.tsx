@@ -66,8 +66,15 @@ export default function GeneratePanel({ dataset, onGenerated }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ datasetId: dataset.id, selectedIndicators: selected, config }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Error al generar')
+      const text = await res.text()
+      let data: { error?: string; strategies?: unknown[]; total?: number; message?: string } = {}
+      try { data = JSON.parse(text) } catch { /* respuesta HTML (timeout/500) */ }
+      if (!res.ok) {
+        if (res.status === 504 || res.status === 408) {
+          throw new Error('Tiempo de espera agotado (>60s). Prueba con menos indicadores seleccionados.')
+        }
+        throw new Error(data.error ?? `Error del servidor (${res.status})`)
+      }
       setMessage(`✓ ${data.strategies.length} estrategias guardadas (de ${data.total ?? data.strategies.length} evaluadas)`)
       onGenerated()
     } catch (err) {
