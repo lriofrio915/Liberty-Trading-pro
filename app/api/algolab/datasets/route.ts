@@ -51,8 +51,8 @@ export async function POST(req: NextRequest) {
     const content = await file.text()
     const candles = parseMT5CSV(content)
 
-    if (candles.length < 10) {
-      return NextResponse.json({ error: 'CSV inválido o insuficientes datos (mínimo 10 velas)' }, { status: 400 })
+    if (candles.length < 2) {
+      return NextResponse.json({ error: 'CSV inválido o sin datos MT5 reconocibles' }, { status: 400 })
     }
 
     const timeframe = detectTimeframe(candles)
