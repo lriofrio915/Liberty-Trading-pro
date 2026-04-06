@@ -79,7 +79,9 @@ export function parseMT5CSV(content: string): Candle[] {
 
     if (!datePart.match(/^\d{4}\.\d{2}\.\d{2}$/)) continue
 
-    const isoDate = datePart.replace(/\./g, '-') + 'T' + (timePart || '00:00') + ':00Z'
+    // Normalizar tiempo: aceptar HH:MM y HH:MM:SS
+    const timeNorm = (timePart || '00:00').replace(/^(\d{2}:\d{2}):\d{2}$/, '$1')
+    const isoDate = datePart.replace(/\./g, '-') + 'T' + timeNorm + ':00Z'
     const ts = new Date(isoDate).getTime()
     if (isNaN(ts)) continue
 
