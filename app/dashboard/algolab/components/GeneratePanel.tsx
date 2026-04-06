@@ -75,7 +75,8 @@ export default function GeneratePanel({ dataset, onGenerated }: Props) {
         }
         throw new Error(data.error ?? `Error del servidor (${res.status})`)
       }
-      setMessage(`✓ ${data.strategies.length} estrategias guardadas (de ${data.total ?? data.strategies.length} evaluadas)`)
+      const count = data.strategies?.length ?? 0
+      setMessage(`✓ ${count} estrategias guardadas (de ${data.total ?? count} evaluadas)`)
       onGenerated()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al generar estrategias')
