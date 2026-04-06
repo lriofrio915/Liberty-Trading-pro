@@ -1,0 +1,29 @@
+name: Morning Scan (9am ET)
+
+on:
+  schedule:
+    - cron: "0 13 * * 1-5"   # 9:00am ET = 13:00 UTC, lun-vie
+  workflow_dispatch:           # permite ejecución manual desde GitHub UI
+
+jobs:
+  morning-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ejecutar morning scan
+        run: |
+          echo "Llamando /api/cron/morning-scan..."
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -X GET "https://libertytrading.pro/api/cron/morning-scan" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+
+          HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | cut -d: -f2)
+          BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS:")
+
+          echo "Status: $HTTP_STATUS"
+          echo "Body: $BODY"
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "ERROR: El cron respondió con status $HTTP_STATUS"
+            exit 1
+          fi

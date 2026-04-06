@@ -1,0 +1,29 @@
+name: Bias Monitor (cada 30 min, 9am-3pm ET)
+
+on:
+  schedule:
+    - cron: "*/30 13-19 * * 1-5"   # cada 30 min, 9am-3pm ET = 13-19 UTC, lun-vie
+  workflow_dispatch:
+
+jobs:
+  bias-monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Monitorear flip de sesgo
+        run: |
+          echo "Llamando /api/cron/bias-monitor..."
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -X GET "https://libertytrading.pro/api/cron/bias-monitor" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+
+          HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | cut -d: -f2)
+          BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS:")
+
+          echo "Status: $HTTP_STATUS"
+          echo "Body: $BODY"
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "ERROR: El cron respondió con status $HTTP_STATUS"
+            exit 1
+          fi

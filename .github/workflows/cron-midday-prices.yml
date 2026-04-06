@@ -1,0 +1,29 @@
+name: Midday Prices (12pm ET)
+
+on:
+  schedule:
+    - cron: "0 16 * * 1-5"   # 12:00pm ET = 16:00 UTC, lun-vie
+  workflow_dispatch:
+
+jobs:
+  midday-prices:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Capturar precios del mediodía
+        run: |
+          echo "Llamando /api/cron/midday-prices..."
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -X GET "https://libertytrading.pro/api/cron/midday-prices" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+
+          HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | cut -d: -f2)
+          BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS:")
+
+          echo "Status: $HTTP_STATUS"
+          echo "Body: $BODY"
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "ERROR: El cron respondió con status $HTTP_STATUS"
+            exit 1
+          fi
