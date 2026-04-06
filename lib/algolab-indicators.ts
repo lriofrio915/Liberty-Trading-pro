@@ -276,7 +276,7 @@ export interface BollingerResult {
   middle: number[]
   lower: number[]
   pctB: number[]
-  width: number[]
+  widthPercent: number[]
 }
 
 export function calcBollinger(candles: Candle[], period = 20, stdDev = 2): BollingerResult {
@@ -285,7 +285,7 @@ export function calcBollinger(candles: Candle[], period = 20, stdDev = 2): Bolli
   const upper: number[] = new Array(closes.length).fill(NaN)
   const lower: number[] = new Array(closes.length).fill(NaN)
   const pctB: number[] = new Array(closes.length).fill(NaN)
-  const width: number[] = new Array(closes.length).fill(NaN)
+  const widthPercent: number[] = new Array(closes.length).fill(NaN)
 
   for (let i = period - 1; i < closes.length; i++) {
     const s = std(closes.slice(i - period + 1, i + 1))
@@ -293,9 +293,9 @@ export function calcBollinger(candles: Candle[], period = 20, stdDev = 2): Bolli
     lower[i] = middle[i] - stdDev * s
     const bw = upper[i] - lower[i]
     pctB[i] = bw === 0 ? 0.5 : (closes[i] - lower[i]) / bw
-    width[i] = middle[i] === 0 ? 0 : bw / middle[i]
+    widthPercent[i] = middle[i] === 0 ? 0 : bw / middle[i]
   }
-  return { upper, middle, lower, pctB, width }
+  return { upper, middle, lower, pctB, widthPercent }
 }
 
 export function calcATR(candles: Candle[], period = 14): number[] {
@@ -311,7 +311,7 @@ export function calcATR(candles: Candle[], period = 14): number[] {
     )
   }
 
-  let sum = tr.slice(1, period + 1).reduce((s, v) => s + v, 0)
+  const sum = tr.slice(1, period + 1).reduce((s, v) => s + v, 0)
   result[period] = sum / period
   for (let i = period + 1; i < n; i++) {
     result[i] = (result[i - 1] * (period - 1) + tr[i]) / period
