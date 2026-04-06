@@ -722,8 +722,8 @@ export default function AnalisisClient({ isAdmin = false }: { isAdmin?: boolean 
         </div>
       )}
 
-      </div> {/* end live tab wrapper */}
-      )} {/* end live tab condition */}
+      </div>
+      )}
 
       {/* ══════════════════════════════════════════════════════════
           TAB: LABORATORIO DE ESTRATEGIA (admin only)
