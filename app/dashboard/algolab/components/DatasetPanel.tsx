@@ -42,8 +42,13 @@ export default function DatasetPanel({ datasets, selectedId, onSelect, onUploade
       form.append('symbol', symbol.trim().toUpperCase())
       form.append('provider', provider)
       const res = await fetch('/api/algolab/datasets', { method: 'POST', body: form })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Error al subir')
+      const text = await res.text()
+      let data: { error?: string; dataset?: DatasetSummary } = {}
+      try { data = JSON.parse(text) } catch { /* respuesta no-JSON (ej: 413) */ }
+      if (!res.ok) {
+        if (res.status === 413) throw new Error('Archivo demasiado grande. Exporta un rango de fechas más corto desde MT5.')
+        throw new Error(data.error ?? `Error al subir (${res.status})`)
+      }
       onUploaded(data.dataset)
       setSymbol('')
       if (fileRef.current) fileRef.current.value = ''
