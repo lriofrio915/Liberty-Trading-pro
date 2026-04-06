@@ -29,6 +29,11 @@ export async function GET(
           },
           orderBy: { createdAt: 'desc' },
         },
+        patternReport: {
+          select: {
+            id: true, meta: true, stats: true, totalScanned: true, createdAt: true, updatedAt: true,
+          },
+        },
       },
     })
 

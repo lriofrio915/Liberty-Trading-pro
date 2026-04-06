@@ -48,8 +48,9 @@ model User {
   posts          Post[]
   postComments   PostComment[]
   certificates   Certificate[]
-  algoDatasets   AlgoDataset[]
-  algoStrategies AlgoStrategy[]
+  algoDatasets      AlgoDataset[]
+  algoStrategies    AlgoStrategy[]
+  algoPatternReports AlgoPatternReport[]
 }
 
 model TradingPlan {
@@ -340,7 +341,8 @@ model AlgoDataset {
   candles     Json
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  strategies  AlgoStrategy[]
+  strategies    AlgoStrategy[]
+  patternReport AlgoPatternReport?
 
   @@unique([userId, symbol, timeframe, provider])
 }
@@ -374,6 +376,20 @@ model AlgoStrategy {
   mql5Code            String?
   status              String   @default("done")
   createdAt           DateTime @default(now())
+}
+
+// Resultado del análisis de 57 patrones de velas (1 por dataset, upsert)
+model AlgoPatternReport {
+  id             String      @id @default(cuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id])
+  datasetId      String      @unique
+  dataset        AlgoDataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  meta           Json        // DatasetMeta
+  stats          Json        // PatternStats[] — solo patrones con N >= 30
+  totalScanned   Int         // siempre 57
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 }
 
 // ─── LABORATORIO DE ESTRATEGIA ────────────────────────────────────────────────

@@ -1,9 +1,14 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import DatasetPanel from './components/DatasetPanel'
-import GeneratePanel from './components/GeneratePanel'
+import ScanPanel from './components/ScanPanel'
+import PatternReport from './components/PatternReport'
+import type { PatternAnalysisResult } from '@/lib/algolab-pattern-engine'
+
+// Legacy imports (kept for backward compat — shown only when patternReport doesn't exist yet)
 import StrategyList, { type Strategy } from './components/StrategyList'
 import StrategyDetail from './components/StrategyDetail'
+import GeneratePanel from './components/GeneratePanel'
 
 interface DatasetSummary {
   id: string
@@ -23,14 +28,20 @@ interface Props {
   isAdmin: boolean
 }
 
-export default function AlgolabClient({ isAdmin: _isAdmin }: Props) {
+export default function AlgolabClient({ isAdmin }: Props) {
   const [panel, setPanel] = useState<Panel>('datasets')
   const [datasets, setDatasets] = useState<DatasetSummary[]>([])
   const [selectedDatasetId, setSelectedDatasetId] = useState<string | null>(null)
+
+  // Pattern analysis (nuevo flujo principal)
+  const [patternResult, setPatternResult] = useState<PatternAnalysisResult | null>(null)
+  const [loadingPattern, setLoadingPattern] = useState(false)
+
+  // Legacy strategies (flujo anterior — solo admin o si no hay patternReport)
   const [strategies, setStrategies] = useState<Strategy[]>([])
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(null)
   const [loadingDatasets, setLoadingDatasets] = useState(true)
-  const [loadingStrategies, setLoadingStrategies] = useState(false)
+  const [showLegacy, setShowLegacy] = useState(false)
 
   useEffect(() => {
     fetch('/api/algolab/datasets')
@@ -40,23 +51,35 @@ export default function AlgolabClient({ isAdmin: _isAdmin }: Props) {
       .finally(() => setLoadingDatasets(false))
   }, [])
 
-  const loadStrategies = useCallback(async (id: string) => {
-    setLoadingStrategies(true)
+  const loadDataset = useCallback(async (id: string) => {
+    setLoadingPattern(true)
+    setPatternResult(null)
     setStrategies([])
     try {
       const res = await fetch(`/api/algolab/datasets/${id}`)
       const data = await res.json()
+      // Cargar patternReport si ya existe
+      if (data.dataset?.patternReport) {
+        const pr = data.dataset.patternReport
+        setPatternResult({
+          meta: pr.meta,
+          stats: pr.stats,
+          totalScanned: pr.totalScanned,
+          generatedAt: new Date(pr.updatedAt).getTime(),
+        })
+      }
+      // Legacy strategies
       setStrategies(data.dataset?.strategies ?? [])
     } catch {
       setStrategies([])
     } finally {
-      setLoadingStrategies(false)
+      setLoadingPattern(false)
     }
   }, [])
 
   function selectDataset(id: string) {
     setSelectedDatasetId(id)
-    loadStrategies(id)
+    loadDataset(id)
     setPanel('generar')
   }
 
@@ -69,19 +92,30 @@ export default function AlgolabClient({ isAdmin: _isAdmin }: Props) {
     selectDataset(ds.id)
   }
 
+  function handleAnalyzed(result: PatternAnalysisResult) {
+    setPatternResult(result)
+    setPanel('resultados')
+  }
+
+  // Legacy: cuando se generan estrategias IA (solo admin)
   function handleGenerated() {
     if (selectedDatasetId) {
-      loadStrategies(selectedDatasetId)
+      loadDataset(selectedDatasetId)
       setPanel('resultados')
     }
   }
 
   const selectedDataset = datasets.find(d => d.id === selectedDatasetId) ?? null
+  const positiveCount = patternResult?.stats.filter(s => s.totalPnlPts > 0).length ?? 0
 
   const tabs: { id: Panel; label: string; disabled?: boolean }[] = [
-    { id: 'datasets',   label: 'Datasets' },
-    { id: 'generar',    label: 'Generar',    disabled: !selectedDataset },
-    { id: 'resultados', label: `Resultados${strategies.length ? ` (${strategies.length})` : ''}`, disabled: !selectedDataset },
+    { id: 'datasets', label: 'Datasets' },
+    { id: 'generar', label: 'Generar', disabled: !selectedDataset },
+    {
+      id: 'resultados',
+      label: `Resultados${patternResult ? ` (${positiveCount}+)` : strategies.length ? ` (${strategies.length})` : ''}`,
+      disabled: !selectedDataset,
+    },
   ]
 
   return (
@@ -103,13 +137,12 @@ export default function AlgolabClient({ isAdmin: _isAdmin }: Props) {
             key={tab.id}
             onClick={() => !tab.disabled && setPanel(tab.id)}
             disabled={tab.disabled}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition ${
-              panel === tab.id
-                ? 'border-[var(--gold)] text-[var(--gold)]'
-                : tab.disabled
-                ? 'border-transparent text-[var(--text-muted)] opacity-40 cursor-not-allowed'
-                : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
-            }`}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors
+              ${tab.disabled ? 'opacity-40 cursor-not-allowed border-transparent text-[var(--text-muted)]' : ''}
+              ${panel === tab.id && !tab.disabled
+                ? 'border-amber-500 text-amber-400'
+                : !tab.disabled ? 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]' : ''
+              }`}
           >
             {tab.label}
           </button>
@@ -117,54 +150,74 @@ export default function AlgolabClient({ isAdmin: _isAdmin }: Props) {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-6 py-6">
+      <div className="overflow-auto">
         {panel === 'datasets' && (
-          loadingDatasets ? (
-            <p className="text-center text-[var(--text-muted)] text-sm py-12">Cargando datasets…</p>
-          ) : (
-            <DatasetPanel
-              datasets={datasets}
-              selectedId={selectedDatasetId}
-              onSelect={selectDataset}
-              onUploaded={handleDatasetUploaded}
-            />
-          )
-        )}
-
-        {panel === 'generar' && selectedDataset && (
-          <GeneratePanel
-            dataset={selectedDataset}
-            onGenerated={handleGenerated}
+          <DatasetPanel
+            datasets={datasets}
+            loading={loadingDatasets}
+            selectedDatasetId={selectedDatasetId}
+            onSelect={selectDataset}
+            onUploaded={handleDatasetUploaded}
           />
         )}
 
-        {panel === 'resultados' && selectedDataset && (
-          loadingStrategies ? (
-            <p className="text-center text-[var(--text-muted)] text-sm py-12">Cargando estrategias…</p>
-          ) : (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-[var(--text-muted)]">
-                  Dataset: <span className="text-[var(--text-primary)] font-semibold">{selectedDataset.symbol} · {selectedDataset.timeframe}</span>
-                </p>
+        {panel === 'generar' && selectedDataset && (
+          <div className="space-y-0">
+            {/* Panel principal: análisis de patrones */}
+            <ScanPanel dataset={selectedDataset} onAnalyzed={handleAnalyzed} />
+
+            {/* Toggle modo legado (solo admin) */}
+            {isAdmin && (
+              <div className="px-6 pb-6">
                 <button
-                  onClick={() => setPanel('generar')}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-[var(--gold)] text-black font-semibold hover:brightness-110 transition"
+                  onClick={() => setShowLegacy(v => !v)}
+                  className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] underline"
                 >
-                  + Generar más
+                  {showLegacy ? '▲ Ocultar modo legado (IA)' : '▼ Mostrar modo legado (IA)'}
                 </button>
+                {showLegacy && (
+                  <div className="mt-4 border border-dashed border-[var(--border)] rounded-xl overflow-hidden">
+                    <div className="px-4 py-2 bg-[var(--bg-secondary)] text-xs text-[var(--text-muted)]">
+                      Modo legado — Generación con IA (archetypes)
+                    </div>
+                    <GeneratePanel dataset={selectedDataset} onGenerated={handleGenerated} />
+                  </div>
+                )}
               </div>
-              <StrategyList
-                strategies={strategies}
-                selectedId={selectedStrategy?.id ?? null}
-                onSelect={setSelectedStrategy}
-              />
-            </div>
-          )
+            )}
+          </div>
+        )}
+
+        {panel === 'resultados' && selectedDataset && (
+          <>
+            {/* Si hay patternResult, mostrar el nuevo reporte */}
+            {(patternResult || loadingPattern) && (
+              <PatternReport result={patternResult} loading={loadingPattern} />
+            )}
+
+            {/* Si no hay patternResult pero hay strategies legacy, mostrarlas */}
+            {!patternResult && !loadingPattern && strategies.length > 0 && (
+              <div className="p-6">
+                <p className="text-xs text-[var(--text-muted)] mb-4">
+                  Mostrando estrategias del análisis anterior (IA). Presiona &quot;Analizar 57 Patrones&quot; en la pestaña Generar para el nuevo análisis.
+                </p>
+                <StrategyList
+                  strategies={strategies}
+                  selectedId={selectedStrategy?.id ?? null}
+                  onSelect={setSelectedStrategy}
+                />
+              </div>
+            )}
+
+            {/* Estado vacío */}
+            {!patternResult && !loadingPattern && strategies.length === 0 && (
+              <PatternReport result={null} loading={false} />
+            )}
+          </>
         )}
       </div>
 
-      {/* Strategy detail modal */}
+      {/* Legacy strategy detail modal */}
       {selectedStrategy && (
         <StrategyDetail
           strategy={selectedStrategy}
