@@ -2,7 +2,8 @@ name: Midday Prices (12pm ET)
 
 on:
   schedule:
-    - cron: "0 16 * * 1-5"   # 12:00pm ET = 16:00 UTC, lun-vie
+    - cron: "0 16 * * 1-5"   # 12:00pm ET = 16:00 UTC (EDT, mar-nov)
+    - cron: "0 17 * * 1-5"   # 12:00pm ET = 17:00 UTC (EST, nov-mar)
   workflow_dispatch:
 
 jobs:

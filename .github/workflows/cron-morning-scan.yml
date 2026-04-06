@@ -2,7 +2,8 @@ name: Morning Scan (9am ET)
 
 on:
   schedule:
-    - cron: "0 13 * * 1-5"   # 9:00am ET = 13:00 UTC, lun-vie
+    - cron: "0 13 * * 1-5"   # 9:00am ET = 13:00 UTC (EDT, mar-nov)
+    - cron: "0 14 * * 1-5"   # 9:00am ET = 14:00 UTC (EST, nov-mar)
   workflow_dispatch:           # permite ejecución manual desde GitHub UI
 
 jobs:

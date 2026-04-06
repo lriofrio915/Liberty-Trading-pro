@@ -57,7 +57,7 @@ export default function AlgolabClient({ isAdmin: _isAdmin }: Props) {
   function selectDataset(id: string) {
     setSelectedDatasetId(id)
     loadStrategies(id)
-    setPanel('resultados')
+    setPanel('generar')
   }
 
   function handleDatasetUploaded(ds: DatasetSummary) {

@@ -1,9 +1,13 @@
-// Cron: 9am ET (13:00 UTC EDT) — lunes a viernes
+// Cron: 9am ET — lunes a viernes
 // Ejecuta el análisis completo de mercados y guarda las oportunidades con confianza >= 70%
+//
+// Se dispara dos veces (EDT y EST schedules en GitHub Actions) para cubrir DST.
+// El guard isInNYWindow(9) rechaza el disparo que llega fuera de la ventana ±45 min.
 
 import { NextRequest, NextResponse } from 'next/server'
 import { runFullAnalysis } from '@/lib/analisis-engine'
 import { prisma } from '@/lib/prisma'
+import { getNYDayBoundaries, isInNYWindow, isNYWeekend } from '@/lib/cron-utils'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -15,18 +19,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Guard: skip weekends
-  const now = new Date()
-  const dayOfWeek = now.getUTCDay() // 0=Sun, 6=Sat
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
+  // Guard: skip weekends (NY calendar day)
+  if (isNYWeekend()) {
     return NextResponse.json({ ok: true, skipped: 'weekend' })
   }
 
-  // Guard: idempotency — only one scan per day
-  const todayStart = new Date(now)
-  todayStart.setUTCHours(0, 0, 0, 0)
-  const todayEnd = new Date(now)
-  todayEnd.setUTCHours(23, 59, 59, 999)
+  // Guard: only run within ±45 min of 9:00 am NY
+  // Rejects the off-hour cron that fires during the opposite DST period
+  if (!isInNYWindow(9)) {
+    return NextResponse.json({ ok: true, skipped: 'outside_ny_window' })
+  }
+
+  // Guard: idempotency — only one scan per NY calendar day
+  const { todayStart, todayEnd } = getNYDayBoundaries()
 
   const existing = await prisma.marketScan.findFirst({
     where: { fecha: { gte: todayStart, lte: todayEnd } },
@@ -46,7 +51,7 @@ export async function GET(req: NextRequest) {
     a => a.confianza >= 70 && a.sesgo !== 'NEUTRAL',
   )
 
-  // Save to DB
+  // Save to DB — use NY-day midnight as canonical fecha
   const scan = await prisma.marketScan.create({
     data: {
       fecha: todayStart,

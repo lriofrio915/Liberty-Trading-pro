@@ -2,7 +2,8 @@ name: Close Prices (3pm ET)
 
 on:
   schedule:
-    - cron: "0 19 * * 1-5"   # 3:00pm ET = 19:00 UTC, lun-vie
+    - cron: "0 19 * * 1-5"   # 3:00pm ET = 19:00 UTC (EDT, mar-nov)
+    - cron: "0 20 * * 1-5"   # 3:00pm ET = 20:00 UTC (EST, nov-mar)
   workflow_dispatch:
 
 jobs:
