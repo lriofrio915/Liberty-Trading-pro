@@ -13,7 +13,7 @@ jobs:
       - name: Capturar precios de cierre
         run: |
           echo "Llamando /api/cron/close-prices..."
-          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+          RESPONSE=$(curl -s -L -w "\nHTTP_STATUS:%{http_code}" \
             -X GET "https://libertytrading.pro/api/cron/close-prices" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
 
