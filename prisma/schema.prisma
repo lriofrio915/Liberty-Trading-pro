@@ -48,6 +48,8 @@ model User {
   posts          Post[]
   postComments   PostComment[]
   certificates   Certificate[]
+  algoDatasets   AlgoDataset[]
+  algoStrategies AlgoStrategy[]
 }
 
 model TradingPlan {
@@ -321,6 +323,57 @@ model VideoSemana {
   semana      DateTime // fecha de inicio de la semana que cubre
   publicado   Boolean  @default(true)
   creadoEn    DateTime @default(now())
+}
+
+// ─── ALGOLAB ──────────────────────────────────────────────────────────────────
+
+model AlgoDataset {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  symbol      String
+  timeframe   String
+  provider    String
+  dateFrom    DateTime
+  dateTo      DateTime
+  candleCount Int
+  candles     Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  strategies  AlgoStrategy[]
+
+  @@unique([userId, symbol, timeframe, provider])
+}
+
+model AlgoStrategy {
+  id                  String      @id @default(cuid())
+  userId              String
+  user                User        @relation(fields: [userId], references: [id])
+  datasetId           String
+  dataset             AlgoDataset @relation(fields: [datasetId], references: [id])
+  name                String
+  description         String?
+  rules               Json
+  indicators          Json
+  netProfit           Float?
+  profitFactor        Float?
+  sharpeRatio         Float?
+  sortinoRatio        Float?
+  calmarRatio         Float?
+  maxDrawdown         Float?
+  maxDrawdownPct      Float?
+  winRate             Float?
+  totalTrades         Int?
+  avgTradeDuration    Float?
+  recoveryFactor      Float?
+  expectancy          Float?
+  consecutiveWins     Int?
+  consecutiveLosses   Int?
+  equityCurve         Json?
+  trades              Json?
+  mql5Code            String?
+  status              String   @default("done")
+  createdAt           DateTime @default(now())
 }
 
 // ─── LABORATORIO DE ESTRATEGIA ────────────────────────────────────────────────

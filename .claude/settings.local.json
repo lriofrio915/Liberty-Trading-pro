@@ -17,7 +17,19 @@
       "mcp__claude_ai_Vercel__list_projects",
       "mcp__claude_ai_Supabase__list_projects",
       "mcp__claude_ai_Supabase__apply_migration",
-      "mcp__claude_ai_Supabase__execute_sql"
+      "mcp__claude_ai_Supabase__execute_sql",
+      "mcp__claude_ai_Vercel__list_deployments",
+      "mcp__claude_ai_Vercel__deploy_to_vercel",
+      "mcp__claude_ai_Vercel__get_deployment_build_logs",
+      "Bash(npx vercel:*)",
+      "mcp__claude_ai_Vercel__get_project",
+      "Skill(schedule)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts|jsx\\)$\")",
+      "Bash(grep -E \"\\\\.tsx$\")",
+      "Bash(xargs -I {} dirname {})",
+      "Bash(xargs -I {} ls -la {})",
+      "Bash(mkdir -p \"D:/AGENCIA DE AUTOMATIZACIONES/Desarrollo de proyectos/Liberty-Trading-pro/app/api/algolab/datasets/[id]\")",
+      "Bash(mkdir -p \"D:/AGENCIA DE AUTOMATIZACIONES/Desarrollo de proyectos/Liberty-Trading-pro/app/api/algolab/export/[id]\")"
     ]
   }
 }
