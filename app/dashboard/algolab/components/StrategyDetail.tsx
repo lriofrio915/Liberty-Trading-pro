@@ -104,7 +104,7 @@ export default function StrategyDetail({ strategy, onClose }: Props) {
                           labelStyle={{ color: 'var(--text-muted)', fontSize: 11 }}
                           itemStyle={{ color: 'var(--gold)' }}
                           formatter={(v: number | undefined) => [`$${(v ?? 0).toLocaleString()}`, 'Equity']}
-                          labelFormatter={(i: number) => `Trade #${i}`}
+                          labelFormatter={(i) => `Trade #${i}`}
                         />
                         <Line
                           type="monotone"
