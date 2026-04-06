@@ -1,6 +1,8 @@
 'use client'
 import { useState, useRef } from 'react'
 
+const CHUNK_LINES = 15_000 // ~750KB por chunk para M1
+
 interface DatasetSummary {
   id: string
   symbol: string
@@ -20,10 +22,36 @@ interface Props {
   onUploaded: (dataset: DatasetSummary) => void
 }
 
+async function uploadChunk(
+  chunk: string,
+  symbol: string,
+  provider: string,
+  filename: string
+): Promise<DatasetSummary> {
+  const blob = new Blob([chunk], { type: 'text/plain' })
+  const file = new File([blob], filename)
+  const form = new FormData()
+  form.append('file', file)
+  form.append('symbol', symbol)
+  form.append('provider', provider)
+
+  const res = await fetch('/api/algolab/datasets', { method: 'POST', body: form })
+  const text = await res.text()
+  let data: { error?: string; dataset?: DatasetSummary } = {}
+  try { data = JSON.parse(text) } catch { /* no-JSON */ }
+  if (!res.ok) {
+    if (res.status === 413) throw new Error('Chunk demasiado grande (reducir CHUNK_LINES)')
+    throw new Error(data.error ?? `Error ${res.status}`)
+  }
+  if (!data.dataset) throw new Error('Respuesta inesperada del servidor')
+  return data.dataset
+}
+
 export default function DatasetPanel({ datasets, selectedId, onSelect, onUploaded }: Props) {
   const [symbol, setSymbol] = useState('')
   const [provider, setProvider] = useState('MetaTrader 5')
   const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState<{ current: number; total: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -36,27 +64,36 @@ export default function DatasetPanel({ datasets, selectedId, onSelect, onUploade
     }
     setUploading(true)
     setError(null)
+    setProgress(null)
+
     try {
-      const form = new FormData()
-      form.append('file', file)
-      form.append('symbol', symbol.trim().toUpperCase())
-      form.append('provider', provider)
-      const res = await fetch('/api/algolab/datasets', { method: 'POST', body: form })
-      const text = await res.text()
-      let data: { error?: string; dataset?: DatasetSummary } = {}
-      try { data = JSON.parse(text) } catch { /* respuesta no-JSON (ej: 413) */ }
-      if (!res.ok) {
-        if (res.status === 413) throw new Error('Archivo demasiado grande. Exporta un rango de fechas más corto desde MT5.')
-        throw new Error(data.error ?? `Error al subir (${res.status})`)
+      const sym = symbol.trim().toUpperCase()
+      const content = await file.text()
+
+      // Dividir en líneas (el parser MT5 salta líneas sin formato de fecha)
+      const lines = content.split('\n')
+      const chunks: string[] = []
+      for (let i = 0; i < lines.length; i += CHUNK_LINES) {
+        const chunk = lines.slice(i, i + CHUNK_LINES).join('\n')
+        if (chunk.trim()) chunks.push(chunk)
       }
-      if (!data.dataset) throw new Error('Respuesta inesperada del servidor')
-      onUploaded(data.dataset)
+
+      setProgress({ current: 0, total: chunks.length })
+
+      let lastDataset: DatasetSummary | null = null
+      for (let i = 0; i < chunks.length; i++) {
+        setProgress({ current: i + 1, total: chunks.length })
+        lastDataset = await uploadChunk(chunks[i], sym, provider, file.name)
+      }
+
+      if (lastDataset) onUploaded(lastDataset)
       setSymbol('')
       if (fileRef.current) fileRef.current.value = ''
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al subir dataset')
     } finally {
       setUploading(false)
+      setProgress(null)
     }
   }
 
@@ -101,13 +138,35 @@ export default function DatasetPanel({ datasets, selectedId, onSelect, onUploade
               className="w-full bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-muted)] file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:bg-[var(--gold)] file:text-black file:text-xs file:cursor-pointer"
             />
           </div>
+
+          {/* Progress bar */}
+          {progress && (
+            <div>
+              <div className="flex justify-between text-xs text-[var(--text-muted)] mb-1">
+                <span>Subiendo bloque {progress.current} de {progress.total}…</span>
+                <span>{Math.round((progress.current / progress.total) * 100)}%</span>
+              </div>
+              <div className="w-full bg-[var(--bg-secondary)] rounded-full h-1.5">
+                <div
+                  className="bg-[var(--gold)] h-1.5 rounded-full transition-all duration-300"
+                  style={{ width: `${(progress.current / progress.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           {error && <p className="text-xs text-[var(--red)]">{error}</p>}
           <button
             type="submit"
             disabled={uploading}
             className="w-full py-2 rounded-lg bg-[var(--gold)] text-black text-sm font-semibold disabled:opacity-50 hover:brightness-110 transition"
           >
-            {uploading ? 'Subiendo…' : 'Subir Dataset'}
+            {uploading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="inline-block w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                Procesando…
+              </span>
+            ) : 'Subir Dataset'}
           </button>
         </form>
       </div>
