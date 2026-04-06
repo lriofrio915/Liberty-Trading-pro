@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       selectedIndicators,
       dataset.symbol,
       dataset.timeframe,
-      { ...backtestConfig, maxResults: 100 }
+      { ...backtestConfig, maxResults: 3 }
     )
 
     if (strategies.length === 0) {
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     // Guardar en DB
     const saved = await prisma.$transaction(
-      strategies.slice(0, 50).map(s =>
+      strategies.slice(0, 3).map(s =>
         prisma.algoStrategy.create({
           data: {
             userId:           dbUser.id,

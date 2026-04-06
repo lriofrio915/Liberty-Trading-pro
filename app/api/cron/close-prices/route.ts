@@ -1,9 +1,13 @@
-// Cron: 3pm ET (19:00 UTC EDT) — lunes a viernes
+// Cron: 3pm ET — lunes a viernes
 // Captura el precio de cierre del mercado (3pm ET) y calcula rendimiento final
+//
+// Se dispara dos veces (EDT y EST schedules en GitHub Actions) para cubrir DST.
+// El guard isInNYWindow(15) rechaza el disparo que llega fuera de la ventana ±45 min.
 
 import { NextRequest, NextResponse } from 'next/server'
 import { fetchYahoo, PRICE_LOOKUP } from '@/lib/analisis-engine'
 import { prisma } from '@/lib/prisma'
+import { getNYDayBoundaries, isInNYWindow } from '@/lib/cron-utils'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -31,11 +35,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const now = new Date()
-  const todayStart = new Date(now)
-  todayStart.setUTCHours(0, 0, 0, 0)
-  const todayEnd = new Date(now)
-  todayEnd.setUTCHours(23, 59, 59, 999)
+  // Guard: only run within ±45 min of 3:00 pm NY
+  // Rejects the off-hour cron that fires during the opposite DST period
+  if (!isInNYWindow(15)) {
+    return NextResponse.json({ ok: true, skipped: 'outside_ny_window' })
+  }
+
+  // Find today's scan using NY calendar day boundaries
+  const { todayStart, todayEnd } = getNYDayBoundaries()
 
   const scan = await prisma.marketScan.findFirst({
     where: { fecha: { gte: todayStart, lte: todayEnd } },
