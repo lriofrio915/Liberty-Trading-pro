@@ -70,12 +70,17 @@ export default function DatasetPanel({ datasets, selectedId, onSelect, onUploade
       const sym = symbol.trim().toUpperCase()
       const content = await file.text()
 
-      // Dividir en líneas (el parser MT5 salta líneas sin formato de fecha)
-      const lines = content.split('\n')
+      // Filtrar solo líneas con datos MT5 (formato YYYY.MM.DD al inicio)
+      const dataLines = content.split('\n').filter(l => /^\d{4}\.\d{2}\.\d{2}/.test(l.trim()))
+
+      if (dataLines.length < 10) {
+        throw new Error('El archivo no contiene datos MT5 válidos. Verifica el formato del CSV.')
+      }
+
+      // Dividir en chunks de CHUNK_LINES filas de datos
       const chunks: string[] = []
-      for (let i = 0; i < lines.length; i += CHUNK_LINES) {
-        const chunk = lines.slice(i, i + CHUNK_LINES).join('\n')
-        if (chunk.trim()) chunks.push(chunk)
+      for (let i = 0; i < dataLines.length; i += CHUNK_LINES) {
+        chunks.push(dataLines.slice(i, i + CHUNK_LINES).join('\n'))
       }
 
       setProgress({ current: 0, total: chunks.length })
