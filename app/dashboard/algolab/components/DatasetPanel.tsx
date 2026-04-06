@@ -49,6 +49,7 @@ export default function DatasetPanel({ datasets, selectedId, onSelect, onUploade
         if (res.status === 413) throw new Error('Archivo demasiado grande. Exporta un rango de fechas más corto desde MT5.')
         throw new Error(data.error ?? `Error al subir (${res.status})`)
       }
+      if (!data.dataset) throw new Error('Respuesta inesperada del servidor')
       onUploaded(data.dataset)
       setSymbol('')
       if (fileRef.current) fileRef.current.value = ''
