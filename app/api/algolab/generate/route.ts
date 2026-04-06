@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { getEffectiveAccess } from '@/lib/access'
 import { generateStrategies } from '@/lib/algolab-engine'
-import type { Candle } from '@/lib/algolab-parser'
+import { validateCandles } from '@/lib/algolab-parser'
 
 export const maxDuration = 60 // segundos
 
@@ -43,7 +43,14 @@ export async function POST(req: NextRequest) {
     })
     if (!dataset) return NextResponse.json({ error: 'Dataset no encontrado' }, { status: 404 })
 
-    const candles = dataset.candles as Candle[]
+    let candles
+    try {
+      candles = validateCandles(dataset.candles)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error validando candles'
+      return NextResponse.json({ error: message }, { status: 400 })
+    }
+
     if (candles.length < 50) {
       return NextResponse.json({ error: 'Dataset insuficiente (mínimo 50 velas)' }, { status: 400 })
     }

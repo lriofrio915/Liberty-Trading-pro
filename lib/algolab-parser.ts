@@ -11,6 +11,51 @@ export interface Candle {
 }
 
 /**
+ * Valida y convierte JsonValue a Candle[].
+ * Usado para validar datos de la base de datos que son almacenados como Json.
+ */
+export function validateCandles(data: unknown): Candle[] {
+  if (!Array.isArray(data)) {
+    throw new Error('candles debe ser un array')
+  }
+
+  const candles: Candle[] = []
+  for (let i = 0; i < data.length; i++) {
+    const item = data[i]
+    if (typeof item !== 'object' || item === null) {
+      throw new Error(`candle[${i}] debe ser un objeto`)
+    }
+
+    const obj = item as Record<string, unknown>
+    const t = obj.t
+    const o = obj.o
+    const h = obj.h
+    const l = obj.l
+    const c = obj.c
+    const v = obj.v
+
+    // Validar que todas las propiedades existan y sean números
+    if (
+      typeof t !== 'number' ||
+      typeof o !== 'number' ||
+      typeof h !== 'number' ||
+      typeof l !== 'number' ||
+      typeof c !== 'number' ||
+      typeof v !== 'number'
+    ) {
+      throw new Error(
+        `candle[${i}] inválido: necesita t, o, h, l, c, v como números. Recibió: ` +
+        JSON.stringify({ t, o, h, l, c, v })
+      )
+    }
+
+    candles.push({ t, o, h, l, c, v })
+  }
+
+  return candles
+}
+
+/**
  * Parsea el contenido de un archivo CSV/TSV de MT5.
  * Formato esperado: Date\tTime\tOpen\tHigh\tLow\tClose\tTickVolume
  * Ejemplo: 2024.01.01\t00:00\t1950.50\t1952.30\t1949.80\t1951.00\t2500000
