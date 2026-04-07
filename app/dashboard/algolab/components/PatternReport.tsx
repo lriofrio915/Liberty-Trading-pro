@@ -1,14 +1,23 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 import type { PatternAnalysisResult, PatternStats, DatasetMeta } from '@/lib/algolab-pattern-engine'
+import type { GridCell } from '@/app/api/algolab/grid-search/route'
+import type { SignalDetail } from '@/app/api/algolab/signal-candles/route'
+import DetalleModal from './modals/DetalleModal'
+import GridSearchModal from './modals/GridSearchModal'
+import PropFirmModal from './modals/PropFirmModal'
+import VelasModal from './modals/VelasModal'
+import PineModal from './modals/PineModal'
+import PeorCasoModal from './modals/PeorCasoModal'
 
 // ─── TIPOS Y HELPERS ──────────────────────────────────────────────────────────
 
 type DirectionFilter = 'ALL' | 'LONG' | 'SHORT'
 type SortTab = 'wr' | 'pnl' | 'equity'
+type ModalId = 'detalle' | 'gridsearch' | 'propfirm' | 'velas' | 'pine' | 'peorCaso' | null
 
 const COLORS = ['#f59e0b', '#60a5fa', '#34d399', '#f87171', '#a78bfa']
 
@@ -233,30 +242,45 @@ function PatternSummary({ stats, meta }: { stats: PatternStats[]; meta: DatasetM
 
 // ─── BOTONES OPCIONALES ───────────────────────────────────────────────────────
 
-function OptionalButtons() {
-  const buttons = [
-    'Detalle día a día top 3',
-    'Grid search TP/SL',
-    'Prop firm sim',
-    'Visualizador de velas',
-    'Pine Script',
-    'Análisis peor caso',
+function OptionalButtons({
+  stats, meta, datasetId, onOpen,
+}: {
+  stats: PatternStats[]
+  meta: DatasetMeta
+  datasetId: string | null
+  onOpen: (id: Exclude<ModalId, null>) => void
+}) {
+  const buttons: { id: Exclude<ModalId, null>; label: string; needsDataset?: boolean }[] = [
+    { id: 'detalle',    label: 'Detalle día a día top 3' },
+    { id: 'gridsearch', label: 'Grid search TP/SL',    needsDataset: true },
+    { id: 'propfirm',   label: 'Prop firm sim' },
+    { id: 'velas',      label: 'Visualizador de velas', needsDataset: true },
+    { id: 'pine',       label: 'Pine Script' },
+    { id: 'peorCaso',   label: 'Análisis peor caso' },
   ]
+  const noStats = stats.length === 0
   return (
     <div className="space-y-2">
       <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide font-medium">Análisis opcionales</p>
       <div className="flex flex-wrap gap-2">
-        {buttons.map(btn => (
-          <button
-            key={btn}
-            disabled
-            title="Próximamente"
-            className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs
-              text-[var(--text-muted)] opacity-50 cursor-not-allowed"
-          >
-            {btn}
-          </button>
-        ))}
+        {buttons.map(btn => {
+          const disabled = noStats || (btn.needsDataset && !datasetId)
+          return (
+            <button
+              key={btn.id}
+              disabled={disabled}
+              onClick={() => !disabled && onOpen(btn.id)}
+              title={disabled ? (noStats ? 'Ejecuta el análisis primero' : 'Requiere dataset cargado') : undefined}
+              className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
+                disabled
+                  ? 'border-[var(--border)] text-[var(--text-muted)] opacity-40 cursor-not-allowed'
+                  : 'border-amber-500/40 text-amber-400 hover:bg-amber-500/10 cursor-pointer'
+              }`}
+            >
+              {btn.label}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
@@ -267,11 +291,13 @@ function OptionalButtons() {
 interface Props {
   result: PatternAnalysisResult | null
   loading: boolean
+  datasetId: string | null
 }
 
-export default function PatternReport({ result, loading }: Props) {
+export default function PatternReport({ result, loading, datasetId }: Props) {
   const [dirFilter, setDirFilter] = useState<DirectionFilter>('ALL')
   const [sortTab, setSortTab] = useState<SortTab>('wr')
+  const [openModal, setOpenModal] = useState<ModalId>(null)
 
   const filtered = useMemo(() => {
     if (!result) return []
@@ -355,7 +381,20 @@ export default function PatternReport({ result, loading }: Props) {
       <PatternSummary stats={result.stats} meta={result.meta} />
 
       {/* Botones opcionales */}
-      <OptionalButtons />
+      <OptionalButtons
+        stats={result.stats}
+        meta={result.meta}
+        datasetId={datasetId}
+        onOpen={setOpenModal}
+      />
+
+      {/* Modales */}
+      {openModal === 'detalle'    && <DetalleModal    stats={result.stats} onClose={() => setOpenModal(null)} />}
+      {openModal === 'gridsearch' && <GridSearchModal stats={result.stats} datasetId={datasetId} onClose={() => setOpenModal(null)} />}
+      {openModal === 'propfirm'   && <PropFirmModal   stats={result.stats} onClose={() => setOpenModal(null)} />}
+      {openModal === 'velas'      && <VelasModal      stats={result.stats} datasetId={datasetId} onClose={() => setOpenModal(null)} />}
+      {openModal === 'pine'       && <PineModal       stats={result.stats} meta={result.meta} onClose={() => setOpenModal(null)} />}
+      {openModal === 'peorCaso'   && <PeorCasoModal   stats={result.stats} onClose={() => setOpenModal(null)} />}
     </div>
   )
 }
