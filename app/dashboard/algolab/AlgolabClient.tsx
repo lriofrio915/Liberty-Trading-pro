@@ -192,7 +192,7 @@ export default function AlgolabClient({ isAdmin }: Props) {
           <>
             {/* Si hay patternResult, mostrar el nuevo reporte */}
             {(patternResult || loadingPattern) && (
-              <PatternReport result={patternResult} loading={loadingPattern} />
+              <PatternReport result={patternResult} loading={loadingPattern} datasetId={selectedDatasetId} />
             )}
 
             {/* Si no hay patternResult pero hay strategies legacy, mostrarlas */}
@@ -211,7 +211,7 @@ export default function AlgolabClient({ isAdmin }: Props) {
 
             {/* Estado vacío */}
             {!patternResult && !loadingPattern && strategies.length === 0 && (
-              <PatternReport result={null} loading={false} />
+              <PatternReport result={null} loading={false} datasetId={selectedDatasetId} />
             )}
           </>
         )}
