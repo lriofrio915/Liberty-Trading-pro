@@ -21,12 +21,16 @@ export default async function DashboardLayout({
 
   const dbUser = await prisma.user.findUnique({
     where: { authId: user.id },
-    select: { plan: true, trialEndsAt: true },
+    select: { id: true, plan: true, trialEndsAt: true },
   }).catch(() => null)
 
   const access = dbUser
     ? getEffectiveAccess({ plan: dbUser.plan, trialEndsAt: dbUser.trialEndsAt })
     : { isOnTrial: false, trialDaysLeft: null, trialExpired: false, canAccessClub: false, level: 'FREE' as const }
+
+  const initialNotifCount = dbUser
+    ? await prisma.notification.count({ where: { userId: dbUser.id, read: false } }).catch(() => 0)
+    : 0
 
   return (
     <ThemeProvider>
@@ -38,13 +42,13 @@ export default async function DashboardLayout({
           <div className="px-6 h-16 flex items-center border-b border-[var(--border)]">
             <Link href="/" className="text-lg font-black gradient-gold">Liberty Trading</Link>
           </div>
-          <SidebarNav email={user.email ?? ''} canAccessClub={access.canAccessClub} />
+          <SidebarNav email={user.email ?? ''} canAccessClub={access.canAccessClub} initialNotifCount={initialNotifCount} />
         </aside>
 
         {/* Main */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Mobile nav (top bar + drawer + bottom tabs) */}
-          <MobileNav email={user.email ?? ''} canAccessClub={access.canAccessClub} />
+          <MobileNav email={user.email ?? ''} canAccessClub={access.canAccessClub} initialNotifCount={initialNotifCount} />
 
           {/* Trial banner — shown when on trial or expired */}
           <TrialBanner

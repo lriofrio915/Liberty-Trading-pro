@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { navItems, navGroups } from './navConfig'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import NotificationBell from '@/components/Notifications/NotificationBell'
 
 const ADMIN_EMAIL = 'lriofrio915@gmail.com'
 
@@ -45,7 +46,7 @@ function ThemeToggle() {
   )
 }
 
-export default function MobileNav({ email, canAccessClub }: { email: string; canAccessClub: boolean }) {
+export default function MobileNav({ email, canAccessClub, initialNotifCount }: { email: string; canAccessClub: boolean; initialNotifCount: number }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const isAdmin = email === ADMIN_EMAIL
@@ -75,16 +76,18 @@ export default function MobileNav({ email, canAccessClub }: { email: string; can
         <Link href="/dashboard" className="text-base font-black gradient-gold">
           Liberty Trading
         </Link>
-        <button
-          onClick={() => setOpen(true)}
-          className="flex flex-col gap-1.5 p-2 rounded-lg transition-colors hover:bg-white/5"
-          aria-label="Abrir menú"
-        >
-          <span className="block w-5 h-0.5 rounded" style={{ background: 'var(--text-secondary)' }} />
-          <span className="block w-5 h-0.5 rounded" style={{ background: 'var(--text-secondary)' }} />
-          <span className="block w-4 h-0.5 rounded" style={{ background: 'var(--text-secondary)' }} />
-        </button>
-      </div>
+        <div className="flex items-center gap-1">
+          <NotificationBell initialCount={initialNotifCount} />
+          <button
+            onClick={() => setOpen(true)}
+            className="flex flex-col gap-1.5 p-2 rounded-lg transition-colors hover:bg-white/5"
+            aria-label="Abrir menú"
+          >
+            <span className="block w-5 h-0.5 rounded" style={{ background: 'var(--text-secondary)' }} />
+            <span className="block w-5 h-0.5 rounded" style={{ background: 'var(--text-secondary)' }} />
+            <span className="block w-4 h-0.5 rounded" style={{ background: 'var(--text-secondary)' }} />
+          </button>
+        </div>
 
       {/* ── Drawer overlay ── */}
       {open && (

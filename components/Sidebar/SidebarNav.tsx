@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { navGroups } from './navConfig'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import NotificationBell from '@/components/Notifications/NotificationBell'
 
 // ── Theme toggle ───────────────────────────────────────────────────────────────
 
@@ -144,7 +145,7 @@ const ADMIN_EMAIL = 'lriofrio915@gmail.com'
 
 // ── Main nav ───────────────────────────────────────────────────────────────────
 
-export default function SidebarNav({ email, canAccessClub }: { email: string; canAccessClub: boolean }) {
+export default function SidebarNav({ email, canAccessClub, initialNotifCount }: { email: string; canAccessClub: boolean; initialNotifCount: number }) {
   const pathname = usePathname()
   const isAdmin = email === ADMIN_EMAIL
 
@@ -200,6 +201,9 @@ export default function SidebarNav({ email, canAccessClub }: { email: string; ca
       {/* Bottom section */}
       <div className="border-t border-[var(--border)] pt-2 space-y-1">
         <ThemeToggle />
+        <div className="flex items-center justify-between px-4 py-1">
+          <NotificationBell initialCount={initialNotifCount} />
+        </div>
         <UserMenu email={email} />
       </div>
     </nav>

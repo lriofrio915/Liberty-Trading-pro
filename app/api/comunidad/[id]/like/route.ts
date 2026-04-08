@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { createNotification } from '@/lib/notifications'
 
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = await createSupabaseServerClient()
@@ -21,6 +22,11 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   } else {
     await prisma.postLike.create({ data: { userId: dbUser.id, postId: params.id } })
     const count = await prisma.postLike.count({ where: { postId: params.id } })
+
+    // Notificar al dueño del post (skip si es su propio like)
+    const post = await prisma.post.findUnique({ where: { id: params.id }, select: { userId: true } })
+    if (post) await createNotification({ recipientUserId: post.userId, actorUserId: dbUser.id, type: 'LIKE', postId: params.id })
+
     return NextResponse.json({ liked: true, likeCount: count })
   }
 }

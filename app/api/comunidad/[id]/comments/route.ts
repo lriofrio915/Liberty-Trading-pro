@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { createNotification } from '@/lib/notifications'
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = await createSupabaseServerClient()
@@ -30,5 +31,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     data: { userId: dbUser.id, postId: params.id, contenido: contenido.trim() },
     include: { user: { select: { id: true, name: true } } },
   })
+
+  // Notificar al dueño del post (skip si comenta en su propio post)
+  const post = await prisma.post.findUnique({ where: { id: params.id }, select: { userId: true } })
+  if (post) await createNotification({ recipientUserId: post.userId, actorUserId: dbUser.id, type: 'COMMENT', postId: params.id })
+
   return NextResponse.json({ comment })
 }

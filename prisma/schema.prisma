@@ -20,6 +20,12 @@ enum Plan {
   PORTFOLIO
 }
 
+enum NotificationType {
+  LIKE
+  COMMENT
+  SHARE
+}
+
 // ─── MODELS ───────────────────────────────────────
 
 model User {
@@ -47,10 +53,13 @@ model User {
   conversations  VincesConversation[]
   posts          Post[]
   postComments   PostComment[]
+  postShares     PostShare[]
   certificates   Certificate[]
   algoDatasets      AlgoDataset[]
   algoStrategies    AlgoStrategy[]
   algoPatternReports AlgoPatternReport[]
+  notifications         Notification[]
+  notificationsActed    Notification[] @relation("NotifActor")
 }
 
 model TradingPlan {
@@ -278,8 +287,10 @@ model Post {
   imageUrl    String?
   creadoEn    DateTime      @default(now())
 
-  likes       PostLike[]
-  comentarios PostComment[]
+  likes         PostLike[]
+  comentarios   PostComment[]
+  shares        PostShare[]
+  notifications Notification[]
 }
 
 model PostLike {
@@ -390,6 +401,34 @@ model AlgoPatternReport {
   totalScanned   Int         // siempre 57
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
+}
+
+// ─── NOTIFICACIONES ───────────────────────────────────────────────────────────
+
+model Notification {
+  id       String           @id @default(cuid())
+  userId   String           // receptor = dueño del post
+  actorId  String           // quien disparó el evento
+  actor    User             @relation("NotifActor", fields: [actorId], references: [id])
+  user     User             @relation(fields: [userId], references: [id])
+  type     NotificationType
+  postId   String
+  post     Post             @relation(fields: [postId], references: [id], onDelete: Cascade)
+  read     Boolean          @default(false)
+  creadoEn DateTime         @default(now())
+
+  @@index([userId, read])
+  @@index([userId, creadoEn])
+}
+
+model PostShare {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id])
+  postId   String
+  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  platform String   // FACEBOOK | WHATSAPP | LINKEDIN | COPY
+  creadoEn DateTime @default(now())
 }
 
 // ─── LABORATORIO DE ESTRATEGIA ────────────────────────────────────────────────

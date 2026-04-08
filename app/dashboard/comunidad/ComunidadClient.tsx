@@ -206,10 +206,20 @@ function ShareModal({ post, onClose }: { post: Post; onClose: () => void }) {
   const postUrl = `${APP_URL}/p/${post.id}`
   const [copied, setCopied] = useState(false)
 
+  // Fire-and-forget: registra el share en la DB para notificar al autor
+  function trackShare(platform: string) {
+    fetch(`/api/comunidad/${post.id}/share`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ platform }),
+    }).catch(() => {})
+  }
+
   function copyLink() {
     navigator.clipboard.writeText(postUrl).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+      trackShare('COPY')
     })
   }
 
@@ -286,6 +296,7 @@ function ShareModal({ post, onClose }: { post: Post; onClose: () => void }) {
               href={n.href}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackShare(n.label.toUpperCase())}
               className="flex items-center gap-3 py-3 px-4 rounded-xl text-sm font-bold transition-opacity hover:opacity-80"
               style={{ background: `${n.color}18`, color: n.color, border: `1px solid ${n.color}30` }}
             >
