@@ -65,10 +65,10 @@ export default function GridSearchModal({ stats, datasetId, onClose }: Props) {
 
   // Derive unique TP and SL multiplier sets from the grid
   const tpMults = result
-    ? [...new Set(result.grid.map(c => c.tp))].sort((a, b) => a - b)
+    ? Array.from(new Set(result.grid.map(c => c.tp))).sort((a, b) => a - b)
     : []
   const slMults = result
-    ? [...new Set(result.grid.map(c => c.sl))].sort((a, b) => a - b)
+    ? Array.from(new Set(result.grid.map(c => c.sl))).sort((a, b) => a - b)
     : []
 
   function getCell(tp: number, sl: number): GridCell | undefined {
