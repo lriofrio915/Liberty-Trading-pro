@@ -187,7 +187,7 @@ function EquityChart({ stats }: { stats: PatternStats[] }) {
         <LineChart data={chartData}>
           <XAxis dataKey="trade" tick={{ fontSize: 10 }} />
           <YAxis tick={{ fontSize: 10 }} />
-          <Tooltip formatter={(v: number) => pts(v)} />
+          <Tooltip formatter={(v: number | undefined) => pts(v ?? 0)} />
           <Legend wrapperStyle={{ fontSize: 11 }} />
           {top.map((s, idx) => (
             <Line

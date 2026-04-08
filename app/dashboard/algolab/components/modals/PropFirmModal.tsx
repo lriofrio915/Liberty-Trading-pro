@@ -197,8 +197,8 @@ export default function PropFirmModal({ stats, onClose }: Props) {
                       domain={['auto', 'auto']}
                     />
                     <Tooltip
-                      formatter={(v: number) => [`$${fmt(v)}`, 'Balance']}
-                      labelFormatter={(l: number) => `Trade ${l}`}
+                      formatter={(v: number | undefined) => [`$${fmt(v ?? 0)}`, 'Balance']}
+                      labelFormatter={(l: string | number) => `Trade ${l}`}
                     />
                     <ReferenceLine
                       y={targetLine}

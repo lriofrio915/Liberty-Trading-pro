@@ -100,7 +100,7 @@ export default function PeorCasoModal({
                 <LineChart data={chartData}>
                   <XAxis dataKey="trade" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} />
-                  <Tooltip formatter={(v: number) => pts(v)} labelFormatter={l => `Trade #${l}`} />
+                  <Tooltip formatter={(v: number | undefined) => pts(v ?? 0)} labelFormatter={l => `Trade #${l}`} />
                   <Line type="monotone" dataKey="equity" stroke="#f59e0b" dot={false} strokeWidth={1.5} />
                 </LineChart>
               </ResponsiveContainer>
