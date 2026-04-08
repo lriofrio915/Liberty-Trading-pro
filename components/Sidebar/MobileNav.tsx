@@ -88,6 +88,7 @@ export default function MobileNav({ email, canAccessClub, initialNotifCount }: {
             <span className="block w-4 h-0.5 rounded" style={{ background: 'var(--text-secondary)' }} />
           </button>
         </div>
+      </div>
 
       {/* ── Drawer overlay ── */}
       {open && (
