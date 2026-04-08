@@ -154,8 +154,7 @@ export default function AlgolabClient({ isAdmin }: Props) {
         {panel === 'datasets' && (
           <DatasetPanel
             datasets={datasets}
-            loading={loadingDatasets}
-            selectedDatasetId={selectedDatasetId}
+            selectedId={selectedDatasetId}
             onSelect={selectDataset}
             onUploaded={handleDatasetUploaded}
           />
