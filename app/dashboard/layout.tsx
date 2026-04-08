@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { getEffectiveAccess } from '@/lib/access'
 import SidebarNav from '@/components/Sidebar/SidebarNav'
 import MobileNav from '@/components/Sidebar/MobileNav'
+import TopBar from '@/components/Dashboard/TopBar'
 import VincesWidget from '@/components/VincesWidget/VincesWidget'
 import ThemeProvider from '@/components/ThemeProvider'
 import TrialBanner from '@/components/TrialBanner/TrialBanner'
@@ -42,13 +43,16 @@ export default async function DashboardLayout({
           <div className="px-6 h-16 flex items-center border-b border-[var(--border)]">
             <Link href="/" className="text-lg font-black gradient-gold">Liberty Trading</Link>
           </div>
-          <SidebarNav email={user.email ?? ''} canAccessClub={access.canAccessClub} initialNotifCount={initialNotifCount} />
+          <SidebarNav email={user.email ?? ''} canAccessClub={access.canAccessClub} />
         </aside>
 
         {/* Main */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Mobile nav (top bar + drawer + bottom tabs) */}
           <MobileNav email={user.email ?? ''} canAccessClub={access.canAccessClub} initialNotifCount={initialNotifCount} />
+
+          {/* Desktop top bar — user controls (hidden on mobile) */}
+          <TopBar email={user.email ?? ''} initialNotifCount={initialNotifCount} />
 
           {/* Trial banner — shown when on trial or expired */}
           <TrialBanner

@@ -148,7 +148,7 @@ export default function NotificationBell({ initialCount }: { initialCount: numbe
 
       {/* ── Dropdown ── */}
       {open && (
-        <div className="absolute bottom-full right-0 mb-2 w-80 rounded-xl border border-[var(--border)]
+        <div className="absolute top-full right-0 mt-2 w-80 rounded-xl border border-[var(--border)]
           shadow-2xl overflow-hidden z-50"
           style={{ background: 'var(--bg-card)' }}>
 
