@@ -1,102 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ModalShell from './ModalShell'
 import type { PatternStats, DatasetMeta } from '@/lib/algolab-pattern-engine'
-
-function generatePine(patternId: string, name: string, direction: 'LONG' | 'SHORT'): string {
-  const dir = direction === 'LONG' ? 'long' : 'short'
-  const color = direction === 'LONG' ? 'green' : 'red'
-  const loc = direction === 'LONG' ? 'location.belowbar' : 'location.abovebar'
-  const shape = direction === 'LONG' ? 'shape.triangleup' : 'shape.triangledown'
-
-  const detectionMap: Record<string, string> = {
-    HAMMER:           'signal = ta.hammer()',
-    INVERTED_HAMMER:  'signal = ta.inverted_hammer()',
-    HANGING_MAN:      'signal = ta.hanging_man()',
-    SHOOTING_STAR:    'signal = ta.shooting_star()',
-    DOJI:             'signal = ta.doji()',
-    GRAVESTONE_DOJI:  'signal = ta.gravestone_doji()',
-    DRAGONFLY_DOJI:   'signal = ta.dragonfly_doji()',
-    DOJI_LONG_LEGGED: 'signal = ta.doji()',
-    MORNING_STAR:     'signal = ta.morning_star()',
-    EVENING_STAR:     'signal = ta.evening_star()',
-    HARAMI_BULL:      'signal = ta.bullish_haramidoji() or ta.harami()',
-    HARAMI_BEAR:      'signal = ta.bearish_haramidoji()',
-    ENGULFING_BULL: [
-      'bearPrev = close[1] < open[1]',
-      'bullCurr = close > open',
-      'signal   = bearPrev and bullCurr and open < close[1] and close > open[1]',
-    ].join('\n'),
-    ENGULFING_BEAR: [
-      'bullPrev = close[1] > open[1]',
-      'bearCurr = close < open',
-      'signal   = bullPrev and bearCurr and open > close[1] and close < open[1]',
-    ].join('\n'),
-    MARUBOZU_BULL: [
-      'bodyRatio = math.abs(close - open) / (high - low + 0.00001)',
-      'signal    = close > open and bodyRatio > 0.9',
-    ].join('\n'),
-    MARUBOZU_BEAR: [
-      'bodyRatio = math.abs(close - open) / (high - low + 0.00001)',
-      'signal    = close < open and bodyRatio > 0.9',
-    ].join('\n'),
-    KICKER_BULL: [
-      'bodyA = math.abs(close[1] - open[1]) / (high[1] - low[1] + 0.00001)',
-      'bodyB = math.abs(close - open) / (high - low + 0.00001)',
-      'signal = close[1] < open[1] and close > open and open > open[1] and bodyA > 0.6 and bodyB > 0.6',
-    ].join('\n'),
-    KICKER_BEAR: [
-      'bodyA = math.abs(close[1] - open[1]) / (high[1] - low[1] + 0.00001)',
-      'bodyB = math.abs(close - open) / (high - low + 0.00001)',
-      'signal = close[1] > open[1] and close < open and open < open[1] and bodyA > 0.6 and bodyB > 0.6',
-    ].join('\n'),
-    '3_WHITE_SOLDIERS': [
-      'bull1 = close[2] > open[2]',
-      'bull2 = close[1] > open[1] and close[1] > close[2] and open[1] > open[2] and open[1] < close[2]',
-      'bull3 = close > open and close > close[1] and open > open[1] and open < close[1]',
-      'signal = bull1 and bull2 and bull3',
-    ].join('\n'),
-    '3_BLACK_CROWS': [
-      'bear1 = close[2] < open[2]',
-      'bear2 = close[1] < open[1] and close[1] < close[2] and open[1] < open[2] and open[1] > close[2]',
-      'bear3 = close < open and close < close[1] and open < open[1] and open > close[1]',
-      'signal = bear1 and bear2 and bear3',
-    ].join('\n'),
-  }
-
-  const detection = detectionMap[patternId]
-    ?? `// Patrón: ${name}\n// Implementar detección personalizada\nsignal = false`
-
-  return `//@version=5
-strategy("AlgoLab — ${name}", overlay=true,
-     default_qty_type=strategy.percent_of_equity,
-     default_qty_value=2)
-
-// ── Parámetros ──────────────────────────────────────────────────────────────
-atrLen  = input.int(14,   "ATR Period",   minval=1)
-tpMult  = input.float(3.0, "TP (× ATR)", minval=0.1, step=0.5)
-slMult  = input.float(1.0, "SL (× ATR)", minval=0.1, step=0.25)
-
-// ── ATR ──────────────────────────────────────────────────────────────────────
-atr = ta.atr(atrLen)
-
-// ── Detección: ${name} ────────────────────────────────────────────────────
-${detection}
-
-// ── Entradas y salidas ───────────────────────────────────────────────────────
-if signal
-    tp = tpMult * atr / syminfo.mintick
-    sl = slMult * atr / syminfo.mintick
-    strategy.entry("${name}", strategy.${dir})
-    strategy.exit("${name} X", "${name}", profit=tp, loss=sl)
-
-// ── Marcadores visuales ──────────────────────────────────────────────────────
-plotshape(signal, style=${shape},
-     location=${loc},
-     color=color.new(color.${color}, 0),
-     size=size.small, title="${name}")
-`
-}
 
 export default function PineModal({
   stats, meta, onClose,
@@ -105,9 +10,29 @@ export default function PineModal({
 }) {
   const [patternId, setPatternId] = useState(stats[0]?.patternId ?? '')
   const [copied, setCopied] = useState(false)
+  const [code, setCode] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const selected = stats.find(s => s.patternId === patternId) ?? stats[0]
-  const code = selected ? generatePine(selected.patternId, selected.name, selected.direction) : ''
+
+  useEffect(() => {
+    if (!selected) return
+    setLoading(true)
+    setError(null)
+    fetch('/api/algolab/pine-script', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ patternId: selected.patternId }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) setError(data.error)
+        else setCode(data.code)
+      })
+      .catch(() => setError('Error al generar Pine Script'))
+      .finally(() => setLoading(false))
+  }, [selected?.patternId])
 
   function copy() {
     navigator.clipboard.writeText(code).then(() => {
@@ -156,14 +81,25 @@ export default function PineModal({
             <span className="text-xs text-[var(--text-muted)]">Pine Script v5</span>
             <button
               onClick={copy}
-              className="text-xs rounded-lg border border-[var(--border)] px-3 py-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+              disabled={loading || !code}
+              className="text-xs rounded-lg border border-[var(--border)] px-3 py-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors disabled:opacity-40"
             >
               {copied ? '✓ Copiado' : 'Copiar'}
             </button>
           </div>
-          <pre className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] p-4 text-xs text-[var(--text-secondary)] leading-relaxed font-mono whitespace-pre">
-            {code}
-          </pre>
+          {loading ? (
+            <div className="flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] p-8 text-xs text-[var(--text-muted)]">
+              Generando Pine Script...
+            </div>
+          ) : error ? (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-xs text-red-400">
+              {error}
+            </div>
+          ) : (
+            <pre className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] p-4 text-xs text-[var(--text-secondary)] leading-relaxed font-mono whitespace-pre">
+              {code}
+            </pre>
+          )}
         </div>
 
         <p className="text-xs text-[var(--text-muted)]">
