@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import NotificationBell from '@/components/Notifications/NotificationBell'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
@@ -63,7 +62,6 @@ function ThemeToggle() {
 function UserMenu({ email }: { email: string }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const router = useRouter()
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {

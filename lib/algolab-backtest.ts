@@ -182,7 +182,6 @@ export function runBacktest(
   let openTrade: null | { direction: 'long' | 'short'; entry: number; sl: number; tp: number; index: number; time: number } = null
 
   for (let i = 1; i < candles.length - 1; i++) {
-    const c = candles[i]
     const next = candles[i + 1]
 
     // Chequear cierre de trade abierto
@@ -240,11 +239,10 @@ export function runBacktest(
         const entryPrice = next.o + (direction === 'long' ? 1 : -1) * (spread + slippage) * pip
         const atr = atrArr[i] ?? NaN
         const sl = calcSLTP(entryPrice, direction, rule.sl, atr)
-        const tp = calcSLTP(entryPrice, direction === 'long' ? 'short' : 'long', rule.tp, atr) // tp en dirección contraria
-        // Recalcular tp en dirección correcta
+        // Calcular tp en dirección correcta
         const tpCorrect = direction === 'long'
-          ? entryPrice + rule.tp.value * (rule.tp.type === 'atr_multiplier' ? (isNaN(atr) ? entryPrice * 0.002 : atr) : rule.tp.type === 'fixed_pct' ? entryPrice * rule.tp.value / 100 : rule.tp.value * 0.0001)
-          : entryPrice - rule.tp.value * (rule.tp.type === 'atr_multiplier' ? (isNaN(atr) ? entryPrice * 0.002 : atr) : rule.tp.type === 'fixed_pct' ? entryPrice * rule.tp.value / 100 : rule.tp.value * 0.0001)
+          ? entryPrice + rule.tp.value * (rule.tp.type === 'atr_multiplier' ? (isNaN(atr) ? entryPrice * 0.002 : atr) : rule.tp.type === 'fixed_pct' ? entryPrice / 100 : rule.tp.value * 0.0001)
+          : entryPrice - rule.tp.value * (rule.tp.type === 'atr_multiplier' ? (isNaN(atr) ? entryPrice * 0.002 : atr) : rule.tp.type === 'fixed_pct' ? entryPrice / 100 : rule.tp.value * 0.0001)
 
         openTrade = { direction, entry: entryPrice, sl, tp: tpCorrect, index: i, time: next.t }
       }

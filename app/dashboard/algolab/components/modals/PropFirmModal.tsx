@@ -4,7 +4,6 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceL
 import ModalShell from './ModalShell'
 import type { PatternStats } from '@/lib/algolab-pattern-engine'
 
-function pts(n: number) { return (n >= 0 ? '+' : '') + n.toFixed(2) }
 function fmt(n: number) { return n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
 
 interface SimResult {

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
@@ -384,7 +385,7 @@ export default function ProfilePage() {
             {avatarUploading ? (
               <span className="text-xs font-mono text-[var(--text-muted)] animate-pulse">...</span>
             ) : user?.avatarUrl ? (
-              <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+              <Image src={user.avatarUrl} alt={user.name} width={80} height={80} className="w-full h-full object-cover" />
             ) : (
               (user?.name || 'T').charAt(0).toUpperCase()
             )}
@@ -547,7 +548,7 @@ export default function ProfilePage() {
             {certFile ? (
               <div>
                 {certPreview ? (
-                  <img src={certPreview} alt="preview" className="h-24 mx-auto rounded-lg object-cover mb-2" />
+                  <Image src={certPreview} alt="preview" width={200} height={96} unoptimized className="h-24 mx-auto rounded-lg object-cover mb-2" />
                 ) : (
                   <div className="text-4xl mb-2">📄</div>
                 )}
@@ -652,11 +653,11 @@ export default function ProfilePage() {
                 >
                   {editFile ? (
                     editPreview
-                      ? <img src={editPreview} alt="preview" className="h-20 mx-auto rounded-lg object-cover mb-1" />
+                      ? <Image src={editPreview} alt="preview" width={160} height={80} unoptimized className="h-20 mx-auto rounded-lg object-cover mb-1" />
                       : <div className="text-3xl mb-1">📄</div>
                   ) : (
                     editingCert.fileType !== 'pdf' && editingCert.fileUrl
-                      ? <img src={editingCert.fileUrl} alt="actual" className="h-20 mx-auto rounded-lg object-cover mb-1" />
+                      ? <Image src={editingCert.fileUrl} alt="actual" width={160} height={80} className="h-20 mx-auto rounded-lg object-cover mb-1" />
                       : <div className="text-3xl mb-1">📎</div>
                   )}
                   <p className="text-xs text-[var(--text-muted)]">
@@ -722,7 +723,7 @@ export default function ProfilePage() {
                   <div className="w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center text-xl"
                     style={{ background: 'rgba(255,255,255,0.05)' }}>
                     {!isPdf && cert.fileUrl ? (
-                      <img src={cert.fileUrl} alt={cert.title} className="w-full h-full object-cover" />
+                      <Image src={cert.fileUrl} alt={cert.title} width={48} height={48} className="w-full h-full object-cover" />
                     ) : (
                       <span>{cat.icon}</span>
                     )}

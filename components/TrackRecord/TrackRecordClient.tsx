@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useRef, useCallback } from 'react'
+import Image from 'next/image'
 import * as XLSX from 'xlsx'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -867,9 +868,11 @@ export default function TrackRecordClient({
                               <div className="col-span-2 md:col-span-4">
                                 <div className="label-mono text-[9px] mb-2">Screenshot</div>
                                 <a href={s.screenshotUrl} target="_blank" rel="noopener noreferrer">
-                                  <img
+                                  <Image
                                     src={s.screenshotUrl}
                                     alt="Screenshot de la operación"
+                                    width={800}
+                                    height={256}
                                     className="max-h-64 rounded-lg border border-[var(--border)] object-contain"
                                   />
                                 </a>
@@ -1060,9 +1063,12 @@ export default function TrackRecordClient({
                 >
                   {screenshotPreview ? (
                     <div className="space-y-2">
-                      <img
+                      <Image
                         src={screenshotPreview}
                         alt="Preview"
+                        width={400}
+                        height={160}
+                        unoptimized
                         className="max-h-40 mx-auto rounded object-contain"
                       />
                       {screenshotFile && (

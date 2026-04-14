@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
@@ -20,15 +20,13 @@ function RegisterForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const router = useRouter()
-
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
     const supabase = createSupabaseBrowserClient()
-    const { data, error: err } = await supabase.auth.signUp({
+    const { error: err } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {

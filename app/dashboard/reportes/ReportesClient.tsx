@@ -81,10 +81,6 @@ function periodLabel(period: Period, from: string, to: string) {
   return `${from} al ${to}`
 }
 
-function fmtNum(n: number, decimals = 2) {
-  return (n >= 0 ? '+' : '') + n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
-}
-
 function formatAnalysis(text: string) {
   return text
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')

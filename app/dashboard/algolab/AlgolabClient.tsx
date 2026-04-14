@@ -40,7 +40,7 @@ export default function AlgolabClient({ isAdmin }: Props) {
   // Legacy strategies (flujo anterior — solo admin o si no hay patternReport)
   const [strategies, setStrategies] = useState<Strategy[]>([])
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(null)
-  const [loadingDatasets, setLoadingDatasets] = useState(true)
+  const [, setLoadingDatasets] = useState(true)
   const [showLegacy, setShowLegacy] = useState(false)
 
   useEffect(() => {

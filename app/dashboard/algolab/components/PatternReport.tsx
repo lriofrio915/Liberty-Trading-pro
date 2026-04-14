@@ -1,11 +1,9 @@
 'use client'
-import { useState, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo } from 'react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 import type { PatternAnalysisResult, PatternStats, DatasetMeta } from '@/lib/algolab-pattern-engine'
-import type { GridCell } from '@/app/api/algolab/grid-search/route'
-import type { SignalDetail } from '@/app/api/algolab/signal-candles/route'
 import DetalleModal from './modals/DetalleModal'
 import GridSearchModal from './modals/GridSearchModal'
 import PropFirmModal from './modals/PropFirmModal'
@@ -243,7 +241,7 @@ function PatternSummary({ stats, meta }: { stats: PatternStats[]; meta: DatasetM
 // ─── BOTONES OPCIONALES ───────────────────────────────────────────────────────
 
 function OptionalButtons({
-  stats, meta, datasetId, onOpen,
+  stats, meta: _meta, datasetId, onOpen,
 }: {
   stats: PatternStats[]
   meta: DatasetMeta

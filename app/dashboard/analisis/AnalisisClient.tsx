@@ -873,6 +873,22 @@ function LabTab({
         ))}
       </div>
 
+      {/* ── Staleness warning ── */}
+      {scans.length > 0 && (() => {
+        const lastFecha = new Date(scans[0].fecha)
+        const diffMs = Date.now() - lastFecha.getTime()
+        const diffDays = diffMs / (1000 * 60 * 60 * 24)
+        if (diffDays > 1.5) {
+          return (
+            <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs text-yellow-400 flex items-center gap-2">
+              ⚠️ Último escaneo hace {Math.floor(diffDays)} días — los crons podrían no estar corriendo.
+              Verifica GitHub Actions o el crontab del servidor.
+            </div>
+          )
+        }
+        return null
+      })()}
+
       {/* ── No data state ── */}
       {scans.length === 0 && (
         <div className="card p-10 text-center">
@@ -888,7 +904,7 @@ function LabTab({
       {/* ── Scan history ── */}
       {scans.map(scan => {
         const isExpanded = expandedScan === scan.id
-        const fecha = new Date(scan.fecha).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+        const fecha = new Date(scan.fecha).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/New_York' })
 
         return (
           <div key={scan.id} className="card overflow-hidden">

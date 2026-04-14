@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Metadata } from 'next'
 import PublicChart from '@/components/TrackRecord/PublicChart'
 
@@ -307,7 +308,7 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
               background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <Image src={user.avatarUrl} alt={displayName} width={80} height={80} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 <span style={{ fontSize: 32, fontWeight: 900, color: '#C9A84C', fontFamily: 'Georgia, serif' }}>
                   {displayName.charAt(0).toUpperCase()}
@@ -505,9 +506,11 @@ export default async function PublicTrackRecordPage({ params }: { params: { slug
                           overflow: 'hidden', position: 'relative',
                         }}>
                           {!isPdf && cert.fileUrl ? (
-                            <img
+                            <Image
                               src={cert.fileUrl}
                               alt={cert.title}
+                              width={200}
+                              height={110}
                               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
                           ) : (

@@ -54,7 +54,6 @@ export default function VideoSemanaWidget({
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [shareOpen, setShareOpen] = useState(false)
   const [form, setForm] = useState<FormState>({
     titulo: '',
     descripcion: '',

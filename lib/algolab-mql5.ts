@@ -138,23 +138,7 @@ function entryConditionMQL5(rule: StrategyRule): string {
   return cond
 }
 
-function slPoints(rule: StrategyRule): string {
-  switch (rule.sl.type) {
-    case 'atr_multiplier': return `(int)(atrBuffer[1] / _Point * ${rule.sl.value})`
-    case 'fixed_pct':      return `(int)(Ask * ${rule.sl.value / 100} / _Point)`
-    case 'fixed_points':   return `${rule.sl.value}`
-    default: return '200'
-  }
-}
 
-function tpPoints(rule: StrategyRule): string {
-  switch (rule.tp.type) {
-    case 'atr_multiplier': return `(int)(atrBuffer[1] / _Point * ${rule.tp.value})`
-    case 'fixed_pct':      return `(int)(Ask * ${rule.tp.value / 100} / _Point)`
-    case 'fixed_points':   return `${rule.tp.value}`
-    default: return '400'
-  }
-}
 
 export function generateEA(strategy: StrategyForExport, symbol: string, timeframe: string): string {
   const indicatorIds = datasetInfo(strategy)

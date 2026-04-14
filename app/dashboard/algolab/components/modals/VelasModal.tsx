@@ -37,8 +37,6 @@ export default function VelasModal({
     }
   }
 
-  const selected = stats.find(s => s.patternId === patternId)
-
   const wins   = signals?.filter(s => s.result === 'WIN').length ?? 0
   const losses = signals?.filter(s => s.result === 'LOSS').length ?? 0
   const totalPnl = signals?.reduce((acc, s) => acc + s.pnlPts, 0) ?? 0

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState } from 'react'
+import Image from 'next/image'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -279,7 +280,7 @@ function ShareModal({ post, onClose }: { post: Post; onClose: () => void }) {
         {/* Preview */}
         {post.imageUrl && (
           <div className="mx-5 mt-4 rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.06)', maxHeight: 180 }}>
-            <img src={post.imageUrl} alt="preview" className="w-full object-cover" style={{ maxHeight: 180 }} />
+            <Image src={post.imageUrl} alt="preview" width={800} height={180} className="w-full object-cover" style={{ maxHeight: 180 }} unoptimized />
           </div>
         )}
         <div className="px-5 py-3">
@@ -413,7 +414,7 @@ function PostCard({
       {/* Image */}
       {post.imageUrl && (
         <div className="mb-3 rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
-          <img src={post.imageUrl} alt="post" className="w-full object-cover max-h-96" />
+          <Image src={post.imageUrl} alt="post" width={800} height={384} className="w-full object-cover max-h-96" unoptimized />
         </div>
       )}
 

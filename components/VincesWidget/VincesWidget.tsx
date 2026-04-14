@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import type { ChatMessage } from '@/types'
 
 // ─── Config por modo ─────────────────────────────────────────────────────────
@@ -343,9 +344,11 @@ export default function VincesWidget({ mode = 'dashboard' }: Props) {
             style={{ background: 'var(--bg-card)' }}
           >
             <div className="flex items-center gap-2.5">
-              <img
+              <Image
                 src="https://res.cloudinary.com/deusntwkn/image/upload/v1773069069/IMG_20251126_065050_395_wcnpca.webp"
                 alt="Vinces"
+                width={36}
+                height={36}
                 className="w-9 h-9 rounded-full object-cover border-2 border-[var(--gold)]"
               />
               <div>

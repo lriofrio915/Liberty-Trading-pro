@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { navItems, navGroups } from './navConfig'
+import { navGroups } from './navConfig'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 import NotificationBell from '@/components/Notifications/NotificationBell'
 
