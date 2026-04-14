@@ -25,24 +25,32 @@ async function callAI(prompt: string): Promise<string> {
   if (!apiKey) throw new Error('OPENROUTER_API_KEY not set')
   const model = process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat-v3-0324'
 
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://www.libertytrading.pro',
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.3,
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-    }),
-  })
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 12000)
 
-  if (!res.ok) throw new Error(`OpenRouter error: ${res.status}`)
-  const data = await res.json()
-  return data.choices?.[0]?.message?.content ?? '{}'
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://www.libertytrading.pro',
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0.3,
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' },
+      }),
+    })
+
+    if (!res.ok) throw new Error(`OpenRouter error: ${res.status}`)
+    const data = await res.json()
+    return data.choices?.[0]?.message?.content ?? '{}'
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 // ─── PROMPT PARA ARQUETIPOS ──────────────────────────────────────────────────
@@ -118,7 +126,7 @@ function buildVariants(archetype: Archetype): StrategyRule[] {
     }
   }
 
-  return variants.slice(0, 20) // máx 20 variantes por arquetipo
+  return variants.slice(0, 10) // máx 10 variantes por arquetipo (reduce carga de backtest)
 }
 
 // ─── SCORE COMPUESTO ─────────────────────────────────────────────────────────
@@ -196,22 +204,7 @@ export async function generateStrategies(
   // 4. Ordenar por score y retornar top N
   allResults.sort((a, b) => b.score - a.score)
 
-  // 5. Generar descripciones IA para las top 3 (si hay suficientes)
-  const top3 = allResults.slice(0, 3)
-  if (top3.length > 0) {
-    try {
-      const descPrompt = `Eres un quant trader experto. Para cada una de estas estrategias, escribe una descripción profesional de 2 líneas en español explicando la lógica de trading.
-Estrategias: ${JSON.stringify(top3.map(s => ({ name: s.name, pf: s.result.profitFactor, sharpe: s.result.sharpeRatio, wr: s.result.winRate })))}
-Responde JSON: { "descriptions": ["desc1", "desc2", "desc3"] }`
-      const descRaw = await callAI(descPrompt)
-      const descParsed = JSON.parse(descRaw)
-      const descs: string[] = descParsed.descriptions ?? []
-      descs.forEach((d, i) => { if (allResults[i]) allResults[i].description = d })
-    } catch {
-      // Ignorar errores en descripciones
-    }
-  }
-
+  // 5. Retornar resultados (descripciones ya incluidas en cada arquetipo)
   return allResults.slice(0, maxResults)
 }
 

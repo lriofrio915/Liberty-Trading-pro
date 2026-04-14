@@ -39,11 +39,11 @@ export async function POST(req: NextRequest) {
     })
     if (!dataset) return NextResponse.json({ error: 'Dataset no encontrado' }, { status: 404 })
 
-    // Validar y limitar candles (cap 10k para consistencia con el route de generate)
+    // Validar y limitar candles (cap 5k para evitar timeout en Vercel — 5k M1 ≈ 3-4 días)
     let candles
     try {
       const all = validateCandles(dataset.candles)
-      candles = all.length > 10000 ? all.slice(-10000) : all
+      candles = all.length > 5000 ? all.slice(-5000) : all
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error validando candles'
       return NextResponse.json({ error: message }, { status: 400 })

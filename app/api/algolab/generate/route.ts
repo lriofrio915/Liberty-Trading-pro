@@ -46,9 +46,9 @@ export async function POST(req: NextRequest) {
     let candles
     try {
       const all = validateCandles(dataset.candles)
-      // Limitar a las últimas 10,000 velas para evitar timeout en Vercel
-      // 10k velas M1 ≈ 1 semana de datos, suficiente para evaluar estrategias
-      candles = all.length > 10000 ? all.slice(-10000) : all
+      // Limitar a las últimas 5,000 velas para evitar timeout en Vercel
+      // 5k velas M1 ≈ 3-4 días de datos, suficiente para evaluar estrategias
+      candles = all.length > 5000 ? all.slice(-5000) : all
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error validando candles'
       return NextResponse.json({ error: message }, { status: 400 })
