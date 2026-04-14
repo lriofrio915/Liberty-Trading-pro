@@ -169,7 +169,10 @@ export function runAllPatterns(
     for (let i = startIdx; i < candles.length - 1; i++) {
       // Fix v2: la barra señal Y la barra anterior deben estar en la ventana de volumen
       const signalHour = new Date(candles[i].t).getUTCHours()
-      const prevHour = new Date(candles[i - Math.max(pattern.minBars - 1, 1)].t).getUTCHours()
+      // Fix v3: prevBarIdx puede ser -1 cuando minBars=1 e i=0 → TypeError: candles[-1].t
+      const prevBarIdx = i - Math.max(pattern.minBars - 1, 1)
+      if (prevBarIdx < 0) continue
+      const prevHour = new Date(candles[prevBarIdx].t).getUTCHours()
 
       // Si volumeWindowHours cubre las 24 horas, no hay filtro
       if (validHours.size < 24 && (!validHours.has(signalHour) || !validHours.has(prevHour))) {
