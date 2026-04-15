@@ -85,14 +85,15 @@ const RISK_PROFILES: { id: RiskProfile; label: string; icon: string; desc: strin
 ]
 
 const AGENTS = [
-  { key: 'crypto', label: 'Crypto', icon: '₿', desc: 'BTC, ETH, SOL' },
-  { key: 'acciones', label: 'Acciones', icon: '📈', desc: 'NQ, SP500, Russell, VIX' },
-  { key: 'divisas', label: 'Divisas', icon: '💱', desc: 'DXY, EUR/USD, MXN, COP' },
-  { key: 'materiales', label: 'Materiales', icon: '🏗️', desc: 'Oro, Petróleo WTI' },
+  { key: 'crypto',     label: 'Crypto',     icon: '₿',  desc: 'BTC, ETH, BNB, XRP' },
+  { key: 'acciones',   label: 'Acciones',   icon: '📈', desc: '7 Magnificas' },
+  { key: 'indices',    label: 'Índices',    icon: '📊', desc: 'Nasdaq, SP500, Russell, Dow, VIX' },
+  { key: 'divisas',    label: 'Divisas',    icon: '💱', desc: 'DXY, EUR/USD, JPY, CAD, GBP' },
+  { key: 'materiales', label: 'Materias',   icon: '🏗️', desc: 'Oro, Petróleo, Plata' },
   { key: 'estrategia', label: 'Estrategia', icon: '🎯', desc: 'Portafolio global' },
 ]
 
-const SECTOR_ORDER = ['Crypto', 'Acciones', 'Divisas', 'Materiales']
+const SECTOR_ORDER = ['Crypto', 'Acciones', 'Índices', 'Divisas', 'Materiales']
 
 const SESGO_STYLES = {
   COMPRA: {
@@ -841,7 +842,7 @@ function LabTab({
         <div>
           <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Laboratorio de Estrategia</h2>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-            Señales detectadas a las 9am ET con confianza ≥70% — resultados a las 12pm, flip de sesgo y 3pm
+            Señales detectadas a las 8am ET (perfil agresivo, confianza ≥70%) — cierre simulado 12pm ET
           </p>
         </div>
         <button
@@ -977,9 +978,58 @@ function LabTab({
                     {/* Resumen sesgo */}
                     {scan.resumen && (
                       <p className="px-4 py-3 text-xs leading-relaxed" style={{ color: 'var(--text-muted)', borderTop: '1px solid var(--border)' }}>
-                        <span className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Contexto 9am:</span> {scan.resumen}
+                        <span className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Contexto 8am:</span> {scan.resumen}
                       </p>
                     )}
+
+                    {/* ── Portfolio Summary ── */}
+                    {(() => {
+                      const ops = scan.oportunidades.filter(o => o.rendimiento12pm !== null)
+                      if (ops.length === 0) return null
+                      const wins = ops.filter(o => (o.rendimiento12pm as number) > 0)
+                      const losses = ops.filter(o => (o.rendimiento12pm as number) <= 0)
+                      const avgPnl = ops.reduce((s, o) => s + (o.rendimiento12pm as number), 0) / ops.length
+                      const best = ops.reduce((a, b) => (b.rendimiento12pm as number) > (a.rendimiento12pm as number) ? b : a)
+                      const worst = ops.reduce((a, b) => (b.rendimiento12pm as number) < (a.rendimiento12pm as number) ? b : a)
+                      const pnlColor = avgPnl >= 0 ? 'text-green-400' : 'text-red-400'
+                      return (
+                        <div className="px-4 py-4" style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-hover)' }}>
+                          <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+                            📊 Resumen Portafolio (8am → 12pm ET)
+                          </p>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className="rounded-lg p-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                              <div className="text-[10px] mb-1" style={{ color: 'var(--text-muted)' }}>P&L Promedio</div>
+                              <div className={`text-sm font-bold font-mono ${pnlColor}`}>
+                                {avgPnl >= 0 ? '+' : ''}{avgPnl.toFixed(2)}%
+                              </div>
+                            </div>
+                            <div className="rounded-lg p-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                              <div className="text-[10px] mb-1" style={{ color: 'var(--text-muted)' }}>Ganadoras / Perdedoras</div>
+                              <div className="text-sm font-bold">
+                                <span className="text-green-400">{wins.length}W</span>
+                                <span style={{ color: 'var(--text-muted)' }}> / </span>
+                                <span className="text-red-400">{losses.length}L</span>
+                              </div>
+                            </div>
+                            <div className="rounded-lg p-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                              <div className="text-[10px] mb-1" style={{ color: 'var(--text-muted)' }}>Mejor operación</div>
+                              <div className="text-sm font-bold">
+                                <span className="font-mono text-green-400">{best.simbolo}</span>
+                                <span className="ml-1.5 text-green-400 font-mono">+{(best.rendimiento12pm as number).toFixed(2)}%</span>
+                              </div>
+                            </div>
+                            <div className="rounded-lg p-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                              <div className="text-[10px] mb-1" style={{ color: 'var(--text-muted)' }}>Peor operación</div>
+                              <div className="text-sm font-bold">
+                                <span className="font-mono text-red-400">{worst.simbolo}</span>
+                                <span className="ml-1.5 text-red-400 font-mono">{(worst.rendimiento12pm as number).toFixed(2)}%</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
                   </div>
                 )}
               </div>
