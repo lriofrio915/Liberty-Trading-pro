@@ -55,8 +55,29 @@ Gestionados en Prisma (`Plan` enum). Hotmart actualiza el plan via webhook.
 - `cron-midday-prices` — Precios al mediodía
 - `cron-close-prices` — Precios de cierre
 - `cron-bias-monitor` — Monitor de sesgo del mercado
+- `cron-followup` — Follow-up automático via WhatsApp a leads en estado CTA (3 etapas: 6h, 24h, 72h)
 
 Todos requieren `CRON_SECRET` en el header de la request.
+
+## Páginas Públicas
+
+| Ruta | Descripción |
+|------|-------------|
+| `/p/[id]` | Vista pública de un post de comunidad (compartir en redes) |
+| `/p2p` | Landing de servicio P2P compra/venta USDT con Luis (CTA WhatsApp) |
+| `/maestria-futuros` | Landing del producto "Maestría en Futuros" (Hotmart anual) |
+| `/mentoria-integral` | Landing del producto "Mentoría Integral" (Hotmart mensual) |
+| `/unirse` | Landing principal de captación de leads con formulario y Vinces widget |
+| `/track-record/[slug]` | Track record público de un trader (marketing) |
+| `/video-semana/[id]` | Video semanal público con análisis en vivo |
+
+## APIs Notables
+
+| Endpoint | Descripción |
+|----------|-------------|
+| `GET /api/benchmark` | Series históricas de S&P 500 y NASDAQ normalizadas. Params: `desde`, `hasta`. Cache 1h. |
+| `POST /api/webhook/hotmart` | Recibe eventos de pago Hotmart y actualiza el plan del usuario |
+| `POST /api/vinces-wa` | Webhook del bot WhatsApp de Vinces (responde preguntas de leads) |
 
 ## AlgoLab — Módulo Crítico
 
