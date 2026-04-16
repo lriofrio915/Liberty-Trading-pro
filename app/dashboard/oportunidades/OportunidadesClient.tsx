@@ -1,6 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+
+interface ReportJSON {
+  ticker: string
+  empresa: string
+  bolsa: string
+  precio_actual: string
+  precio_objetivo: string
+  informe_numero: string
+  resumen: string
+  negocio: string
+  fuentes_ingresos: string[][]
+  financieros: string
+  valoracion: string
+  factores_positivos: string[][]
+  factores_riesgo: string[][]
+  conclusion: string
+  mes_año: string
+}
 
 interface Opportunity {
   id: string
@@ -38,40 +56,59 @@ const RIESGO_COLOR: Record<string, string> = {
   BAJO: 'text-green-400', MEDIO: 'text-yellow-400', ALTO: 'text-red-400',
 }
 
+// ─── Parse aiReport safely ────────────────────────────────────────────────────
+function parseReport(raw: string | null): ReportJSON | null {
+  if (!raw) return null
+  try { return JSON.parse(raw) as ReportJSON } catch { return null }
+}
+
 // ─── Print / download helper ───────────────────────────────────────────────────
 function printReport(opp: Opportunity) {
   const win = window.open('', '_blank')
   if (!win) return
+  const r = parseReport(opp.aiReport)
+
+  const tableRows = (rows: string[][], headerStyle = '') =>
+    rows.map((row, i) =>
+      `<tr style="${i === 0 ? headerStyle : ''}">${row.map(c => `<td style="padding:6px 10px;border:1px solid #ddd">${c}</td>`).join('')}</tr>`
+    ).join('')
+
+  const body = r ? `
+    <h2 style="color:#C9A84C;font-size:18px;margin:0 0 4px">Informe de Inversión — ${r.ticker}</h2>
+    <p style="color:#555;font-size:13px;margin:0 0 20px">${r.empresa} · ${r.bolsa} · ${r.mes_año}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;border:1px solid #ddd;border-radius:8px;padding:16px;margin:0 0 24px">
+      <div><div style="font-size:11px;color:#777;text-transform:uppercase">Precio Actual</div><div style="font-size:20px;font-weight:bold">$${r.precio_actual}</div></div>
+      <div><div style="font-size:11px;color:#777;text-transform:uppercase">Precio Objetivo</div><div style="font-size:20px;font-weight:bold;color:#16a34a">$${r.precio_objetivo}</div></div>
+    </div>
+    <h3 style="font-size:13px;text-transform:uppercase;color:#C9A84C;letter-spacing:.05em;margin:24px 0 8px">Resumen Ejecutivo</h3>
+    <p style="font-size:14px;line-height:1.7;margin:0 0 20px">${r.resumen}</p>
+    <h3 style="font-size:13px;text-transform:uppercase;color:#C9A84C;letter-spacing:.05em;margin:24px 0 8px">El Negocio</h3>
+    <p style="font-size:14px;line-height:1.7;margin:0 0 20px;white-space:pre-wrap">${r.negocio}</p>
+    <h3 style="font-size:13px;text-transform:uppercase;color:#C9A84C;letter-spacing:.05em;margin:24px 0 8px">Histórico Financiero</h3>
+    <table style="width:100%;border-collapse:collapse;margin:0 0 20px;font-size:13px">${tableRows(r.fuentes_ingresos, 'background:#f5f5f5;font-weight:bold')}</table>
+    <h3 style="font-size:13px;text-transform:uppercase;color:#C9A84C;letter-spacing:.05em;margin:24px 0 8px">Análisis Financiero</h3>
+    <p style="font-size:14px;line-height:1.7;margin:0 0 20px;white-space:pre-wrap">${r.financieros}</p>
+    <h3 style="font-size:13px;text-transform:uppercase;color:#C9A84C;letter-spacing:.05em;margin:24px 0 8px">Valoración y Consenso</h3>
+    <p style="font-size:14px;line-height:1.7;margin:0 0 20px;white-space:pre-wrap">${r.valoracion}</p>
+    <h3 style="font-size:13px;text-transform:uppercase;color:#16a34a;letter-spacing:.05em;margin:24px 0 8px">Factores Positivos</h3>
+    <table style="width:100%;border-collapse:collapse;margin:0 0 20px;font-size:13px">${tableRows(r.factores_positivos)}</table>
+    <h3 style="font-size:13px;text-transform:uppercase;color:#dc2626;letter-spacing:.05em;margin:24px 0 8px">Factores de Riesgo</h3>
+    <table style="width:100%;border-collapse:collapse;margin:0 0 20px;font-size:13px">${tableRows(r.factores_riesgo)}</table>
+    <h3 style="font-size:13px;text-transform:uppercase;color:#C9A84C;letter-spacing:.05em;margin:24px 0 8px">Conclusión y Recomendación</h3>
+    <p style="font-size:14px;line-height:1.7;margin:0 0 20px;white-space:pre-wrap">${r.conclusion}</p>
+  ` : `<div style="white-space:pre-wrap;font-size:14px;line-height:1.8">${opp.aiReport ?? opp.description}</div>`
+
   win.document.write(`<!DOCTYPE html><html><head>
     <meta charset="utf-8"/>
     <title>Informe — ${opp.ticker}</title>
     <style>
-      body{font-family:Georgia,serif;max-width:800px;margin:40px auto;padding:0 24px;color:#111;line-height:1.7}
-      h1{font-size:24px;margin-bottom:4px} h2{font-size:14px;color:#555;margin-bottom:24px;font-weight:normal}
-      .badge{display:inline-block;background:#111;color:#C9A84C;border:1px solid #C9A84C;border-radius:4px;padding:2px 10px;font-size:12px;margin-right:8px}
-      .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;border:1px solid #ddd;border-radius:8px;padding:16px;margin:24px 0}
-      .cell{text-align:center} .cell-label{font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.05em}
-      .cell-value{font-size:18px;font-weight:bold;margin-top:4px}
-      .report{white-space:pre-wrap;font-size:14px;line-height:1.8}
+      body{font-family:Georgia,serif;max-width:820px;margin:40px auto;padding:0 24px;color:#111;line-height:1.7}
       .footer{margin-top:40px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:16px}
       @media print{body{margin:0}}
     </style>
   </head><body>
-    <h1>${opp.ticker} — ${opp.instrumento}</h1>
-    <h2>${opp.title}</h2>
-    <div>
-      <span class="badge">${opp.direction}</span>
-      <span class="badge">${opp.tipo}</span>
-      <span class="badge">${opp.timeframe} PLAZO</span>
-      <span class="badge">RIESGO ${opp.riesgo}</span>
-    </div>
-    <div class="grid">
-      <div class="cell"><div class="cell-label">Entrada</div><div class="cell-value">$${opp.precioEntrada}</div></div>
-      <div class="cell"><div class="cell-label">Objetivo</div><div class="cell-value" style="color:#16a34a">$${opp.precioObjetivo}</div></div>
-      <div class="cell"><div class="cell-label">Stop Loss</div><div class="cell-value" style="color:#dc2626">$${opp.stopLoss}</div></div>
-    </div>
-    <div class="report">${opp.aiReport ?? opp.description}</div>
-    <div class="footer">Liberty Trading Pro · ${new Date(opp.publishedAt).toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'})} · Análisis generado con IA</div>
+    ${body}
+    <div class="footer">Liberty Trading Pro · ${new Date(opp.publishedAt).toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'})} · Análisis generado con IA · Liberty Trading Club</div>
   </body></html>`)
   win.document.close()
   win.print()
@@ -178,14 +215,114 @@ function OppCard({ opp, isAdmin, onDelete, onStatusChange }: {
       </div>
 
       {/* Expanded AI report */}
-      {expanded && opp.aiReport && (
-        <div
-          className="mt-4 pt-4 border-t border-[var(--border)] text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto"
-          style={{ background: 'var(--bg-primary)', borderRadius: '8px', padding: '16px' }}
-        >
-          {opp.aiReport}
-        </div>
-      )}
+      {expanded && opp.aiReport && (() => {
+        const r = parseReport(opp.aiReport)
+        if (!r) return (
+          <div className="mt-4 pt-4 border-t border-[var(--border)] text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto"
+            style={{ background: 'var(--bg-primary)', borderRadius: '8px', padding: '16px' }}>
+            {opp.aiReport}
+          </div>
+        )
+        return (
+          <div className="mt-4 pt-4 border-t border-[var(--border)] space-y-5 text-sm">
+            {/* Header */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg p-3" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
+                <div className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Precio Actual</div>
+                <div className="text-lg font-bold font-mono" style={{ color: 'var(--text-primary)' }}>${r.precio_actual}</div>
+              </div>
+              <div className="rounded-lg p-3" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
+                <div className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Precio Objetivo</div>
+                <div className="text-lg font-bold font-mono text-green-400">${r.precio_objetivo}</div>
+              </div>
+            </div>
+
+            {/* Resumen */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--gold)' }}>Resumen Ejecutivo</p>
+              <p className="leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{r.resumen}</p>
+            </div>
+
+            {/* Negocio */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--gold)' }}>El Negocio</p>
+              <p className="leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>{r.negocio}</p>
+            </div>
+
+            {/* Histórico financiero */}
+            {r.fuentes_ingresos?.length > 0 && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--gold)' }}>Histórico Financiero</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs border-collapse">
+                    {r.fuentes_ingresos.map((row, i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i === 0 ? 'var(--bg-hover)' : 'transparent' }}>
+                        {row.map((cell, j) => (
+                          <td key={j} className={`px-3 py-2 ${i === 0 ? 'font-bold' : ''}`} style={{ color: i === 0 ? 'var(--text-muted)' : 'var(--text-secondary)' }}>{cell}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Financieros */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--gold)' }}>Análisis Financiero</p>
+              <p className="leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>{r.financieros}</p>
+            </div>
+
+            {/* Valoración */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--gold)' }}>Valoración y Consenso</p>
+              <p className="leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>{r.valoracion}</p>
+            </div>
+
+            {/* Factores positivos */}
+            {r.factores_positivos?.length > 0 && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-2 text-green-400">Factores Positivos</p>
+                <div className="space-y-2">
+                  {r.factores_positivos.map(([titulo, desc], i) => (
+                    <div key={i} className="flex gap-2">
+                      <span className="text-green-400 flex-shrink-0">▲</span>
+                      <div><span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{titulo}:</span>{' '}
+                        <span style={{ color: 'var(--text-secondary)' }}>{desc}</span></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Factores de riesgo */}
+            {r.factores_riesgo?.length > 0 && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-2 text-red-400">Factores de Riesgo</p>
+                <div className="space-y-2">
+                  {r.factores_riesgo.map(([titulo, desc], i) => (
+                    <div key={i} className="flex gap-2">
+                      <span className="text-red-400 flex-shrink-0">▼</span>
+                      <div><span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{titulo}:</span>{' '}
+                        <span style={{ color: 'var(--text-secondary)' }}>{desc}</span></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Conclusión */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--gold)' }}>Conclusión y Recomendación</p>
+              <p className="leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>{r.conclusion}</p>
+            </div>
+
+            <p className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
+              Liberty Trading Club · Informe generado con IA · {r.mes_año}
+            </p>
+          </div>
+        )
+      })()}
     </div>
   )
 }
@@ -195,119 +332,124 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [form, setForm] = useState({
-    title: '', ticker: '', instrumento: '', tipo: 'ACCION', direction: 'COMPRA',
-    precioEntrada: '', precioObjetivo: '', stopLoss: '',
-    timeframe: 'MEDIANO', riesgo: 'MEDIO', description: '', minPlan: 'CLUB',
-  })
+  const [ticker, setTicker] = useState('')
+  const [preview, setPreview] = useState<{ precio: number; empresa: string } | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [direction, setDirection] = useState('COMPRA')
+  const [timeframe, setTimeframe] = useState('MEDIANO')
+  const [riesgo, setRiesgo] = useState('MEDIO')
+  const [minPlan, setMinPlan] = useState('CLUB')
+  const [stopLossPct, setStopLossPct] = useState('8')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const set = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }))
+  const inputCls = 'w-full bg-black/30 border border-[var(--border)] text-[var(--text-primary)] text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold)] transition-colors'
+  const selectCls = inputCls + ' cursor-pointer'
+
+  // Auto-preview ticker price when user finishes typing
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    const t = ticker.trim().toUpperCase()
+    if (t.length < 1) { setPreview(null); return }
+    debounceRef.current = setTimeout(async () => {
+      setPreviewLoading(true)
+      try {
+        const res = await fetch(`/api/opportunities/fetch-ticker?ticker=${t}`)
+        const json = await res.json()
+        if (res.ok && json.data) {
+          setPreview({ precio: json.data.precioActual, empresa: json.data.empresa })
+        } else {
+          setPreview(null)
+        }
+      } catch { setPreview(null) }
+      finally { setPreviewLoading(false) }
+    }, 700)
+  }, [ticker])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!ticker.trim()) return
     setSaving(true); setError(null)
     try {
       const res = await fetch('/api/opportunities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          precioEntrada: parseFloat(form.precioEntrada),
-          precioObjetivo: parseFloat(form.precioObjetivo),
-          stopLoss: parseFloat(form.stopLoss),
-        }),
+        body: JSON.stringify({ ticker: ticker.trim().toUpperCase(), direction, timeframe, riesgo, minPlan, stopLossPct: parseFloat(stopLossPct) }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Error al crear')
       onCreated(data.opportunity)
       setOpen(false)
-      setForm({ title: '', ticker: '', instrumento: '', tipo: 'ACCION', direction: 'COMPRA',
-        precioEntrada: '', precioObjetivo: '', stopLoss: '',
-        timeframe: 'MEDIANO', riesgo: 'MEDIO', description: '', minPlan: 'CLUB' })
+      setTicker(''); setPreview(null)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error')
     } finally { setSaving(false) }
   }
 
-  const inputCls = 'w-full bg-black/30 border border-[var(--border)] text-[var(--text-primary)] text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold)] transition-colors'
-  const selectCls = inputCls + ' cursor-pointer'
-
   return (
     <div className="mb-8">
-      <button
-        onClick={() => setOpen(!open)}
-        className="btn-gold rounded-xl px-6 py-2 text-sm font-bold"
-      >
-        {open ? '✕ Cancelar' : '+ Nueva oportunidad'}
+      <button onClick={() => setOpen(!open)} className="btn-gold rounded-xl px-6 py-2 text-sm font-bold">
+        {open ? '✕ Cancelar' : '+ Generar Informe de Inversión'}
       </button>
 
       {open && (
-        <form onSubmit={handleSubmit} className="card mt-4 space-y-4">
-          <h3 className="font-bold text-[var(--gold)] text-sm uppercase tracking-widest mb-2">
-            Nueva alerta de inversión
+        <form onSubmit={handleSubmit} className="card mt-4 space-y-5">
+          <h3 className="font-bold text-[var(--gold)] text-sm uppercase tracking-widest">
+            Nuevo Informe de Inversión
           </h3>
 
           {error && (
             <p className="text-red-400 text-xs border border-red-900 bg-red-950/50 rounded px-3 py-2">{error}</p>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Título de la alerta *</label>
-              <input value={form.title} onChange={e => set('title', e.target.value)} required placeholder="Ej: AAPL rompimiento canal alcista" className={inputCls} />
+          {/* Ticker search */}
+          <div>
+            <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Ticker *</label>
+            <div className="relative">
+              <input
+                value={ticker}
+                onChange={e => setTicker(e.target.value.toUpperCase())}
+                required
+                placeholder="NVDA, AAPL, MSFT..."
+                className={inputCls + ' font-mono font-bold text-[var(--gold)] pr-32'}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style={{ color: 'var(--text-muted)' }}>
+                {previewLoading ? 'Buscando...' : preview ? (
+                  <span className="text-green-400">${preview.precio.toFixed(2)} · {preview.empresa.slice(0, 20)}</span>
+                ) : ticker.length > 0 ? 'No encontrado' : ''}
+              </div>
             </div>
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Ticker *</label>
-              <input value={form.ticker} onChange={e => set('ticker', e.target.value.toUpperCase())} required placeholder="AAPL" className={inputCls} />
-            </div>
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Nombre del instrumento *</label>
-              <input value={form.instrumento} onChange={e => set('instrumento', e.target.value)} required placeholder="Apple Inc." className={inputCls} />
-            </div>
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Tipo</label>
-              <select value={form.tipo} onChange={e => set('tipo', e.target.value)} className={selectCls}>
-                {['ACCION','ETF','CRIPTO','FOREX'].map(v => <option key={v}>{v}</option>)}
-              </select>
-            </div>
+            <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
+              Los datos financieros se obtienen automáticamente de Yahoo Finance
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Dirección</label>
-              <select value={form.direction} onChange={e => set('direction', e.target.value)} className={selectCls}>
+              <select value={direction} onChange={e => setDirection(e.target.value)} className={selectCls}>
                 <option value="COMPRA">COMPRA (Long)</option>
                 <option value="VENTA">VENTA (Short)</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Precio de entrada *</label>
-              <input type="number" step="0.01" value={form.precioEntrada} onChange={e => set('precioEntrada', e.target.value)} required placeholder="185.50" className={inputCls} />
-            </div>
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Precio objetivo *</label>
-              <input type="number" step="0.01" value={form.precioObjetivo} onChange={e => set('precioObjetivo', e.target.value)} required placeholder="210.00" className={inputCls} />
-            </div>
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Stop Loss *</label>
-              <input type="number" step="0.01" value={form.stopLoss} onChange={e => set('stopLoss', e.target.value)} required placeholder="178.00" className={inputCls} />
-            </div>
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Horizonte temporal</label>
-              <select value={form.timeframe} onChange={e => set('timeframe', e.target.value)} className={selectCls}>
-                <option value="CORTO">CORTO (días/semanas)</option>
-                <option value="MEDIANO">MEDIANO (semanas/meses)</option>
-                <option value="LARGO">LARGO (meses/años)</option>
+              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Horizonte</label>
+              <select value={timeframe} onChange={e => setTimeframe(e.target.value)} className={selectCls}>
+                <option value="CORTO">CORTO</option>
+                <option value="MEDIANO">MEDIANO</option>
+                <option value="LARGO">LARGO</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Nivel de riesgo</label>
-              <select value={form.riesgo} onChange={e => set('riesgo', e.target.value)} className={selectCls}>
+              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Riesgo</label>
+              <select value={riesgo} onChange={e => setRiesgo(e.target.value)} className={selectCls}>
                 <option value="BAJO">BAJO</option>
                 <option value="MEDIO">MEDIO</option>
                 <option value="ALTO">ALTO</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Plan mínimo requerido</label>
-              <select value={form.minPlan} onChange={e => set('minPlan', e.target.value)} className={selectCls}>
+              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Plan mín.</label>
+              <select value={minPlan} onChange={e => setMinPlan(e.target.value)} className={selectCls}>
                 <option value="CLUB">CLUB</option>
                 <option value="PRO">PRO</option>
                 <option value="PORTFOLIO">PORTFOLIO</option>
@@ -315,20 +457,21 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Resumen / tesis del analista *</label>
-            <textarea value={form.description} onChange={e => set('description', e.target.value)} required rows={3}
-              placeholder="Describe brevemente la tesis de inversión, por qué es interesante este activo..."
-              className={inputCls + ' resize-none'} />
+          <div className="max-w-xs">
+            <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Stop Loss % (desde precio actual)</label>
+            <input type="number" step="0.5" min="1" max="30" value={stopLossPct}
+              onChange={e => setStopLossPct(e.target.value)} className={inputCls} />
           </div>
 
-          <div className="flex items-center gap-3">
-            <button type="submit" disabled={saving} className="btn-gold rounded-xl px-8 py-2 text-sm font-bold disabled:opacity-50">
-              {saving ? '⏳ Generando informe con IA...' : '🤖 Crear + Generar informe'}
+          <div className="flex items-center gap-4">
+            <button type="submit" disabled={saving || !ticker.trim()} className="btn-gold rounded-xl px-8 py-2.5 text-sm font-bold disabled:opacity-50">
+              {saving ? '⏳ Generando informe...' : '🤖 Generar Informe'}
             </button>
-            <p className="text-xs text-[var(--text-muted)]">
-              {saving ? 'La IA está buscando información y redactando el informe. Puede tardar 20-40 seg.' : 'La IA buscará datos financieros y redactará el informe completo automáticamente.'}
-            </p>
+            {saving && (
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Obteniendo datos de Yahoo Finance y generando el informe con IA. ~30-60 seg.
+              </p>
+            )}
           </div>
         </form>
       )}

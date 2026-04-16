@@ -9,21 +9,14 @@ export const metadata = {
   description: '5 agentes de IA analizan en paralelo crypto, acciones, divisas y materiales para darte un sesgo claro y recomendación de compra/venta.',
 }
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim().toLowerCase())
-
 export default async function AnalisisPage() {
   const supabase = await createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) redirect('/auth/login')
 
   const dbUser = await prisma.user
-    .findUnique({
-      where: { authId: user.id },
-      select: { plan: true, trialEndsAt: true },
-    })
+    .findUnique({ where: { authId: user.id }, select: { plan: true, trialEndsAt: true } })
     .catch(() => null)
 
   const access = dbUser
@@ -32,7 +25,5 @@ export default async function AnalisisPage() {
 
   if (!access.canAccessClub) redirect('/dashboard/upgrade')
 
-  const isAdmin = ADMIN_EMAILS.length > 0 && ADMIN_EMAILS.includes((user.email ?? '').toLowerCase())
-
-  return <AnalisisClient isAdmin={isAdmin} />
+  return <AnalisisClient />
 }

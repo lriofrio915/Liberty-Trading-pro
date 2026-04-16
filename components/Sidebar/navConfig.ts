@@ -29,7 +29,6 @@ export const navGroups: NavGroup[] = [
       { href: '/dashboard/reportes',      icon: '📄', label: 'Reportes',      requiresClub: true },
       { href: '/dashboard/comunidad',     icon: '🤝', label: 'Comunidad',     requiresClub: true },
       { href: '/dashboard/academia',      icon: '🎓', label: 'Academia',      requiresClub: true },
-      { href: '/dashboard/algolab',        icon: '🤖', label: 'AlgoLab',      requiresClub: true },
     ],
   },
 ]

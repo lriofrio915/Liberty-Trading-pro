@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { prisma } from '@/lib/prisma'
+import { fetchTickerFinancials, buildDataBlock } from '@/lib/yahoo-financials'
 
 const ADMIN_EMAIL = 'lriofrio915@gmail.com'
 
 const PLAN_ORDER: Record<string, number> = { FREE: 0, CLUB: 1, PRO: 2, PORTFOLIO: 3 }
-
-function sanitize(text: string): string {
-  return text
-    .replace(/\u2014/g, '--').replace(/\u2013/g, '-')
-    .replace(/\u2018/g, "'").replace(/\u2019/g, "'")
-    .replace(/\u201C/g, '"').replace(/\u201D/g, '"')
-    .replace(/\u2026/g, '...')
-    .replace(/[^\x00-\x7F]/g, '')
-}
 
 // ── GET /api/opportunities — returns opportunities visible to the user's plan ──
 export async function GET() {
@@ -27,7 +19,6 @@ export async function GET() {
     const plan = dbUser?.plan ?? 'FREE'
     const userLevel = PLAN_ORDER[plan] ?? 0
 
-    // Admin sees all
     const isAdmin = user.email === ADMIN_EMAIL
 
     const all = await prisma.opportunity.findMany({
@@ -46,7 +37,7 @@ export async function GET() {
   }
 }
 
-// ── POST /api/opportunities — admin only, creates + generates AI report ────────
+// ── POST /api/opportunities — admin only, fetches YF data + generates AI report ─
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createSupabaseServerClient()
@@ -58,52 +49,77 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const {
-      title, ticker, instrumento, tipo, direction,
-      precioEntrada, precioObjetivo, stopLoss,
-      timeframe, riesgo, description, minPlan,
+      ticker,
+      direction,
+      timeframe = 'MEDIANO',
+      riesgo = 'MEDIO',
+      minPlan = 'CLUB',
+      stopLossPct = 8,
     } = body
 
-    if (!title || !ticker || !instrumento || !tipo || !direction
-      || precioEntrada == null || precioObjetivo == null || stopLoss == null) {
-      return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
+    if (!ticker || !direction) {
+      return NextResponse.json({ error: 'ticker y direction son requeridos' }, { status: 400 })
     }
 
-    // ── Generate AI report via OpenRouter (Perplexity online model for web search) ──
+    // ── 1. Fetch real market data from Yahoo Finance ──
+    const yf = await fetchTickerFinancials(ticker.toUpperCase().trim())
+    const dataBlock = buildDataBlock(yf)
+
+    const precioEntrada = yf.precioActual
+    const precioObjetivo = yf.precioObjetivoMedio ?? precioEntrada * 1.15
+    const stopLoss = precioEntrada * (1 - stopLossPct / 100)
+
+    // ── 2. Generate structured AI report ──
     let aiReport: string | null = null
     try {
       const apiKey = process.env.OPENROUTER_API_KEY
-      const rr = ((precioObjetivo - precioEntrada) / (precioEntrada - stopLoss)).toFixed(2)
-      const potencial = (((precioObjetivo - precioEntrada) / precioEntrada) * 100).toFixed(2)
+      const model = process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat-v3-0324'
 
-      const prompt = sanitize(
-        `Eres un analista financiero senior especializado en mercados de capitales.
-Genera un informe completo y profesional de oportunidad de inversión para:
+      const prompt = `Eres un analista financiero senior de Liberty Trading Club. Tienes los siguientes DATOS REALES de mercado para ${yf.ticker}:
 
-DATOS DE LA ALERTA:
-- Ticker: ${ticker}
-- Instrumento: ${instrumento}
-- Tipo: ${tipo}
-- Dirección: ${direction}
-- Precio de entrada: $${precioEntrada}
-- Precio objetivo: $${precioObjetivo} (potencial: +${potencial}%)
-- Stop Loss: $${stopLoss}
-- Ratio Riesgo/Beneficio: ${rr}x
-- Horizonte temporal: ${timeframe} plazo
-- Nivel de riesgo: ${riesgo}
-- Resumen del analista: ${description}
+${dataBlock}
 
-ESTRUCTURA DEL INFORME:
-1. RESUMEN EJECUTIVO (2-3 oraciones clave)
-2. DESCRIPCION DE LA EMPRESA / ACTIVO (actividad, sector, capitalización)
-3. ANALISIS TECNICO (soporte/resistencia, tendencia actual, patrones relevantes)
-4. ANALISIS FUNDAMENTAL (métricas clave: P/E, EPS, ingresos, margen, deuda si aplica)
-5. CATALIZADORES (por qué podría moverse hacia el objetivo)
-6. RIESGOS A CONSIDERAR
-7. GESTION DEL TRADE (entrada, objetivo, stop, RR, tamaño sugerido)
-8. CONCLUSION Y RECOMENDACION
+Con base EXCLUSIVAMENTE en esos datos reales, genera un informe de inversión profesional.
+REGLAS ESTRICTAS:
+1. NO inventes cifras. Usa SOLO los números del bloque de datos reales de arriba.
+2. Si un dato dice "N/D" o "N/M", indícalo así en el texto o no lo menciones.
+3. El análisis cualitativo y la narrativa son tuyas, pero toda cifra debe provenir del bloque de datos.
+4. Responde ÚNICAMENTE con el JSON, sin texto adicional ni bloques markdown.
 
-Usa datos reales y actualizados. Sé preciso, usa términos técnicos y escribe en español. Formato con secciones claras.`
-      )
+{
+  "ticker": "${yf.ticker}",
+  "empresa": "<nombre exacto del bloque>",
+  "bolsa": "<exchange exacto>",
+  "precio_actual": "<precio exacto>",
+  "precio_objetivo": "<precio_obj_medio exacto, o N/D>",
+  "informe_numero": "N/A",
+  "resumen": "3-4 oraciones: qué hace la empresa, precio actual, situación financiera y tesis de inversión basada en datos reales.",
+  "negocio": "2-3 párrafos describiendo el negocio usando la descripción del bloque. Menciona sector, industria y fuentes de ingresos.",
+  "fuentes_ingresos": [
+    ["Año", "Revenue", "Gross Profit", "Net Income"],
+    ["2024", "<cifras exactas del bloque>", "...", "..."],
+    ["2023", "<cifras exactas del bloque>", "...", "..."],
+    ["2022", "<cifras exactas del bloque>", "...", "..."]
+  ],
+  "financieros": "2 párrafos con cifras EXACTAS: revenue TTM, márgenes, EBITDA, EPS, deuda, caja.",
+  "valoracion": "2 párrafos con cifras EXACTAS: market cap, EV, P/E, P/S, EV/EBITDA, rango 52 semanas, precio objetivo y breakdown de analistas.",
+  "factores_positivos": [
+    ["Catalizador 1", "Descripción con cifras reales del bloque"],
+    ["Catalizador 2", "Descripción con cifras reales del bloque"],
+    ["Catalizador 3", "Descripción con cifras reales del bloque"],
+    ["Catalizador 4", "Descripción con cifras reales del bloque"],
+    ["Catalizador 5", "Descripción con cifras reales del bloque"]
+  ],
+  "factores_riesgo": [
+    ["Riesgo 1", "Descripción con cifras reales del bloque"],
+    ["Riesgo 2", "Descripción con cifras reales del bloque"],
+    ["Riesgo 3", "Descripción con cifras reales del bloque"],
+    ["Riesgo 4", "Descripción con cifras reales del bloque"],
+    ["Riesgo 5", "Descripción con cifras reales del bloque"]
+  ],
+  "conclusion": "2-3 párrafos: recomendación, zona de entrada, precio objetivo y horizonte.",
+  "mes_año": "${new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}"
+}`
 
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -111,39 +127,44 @@ Usa datos reales y actualizados. Sé preciso, usa términos técnicos y escribe 
           Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
-          'X-Title': 'Liberty Trading Pro -- Opportunity Report',
+          'X-Title': 'Liberty Trading Pro — Investment Report',
         },
         body: JSON.stringify({
-          model: 'perplexity/sonar-pro',
+          model,
           messages: [{ role: 'user', content: prompt }],
-          max_tokens: 3000,
-          temperature: 0.4,
+          temperature: 0.15,
+          max_tokens: 4096,
         }),
+        signal: AbortSignal.timeout(90000),
       })
 
       const data = await res.json()
-      aiReport = data.choices?.[0]?.message?.content ?? null
-      if (aiReport) aiReport = aiReport.trim()
+      const raw = data.choices?.[0]?.message?.content ?? null
+      if (raw) {
+        // Extract JSON from response
+        const start = raw.indexOf('{')
+        const end = raw.lastIndexOf('}')
+        aiReport = start !== -1 && end !== -1 ? raw.slice(start, end + 1).trim() : raw.trim()
+      }
     } catch (aiErr) {
-      console.error('AI report generation failed:', aiErr)
-      // continue without report — can regenerate later
+      console.error('[opportunities] AI report generation failed:', aiErr)
     }
 
     const opportunity = await prisma.opportunity.create({
       data: {
-        title,
-        ticker: ticker.toUpperCase().trim(),
-        instrumento,
-        tipo,
+        title: `${yf.ticker} — ${direction} · ${yf.empresa}`,
+        ticker: yf.ticker,
+        instrumento: 'ACCION',
+        tipo: 'ACCION',
         direction,
-        precioEntrada: parseFloat(precioEntrada),
-        precioObjetivo: parseFloat(precioObjetivo),
-        stopLoss: parseFloat(stopLoss),
+        precioEntrada,
+        precioObjetivo,
+        stopLoss: parseFloat(stopLoss.toFixed(2)),
         timeframe,
         riesgo,
-        description,
+        description: yf.descripcion.slice(0, 300),
         aiReport,
-        minPlan: minPlan ?? 'CLUB',
+        minPlan,
         active: true,
         status: 'ACTIVA',
       },
@@ -152,6 +173,6 @@ Usa datos reales y actualizados. Sé preciso, usa términos técnicos y escribe 
     return NextResponse.json({ opportunity }, { status: 201 })
   } catch (err) {
     console.error('POST /api/opportunities:', err)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Internal error' }, { status: 500 })
   }
 }
