@@ -29,7 +29,16 @@
       "Bash(xargs -I {} dirname {})",
       "Bash(xargs -I {} ls -la {})",
       "Bash(mkdir -p \"D:/AGENCIA DE AUTOMATIZACIONES/Desarrollo de proyectos/Liberty-Trading-pro/app/api/algolab/datasets/[id]\")",
-      "Bash(mkdir -p \"D:/AGENCIA DE AUTOMATIZACIONES/Desarrollo de proyectos/Liberty-Trading-pro/app/api/algolab/export/[id]\")"
+      "Bash(mkdir -p \"D:/AGENCIA DE AUTOMATIZACIONES/Desarrollo de proyectos/Liberty-Trading-pro/app/api/algolab/export/[id]\")",
+      "mcp__plugin_context-mode_context-mode__ctx_fetch_and_index",
+      "mcp__plugin_context-mode_context-mode__ctx_search",
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute",
+      "mcp__plugin_context-mode_context-mode__ctx_execute",
+      "mcp__plugin_context-mode_context-mode__ctx_execute_file",
+      "mcp__plugin_context-mode_context-mode__ctx_index",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
