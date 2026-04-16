@@ -392,7 +392,7 @@ export default function PatternReport({ result, loading, datasetId }: Props) {
       {openModal === 'propfirm'   && <PropFirmModal   stats={result.stats} onClose={() => setOpenModal(null)} />}
       {openModal === 'velas'      && <VelasModal      stats={result.stats} datasetId={datasetId} onClose={() => setOpenModal(null)} />}
       {openModal === 'pine'       && <PineModal       stats={result.stats} meta={result.meta} onClose={() => setOpenModal(null)} />}
-      {openModal === 'peorCaso'   && <PeorCasoModal   stats={result.stats} onClose={() => setOpenModal(null)} />
+      {openModal === 'peorCaso'   && <PeorCasoModal   stats={result.stats} onClose={() => setOpenModal(null)} />}
     </div>
   )
 }
