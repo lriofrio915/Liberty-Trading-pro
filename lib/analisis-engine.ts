@@ -317,7 +317,10 @@ export async function runFullAnalysis(riskProfile: string = 'moderado'): Promise
   let estrategia: EstrategiaResult | null = null
 
   rawResults.forEach((result, i) => {
-    if (result.status !== 'fulfilled') return
+    if (result.status !== 'fulfilled') {
+      console.error(`[analisis] Agent ${agents[i].name} failed:`, result.reason)
+      return
+    }
     try {
       const json = extractJSON(result.value)
       const data = JSON.parse(json)
@@ -333,8 +336,8 @@ export async function runFullAnalysis(riskProfile: string = 'moderado'): Promise
           activos.push(asset)
         }
       }
-    } catch {
-      // Agent failed or returned invalid JSON — skip gracefully
+    } catch (err) {
+      console.error(`[analisis] Agent ${agents[i].name} JSON parse failed:`, err)
     }
   })
 
