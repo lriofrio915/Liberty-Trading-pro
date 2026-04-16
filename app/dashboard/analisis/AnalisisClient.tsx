@@ -355,6 +355,7 @@ export default function AnalisisClient({ isAdmin = false }: { isAdmin?: boolean 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ riskProfile }),
+        signal: AbortSignal.timeout(70000),
       })
 
       clearInterval(stepInterval)
@@ -369,7 +370,13 @@ export default function AnalisisClient({ isAdmin = false }: { isAdmin?: boolean 
       setResult(data)
     } catch (err) {
       clearInterval(stepInterval)
-      setError(err instanceof Error ? err.message : 'Error al ejecutar el análisis. Intenta nuevamente.')
+      const msg =
+        err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError')
+          ? 'El análisis tardó demasiado. Los mercados están lentos, intenta nuevamente en unos momentos.'
+          : err instanceof Error
+            ? err.message
+            : 'Error al ejecutar el análisis. Intenta nuevamente.'
+      setError(msg)
     } finally {
       setLoading(false)
     }
