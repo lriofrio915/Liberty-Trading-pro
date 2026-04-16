@@ -431,6 +431,7 @@ model PostShare {
   creadoEn DateTime @default(now())
 }
 
+
 // ─── LABORATORIO DE ESTRATEGIA ────────────────────────────────────────────────
 
 // Escaneo automático diario a las 9am ET (lunes a viernes)
