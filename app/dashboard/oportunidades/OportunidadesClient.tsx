@@ -327,63 +327,80 @@ function OppCard({ opp, isAdmin, onDelete, onStatusChange }: {
   )
 }
 
+interface Suggestion { symbol: string; name: string; exchange: string }
+
 // ─── Admin form ───────────────────────────────────────────────────────────────
 function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
-  const [open, setOpen] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [ticker, setTicker] = useState('')
-  const [preview, setPreview] = useState<{ precio: number; empresa: string } | null>(null)
-  const [previewLoading, setPreviewLoading] = useState(false)
-  const [direction, setDirection] = useState('COMPRA')
-  const [timeframe, setTimeframe] = useState('MEDIANO')
-  const [riesgo, setRiesgo] = useState('MEDIO')
-  const [minPlan, setMinPlan] = useState('CLUB')
-  const [stopLossPct, setStopLossPct] = useState('8')
+  const [open, setOpen]           = useState(false)
+  const [saving, setSaving]       = useState(false)
+  const [error, setError]         = useState<string | null>(null)
+  const [query, setQuery]         = useState('')
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+  const [searching, setSearching] = useState(false)
+  const [selected, setSelected]   = useState<Suggestion | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wrapperRef  = useRef<HTMLDivElement>(null)
 
-  const inputCls = 'w-full bg-black/30 border border-[var(--border)] text-[var(--text-primary)] text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold)] transition-colors'
-  const selectCls = inputCls + ' cursor-pointer'
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setSuggestions([])
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
-  // Auto-preview ticker price when user finishes typing
+  // Search suggestions as user types
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    const t = ticker.trim().toUpperCase()
-    if (t.length < 1) { setPreview(null); return }
+    const q = query.trim()
+    if (q.length < 1) { setSuggestions([]); return }
+    if (selected && selected.symbol === q.toUpperCase()) return  // already selected
     debounceRef.current = setTimeout(async () => {
-      setPreviewLoading(true)
+      setSearching(true)
       try {
-        const res = await fetch(`/api/opportunities/fetch-ticker?ticker=${t}`)
+        const res = await fetch(`/api/opportunities/fetch-ticker?q=${encodeURIComponent(q)}`)
         const json = await res.json()
-        if (res.ok && json.data) {
-          setPreview({ precio: json.data.precioActual, empresa: json.data.empresa })
-        } else {
-          setPreview(null)
-        }
-      } catch { setPreview(null) }
-      finally { setPreviewLoading(false) }
-    }, 700)
-  }, [ticker])
+        setSuggestions(res.ok ? (json.suggestions ?? []) : [])
+      } catch { setSuggestions([]) }
+      finally { setSearching(false) }
+    }, 400)
+  }, [query, selected])
+
+  function pickSuggestion(s: Suggestion) {
+    setSelected(s)
+    setQuery(s.symbol)
+    setSuggestions([])
+  }
+
+  function reset() {
+    setQuery(''); setSelected(null); setSuggestions([])
+    setError(null); setOpen(false)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!ticker.trim()) return
+    const ticker = selected?.symbol ?? query.trim().toUpperCase()
+    if (!ticker) return
     setSaving(true); setError(null)
     try {
       const res = await fetch('/api/opportunities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticker: ticker.trim().toUpperCase(), direction, timeframe, riesgo, minPlan, stopLossPct: parseFloat(stopLossPct) }),
+        body: JSON.stringify({ ticker }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Error al crear')
       onCreated(data.opportunity)
-      setOpen(false)
-      setTicker(''); setPreview(null)
+      reset()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error')
     } finally { setSaving(false) }
   }
+
+  const inputCls = 'w-full bg-black/30 border border-[var(--border)] text-[var(--text-primary)] text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold)] transition-colors'
 
   return (
     <div className="mb-8">
@@ -392,84 +409,93 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
       </button>
 
       {open && (
-        <form onSubmit={handleSubmit} className="card mt-4 space-y-5">
-          <h3 className="font-bold text-[var(--gold)] text-sm uppercase tracking-widest">
-            Nuevo Informe de Inversión
-          </h3>
+        <form onSubmit={handleSubmit} className="card mt-4 space-y-5 max-w-lg">
+          <div>
+            <h3 className="font-bold text-[var(--gold)] text-sm uppercase tracking-widest mb-0.5">
+              Nuevo Informe de Inversión
+            </h3>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              Busca por empresa o ticker — los datos se obtienen de Yahoo Finance automáticamente
+            </p>
+          </div>
 
           {error && (
             <p className="text-red-400 text-xs border border-red-900 bg-red-950/50 rounded px-3 py-2">{error}</p>
           )}
 
-          {/* Ticker search */}
-          <div>
-            <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Ticker *</label>
+          {/* Search box with dropdown */}
+          <div ref={wrapperRef} className="relative">
             <div className="relative">
               <input
-                value={ticker}
-                onChange={e => setTicker(e.target.value.toUpperCase())}
+                value={query}
+                onChange={e => { setQuery(e.target.value); setSelected(null) }}
                 required
-                placeholder="NVDA, AAPL, MSFT..."
-                className={inputCls + ' font-mono font-bold text-[var(--gold)] pr-32'}
+                autoComplete="off"
+                placeholder="Busca empresa o ticker: Apple, NVDA, Tesla..."
+                className={inputCls + ' pr-10'}
+                disabled={saving}
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style={{ color: 'var(--text-muted)' }}>
-                {previewLoading ? 'Buscando...' : preview ? (
-                  <span className="text-green-400">${preview.precio.toFixed(2)} · {preview.empresa.slice(0, 20)}</span>
-                ) : ticker.length > 0 ? 'No encontrado' : ''}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {searching ? (
+                  <svg className="animate-spin h-4 w-4" style={{ color: 'var(--gold)' }} viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                ) : selected ? (
+                  <span className="text-green-400 text-sm">✓</span>
+                ) : null}
               </div>
             </div>
-            <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
-              Los datos financieros se obtienen automáticamente de Yahoo Finance
-            </p>
+
+            {/* Suggestions dropdown */}
+            {suggestions.length > 0 && (
+              <div className="absolute z-50 w-full mt-1 rounded-xl overflow-hidden shadow-xl"
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                {suggestions.map(s => (
+                  <button
+                    key={s.symbol}
+                    type="button"
+                    onClick={() => pickSuggestion(s)}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
+                  >
+                    <span className="font-mono font-bold text-sm min-w-[56px]" style={{ color: 'var(--gold)' }}>
+                      {s.symbol}
+                    </span>
+                    <span className="text-sm flex-1 truncate" style={{ color: 'var(--text-primary)' }}>
+                      {s.name}
+                    </span>
+                    <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
+                      {s.exchange}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Dirección</label>
-              <select value={direction} onChange={e => setDirection(e.target.value)} className={selectCls}>
-                <option value="COMPRA">COMPRA (Long)</option>
-                <option value="VENTA">VENTA (Short)</option>
-              </select>
+          {/* Selected company preview */}
+          {selected && (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
+              style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)' }}>
+              <span className="font-mono font-black text-lg" style={{ color: 'var(--gold)' }}>{selected.symbol}</span>
+              <div>
+                <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{selected.name}</p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{selected.exchange}</p>
+              </div>
             </div>
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Horizonte</label>
-              <select value={timeframe} onChange={e => setTimeframe(e.target.value)} className={selectCls}>
-                <option value="CORTO">CORTO</option>
-                <option value="MEDIANO">MEDIANO</option>
-                <option value="LARGO">LARGO</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Riesgo</label>
-              <select value={riesgo} onChange={e => setRiesgo(e.target.value)} className={selectCls}>
-                <option value="BAJO">BAJO</option>
-                <option value="MEDIO">MEDIO</option>
-                <option value="ALTO">ALTO</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Plan mín.</label>
-              <select value={minPlan} onChange={e => setMinPlan(e.target.value)} className={selectCls}>
-                <option value="CLUB">CLUB</option>
-                <option value="PRO">PRO</option>
-                <option value="PORTFOLIO">PORTFOLIO</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="max-w-xs">
-            <label className="block text-xs text-[var(--text-muted)] mb-1 font-mono uppercase">Stop Loss % (desde precio actual)</label>
-            <input type="number" step="0.5" min="1" max="30" value={stopLossPct}
-              onChange={e => setStopLossPct(e.target.value)} className={inputCls} />
-          </div>
+          )}
 
           <div className="flex items-center gap-4">
-            <button type="submit" disabled={saving || !ticker.trim()} className="btn-gold rounded-xl px-8 py-2.5 text-sm font-bold disabled:opacity-50">
+            <button
+              type="submit"
+              disabled={saving || (!selected && !query.trim())}
+              className="btn-gold rounded-xl px-8 py-2.5 text-sm font-bold disabled:opacity-50"
+            >
               {saving ? '⏳ Generando informe...' : '🤖 Generar Informe'}
             </button>
             {saving && (
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                Obteniendo datos de Yahoo Finance y generando el informe con IA. ~30-60 seg.
+                Obteniendo datos de Yahoo Finance y generando con IA. ~30-60 seg.
               </p>
             )}
           </div>
