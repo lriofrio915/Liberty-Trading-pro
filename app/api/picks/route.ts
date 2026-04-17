@@ -137,7 +137,7 @@ REGLAS ESTRICTAS:
           Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
-          'X-Title': 'Liberty Trading Pro — Investment Report',
+          'X-Title': 'Liberty Trading Pro - Investment Report',
         },
         body: JSON.stringify({
           model,
