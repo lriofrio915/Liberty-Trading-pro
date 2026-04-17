@@ -120,11 +120,27 @@ function OppCard({ opp, isAdmin, onDelete, onStatusChange, onRegenerate }: {
   isAdmin: boolean
   onDelete: (id: string) => void
   onStatusChange: (id: string, status: string) => void
-  onRegenerate: (id: string) => Promise<void>
+  onRegenerate: (updatedOpp: Opportunity) => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
+  const [regenError, setRegenError] = useState<string | null>(null)
   const parsed = parseReport(opp.aiReport)
+
+  async function handleRegenerate() {
+    setRegenerating(true)
+    setRegenError(null)
+    try {
+      const res = await fetch(`/api/picks/${opp.id}/regenerate`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Error al generar informe')
+      if (data.opportunity) onRegenerate(data.opportunity)
+    } catch (err) {
+      setRegenError(err instanceof Error ? err.message : 'Error desconocido')
+    } finally {
+      setRegenerating(false)
+    }
+  }
   const rr = ((opp.precioObjetivo - opp.precioEntrada) / (opp.precioEntrada - opp.stopLoss)).toFixed(1)
   const potencial = (((opp.precioObjetivo - opp.precioEntrada) / opp.precioEntrada) * 100).toFixed(1)
 
@@ -151,9 +167,9 @@ function OppCard({ opp, isAdmin, onDelete, onStatusChange, onRegenerate }: {
       {/* Price grid */}
       <div className="grid grid-cols-3 gap-1.5 mb-3">
         {[
-          { label: 'Entrada', value: `$${opp.precioEntrada}`, color: '' },
-          { label: 'Objetivo', value: `$${opp.precioObjetivo}`, color: 'text-green-400' },
-          { label: 'Stop Loss', value: `$${opp.stopLoss}`, color: 'text-red-400' },
+          { label: 'Entrada', value: `$${opp.precioEntrada.toFixed(2)}`, color: '' },
+          { label: 'Objetivo', value: `$${opp.precioObjetivo.toFixed(2)}`, color: 'text-green-400' },
+          { label: 'Stop Loss', value: `$${opp.stopLoss.toFixed(2)}`, color: 'text-red-400' },
         ].map(({ label, value, color }) => (
           <div key={label} className="text-center py-2 rounded-lg" style={{ background: 'var(--bg-primary)' }}>
             <p className="text-[10px] text-[var(--text-muted)] font-mono uppercase">{label}</p>
@@ -196,16 +212,18 @@ function OppCard({ opp, isAdmin, onDelete, onStatusChange, onRegenerate }: {
             </button>
           </>
         ) : isAdmin && (
-          <button
-            disabled={regenerating}
-            onClick={async () => {
-              setRegenerating(true)
-              try { await onRegenerate(opp.id) } finally { setRegenerating(false) }
-            }}
-            className="text-xs font-mono text-[var(--gold)] hover:text-[var(--gold-light)] transition-colors disabled:opacity-50"
-          >
-            {regenerating ? '⏳ Generando informe...' : '🔄 Generar Informe'}
-          </button>
+          <div className="flex flex-col gap-1">
+            <button
+              disabled={regenerating}
+              onClick={handleRegenerate}
+              className="text-xs font-mono text-[var(--gold)] hover:text-[var(--gold-light)] transition-colors disabled:opacity-50"
+            >
+              {regenerating ? '⏳ Generando informe...' : '🔄 Generar Informe'}
+            </button>
+            {regenError && (
+              <p className="text-[10px] text-red-400 font-mono">{regenError}</p>
+            )}
+          </div>
         )}
 
         {isAdmin && (
@@ -545,12 +563,8 @@ export default function OportunidadesClient({
     setOpportunities(prev => prev.filter(o => o.id !== id))
   }
 
-  const handleRegenerate = async (id: string) => {
-    const res = await fetch(`/api/picks/${id}/regenerate`, { method: 'POST' })
-    const data = await res.json()
-    if (data.opportunity) {
-      setOpportunities(prev => prev.map(o => o.id === id ? data.opportunity : o))
-    }
+  const handleRegenerate = (updatedOpp: Opportunity) => {
+    setOpportunities(prev => prev.map(o => o.id === updatedOpp.id ? updatedOpp : o))
   }
 
   const handleStatusChange = async (id: string, status: string) => {
