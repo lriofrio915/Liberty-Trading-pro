@@ -38,11 +38,36 @@ interface EstrategiaResult {
   alerta_riesgo: string
 }
 
+interface FarosAssetItem {
+  symbol: string
+  zScore: number
+  thermodynamicState: string
+  reynoldsPercentile: number
+  entropy: number
+  alphaFlow: number
+  psiScore: number
+  marketRegime: string
+  governanceSignal: string
+  killSwitch: boolean
+  trendStrength5d: number
+}
+
+interface FarosAgentResult {
+  sesgo_faros: 'ALCISTA' | 'BAJISTA' | 'NEUTRAL' | 'KILL_SWITCH'
+  regimen_dominante: string
+  activos_faros: FarosAssetItem[]
+  resumen_faros: string
+  kill_switch_activos: string[]
+  oportunidades_faros: string
+  advertencias_faros: string
+}
+
 interface AnalysisResult {
   timestamp: string
   riskProfile: string
   activos: AssetAnalysis[]
   estrategia: EstrategiaResult | null
+  faros?: FarosAgentResult
 }
 
 type RiskProfile = 'conservador' | 'moderado' | 'agresivo'
@@ -62,6 +87,7 @@ const AGENTS = [
   { key: 'divisas',    label: 'Divisas',    icon: '💱', desc: 'DXY, EUR/USD, JPY, CAD, GBP' },
   { key: 'materiales', label: 'Materias',   icon: '🏗️', desc: 'Oro, Petróleo, Plata' },
   { key: 'estrategia', label: 'Estrategia', icon: '🎯', desc: 'Portafolio global' },
+  { key: 'faros',      label: 'FAROS v7',   icon: '🔭', desc: 'TAI-ACF — Física de fluidos' },
 ]
 
 const SECTOR_ORDER = ['Crypto', 'Acciones', 'Índices', 'Divisas', 'Materiales']
@@ -127,6 +153,170 @@ function formatPriceNum(price: number): string {
   if (price >= 1000) return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   if (price >= 1) return price.toFixed(4)
   return price.toFixed(6)
+}
+
+// ── FAROS helpers ─────────────────────────────────────────────────────────────
+
+const REGIME_STYLES: Record<string, { bg: string; text: string; border: string; label: string }> = {
+  INSTITUTIONAL_ACCUMULATION: { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/25', label: 'Acumulación Institucional' },
+  HIGH_MOMENTUM:               { bg: 'bg-blue-500/10',  text: 'text-blue-400',  border: 'border-blue-500/25',  label: 'Alto Momentum' },
+  CONSOLIDATION:               { bg: 'bg-yellow-500/10',text: 'text-yellow-400',border: 'border-yellow-500/25',label: 'Consolidación' },
+  STRUCTURAL_BREAK:            { bg: 'bg-red-500/10',   text: 'text-red-400',   border: 'border-red-500/25',   label: 'Ruptura Estructural ⚠️' },
+  DISTRIBUTION_BEAR:           { bg: 'bg-red-500/15',   text: 'text-red-300',   border: 'border-red-500/30',   label: 'Distribución / Bajista' },
+}
+
+const SIGNAL_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  BUY:         { bg: 'bg-green-500/15',  text: 'text-green-400',  label: '▲ BUY' },
+  BUY_CAUTION: { bg: 'bg-blue-500/10',   text: 'text-blue-400',   label: '▲ BUY~' },
+  HOLD:        { bg: 'bg-yellow-500/10', text: 'text-yellow-400', label: '◆ HOLD' },
+  SELL:        { bg: 'bg-red-500/15',    text: 'text-red-400',    label: '▼ SELL' },
+  CASH:        { bg: 'bg-orange-500/10', text: 'text-orange-400', label: '✕ CASH' },
+}
+
+const FAROS_SESGO_STYLES: Record<string, { bg: string; border: string; text: string; icon: string; label: string }> = {
+  ALCISTA:     { bg: 'bg-green-500/10', border: 'border-green-500/30',  text: 'text-green-400',  icon: '▲', label: 'ALCISTA' },
+  BAJISTA:     { bg: 'bg-red-500/10',   border: 'border-red-500/30',    text: 'text-red-400',    icon: '▼', label: 'BAJISTA' },
+  NEUTRAL:     { bg: 'bg-yellow-500/10',border: 'border-yellow-500/30', text: 'text-yellow-400', icon: '◆', label: 'NEUTRAL' },
+  KILL_SWITCH: { bg: 'bg-red-500/20',   border: 'border-red-500/50',    text: 'text-red-300',    icon: '✕', label: 'KILL SWITCH' },
+}
+
+function FarosMetricMini({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="flex flex-col items-center text-center">
+      <div className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-muted)' }}>
+        {label}
+      </div>
+      <div className="text-sm font-mono font-bold" style={{ color: 'var(--text-primary)' }}>
+        {value}
+      </div>
+      {sub && <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{sub}</div>}
+    </div>
+  )
+}
+
+function FarosAssetCard({ asset }: { asset: FarosAssetItem }) {
+  const regime = REGIME_STYLES[asset.marketRegime] ?? REGIME_STYLES.CONSOLIDATION
+  const signal = SIGNAL_STYLES[asset.governanceSignal] ?? SIGNAL_STYLES.HOLD
+
+  return (
+    <div className={`rounded-xl border p-3.5 ${regime.bg} ${regime.border} ${asset.killSwitch ? 'ring-1 ring-red-500/40' : ''}`}>
+      <div className="flex items-start justify-between mb-2.5">
+        <div>
+          <div className="font-mono font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+            {asset.symbol}
+          </div>
+          <div className={`text-[10px] font-medium mt-0.5 ${regime.text}`}>{regime.label}</div>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg ${signal.bg} ${signal.text}`}>
+            {signal.label}
+          </span>
+          {asset.killSwitch && (
+            <span className="text-[10px] font-bold text-red-400 animate-pulse">KILL SWITCH</span>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 mb-2.5">
+        <FarosMetricMini label="Z-Score" value={asset.zScore.toFixed(2)} sub={asset.thermodynamicState} />
+        <FarosMetricMini label="Reynolds%" value={`${asset.reynoldsPercentile.toFixed(0)}%`} />
+        <FarosMetricMini label="αflow" value={asset.alphaFlow.toFixed(2)} />
+      </div>
+
+      {/* Ψ Score bar */}
+      <div>
+        <div className="flex justify-between text-[10px] mb-1">
+          <span style={{ color: 'var(--text-muted)' }}>Ψ Gobernanza</span>
+          <span className={`font-mono font-semibold ${regime.text}`}>{(asset.psiScore * 100).toFixed(0)}%</span>
+        </div>
+        <div className="h-1.5 rounded-full" style={{ background: 'var(--border)' }}>
+          <div
+            className={`h-1.5 rounded-full transition-all duration-700 ${
+              asset.psiScore > 0.5 ? 'bg-green-400' : asset.psiScore > 0.25 ? 'bg-yellow-400' : 'bg-red-400'
+            }`}
+            style={{ width: `${asset.psiScore * 100}%` }}
+          />
+        </div>
+      </div>
+
+      <div className={`mt-2 text-[10px] font-mono ${asset.trendStrength5d >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+        Trend 5d: {asset.trendStrength5d >= 0 ? '+' : ''}{asset.trendStrength5d}%
+      </div>
+    </div>
+  )
+}
+
+function FarosPanel({ faros }: { faros: FarosAgentResult }) {
+  const ss = FAROS_SESGO_STYLES[faros.sesgo_faros] ?? FAROS_SESGO_STYLES.NEUTRAL
+  const sorted = [...faros.activos_faros].sort((a, b) => b.psiScore - a.psiScore)
+
+  return (
+    <div className="space-y-4">
+      {/* Header banner */}
+      <div className={`rounded-xl border p-5 ${ss.bg} ${ss.border}`}>
+        <div className="flex items-start gap-4">
+          <div className={`text-4xl font-black flex-shrink-0 leading-none mt-1 ${ss.text}`}>
+            {ss.icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                FAROS v7.0 — Sesgo TAI-ACF
+              </span>
+              <span className={`text-lg font-black ${ss.text}`}>{ss.label}</span>
+            </div>
+            <p className="text-sm leading-relaxed mb-1" style={{ color: 'var(--text-secondary)' }}>
+              {faros.resumen_faros}
+            </p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              Régimen dominante:{' '}
+              <span className="font-semibold">
+                {REGIME_STYLES[faros.regimen_dominante]?.label ?? faros.regimen_dominante}
+              </span>
+            </p>
+
+            {faros.kill_switch_activos.length > 0 && (
+              <div className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2">
+                <div className="text-xs font-bold text-red-400 mb-1">⚠️ Kill Switch Activo</div>
+                <div className="text-xs text-red-300">
+                  Turbulencia extrema detectada en: {faros.kill_switch_activos.join(', ')} — Ψ forzado a 0. Evitar exposición.
+                </div>
+              </div>
+            )}
+
+            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="rounded-xl p-3" style={{ background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)' }}>
+                <div className="text-xs font-semibold text-green-400 mb-1">🔭 Oportunidades FAROS</div>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                  {faros.oportunidades_faros}
+                </p>
+              </div>
+              <div className="rounded-xl p-3" style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                <div className="text-xs font-semibold text-red-400 mb-1">⚠️ Advertencias FAROS</div>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                  {faros.advertencias_faros}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Asset grid sorted by Ψ */}
+      {sorted.length > 0 && (
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+            Activos por Ψ Score — Física de Fluidos
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {sorted.map(asset => (
+              <FarosAssetCard key={asset.symbol} asset={asset} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
@@ -336,8 +526,8 @@ export default function AnalisisClient() {
       <div>
         <h1 className="text-2xl font-black gradient-gold mb-1">Análisis de Activos</h1>
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-          5 agentes de IA trabajan en paralelo — datos en tiempo real, sesgo claro y recomendación de
-          compra/venta por sector
+          7 agentes de IA trabajan en paralelo — incluye FAROS v7.0 (TAI-ACF, física de fluidos financieros)
+          para un sesgo más robusto con Z-Score, Reynolds, Entropía Shannon y Gobernanza Ψ
         </p>
       </div>
 
@@ -485,6 +675,9 @@ export default function AnalisisClient() {
               </div>
             </div>
           )}
+
+          {/* FAROS panel */}
+          {result.faros && <FarosPanel faros={result.faros} />}
 
           {/* Portfolio distribution + Rankings */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
