@@ -115,13 +115,15 @@ function printReport(opp: Opportunity) {
 }
 
 // ─── Opportunity card ──────────────────────────────────────────────────────────
-function OppCard({ opp, isAdmin, onDelete, onStatusChange }: {
+function OppCard({ opp, isAdmin, onDelete, onStatusChange, onRegenerate }: {
   opp: Opportunity
   isAdmin: boolean
   onDelete: (id: string) => void
   onStatusChange: (id: string, status: string) => void
+  onRegenerate: (id: string) => Promise<void>
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [regenerating, setRegenerating] = useState(false)
   const parsed = parseReport(opp.aiReport)
   const rr = ((opp.precioObjetivo - opp.precioEntrada) / (opp.precioEntrada - opp.stopLoss)).toFixed(1)
   const potencial = (((opp.precioObjetivo - opp.precioEntrada) / opp.precioEntrada) * 100).toFixed(1)
@@ -172,11 +174,13 @@ function OppCard({ opp, isAdmin, onDelete, onStatusChange }: {
       </div>
 
       {/* Summary */}
-      <p className="text-sm text-[var(--text-secondary)] mb-3 leading-relaxed">{parsed?.resumen ?? opp.description}</p>
+      {parsed?.resumen && (
+        <p className="text-sm text-[var(--text-secondary)] mb-3 leading-relaxed">{parsed.resumen}</p>
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-2 flex-wrap mt-auto pt-3 border-t border-[var(--border)]">
-        {opp.aiReport && (
+        {opp.aiReport ? (
           <>
             <button
               onClick={() => setExpanded(!expanded)}
@@ -191,6 +195,17 @@ function OppCard({ opp, isAdmin, onDelete, onStatusChange }: {
               ↓ Descargar PDF
             </button>
           </>
+        ) : isAdmin && (
+          <button
+            disabled={regenerating}
+            onClick={async () => {
+              setRegenerating(true)
+              try { await onRegenerate(opp.id) } finally { setRegenerating(false) }
+            }}
+            className="text-xs font-mono text-[var(--gold)] hover:text-[var(--gold-light)] transition-colors disabled:opacity-50"
+          >
+            {regenerating ? '⏳ Generando informe...' : '🔄 Generar Informe'}
+          </button>
         )}
 
         {isAdmin && (
@@ -530,6 +545,14 @@ export default function OportunidadesClient({
     setOpportunities(prev => prev.filter(o => o.id !== id))
   }
 
+  const handleRegenerate = async (id: string) => {
+    const res = await fetch(`/api/picks/${id}/regenerate`, { method: 'POST' })
+    const data = await res.json()
+    if (data.opportunity) {
+      setOpportunities(prev => prev.map(o => o.id === id ? data.opportunity : o))
+    }
+  }
+
   const handleStatusChange = async (id: string, status: string) => {
     await fetch(`/api/picks/${id}`, {
       method: 'PATCH',
@@ -630,6 +653,7 @@ export default function OportunidadesClient({
               isAdmin={effectiveAdmin}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
+              onRegenerate={handleRegenerate}
             />
           ))}
         </div>
