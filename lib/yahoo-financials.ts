@@ -4,33 +4,65 @@
 // ── Crumb auth (Yahoo Finance requires crumb + session cookie since 2024) ──────
 let _crumbCache: { crumb: string; cookie: string; at: number } | null = null
 
+function extractCookies(headers: Headers): string {
+  const setCookies: string[] =
+    typeof (headers as { getSetCookie?: () => string[] }).getSetCookie === 'function'
+      ? (headers as { getSetCookie: () => string[] }).getSetCookie()
+      : headers.get('set-cookie')
+        ? [headers.get('set-cookie')!]
+        : []
+  return setCookies.map((c) => c.split(';')[0]).join('; ')
+}
+
 async function getYahooCrumb(): Promise<{ crumb: string; cookie: string }> {
   if (_crumbCache && Date.now() - _crumbCache.at < 3_600_000) return _crumbCache
 
   const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-  const baseHeaders = { 'User-Agent': ua, Accept: '*/*', 'Accept-Language': 'en-US,en;q=0.9' }
+  const baseHeaders = {
+    'User-Agent': ua,
+    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept-Encoding': 'gzip, deflate, br',
+  }
 
-  // 1. Hit Yahoo Finance to get session cookies
-  const r1 = await fetch('https://finance.yahoo.com/', {
-    headers: baseHeaders,
-    signal: AbortSignal.timeout(10000),
-  })
+  // 1. Use fc.yahoo.com — more reliable cookie source than finance.yahoo.com
+  let cookie = ''
+  try {
+    const r1 = await fetch('https://fc.yahoo.com', {
+      headers: baseHeaders,
+      redirect: 'follow',
+      signal: AbortSignal.timeout(8000),
+    })
+    cookie = extractCookies(r1.headers)
+  } catch {
+    // fallback: try finance.yahoo.com directly
+    try {
+      const r1b = await fetch('https://finance.yahoo.com/', {
+        headers: baseHeaders,
+        signal: AbortSignal.timeout(8000),
+      })
+      cookie = extractCookies(r1b.headers)
+    } catch { /* continue without cookies */ }
+  }
 
-  // Node 18.14+ exposes getSetCookie(); fall back to single-value get()
-  const setCookies: string[] =
-    typeof (r1.headers as { getSetCookie?: () => string[] }).getSetCookie === 'function'
-      ? (r1.headers as { getSetCookie: () => string[] }).getSetCookie()
-      : r1.headers.get('set-cookie')
-        ? [r1.headers.get('set-cookie')!]
-        : []
-  const cookie = setCookies.map((c) => c.split(';')[0]).join('; ')
+  // 2. Get crumb — try query2 first, then query1
+  let crumb = ''
+  for (const host of ['https://query2.finance.yahoo.com', 'https://query1.finance.yahoo.com']) {
+    try {
+      const r2 = await fetch(`${host}/v1/test/getcrumb`, {
+        headers: { 'User-Agent': ua, Accept: '*/*', ...(cookie ? { Cookie: cookie } : {}) },
+        signal: AbortSignal.timeout(8000),
+      })
+      const text = (await r2.text()).trim()
+      // Valid crumb is a short alphanumeric string, not HTML
+      if (text && !text.startsWith('<') && text.length < 50) {
+        crumb = text
+        break
+      }
+    } catch { /* try next host */ }
+  }
 
-  // 2. Get crumb
-  const r2 = await fetch('https://query1.finance.yahoo.com/v1/test/getcrumb', {
-    headers: { ...baseHeaders, Cookie: cookie },
-    signal: AbortSignal.timeout(8000),
-  })
-  const crumb = (await r2.text()).trim()
+  if (!crumb) throw new Error('No se pudo obtener crumb de Yahoo Finance')
 
   _crumbCache = { crumb, cookie, at: Date.now() }
   return _crumbCache
@@ -114,18 +146,21 @@ export async function fetchTickerFinancials(ticker: string): Promise<TickerFinan
     'assetProfile',
   ].join('%2C')
 
-  const { crumb, cookie } = await getYahooCrumb()
-  const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(ticker)}?modules=${modules}&crumb=${encodeURIComponent(crumb)}`
+  const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      Accept: 'application/json',
-      Cookie: cookie,
-    },
-    signal: AbortSignal.timeout(12000),
-  })
-
+  // Try with crumb; if 401, invalidate cache and retry once
+  let res: Response | null = null
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt === 1) _crumbCache = null // force fresh crumb on retry
+    const { crumb, cookie } = await getYahooCrumb()
+    const url = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(ticker)}?modules=${modules}&crumb=${encodeURIComponent(crumb)}`
+    res = await fetch(url, {
+      headers: { 'User-Agent': ua, Accept: 'application/json', ...(cookie ? { Cookie: cookie } : {}) },
+      signal: AbortSignal.timeout(12000),
+    })
+    if (res.status !== 401) break
+  }
+  if (!res) throw new Error(`No response from Yahoo Finance for ${ticker}`)
   if (!res.ok) throw new Error(`Yahoo Finance returned ${res.status} for ${ticker}`)
 
   const json = await res.json()
