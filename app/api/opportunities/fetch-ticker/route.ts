@@ -26,8 +26,8 @@ export async function GET(req: NextRequest) {
       })
       if (!res.ok) return NextResponse.json({ suggestions: [] })
       const json = await res.json()
-      const quotes: Array<{ symbol: string; longname?: string; shortname?: string; quoteType?: string; exchange?: string }> =
-        json?.finance?.result?.[0]?.quotes ?? []
+      const quotes: Array<{ symbol: string; longname?: string; shortname?: string; quoteType?: string; exchDisp?: string; exchange?: string }> =
+        json?.quotes ?? []
 
       const suggestions = quotes
         .filter(q => q.quoteType === 'EQUITY' || q.quoteType === 'ETF')
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
         .map(q => ({
           symbol:   q.symbol,
           name:     q.longname ?? q.shortname ?? q.symbol,
-          exchange: q.exchange ?? '',
+          exchange: q.exchDisp ?? q.exchange ?? '',
           type:     q.quoteType ?? '',
         }))
 

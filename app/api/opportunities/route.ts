@@ -50,15 +50,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const {
       ticker,
-      direction,
-      timeframe = 'MEDIANO',
-      riesgo = 'MEDIO',
-      minPlan = 'CLUB',
-      stopLossPct = 8,
+      direction    = 'COMPRA',
+      timeframe    = 'MEDIANO',
+      riesgo       = 'MEDIO',
+      minPlan      = 'CLUB',
+      stopLossPct  = 8,
     } = body
 
-    if (!ticker || !direction) {
-      return NextResponse.json({ error: 'ticker y direction son requeridos' }, { status: 400 })
+    if (!ticker) {
+      return NextResponse.json({ error: 'ticker es requerido' }, { status: 400 })
     }
 
     // ── 1. Fetch real market data from Yahoo Finance ──
