@@ -1,6 +1,41 @@
 // lib/yahoo-financials.ts
 // Fetches comprehensive financial data from Yahoo Finance quoteSummary API
 
+// ── Crumb auth (Yahoo Finance requires crumb + session cookie since 2024) ──────
+let _crumbCache: { crumb: string; cookie: string; at: number } | null = null
+
+async function getYahooCrumb(): Promise<{ crumb: string; cookie: string }> {
+  if (_crumbCache && Date.now() - _crumbCache.at < 3_600_000) return _crumbCache
+
+  const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+  const baseHeaders = { 'User-Agent': ua, Accept: '*/*', 'Accept-Language': 'en-US,en;q=0.9' }
+
+  // 1. Hit Yahoo Finance to get session cookies
+  const r1 = await fetch('https://finance.yahoo.com/', {
+    headers: baseHeaders,
+    signal: AbortSignal.timeout(10000),
+  })
+
+  // Node 18.14+ exposes getSetCookie(); fall back to single-value get()
+  const setCookies: string[] =
+    typeof (r1.headers as { getSetCookie?: () => string[] }).getSetCookie === 'function'
+      ? (r1.headers as { getSetCookie: () => string[] }).getSetCookie()
+      : r1.headers.get('set-cookie')
+        ? [r1.headers.get('set-cookie')!]
+        : []
+  const cookie = setCookies.map((c) => c.split(';')[0]).join('; ')
+
+  // 2. Get crumb
+  const r2 = await fetch('https://query1.finance.yahoo.com/v1/test/getcrumb', {
+    headers: { ...baseHeaders, Cookie: cookie },
+    signal: AbortSignal.timeout(8000),
+  })
+  const crumb = (await r2.text()).trim()
+
+  _crumbCache = { crumb, cookie, at: Date.now() }
+  return _crumbCache
+}
+
 export interface TickerFinancials {
   ticker: string
   empresa: string
@@ -79,12 +114,14 @@ export async function fetchTickerFinancials(ticker: string): Promise<TickerFinan
     'assetProfile',
   ].join('%2C')
 
-  const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(ticker)}?modules=${modules}`
+  const { crumb, cookie } = await getYahooCrumb()
+  const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(ticker)}?modules=${modules}&crumb=${encodeURIComponent(crumb)}`
 
   const res = await fetch(url, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
       Accept: 'application/json',
+      Cookie: cookie,
     },
     signal: AbortSignal.timeout(12000),
   })
