@@ -3,6 +3,8 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { prisma } from '@/lib/prisma'
 import { fetchTickerFinancials, buildDataBlock } from '@/lib/yahoo-financials'
 
+export const maxDuration = 60
+
 const ADMIN_EMAIL = 'lriofrio915@gmail.com'
 
 const PLAN_ORDER: Record<string, number> = { FREE: 0, CLUB: 1, PRO: 2, PORTFOLIO: 3 }
@@ -145,7 +147,7 @@ REGLAS ESTRICTAS:
           temperature: 0.15,
           max_tokens: 4096,
         }),
-        signal: AbortSignal.timeout(90000),
+        signal: AbortSignal.timeout(55000),
       })
 
       const data = await res.json()
