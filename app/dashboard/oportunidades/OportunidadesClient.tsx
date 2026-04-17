@@ -122,6 +122,7 @@ function OppCard({ opp, isAdmin, onDelete, onStatusChange }: {
   onStatusChange: (id: string, status: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const parsed = parseReport(opp.aiReport)
   const rr = ((opp.precioObjetivo - opp.precioEntrada) / (opp.precioEntrada - opp.stopLoss)).toFixed(1)
   const potencial = (((opp.precioObjetivo - opp.precioEntrada) / opp.precioEntrada) * 100).toFixed(1)
 
@@ -171,7 +172,7 @@ function OppCard({ opp, isAdmin, onDelete, onStatusChange }: {
       </div>
 
       {/* Summary */}
-      <p className="text-sm text-[var(--text-secondary)] mb-3 leading-relaxed">{opp.description}</p>
+      <p className="text-sm text-[var(--text-secondary)] mb-3 leading-relaxed">{parsed?.resumen ?? opp.description}</p>
 
       {/* Actions */}
       <div className="flex items-center gap-2 flex-wrap mt-auto pt-3 border-t border-[var(--border)]">
@@ -216,7 +217,7 @@ function OppCard({ opp, isAdmin, onDelete, onStatusChange }: {
 
       {/* Expanded AI report */}
       {expanded && opp.aiReport && (() => {
-        const r = parseReport(opp.aiReport)
+        const r = parsed
         if (!r) return (
           <div className="mt-4 pt-4 border-t border-[var(--border)] text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto"
             style={{ background: 'var(--bg-primary)', borderRadius: '8px', padding: '16px' }}>
@@ -516,6 +517,8 @@ export default function OportunidadesClient({
   isAdmin: boolean
 }) {
   const [opportunities, setOpportunities] = useState<Opportunity[]>(initialOpportunities)
+  const [previewMode, setPreviewMode] = useState(false)
+  const [previewPlan, setPreviewPlan] = useState<'FREE' | 'CLUB' | 'PRO' | 'PORTFOLIO'>('CLUB')
 
   const handleCreated = (opp: Opportunity) => {
     setOpportunities(prev => [opp, ...prev])
@@ -538,7 +541,16 @@ export default function OportunidadesClient({
     ))
   }
 
-  const activeOpps = isAdmin ? opportunities : opportunities.filter(o => o.active)
+  const PLAN_ORDER: Record<string, number> = { FREE: 0, CLUB: 1, PRO: 2, PORTFOLIO: 3 }
+  const effectiveAdmin = isAdmin && !previewMode
+
+  const activeOpps = (() => {
+    if (previewMode) {
+      const level = PLAN_ORDER[previewPlan] ?? 0
+      return opportunities.filter(o => o.active && (PLAN_ORDER[o.minPlan] ?? 1) <= level)
+    }
+    return isAdmin ? opportunities : opportunities.filter(o => o.active)
+  })()
 
   return (
     <div className="animate-fadeIn">
@@ -551,27 +563,59 @@ export default function OportunidadesClient({
           <p className="text-[var(--text-secondary)] text-sm">
             Alertas de inversión analizadas con IA — Plan{' '}
             <span className="text-[var(--gold)] font-bold">{plan}</span>
-            {isAdmin && <span className="ml-2 text-xs bg-[var(--gold)] text-black px-2 py-0.5 rounded font-bold">ADMIN</span>}
+            {isAdmin && !previewMode && <span className="ml-2 text-xs bg-[var(--gold)] text-black px-2 py-0.5 rounded font-bold">ADMIN</span>}
+            {previewMode && <span className="ml-2 text-xs bg-blue-600 text-white px-2 py-0.5 rounded font-bold">VISTA USUARIO</span>}
           </p>
         </div>
+
+        {/* Admin preview toggle */}
+        {isAdmin && (
+          <div className="flex items-center gap-2">
+            {previewMode && (
+              <select
+                value={previewPlan}
+                onChange={e => setPreviewPlan(e.target.value as typeof previewPlan)}
+                className="text-xs font-mono rounded-lg px-2 py-1.5 border border-[var(--border)]"
+                style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+              >
+                <option value="FREE">Plan FREE</option>
+                <option value="CLUB">Plan CLUB</option>
+                <option value="PRO">Plan PRO</option>
+                <option value="PORTFOLIO">Plan PORTFOLIO</option>
+              </select>
+            )}
+            <button
+              onClick={() => setPreviewMode(p => !p)}
+              className={`text-xs font-mono px-3 py-1.5 rounded-lg border transition-colors ${
+                previewMode
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+              }`}
+            >
+              {previewMode ? '✕ Salir vista usuario' : '👁 Vista usuario'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Admin form */}
-      {isAdmin && <AdminForm onCreated={handleCreated} />}
+      {effectiveAdmin && <AdminForm onCreated={handleCreated} />}
 
       {/* Opportunities grid */}
       {activeOpps.length === 0 ? (
         <div className="card text-center py-16">
-          <div className="text-5xl mb-4">{isAdmin ? '📭' : '🔒'}</div>
+          <div className="text-5xl mb-4">{effectiveAdmin ? '📭' : '🔒'}</div>
           <h2 className="text-xl font-bold mb-2">
-            {isAdmin ? 'No hay oportunidades publicadas' : 'Contenido Premium'}
+            {effectiveAdmin ? 'No hay oportunidades publicadas' : 'Contenido Premium'}
           </h2>
           <p className="text-[var(--text-secondary)] text-sm mb-6 max-w-md mx-auto">
-            {isAdmin
+            {effectiveAdmin
               ? 'Crea la primera alerta de inversión con el formulario de arriba.'
-              : 'Las oportunidades de inversión están disponibles para miembros Club y superiores.'}
+              : previewMode
+                ? `No hay oportunidades activas visibles para el plan ${previewPlan}.`
+                : 'Las oportunidades de inversión están disponibles para miembros Club y superiores.'}
           </p>
-          {!isAdmin && (
+          {!effectiveAdmin && !previewMode && (
             <a href="/dashboard/planes" className="btn-gold inline-block py-3 px-8 rounded-xl">
               Ver Planes →
             </a>
@@ -583,7 +627,7 @@ export default function OportunidadesClient({
             <OppCard
               key={opp.id}
               opp={opp}
-              isAdmin={isAdmin}
+              isAdmin={effectiveAdmin}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
             />
