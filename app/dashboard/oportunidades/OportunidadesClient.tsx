@@ -131,7 +131,7 @@ function OppCard({ opp, isAdmin, onDelete, onStatusChange, onRegenerate }: {
     setRegenerating(true)
     setRegenError(null)
     try {
-      const res = await fetch(`/api/picks/${opp.id}/regenerate`, { method: 'POST' })
+      const res = await fetch(`/api/picks/${opp.id}`, { method: 'POST' })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Error al generar informe')
       if (data.opportunity) onRegenerate(data.opportunity)
