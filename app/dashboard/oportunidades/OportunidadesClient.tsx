@@ -361,7 +361,7 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
     debounceRef.current = setTimeout(async () => {
       setSearching(true)
       try {
-        const res = await fetch(`/api/opportunities/fetch-ticker?q=${encodeURIComponent(q)}`)
+        const res = await fetch(`/api/picks/search?q=${encodeURIComponent(q)}`)
         const json = await res.json()
         setSuggestions(res.ok ? (json.suggestions ?? []) : [])
       } catch { setSuggestions([]) }
@@ -386,7 +386,7 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
     if (!ticker) return
     setSaving(true); setError(null)
     try {
-      const res = await fetch('/api/opportunities', {
+      const res = await fetch('/api/picks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ticker }),
@@ -523,12 +523,12 @@ export default function OportunidadesClient({
 
   const handleDelete = async (id: string) => {
     if (!confirm('¿Eliminar esta oportunidad?')) return
-    await fetch(`/api/opportunities/${id}`, { method: 'DELETE' })
+    await fetch(`/api/picks/${id}`, { method: 'DELETE' })
     setOpportunities(prev => prev.filter(o => o.id !== id))
   }
 
   const handleStatusChange = async (id: string, status: string) => {
-    await fetch(`/api/opportunities/${id}`, {
+    await fetch(`/api/picks/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status, active: status === 'ACTIVA' }),

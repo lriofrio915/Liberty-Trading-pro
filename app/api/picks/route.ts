@@ -7,7 +7,7 @@ const ADMIN_EMAIL = 'lriofrio915@gmail.com'
 
 const PLAN_ORDER: Record<string, number> = { FREE: 0, CLUB: 1, PRO: 2, PORTFOLIO: 3 }
 
-// ── GET /api/opportunities — returns opportunities visible to the user's plan ──
+// ── GET /api/picks — returns opportunities visible to the user's plan ──
 export async function GET() {
   try {
     const supabase = await createSupabaseServerClient()
@@ -32,12 +32,12 @@ export async function GET() {
 
     return NextResponse.json({ opportunities: visible, plan, isAdmin })
   } catch (err) {
-    console.error('GET /api/opportunities:', err)
+    console.error('GET /api/picks:', err)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }
 
-// ── POST /api/opportunities — admin only, fetches YF data + generates AI report ─
+// ── POST /api/picks — admin only, fetches YF data + generates AI report ─
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createSupabaseServerClient()
@@ -66,8 +66,16 @@ export async function POST(req: NextRequest) {
     const dataBlock = buildDataBlock(yf)
 
     const precioEntrada = yf.precioActual
-    const precioObjetivo = yf.precioObjetivoMedio ?? precioEntrada * 1.15
-    const stopLoss = precioEntrada * (1 - stopLossPct / 100)
+
+    // For COMPRA: target must be ABOVE entry; for VENTA: target must be BELOW entry
+    const analTarget = yf.precioObjetivoMedio
+    const precioObjetivo = direction === 'COMPRA'
+      ? (analTarget && analTarget > precioEntrada ? analTarget : parseFloat((precioEntrada * 1.15).toFixed(2)))
+      : (analTarget && analTarget < precioEntrada ? analTarget : parseFloat((precioEntrada * 0.85).toFixed(2)))
+
+    const stopLoss = direction === 'COMPRA'
+      ? parseFloat((precioEntrada * (1 - stopLossPct / 100)).toFixed(2))
+      : parseFloat((precioEntrada * (1 + stopLossPct / 100)).toFixed(2))
 
     // ── 2. Generate structured AI report ──
     let aiReport: string | null = null
@@ -78,6 +86,8 @@ export async function POST(req: NextRequest) {
       const prompt = `Eres un analista financiero senior de Liberty Trading Club. Tienes los siguientes DATOS REALES de mercado para ${yf.ticker}:
 
 ${dataBlock}
+
+IDIOMA: Responde EXCLUSIVAMENTE en español. Todos los campos de texto narrativo deben estar en español.
 
 Con base EXCLUSIVAMENTE en esos datos reales, genera un informe de inversión profesional.
 REGLAS ESTRICTAS:
@@ -93,31 +103,31 @@ REGLAS ESTRICTAS:
   "precio_actual": "<precio exacto>",
   "precio_objetivo": "<precio_obj_medio exacto, o N/D>",
   "informe_numero": "N/A",
-  "resumen": "3-4 oraciones: qué hace la empresa, precio actual, situación financiera y tesis de inversión basada en datos reales.",
-  "negocio": "2-3 párrafos describiendo el negocio usando la descripción del bloque. Menciona sector, industria y fuentes de ingresos.",
+  "resumen": "3-4 oraciones en español: qué hace la empresa, precio actual, situación financiera y tesis de inversión basada en datos reales.",
+  "negocio": "2-3 párrafos en español describiendo el negocio usando la descripción del bloque. Menciona sector, industria y fuentes de ingresos.",
   "fuentes_ingresos": [
     ["Año", "Revenue", "Gross Profit", "Net Income"],
     ["2024", "<cifras exactas del bloque>", "...", "..."],
     ["2023", "<cifras exactas del bloque>", "...", "..."],
     ["2022", "<cifras exactas del bloque>", "...", "..."]
   ],
-  "financieros": "2 párrafos con cifras EXACTAS: revenue TTM, márgenes, EBITDA, EPS, deuda, caja.",
-  "valoracion": "2 párrafos con cifras EXACTAS: market cap, EV, P/E, P/S, EV/EBITDA, rango 52 semanas, precio objetivo y breakdown de analistas.",
+  "financieros": "2 párrafos en español con cifras EXACTAS: revenue TTM, márgenes, EBITDA, EPS, deuda, caja.",
+  "valoracion": "2 párrafos en español con cifras EXACTAS: market cap, EV, P/E, P/S, EV/EBITDA, rango 52 semanas, precio objetivo y breakdown de analistas.",
   "factores_positivos": [
-    ["Catalizador 1", "Descripción con cifras reales del bloque"],
-    ["Catalizador 2", "Descripción con cifras reales del bloque"],
-    ["Catalizador 3", "Descripción con cifras reales del bloque"],
-    ["Catalizador 4", "Descripción con cifras reales del bloque"],
-    ["Catalizador 5", "Descripción con cifras reales del bloque"]
+    ["Catalizador 1", "Descripción en español con cifras reales del bloque"],
+    ["Catalizador 2", "Descripción en español con cifras reales del bloque"],
+    ["Catalizador 3", "Descripción en español con cifras reales del bloque"],
+    ["Catalizador 4", "Descripción en español con cifras reales del bloque"],
+    ["Catalizador 5", "Descripción en español con cifras reales del bloque"]
   ],
   "factores_riesgo": [
-    ["Riesgo 1", "Descripción con cifras reales del bloque"],
-    ["Riesgo 2", "Descripción con cifras reales del bloque"],
-    ["Riesgo 3", "Descripción con cifras reales del bloque"],
-    ["Riesgo 4", "Descripción con cifras reales del bloque"],
-    ["Riesgo 5", "Descripción con cifras reales del bloque"]
+    ["Riesgo 1", "Descripción en español con cifras reales del bloque"],
+    ["Riesgo 2", "Descripción en español con cifras reales del bloque"],
+    ["Riesgo 3", "Descripción en español con cifras reales del bloque"],
+    ["Riesgo 4", "Descripción en español con cifras reales del bloque"],
+    ["Riesgo 5", "Descripción en español con cifras reales del bloque"]
   ],
-  "conclusion": "2-3 párrafos: recomendación, zona de entrada, precio objetivo y horizonte.",
+  "conclusion": "2-3 párrafos en español: recomendación, zona de entrada, precio objetivo y horizonte.",
   "mes_año": "${new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}"
 }`
 
@@ -141,13 +151,12 @@ REGLAS ESTRICTAS:
       const data = await res.json()
       const raw = data.choices?.[0]?.message?.content ?? null
       if (raw) {
-        // Extract JSON from response
         const start = raw.indexOf('{')
         const end = raw.lastIndexOf('}')
         aiReport = start !== -1 && end !== -1 ? raw.slice(start, end + 1).trim() : raw.trim()
       }
     } catch (aiErr) {
-      console.error('[opportunities] AI report generation failed:', aiErr)
+      console.error('[picks] AI report generation failed:', aiErr)
     }
 
     const opportunity = await prisma.opportunity.create({
@@ -159,7 +168,7 @@ REGLAS ESTRICTAS:
         direction,
         precioEntrada,
         precioObjetivo,
-        stopLoss: parseFloat(stopLoss.toFixed(2)),
+        stopLoss,
         timeframe,
         riesgo,
         description: yf.descripcion.slice(0, 300),
@@ -172,7 +181,7 @@ REGLAS ESTRICTAS:
 
     return NextResponse.json({ opportunity }, { status: 201 })
   } catch (err) {
-    console.error('POST /api/opportunities:', err)
+    console.error('POST /api/picks:', err)
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Internal error' }, { status: 500 })
   }
 }

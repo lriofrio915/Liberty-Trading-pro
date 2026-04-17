@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 const ADMIN_EMAIL = 'lriofrio915@gmail.com'
 
-// ── PATCH /api/opportunities/[id] — update status, active, or any field ────────
+// ── PATCH /api/picks/[id] — update status, active, or any field ────────
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = await createSupabaseServerClient()
@@ -31,12 +31,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     return NextResponse.json({ opportunity: updated })
   } catch (err) {
-    console.error('PATCH /api/opportunities/[id]:', err)
+    console.error('PATCH /api/picks/[id]:', err)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }
 
-// ── DELETE /api/opportunities/[id] ─────────────────────────────────────────────
+// ── DELETE /api/picks/[id] ─────────────────────────────────────────────
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = await createSupabaseServerClient()
@@ -49,7 +49,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     await prisma.opportunity.delete({ where: { id: params.id } })
     return NextResponse.json({ ok: true })
   } catch (err) {
-    console.error('DELETE /api/opportunities/[id]:', err)
+    console.error('DELETE /api/picks/[id]:', err)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }
