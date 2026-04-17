@@ -62,6 +62,60 @@ function parseReport(raw: string | null): ReportJSON | null {
   try { return JSON.parse(raw) as ReportJSON } catch { return null }
 }
 
+// ─── TradingView exchange name → TV prefix mapping ────────────────────────────
+const TV_EXCHANGE: Record<string, string> = {
+  NasdaqGS: 'NASDAQ', NasdaqGM: 'NASDAQ', NasdaqCM: 'NASDAQ',
+  NASDAQ: 'NASDAQ', NYSE: 'NYSE', NYSEArca: 'NYSE', NYSEAmerican: 'AMEX',
+  AMEX: 'AMEX', TSX: 'TSX', LSE: 'LSE', BME: 'BME', XETRA: 'XETR',
+}
+
+// ─── Real-time TradingView chart widget ───────────────────────────────────────
+function TradingViewChart({ ticker, exchange, containerId }: {
+  ticker: string
+  exchange?: string
+  containerId: string
+}) {
+  useEffect(() => {
+    const ex = exchange ? (TV_EXCHANGE[exchange] ?? 'NASDAQ') : 'NASDAQ'
+    const symbol = `${ex}:${ticker}`
+
+    function initWidget() {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      new (window as any).TradingView.widget({
+        autosize: true,
+        symbol,
+        interval: 'D',
+        timezone: 'America/New_York',
+        theme: 'dark',
+        style: '1',
+        locale: 'es',
+        enable_publishing: false,
+        save_image: false,
+        hide_side_toolbar: false,
+        container_id: containerId,
+      })
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((window as any).TradingView) {
+      initWidget()
+    } else {
+      const script = document.createElement('script')
+      script.src = 'https://s3.tradingview.com/tv.js'
+      script.async = true
+      script.onload = initWidget
+      document.head.appendChild(script)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return (
+    <div style={{ height: '440px' }}>
+      <div id={containerId} style={{ height: '100%' }} />
+    </div>
+  )
+}
+
 // ─── Print / download helper ───────────────────────────────────────────────────
 function printReport(opp: Opportunity) {
   const win = window.open('', '_blank')
@@ -349,6 +403,18 @@ function OppCard({ opp, isAdmin, onDelete, onStatusChange, onRegenerate }: {
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--gold)' }}>Conclusión y Recomendación</p>
               <p className="leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>{r.conclusion}</p>
+            </div>
+
+            {/* Gráfica en tiempo real */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--gold)' }}>
+                Gráfica en Tiempo Real — {opp.ticker}
+              </p>
+              <TradingViewChart
+                ticker={opp.ticker}
+                exchange={r.bolsa}
+                containerId={`tv_${opp.id}`}
+              />
             </div>
 
             <p className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
