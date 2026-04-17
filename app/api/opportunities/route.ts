@@ -28,7 +28,7 @@ export async function GET() {
 
     const visible = isAdmin
       ? all
-      : all.filter((o) => (PLAN_ORDER[o.minPlan] ?? 1) <= userLevel)
+      : all.filter((o: { minPlan: string | number }) => (PLAN_ORDER[o.minPlan] ?? 1) <= userLevel)
 
     return NextResponse.json({ opportunities: visible, plan, isAdmin })
   } catch (err) {
