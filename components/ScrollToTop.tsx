@@ -20,15 +20,17 @@ export default function ScrollToTop() {
   return (
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      className="fixed bottom-8 right-8 z-50 w-12 h-12
-        bg-yellow-500 text-black flex items-center justify-center
-        hover:bg-yellow-400 transition-all duration-300
-        shadow-lg shadow-yellow-500/20"
+      className="fixed bottom-6 right-6 z-50 w-9 h-9 rounded-full
+        flex items-center justify-center
+        bg-black/60 backdrop-blur-sm border border-white/10
+        text-white/60 hover:text-white hover:border-yellow-500/40 hover:bg-black/80
+        transition-all duration-200 opacity-70 hover:opacity-100
+        shadow-lg"
       aria-label="Volver arriba"
     >
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
         <path d="M10 16V4M4 10l6-6 6 6" stroke="currentColor"
-          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </button>
   )
