@@ -38,7 +38,10 @@
       "mcp__plugin_context-mode_context-mode__ctx_index",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Skill(gsd-update)",
+      "Skill(health)",
+      "Bash(vercel whoami *)"
     ]
   }
 }
