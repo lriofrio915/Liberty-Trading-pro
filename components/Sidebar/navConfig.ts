@@ -27,6 +27,7 @@ export const navGroups: NavGroup[] = [
       { href: '/dashboard/oportunidades', icon: '🎯', label: 'Oportunidades', requiresClub: true },
       { href: '/dashboard/track-record',  icon: '📈', label: 'Track Record',  requiresClub: true },
       { href: '/dashboard/reportes',      icon: '📄', label: 'Reportes',      requiresClub: true },
+      { href: '/dashboard/vibe',          icon: '🤖', label: 'Vibe Agent',    requiresClub: true },
       { href: '/dashboard/comunidad',     icon: '🤝', label: 'Comunidad',     requiresClub: true },
       { href: '/dashboard/academia',      icon: '🎓', label: 'Academia',      requiresClub: true },
     ],
