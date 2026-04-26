@@ -7,7 +7,6 @@ type Preset = {
   name?: string
   preset?: string
   description?: string
-  agents?: number
 }
 
 type Mode = 'chat' | 'swarm'
@@ -16,17 +15,27 @@ type ChatLine = {
   id: string
   role: 'user' | 'agent' | 'system'
   text: string
-  ts: number
 }
 
-type StreamState = 'idle' | 'connecting' | 'streaming' | 'done' | 'error'
+type RunState = 'idle' | 'sending' | 'thinking' | 'done' | 'error'
+
+type RemoteMessage = {
+  message_id: string
+  role: 'user' | 'assistant'
+  content: string
+  created_at?: string
+  metadata?: { run_id?: string; status?: string } | null
+}
 
 const SUGGESTED = [
+  'Diseña una estrategia de cruce EMA 9/21 sobre SPY 1H con stop ATR.',
+  'Backtest momentum top-10 small-caps US últimos 12 meses, rebalanceo mensual.',
   'Analiza AAPL: tendencia, soporte/resistencia y un setup intradía.',
-  'Backtest cruce EMA 9/21 sobre SPY 1H últimos 6 meses con filtro RSI.',
-  'Listame 3 small-caps con momentum positivo y catalizador esta semana.',
-  'Revisa NVDA por niveles institucionales (VWAP, POC) y dame entradas swing.',
+  'Genera indicador Pine Script: VWAP + bandas de desviación estándar.',
 ]
+
+const POLL_INTERVAL_MS = 1500
+const POLL_TIMEOUT_MS = 120_000
 
 export default function VibeClient({ userEmail }: { userEmail: string }) {
   const [mode, setMode] = useState<Mode>('chat')
@@ -36,13 +45,13 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
   const [vars, setVars] = useState<string>('{\n  "ticker": "AAPL"\n}')
 
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [runId, setRunId] = useState<string | null>(null)
   const [input, setInput] = useState<string>('')
   const [lines, setLines] = useState<ChatLine[]>([])
-  const [streamState, setStreamState] = useState<StreamState>('idle')
+  const [runState, setRunState] = useState<RunState>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const esRef = useRef<EventSource | null>(null)
+  const lastSeenIdsRef = useRef<Set<string>>(new Set())
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -65,86 +74,14 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-  }, [lines.length, streamState])
+  }, [lines.length, runState])
 
-  useEffect(() => () => esRef.current?.close(), [])
+  useEffect(() => () => {
+    if (pollTimerRef.current) clearTimeout(pollTimerRef.current)
+  }, [])
 
   function appendLine(role: ChatLine['role'], text: string) {
-    setLines(prev => [...prev, { id: crypto.randomUUID(), role, text, ts: Date.now() }])
-  }
-
-  function appendAgentChunk(chunk: string) {
-    setLines(prev => {
-      const last = prev[prev.length - 1]
-      if (last && last.role === 'agent') {
-        const updated = { ...last, text: last.text + chunk }
-        return [...prev.slice(0, -1), updated]
-      }
-      return [...prev, { id: crypto.randomUUID(), role: 'agent', text: chunk, ts: Date.now() }]
-    })
-  }
-
-  function closeStream() {
-    if (esRef.current) {
-      esRef.current.close()
-      esRef.current = null
-    }
-  }
-
-  function attachStream(streamUrl: string) {
-    closeStream()
-    setStreamState('connecting')
-    const es = new EventSource(streamUrl)
-    esRef.current = es
-
-    es.onopen = () => setStreamState('streaming')
-
-    es.onmessage = (ev) => {
-      const raw = ev.data
-      if (!raw) return
-      let parsed: unknown
-      try { parsed = JSON.parse(raw) } catch { parsed = raw }
-
-      if (typeof parsed === 'string') {
-        appendAgentChunk(parsed)
-        return
-      }
-      const obj = parsed as Record<string, unknown>
-
-      const type = (obj.type ?? obj.event) as string | undefined
-      const content =
-        (obj.content as string | undefined) ??
-        (obj.text as string | undefined) ??
-        (obj.delta as string | undefined) ??
-        (obj.message as string | undefined)
-
-      if (type === 'done' || type === 'finish' || type === 'end' || type === 'complete') {
-        setStreamState('done')
-        closeStream()
-        return
-      }
-      if (type === 'error') {
-        setStreamState('error')
-        setErrorMsg(typeof content === 'string' ? content : 'Error en el agente')
-        closeStream()
-        return
-      }
-      if (typeof content === 'string' && content.length) {
-        appendAgentChunk(content)
-        return
-      }
-      // Fallback: pretty print event payload as a system note
-      appendLine('system', `· evento: ${type ?? 'mensaje'}`)
-    }
-
-    es.addEventListener('error', () => {
-      // EventSource fires generic 'error' on disconnect AND on stream end.
-      // If we already saw 'done', state is already 'done'. Otherwise mark error.
-      if (streamState !== 'done') {
-        setStreamState(prev => (prev === 'streaming' ? 'done' : 'error'))
-      }
-      closeStream()
-    })
+    setLines(prev => [...prev, { id: crypto.randomUUID(), role, text }])
   }
 
   async function ensureSession(): Promise<string | null> {
@@ -161,12 +98,13 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
         return null
       }
       const data = await res.json()
-      const id = data.id ?? data.session_id ?? data.session?.id
+      const id = data.session_id ?? data.id ?? data.session?.id
       if (!id) {
-        setErrorMsg('Respuesta sin id de sesión')
+        setErrorMsg('Respuesta sin session_id')
         return null
       }
       setSessionId(id)
+      lastSeenIdsRef.current = new Set()
       return id as string
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'No se pudo crear sesión')
@@ -174,31 +112,96 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
     }
   }
 
+  function pollMessages(sid: string, deadline: number) {
+    if (pollTimerRef.current) clearTimeout(pollTimerRef.current)
+
+    const tick = async () => {
+      if (Date.now() > deadline) {
+        setRunState('error')
+        setErrorMsg('El agente tardó más de 2 minutos. Mira los logs del backend.')
+        return
+      }
+
+      try {
+        const res = await fetch(
+          `/api/trading/vibe/sessions/${encodeURIComponent(sid)}/messages`,
+          { cache: 'no-store' },
+        )
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data: RemoteMessage[] = await res.json()
+        const seen = lastSeenIdsRef.current
+
+        let gotAssistant = false
+        for (const m of data) {
+          if (seen.has(m.message_id)) continue
+          seen.add(m.message_id)
+          if (m.role === 'assistant') {
+            const status = m.metadata?.status
+            if (status && status !== 'completed' && status !== 'success') {
+              appendLine('system', `· ${status}`)
+            } else {
+              appendLine('agent', m.content || '(respuesta vacía)')
+              gotAssistant = true
+            }
+          }
+        }
+
+        if (gotAssistant) {
+          setRunState('done')
+          return
+        }
+      } catch (err) {
+        setRunState('error')
+        setErrorMsg(err instanceof Error ? err.message : 'Polling falló')
+        return
+      }
+
+      pollTimerRef.current = setTimeout(tick, POLL_INTERVAL_MS)
+    }
+
+    pollTimerRef.current = setTimeout(tick, POLL_INTERVAL_MS)
+  }
+
   async function sendChat() {
     setErrorMsg(null)
     const text = input.trim()
-    if (!text || streamState === 'streaming' || streamState === 'connecting') return
+    if (!text || runState === 'sending' || runState === 'thinking') return
+
     const sid = await ensureSession()
     if (!sid) return
 
     appendLine('user', text)
     setInput('')
 
-    const res = await fetch(
-      `/api/trading/vibe/sessions/${encodeURIComponent(sid)}/messages`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, content: text, role: 'user' }),
-      },
-    )
-    if (!res.ok) {
-      const j = await res.json().catch(() => ({}))
-      setErrorMsg(j.error ?? `HTTP ${res.status}`)
+    // Marca como vista la posible existencia previa (al ya estar mi user message creado)
+    setRunState('sending')
+
+    try {
+      const res = await fetch(
+        `/api/trading/vibe/sessions/${encodeURIComponent(sid)}/messages`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: text }),
+        },
+      )
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        setErrorMsg(j.error ?? `HTTP ${res.status}`)
+        setRunState('error')
+        return
+      }
+      // El POST devuelve {message_id, attempt_id} — registro el message_id del usuario para no repintarlo.
+      const data = await res.json()
+      if (data.message_id) lastSeenIdsRef.current.add(data.message_id)
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Error enviando')
+      setRunState('error')
       return
     }
 
-    attachStream(`/api/trading/vibe/sessions/${encodeURIComponent(sid)}/stream`)
+    setRunState('thinking')
+    pollMessages(sid, Date.now() + POLL_TIMEOUT_MS)
   }
 
   async function runSwarm() {
@@ -214,6 +217,7 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
     }
 
     appendLine('user', `▶ swarm: ${selectedPreset}\n${vars}`)
+    setRunState('sending')
 
     const res = await fetch('/api/trading/vibe/swarm', {
       method: 'POST',
@@ -223,25 +227,24 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
     if (!res.ok) {
       const j = await res.json().catch(() => ({}))
       setErrorMsg(j.error ?? `HTTP ${res.status}`)
+      setRunState('error')
       return
     }
     const data = await res.json()
-    const id = data.run_id ?? data.id ?? data.run?.id
-    if (!id) { setErrorMsg('Respuesta sin run_id'); return }
-    setRunId(id as string)
-    attachStream(`/api/trading/vibe/swarm/runs/${encodeURIComponent(id)}/stream`)
+    appendLine('system', `swarm run iniciado: ${JSON.stringify(data).slice(0, 200)}`)
+    setRunState('done')
   }
 
   function newConversation() {
-    closeStream()
+    if (pollTimerRef.current) clearTimeout(pollTimerRef.current)
     setSessionId(null)
-    setRunId(null)
+    lastSeenIdsRef.current = new Set()
     setLines([])
     setErrorMsg(null)
-    setStreamState('idle')
+    setRunState('idle')
   }
 
-  const busy = streamState === 'connecting' || streamState === 'streaming'
+  const busy = runState === 'sending' || runState === 'thinking'
 
   return (
     <div className="animate-fadeIn">
@@ -252,7 +255,7 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
             Vibe <span className="gradient-gold">Trading</span>
           </h1>
           <p className="text-[var(--text-secondary)] text-sm">
-            Agente de trading con 71 skills, 29 swarm presets y export Pine/MT5 ·{' '}
+            Agente de trading con 71 skills y export Pine/MT5 ·{' '}
             <span className="font-mono text-[var(--text-muted)]">{userEmail}</span>
           </p>
         </div>
@@ -284,14 +287,8 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
         <div className="card mb-4 border border-red-500/40">
           <div className="label-mono text-xs mb-2 text-red-400">Backend Vibe-Trading no responde</div>
           <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-            No se pudo conectar a <span className="font-mono">VIBE_TRADING_BASE_URL</span>. Levanta el servicio Python:
+            No se pudo conectar a <span className="font-mono">VIBE_TRADING_BASE_URL</span>.
           </p>
-          <pre className="mt-2 p-3 bg-black/40 rounded text-[11px] font-mono text-[var(--text-muted)] overflow-x-auto">
-{`git clone https://github.com/HKUDS/Vibe-Trading.git
-cd Vibe-Trading && cp agent/.env.example agent/.env
-# editar agent/.env con tu OPENROUTER_API_KEY
-docker compose up --build   # API en :8899`}
-          </pre>
           <p className="text-[10px] text-red-400 mt-2 font-mono">{presetsErr}</p>
         </div>
       )}
@@ -317,9 +314,9 @@ docker compose up --build   # API en :8899`}
                   return <option key={id} value={id}>{label}</option>
                 })}
               </select>
-              {presets.length > 0 && selectedPreset && (
+              {presets.length === 0 && (
                 <p className="mt-2 text-[10px] text-[var(--text-muted)]">
-                  {presets.find(p => (p.id ?? p.preset ?? p.name) === selectedPreset)?.description ?? ''}
+                  El backend no tiene swarm presets configurados. Usa el modo CHAT.
                 </p>
               )}
             </div>
@@ -335,7 +332,7 @@ docker compose up --build   # API en :8899`}
           </div>
           <div className="mt-4 flex justify-end">
             <button
-              disabled={busy}
+              disabled={busy || !selectedPreset}
               onClick={runSwarm}
               className="px-4 py-2 text-xs font-mono tracking-widest rounded-lg bg-[var(--gold)] text-black disabled:opacity-50"
             >
@@ -349,15 +346,14 @@ docker compose up --build   # API en :8899`}
       <div className="flex items-center gap-3 text-[10px] font-mono text-[var(--text-muted)] mb-3">
         <span>Estado:</span>
         <span className={
-          streamState === 'streaming' ? 'text-[var(--gold)]' :
-          streamState === 'connecting' ? 'text-yellow-400' :
-          streamState === 'error' ? 'text-red-400' :
-          streamState === 'done' ? 'text-green-400' : ''
+          runState === 'thinking' ? 'text-[var(--gold)] animate-pulse' :
+          runState === 'sending' ? 'text-yellow-400' :
+          runState === 'error' ? 'text-red-400' :
+          runState === 'done' ? 'text-green-400' : ''
         }>
-          {streamState.toUpperCase()}
+          {runState === 'thinking' ? 'AGENTE PENSANDO…' : runState.toUpperCase()}
         </span>
         {sessionId && <span>· session: <span className="text-[var(--text-secondary)]">{sessionId.slice(0, 8)}…</span></span>}
-        {runId && <span>· run: <span className="text-[var(--text-secondary)]">{runId.slice(0, 8)}…</span></span>}
       </div>
 
       {/* Chat area */}
@@ -397,12 +393,14 @@ docker compose up --build   # API en :8899`}
                         : 'text-xs text-[var(--text-muted)] italic'
                   }
                 >
-                  {l.text || (streamState === 'streaming' ? '…' : '')}
+                  {l.text}
                 </div>
               </div>
             ))}
-            {busy && (
-              <div className="text-xs text-[var(--gold)] animate-pulse">▍</div>
+            {runState === 'thinking' && (
+              <div className="text-xs text-[var(--gold)] animate-pulse">
+                ▍ procesando… (puede tardar 5–60s en runs complejos)
+              </div>
             )}
           </div>
         )}
@@ -440,7 +438,7 @@ docker compose up --build   # API en :8899`}
       )}
 
       <p className="mt-6 text-[10px] font-mono text-[var(--text-muted)]">
-        Backend: <span className="text-[var(--text-secondary)]">Vibe-Trading (HKUDS) · FastAPI</span> ·
+        Backend: <span className="text-[var(--text-secondary)]">Vibe-Trading (HKUDS) · FastAPI · DeepSeek</span> ·
         Conectado vía proxy <span className="text-[var(--text-secondary)]">/api/trading/vibe/*</span>
       </p>
     </div>
