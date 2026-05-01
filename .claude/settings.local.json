@@ -41,7 +41,29 @@
       "Bash(git push *)",
       "Skill(gsd-update)",
       "Skill(health)",
-      "Bash(vercel whoami *)"
+      "Bash(vercel whoami *)",
+      "Bash(npm test *)",
+      "Bash(git commit -m 'fix: adjust ScrollToTop button position to bottom-16 *)",
+      "Bash(xargs sed *)",
+      "Bash(git checkout *)",
+      "Bash(git remote *)",
+      "Bash(gh auth *)",
+      "Bash(~/.claude/skills/gstack/bin/gstack-review-read)",
+      "Bash(git fetch *)",
+      "Bash(git merge *)",
+      "Bash(setopt +o nomatch)",
+      "Bash(git -C /var/www/liberty-trading-new status)",
+      "Bash(git -C /var/www/liberty-trading-new log --oneline -3)",
+      "Bash(git -C /var/www/liberty-trading-new push -u origin fix/security-remove-hardcoded-credentials)",
+      "Bash(gh pr create --repo lriofrio915/Liberty-Trading-pro --title 'fix\\(security\\): remove all hardcoded credentials from source code' --body ' *)",
+      "Bash(gh pr *)",
+      "Bash(git pull *)",
+      "Bash(npm outdated *)",
+      "Bash(node -e ' *)",
+      "Bash(npm install *)",
+      "Bash(node -e 'const p=require\\(\"./package.json\"\\);process.stdout.write\\(p.version||\"\"\\)')",
+      "Bash(echo \"0.1.2.0\")",
+      "Bash(node -e 'const fs=require\\(\"fs\"\\),p=require\\(\"./package.json\"\\);p.version=\"0.1.2.0\";fs.writeFileSync\\(\"package.json\",JSON.stringify\\(p,null,2\\)+\"\\\\n\"\\)')"
     ]
   }
 }
