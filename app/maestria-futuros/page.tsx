@@ -4,7 +4,7 @@ import LeadCaptureForm from '@/components/LeadCaptureForm/LeadCaptureForm'
 import PersonalContactForm from '@/components/PersonalContactForm/PersonalContactForm'
 import VincesWidget from '@/components/VincesWidget/VincesWidget'
 
-const HOTMART_ANUAL = 'https://pay.hotmart.com/L104900408S?checkoutMode=2'
+const HOTMART_ANUAL = process.env.HOTMART_LINK_ANUAL || ''
 
 export default function MaestriaFuturosPage() {
   return (

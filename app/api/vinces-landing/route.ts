@@ -8,8 +8,8 @@ const LUIS_PHONE   = process.env.LUIS_PHONE         || ''
 const N8N_WEBHOOK_LANDING = process.env.N8N_WEBHOOK_LANDING || ''
 
 const LINKS = {
-  MENSUAL: process.env.HOTMART_LINK_MENSUAL || 'https://pay.hotmart.com/R104900326X?checkoutMode=2',
-  ANUAL:   process.env.HOTMART_LINK_ANUAL   || 'https://pay.hotmart.com/L104900408S?checkoutMode=2',
+  MENSUAL: process.env.HOTMART_LINK_MENSUAL || '',
+  ANUAL:   process.env.HOTMART_LINK_ANUAL   || '',
 }
 
 function sanitizeText(text: string): string {

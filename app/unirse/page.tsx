@@ -8,10 +8,10 @@ import Link from 'next/link'
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const HOTMART = {
-  MENSUAL: 'https://pay.hotmart.com/R104900326X?checkoutMode=2',
-  ANUAL:   'https://pay.hotmart.com/L104900408S?checkoutMode=2',
+  MENSUAL: process.env.NEXT_PUBLIC_HOTMART_LINK_MENSUAL || '',
+  ANUAL:   process.env.NEXT_PUBLIC_HOTMART_LINK_ANUAL   || '',
 }
-const VINCES_WA = 'https://wa.me/18287149177?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20el%20Club%20Liberty%20Trading'
+const VINCES_WA = process.env.NEXT_PUBLIC_VINCES_WA || ''
 const TRACK_RECORD_URL = '/track-record/luis-riofrio'
 
 // ─── Types ────────────────────────────────────────────────────────────────────

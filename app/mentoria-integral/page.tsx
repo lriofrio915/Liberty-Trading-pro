@@ -4,7 +4,7 @@ import LeadCaptureForm from '@/components/LeadCaptureForm/LeadCaptureForm'
 import PersonalContactForm from '@/components/PersonalContactForm/PersonalContactForm'
 import VincesWidget from '@/components/VincesWidget/VincesWidget'
 
-const HOTMART_MENSUAL = 'https://pay.hotmart.com/R104900326X?checkoutMode=2'
+const HOTMART_MENSUAL = process.env.HOTMART_LINK_MENSUAL || ''
 
 export default function MentoriaIntegralPage() {
   return (
