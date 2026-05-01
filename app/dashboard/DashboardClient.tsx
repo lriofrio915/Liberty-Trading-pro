@@ -620,14 +620,14 @@ export default function DashboardClient({
                       domain={['auto', 'auto']}
                     />
                     <RTooltip
-                      formatter={(v: number | undefined, name: string | undefined) => {
+                      formatter={(v, name) => {
                         const labels: Record<string, string> = {
                           tuCuenta: 'Tu Cuenta',
                           nasdaq: 'Nasdaq 100',
                           sp500: 'S&P 500',
                         }
-                        const key = name ?? ''
-                        return [v != null ? fmtVal(v) : '—', labels[key] ?? key]
+                        const key = String(name ?? '')
+                        return [v != null ? fmtVal(Number(v)) : '—', labels[key] ?? key]
                       }}
                       labelFormatter={(l) => `Fecha: ${l}`}
                       contentStyle={{
