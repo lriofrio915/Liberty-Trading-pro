@@ -63,7 +63,9 @@
       "Bash(npm install *)",
       "Bash(node -e 'const p=require\\(\"./package.json\"\\);process.stdout.write\\(p.version||\"\"\\)')",
       "Bash(echo \"0.1.2.0\")",
-      "Bash(node -e 'const fs=require\\(\"fs\"\\),p=require\\(\"./package.json\"\\);p.version=\"0.1.2.0\";fs.writeFileSync\\(\"package.json\",JSON.stringify\\(p,null,2\\)+\"\\\\n\"\\)')"
+      "Bash(node -e 'const fs=require\\(\"fs\"\\),p=require\\(\"./package.json\"\\);p.version=\"0.1.2.0\";fs.writeFileSync\\(\"package.json\",JSON.stringify\\(p,null,2\\)+\"\\\\n\"\\)')",
+      "Bash(npm run *)",
+      "Bash(git commit *)"
     ]
   }
 }
