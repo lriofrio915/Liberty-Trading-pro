@@ -8,10 +8,10 @@ import Link from 'next/link'
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const HOTMART = {
-  MENSUAL: 'https://pay.hotmart.com/R104900326X?checkoutMode=2',
-  ANUAL:   'https://pay.hotmart.com/L104900408S?checkoutMode=2',
+  MENSUAL: process.env.NEXT_PUBLIC_HOTMART_LINK_MENSUAL || '',
+  ANUAL:   process.env.NEXT_PUBLIC_HOTMART_LINK_ANUAL   || '',
 }
-const VINCES_WA = 'https://wa.me/18287149177?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20el%20Club%20Liberty%20Trading'
+const VINCES_WA = process.env.NEXT_PUBLIC_VINCES_WA || ''
 const TRACK_RECORD_URL = '/track-record/luis-riofrio'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -246,11 +246,13 @@ export default function UnirsePage() {
               style={{ background: '#C9A84C', color: '#080808' }}>
               Ir directo al pago · {plan === 'ANUAL' ? '$649/año' : '$79/mes'} →
             </a>
-            <a href={VINCES_WA} target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-sm border transition-colors hover:border-white/20"
-              style={{ borderColor: 'rgba(255,255,255,0.1)', color: '#888' }}>
-              Hablar ahora con Vinces por WhatsApp
-            </a>
+            {VINCES_WA && (
+              <a href={VINCES_WA} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-sm border transition-colors hover:border-white/20"
+                style={{ borderColor: 'rgba(255,255,255,0.1)', color: '#888' }}>
+                Hablar ahora con Vinces por WhatsApp
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -270,7 +272,7 @@ export default function UnirsePage() {
             Liberty Trading Pro
           </Link>
           <div className="flex items-center gap-3">
-            <a href={VINCES_WA} target="_blank" rel="noopener noreferrer"
+            {VINCES_WA && <a href={VINCES_WA} target="_blank" rel="noopener noreferrer"
               className="hidden sm:flex items-center gap-2 text-xs font-mono px-4 py-2 rounded-lg border transition-colors hover:border-white/20"
               style={{ borderColor: 'rgba(255,255,255,0.1)', color: '#888' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#25D366' }}>
@@ -278,7 +280,7 @@ export default function UnirsePage() {
                 <path d="M12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413A11.824 11.824 0 0012.05 0zm0 21.785h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.981.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884z" />
               </svg>
               Hablar con Vinces
-            </a>
+            </a>}
             <button
               onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               className="text-xs font-bold px-4 py-2 rounded-lg transition-opacity hover:opacity-80"

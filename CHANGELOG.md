@@ -2,6 +2,14 @@
 
 All notable changes to Liberty Trading Pro are documented here.
 
+## [0.1.2.0] - 2026-05-01
+
+### Fixed
+- **Seguridad**: eliminadas todas las URLs y números de teléfono hardcodeados del código fuente — ahora se leen desde variables de entorno (`HOTMART_LINK_MENSUAL`, `HOTMART_LINK_ANUAL`, `NEXT_PUBLIC_HOTMART_LINK_MENSUAL`, `NEXT_PUBLIC_HOTMART_LINK_ANUAL`, `NEXT_PUBLIC_VINCES_WA`)
+- **Chat landing Vinces**: advertencia en logs cuando los links de Hotmart no están configurados — evita que leads queden sin link de pago de forma silenciosa
+- **Botón WhatsApp en `/unirse`**: ya no renderiza `<a href="">` cuando `NEXT_PUBLIC_VINCES_WA` no está configurado
+- **Tests en Linux**: añadido `@rolldown/binding-linux-x64-gnu` como dependencia explícita para resolver falla de módulo nativo en entornos Linux
+
 ## [0.1.1.0] - 2026-05-01
 
 ### Added
