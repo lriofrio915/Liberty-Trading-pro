@@ -4,7 +4,7 @@ import { getEffectiveAccess } from '@/lib/access'
 import { redirect } from 'next/navigation'
 import ComunidadClient from './ComunidadClient'
 
-const ADMIN_EMAIL = 'lriofrio915@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 export default async function ComunidadPage() {
   const supabase = await createSupabaseServerClient()

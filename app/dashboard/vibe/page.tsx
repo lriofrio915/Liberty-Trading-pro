@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getEffectiveAccess } from '@/lib/access'
 import VibeClient from './VibeClient'
 
-const ADMIN_EMAIL = 'lriofrio915@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 export const dynamic = 'force-dynamic'
 

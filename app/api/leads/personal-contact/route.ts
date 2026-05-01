@@ -3,8 +3,8 @@ import { prisma } from '@/lib/prisma'
 
 const EVO_URL      = process.env.EVOLUTION_API_URL  || 'https://evo.nexus-ia.com.es'
 const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || 'vinces'
-const EVO_KEY      = process.env.EVOLUTION_API_KEY  || '157B8ABC2B63-46DE-B38C-05C3C3ACAA3A'
-const LUIS_PHONE   = process.env.LUIS_PHONE         || '593996691586'
+const EVO_KEY      = process.env.EVOLUTION_API_KEY  || ''
+const LUIS_PHONE   = process.env.LUIS_PHONE         || ''
 
 function cleanPhone(phone: string) {
   return phone.replace(/[\s\-\+\(\)]/g, '')

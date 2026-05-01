@@ -20,7 +20,12 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     const count = await prisma.postLike.count({ where: { postId: params.id } })
     return NextResponse.json({ liked: false, likeCount: count })
   } else {
-    await prisma.postLike.create({ data: { userId: dbUser.id, postId: params.id } })
+    try {
+      await prisma.postLike.create({ data: { userId: dbUser.id, postId: params.id } })
+    } catch (e: any) {
+      // P2002 = unique constraint — race condition, like already exists
+      if (e?.code !== 'P2002') throw e
+    }
     const count = await prisma.postLike.count({ where: { postId: params.id } })
 
     // Notificar al dueño del post (skip si es su propio like)

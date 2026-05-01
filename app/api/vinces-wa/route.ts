@@ -9,7 +9,7 @@ const LINKS = {
 
 const EVO_URL      = process.env.EVOLUTION_API_URL || 'https://evo.nexus-ia.com.es'
 const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || 'vinces'
-const EVO_KEY      = process.env.EVOLUTION_API_KEY  || '157B8ABC2B63-46DE-B38C-05C3C3ACAA3A'
+const EVO_KEY      = process.env.EVOLUTION_API_KEY  || ''
 
 // ── Contexto de Liberty Trading Pro ───────────────────────────────────────────
 const CONTEXTO_LUIS = `
@@ -182,7 +182,7 @@ async function callAI(messages: { role: string; content: string }[]): Promise<st
 
 // ── Notificar a Luis cuando un lead llega a CTA ───────────────────────────────
 
-const LUIS_PHONE = process.env.LUIS_PHONE || '593988835806' // formato sin + ni espacios
+const LUIS_PHONE = process.env.LUIS_PHONE || '' // formato sin + ni espacios
 
 async function notificarLuis(lead: {
   name: string | null

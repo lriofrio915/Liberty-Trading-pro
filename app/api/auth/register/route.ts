@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ user })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[Register] Error:', err?.message)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

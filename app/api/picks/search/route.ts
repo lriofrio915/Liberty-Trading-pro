@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { fetchTickerFinancials } from '@/lib/yahoo-financials'
 
-const ADMIN_EMAIL = 'lriofrio915@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 // ── GET ?q=apple  → search suggestions (symbol + name)
 // ── GET ?ticker=AAPL → full financial data

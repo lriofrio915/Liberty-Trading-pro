@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import AcademiaClient from './AcademiaClient'
 import VideoSemanaWidget from '@/components/VideoSemana/VideoSemanaWidget'
 
-const ADMIN_EMAIL = 'lriofrio915@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 const CATEGORIAS = [
   'Plataforma NT8',
   'Configuracion de Graficas',

@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendWA } from '@/lib/sendWA'
@@ -14,10 +15,15 @@ function planFromHotmart(event: any): 'CLUB' | null {
 }
 
 export async function POST(req: NextRequest) {
-  // Validate token
+  // Validate token using timing-safe comparison to prevent timing attacks
   const token = req.headers.get('x-hotmart-hottok') || req.headers.get('authorization')?.replace('Bearer ', '')
-  if (HOTMART_TOKEN && token !== HOTMART_TOKEN) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (HOTMART_TOKEN) {
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const a = Buffer.from(token)
+    const b = Buffer.from(HOTMART_TOKEN)
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
   }
 
   let body: any

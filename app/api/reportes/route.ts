@@ -93,6 +93,9 @@ export async function GET(req: NextRequest) {
 
     const where: any = { userId: dbUser.id }
     if (from && to) {
+      if (isNaN(Date.parse(from)) || isNaN(Date.parse(to))) {
+        return NextResponse.json({ error: 'Fechas inválidas' }, { status: 400 })
+      }
       where.date = {
         gte: new Date(`${from}T00:00:00.000Z`),
         lte: new Date(`${to}T23:59:59.999Z`),
@@ -104,13 +107,14 @@ export async function GET(req: NextRequest) {
 
     const [sessions, plans] = await Promise.all([
       prisma.tradingSession.findMany({ where, orderBy: { date: 'desc' } }),
-      prisma.tradingPlan.findMany({ where: { userId: dbUser.id }, select: { id: true, name: true, accountName: true, active: true } }),
+      prisma.tradingPlan.findMany({ where: { userId: dbUser.id }, select: { id: true, name: true, accountName: true, active: true }, take: 200 }),
     ])
 
     const stats = computeStats(sessions)
 
     return NextResponse.json({ sessions, stats, plans })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[Reportes] Error:', err?.message)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

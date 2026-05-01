@@ -5,7 +5,7 @@ import { fetchTickerFinancials, buildDataBlock } from '@/lib/yahoo-financials'
 
 export const maxDuration = 60
 
-const ADMIN_EMAIL = 'lriofrio915@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 // ── POST /api/picks/[id] — regenerate AI report for existing pick ──────
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {

@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import EquityChart from './EquityChart'
 
-const MENTOR_EMAIL = 'lriofrio915@gmail.com'
+const MENTOR_EMAIL = process.env.ADMIN_EMAIL || ''
 const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
 function calcMetrics(sessions: { resultado: string; pnlNeto: number; date: Date | string }[]) {
