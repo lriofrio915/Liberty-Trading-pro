@@ -1,6 +1,6 @@
 {
   "name": "liberty-trading-new",
-  "version": "0.1.1",
+  "version": "0.1.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "@rolldown/binding-linux-x64-gnu": "^1.0.0-rc.17",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.105.1",
     "@types/leaflet": "^1.9.21",
