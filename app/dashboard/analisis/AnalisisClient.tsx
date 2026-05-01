@@ -514,6 +514,28 @@ function MT5PositionsList({ positions, loading }: { positions: MT5Position[]; lo
   )
 }
 
+// ── Portfolio Tooltip ──────────────────────────────────────────────────────────
+
+function PortfolioTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number }> }) {
+  if (!active || !payload?.length) return null
+  return (
+    <div style={{
+      background: '#1c1917',
+      border: '1px solid #292524',
+      borderRadius: 10,
+      padding: '8px 12px',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
+    }}>
+      <p style={{ color: '#C9A84C', fontWeight: 700, fontSize: 12, marginBottom: 2 }}>
+        {payload[0]?.name}
+      </p>
+      <p style={{ color: '#f0ece4', fontSize: 14, fontWeight: 800 }}>
+        {payload[0]?.value}%
+      </p>
+    </div>
+  )
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function AnalisisClient() {
@@ -634,9 +656,9 @@ export default function AnalisisClient() {
     <div className="max-w-6xl mx-auto space-y-6">
       {/* ── Page header ── */}
       <div>
-        <h1 className="text-2xl font-black gradient-gold mb-1">Análisis & Trading Automático</h1>
+        <h1 className="text-2xl font-black gradient-gold mb-1">Sesgo del Día</h1>
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-          7 agentes de IA analizan el mercado — conecta tu cuenta MT5 para ejecutar operaciones directamente
+          7 agentes de IA determinan el sesgo intradía del mercado — conecta MT5 para ejecutar operaciones directamente
         </p>
       </div>
 
@@ -851,10 +873,7 @@ export default function AnalisisClient() {
                             <Cell key={index} fill={entry.color} />
                           ))}
                         </Pie>
-                        <Tooltip
-                          formatter={(value) => [`${value}%`, 'Asignación']}
-                          contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 12 }}
-                        />
+                        <Tooltip content={<PortfolioTooltip />} />
                         <Legend formatter={(value) => <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{value}</span>} />
                       </PieChart>
                     </ResponsiveContainer>

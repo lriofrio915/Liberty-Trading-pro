@@ -660,11 +660,13 @@ export default function ComunidadClient({
   currentUserId,
   currentUserName,
   isAdmin,
+  canPublish,
 }: {
   initialPosts: Post[]
   currentUserId: string | null
   currentUserName: string | null
   isAdmin: boolean
+  canPublish: boolean
 }) {
   const [posts, setPosts] = useState<Post[]>(initialPosts)
   const [cursor, setCursor] = useState<string | null>(
@@ -708,7 +710,7 @@ export default function ComunidadClient({
               Comparte operativas, análisis y logros con la comunidad
             </p>
           </div>
-          {currentUserId && (
+          {canPublish && (
             <button
               onClick={() => setShowForm(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-opacity hover:opacity-80"
@@ -726,8 +728,26 @@ export default function ComunidadClient({
         <FilterBar active={filter} onChange={setFilter} />
       </div>
 
+      {/* Banner de upgrade para usuarios FREE */}
+      {currentUserId && !canPublish && (
+        <a
+          href="/dashboard/upgrade"
+          className="flex items-center gap-3 rounded-xl border px-4 py-3 mb-5 transition-colors hover:border-[#C9A84C]/40"
+          style={{ background: 'rgba(201,168,76,0.05)', borderColor: 'rgba(201,168,76,0.15)' }}
+        >
+          <span style={{ fontSize: 18 }}>🔒</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold" style={{ color: '#C9A84C' }}>Modo lectura</p>
+            <p className="text-xs" style={{ color: '#555' }}>Mejora tu plan para publicar en la comunidad</p>
+          </div>
+          <span className="text-xs font-bold px-3 py-1 rounded-lg flex-shrink-0" style={{ background: '#C9A84C', color: '#080808' }}>
+            Ver planes
+          </span>
+        </a>
+      )}
+
       {/* Empty composer prompt */}
-      {currentUserId && filtered.length === 0 && filter === 'ALL' && (
+      {canPublish && filtered.length === 0 && filter === 'ALL' && (
         <button
           onClick={() => setShowForm(true)}
           className="w-full rounded-xl border p-4 text-left mb-4 flex items-center gap-3 transition-colors hover:border-[#C9A84C]/30"

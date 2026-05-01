@@ -1,7 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { getEffectiveAccess } from '@/lib/access'
-import { redirect } from 'next/navigation'
 import ComunidadClient from './ComunidadClient'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
@@ -17,7 +16,7 @@ export default async function ComunidadPage() {
   const isAdmin = user?.email === ADMIN_EMAIL
 
   const access = getEffectiveAccess({ plan: dbUser?.plan ?? 'FREE', trialEndsAt: dbUser?.trialEndsAt ?? null })
-  if (!isAdmin && !access.canAccessClub) redirect('/dashboard/upgrade')
+  const canPublish = isAdmin || access.canAccessClub
 
   // Fetch first page SSR
   const rawPosts = await prisma.post.findMany({
@@ -49,6 +48,7 @@ export default async function ComunidadPage() {
       currentUserId={dbUser?.id ?? null}
       currentUserName={dbUser?.name ?? null}
       isAdmin={isAdmin}
+      canPublish={canPublish}
     />
   )
 }
