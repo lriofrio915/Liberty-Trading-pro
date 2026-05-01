@@ -54,6 +54,7 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
   const lastSeenIdsRef = useRef<Set<string>>(new Set())
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pollDeadlineRef = useRef<number>(0)
+  const isSendingRef = useRef(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const keepaliveRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -200,8 +201,15 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
           return
         }
       } catch (err) {
+        const msg = err instanceof Error ? err.message : ''
+        if (msg.includes('404')) {
+          // Sesión expiró mientras el agente procesaba — reset graceful
+          appendLine('system', '· Sesión expirada — la respuesta se perdió. Puedes reenviar tu mensaje.')
+          setRunState('done')
+          return
+        }
         setRunState('error')
-        setErrorMsg(err instanceof Error ? err.message : 'Polling falló')
+        setErrorMsg(msg || 'Polling falló')
         return
       }
 
@@ -212,60 +220,71 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
   }
 
   async function sendChat() {
-    setErrorMsg(null)
-    const text = input.trim()
-    if (!text || runState === 'sending' || runState === 'thinking') return
-
-    let sid = await ensureSession()
-    if (!sid) return
-
-    appendLine('user', text)
-    setInput('')
-
-    // Marca como vista la posible existencia previa (al ya estar mi user message creado)
-    setRunState('sending')
-
+    if (isSendingRef.current) return  // guard síncrono para evitar envíos duplicados
+    isSendingRef.current = true
     try {
-      const res = await fetch(
-        `/api/trading/vibe/sessions/${encodeURIComponent(sid)}/messages`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content: text }),
-        },
-      )
+      setErrorMsg(null)
+      const text = input.trim()
+      if (!text || runState === 'sending' || runState === 'thinking') return
 
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}))
-        setErrorMsg(
-          res.status >= 500
-            ? 'El agente no está disponible temporalmente. Intenta de nuevo en unos segundos.'
-            : (j.error ?? `HTTP ${res.status}`),
+      let sid = await ensureSession()
+      if (!sid) return
+
+      appendLine('user', text)
+      setInput('')
+
+      setRunState('sending')
+
+      try {
+        const res = await fetch(
+          `/api/trading/vibe/sessions/${encodeURIComponent(sid)}/messages`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: text }),
+          },
         )
+
+        if (!res.ok) {
+          if (res.status === 404) {
+            // Recovery del server también falló — resetear automáticamente
+            appendLine('system', '· Sesión perdida. Iniciando conversación nueva…')
+            newConversation()
+            return
+          }
+          const j = await res.json().catch(() => ({}))
+          setErrorMsg(
+            res.status >= 500
+              ? 'El agente no está disponible temporalmente. Intenta de nuevo en unos segundos.'
+              : (j.error ?? `HTTP ${res.status}`),
+          )
+          setRunState('error')
+          return
+        }
+
+        // El server renueva la sesión de forma transparente cuando expira (404 upstream)
+        const newSid = res.headers.get('X-New-Session-Id')
+        if (newSid) {
+          setSessionId(newSid)
+          sid = newSid
+          lastSeenIdsRef.current = new Set()
+          appendLine('system', '· Sesión renovada — el agente continuará sin contexto previo')
+        }
+
+        // El POST devuelve {message_id, attempt_id} — registro el message_id del usuario para no repintarlo.
+        const data = await res.json()
+        if (data.message_id) lastSeenIdsRef.current.add(data.message_id)
+      } catch (err) {
+        setErrorMsg(err instanceof Error ? err.message : 'Error enviando')
         setRunState('error')
         return
       }
 
-      // El server renueva la sesión de forma transparente cuando expira (404 upstream)
-      const newSid = res.headers.get('X-New-Session-Id')
-      if (newSid) {
-        setSessionId(newSid)
-        sid = newSid
-        lastSeenIdsRef.current = new Set()
-        appendLine('system', '· Sesión renovada — el agente continuará sin contexto previo')
-      }
-
-      // El POST devuelve {message_id, attempt_id} — registro el message_id del usuario para no repintarlo.
-      const data = await res.json()
-      if (data.message_id) lastSeenIdsRef.current.add(data.message_id)
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Error enviando')
-      setRunState('error')
-      return
+      setRunState('thinking')
+      pollMessages(sid, Date.now() + POLL_TIMEOUT_MS)
+    } finally {
+      isSendingRef.current = false
     }
-
-    setRunState('thinking')
-    pollMessages(sid, Date.now() + POLL_TIMEOUT_MS)
   }
 
   async function runSwarm() {
