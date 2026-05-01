@@ -254,13 +254,14 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
       const text = input.trim()
       if (!text || runState === 'sending' || runState === 'thinking') return
 
-      let sid = await ensureSession()
-      if (!sid) return
-
+      // Feedback visual inmediato — el usuario ve su mensaje y el botón cargando
+      // antes de que se cree la sesión (que puede tardar 1-2s en el primer mensaje)
       appendLine('user', text)
       setInput('')
-
       setRunState('sending')
+
+      let sid = await ensureSession()
+      if (!sid) { setRunState('error'); return }
 
       try {
         const res = await fetch(
