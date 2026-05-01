@@ -84,8 +84,7 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
     setLines(prev => [...prev, { id: crypto.randomUUID(), role, text }])
   }
 
-  async function ensureSession(): Promise<string | null> {
-    if (sessionId) return sessionId
+  async function createFreshSession(): Promise<string | null> {
     try {
       const res = await fetch('/api/trading/vibe/sessions', {
         method: 'POST',
@@ -110,6 +109,11 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
       setErrorMsg(err instanceof Error ? err.message : 'No se pudo crear sesión')
       return null
     }
+  }
+
+  async function ensureSession(): Promise<string | null> {
+    if (sessionId) return sessionId
+    return createFreshSession()
   }
 
   function pollMessages(sid: string, deadline: number) {
@@ -167,7 +171,7 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
     const text = input.trim()
     if (!text || runState === 'sending' || runState === 'thinking') return
 
-    const sid = await ensureSession()
+    let sid = await ensureSession()
     if (!sid) return
 
     appendLine('user', text)
@@ -177,7 +181,7 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
     setRunState('sending')
 
     try {
-      const res = await fetch(
+      let res = await fetch(
         `/api/trading/vibe/sessions/${encodeURIComponent(sid)}/messages`,
         {
           method: 'POST',
@@ -185,6 +189,23 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
           body: JSON.stringify({ content: text }),
         },
       )
+
+      // La sesión expiró en el backend — crear una nueva y reintentar una vez
+      if (res.status === 404) {
+        setSessionId(null)
+        const newSid = await createFreshSession()
+        if (!newSid) { setRunState('error'); return }
+        sid = newSid
+        res = await fetch(
+          `/api/trading/vibe/sessions/${encodeURIComponent(sid)}/messages`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: text }),
+          },
+        )
+      }
+
       if (!res.ok) {
         const j = await res.json().catch(() => ({}))
         setErrorMsg(j.error ?? `HTTP ${res.status}`)
@@ -252,10 +273,10 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
       <div className="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
           <h1 className="text-3xl font-black mb-1">
-            Vibe <span className="gradient-gold">Trading</span>
+            Copiloto <span className="gradient-gold">de Trading</span>
           </h1>
           <p className="text-[var(--text-secondary)] text-sm">
-            Agente de trading con 71 skills y export Pine/MT5 ·{' '}
+            Tu asistente IA para diseñar estrategias, backtests y código Pine/MT5 ·{' '}
             <span className="font-mono text-[var(--text-muted)]">{userEmail}</span>
           </p>
         </div>
@@ -280,6 +301,25 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
             onClick={newConversation}
             className="px-3 py-2 text-xs font-mono tracking-widest rounded-lg border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)]"
           >NUEVA</button>
+        </div>
+      </div>
+
+      {/* What is this */}
+      <div className="mb-5 rounded-xl border p-4" style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.07) 0%, transparent 80%)', borderColor: 'rgba(201,168,76,0.18)' }}>
+        <p className="text-[10px] font-mono tracking-widest mb-3" style={{ color: 'var(--gold)' }}>¿QUÉ PUEDES HACER AQUÍ?</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <p className="text-xs font-bold text-white mb-1">🎯 Estrategias personalizadas</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>Describe tu idea de trading y el agente diseña la estrategia completa: entradas, salidas, stop-loss y take-profit.</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-white mb-1">📊 Backtesting inteligente</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>Analiza el rendimiento histórico de cualquier estrategia sobre datos reales antes de arriesgar capital.</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-white mb-1">⚡ Código listo para usar</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>Genera indicadores Pine Script para TradingView y Expert Advisors (EA) para MetaTrader 5 automáticamente.</p>
+          </div>
         </div>
       </div>
 
