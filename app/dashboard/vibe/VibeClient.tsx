@@ -37,6 +37,8 @@ const SUGGESTED = [
 const POLL_INTERVAL_MS = 1500
 const POLL_TIMEOUT_MS = 480_000  // 8 min para tareas complejas
 const WARN_LONG_MS    = 120_000  // aviso visual al llegar a 2 min
+const STORAGE_LINES   = 'vibe:chat:lines'
+const STORAGE_SESSION = 'vibe:chat:session'
 
 export default function VibeClient({ userEmail }: { userEmail: string }) {
   const [mode, setMode] = useState<Mode>('chat')
@@ -45,9 +47,18 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
   const [selectedPreset, setSelectedPreset] = useState<string>('')
   const [vars, setVars] = useState<string>('{\n  "ticker": "AAPL"\n}')
 
-  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [sessionId, setSessionId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    return localStorage.getItem(STORAGE_SESSION)
+  })
   const [input, setInput] = useState<string>('')
-  const [lines, setLines] = useState<ChatLine[]>([])
+  const [lines, setLines] = useState<ChatLine[]>(() => {
+    if (typeof window === 'undefined') return []
+    try {
+      const raw = localStorage.getItem(STORAGE_LINES)
+      return raw ? (JSON.parse(raw) as ChatLine[]) : []
+    } catch { return [] }
+  })
   const [runState, setRunState] = useState<RunState>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -124,6 +135,22 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
       if (elapsedRef.current) { clearInterval(elapsedRef.current); elapsedRef.current = null }
     }
   }, [runState])
+
+  // Persistir historial de chat en localStorage (máx 200 líneas)
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_LINES, JSON.stringify(lines.slice(-200)))
+    } catch { /* localStorage lleno o bloqueado */ }
+  }, [lines])
+
+  // Persistir sessionId en localStorage
+  useEffect(() => {
+    if (sessionId) {
+      localStorage.setItem(STORAGE_SESSION, sessionId)
+    } else {
+      localStorage.removeItem(STORAGE_SESSION)
+    }
+  }, [sessionId])
 
   function appendLine(role: ChatLine['role'], text: string) {
     setLines(prev => [...prev, { id: crypto.randomUUID(), role, text }])
@@ -324,6 +351,8 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
     if (elapsedRef.current) { clearInterval(elapsedRef.current); elapsedRef.current = null }
     thinkStartRef.current = null
     setElapsedSeconds(0)
+    localStorage.removeItem(STORAGE_LINES)
+    localStorage.removeItem(STORAGE_SESSION)
     setSessionId(null)
     lastSeenIdsRef.current = new Set()
     setLines([])
@@ -366,7 +395,7 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
           <button
             onClick={newConversation}
             className="px-3 py-2 text-xs font-mono tracking-widest rounded-lg border border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)]"
-          >NUEVA</button>
+          >LIMPIAR CHAT</button>
         </div>
       </div>
 
