@@ -12,6 +12,10 @@ const LINKS = {
   ANUAL:   process.env.HOTMART_LINK_ANUAL   || '',
 }
 
+if (!LINKS.MENSUAL || !LINKS.ANUAL) {
+  console.warn('[VincesLanding] HOTMART_LINK_MENSUAL o HOTMART_LINK_ANUAL no configurados — los leads recibirán links vacíos')
+}
+
 function sanitizeText(text: string): string {
   return text
     .replace(/\u2014/g, '--')
