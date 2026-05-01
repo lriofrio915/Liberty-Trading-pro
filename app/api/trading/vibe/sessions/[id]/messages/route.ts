@@ -19,6 +19,10 @@ function fail(err: unknown) {
   return NextResponse.json({ error: msg }, { status: 502 })
 }
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+type SessionResponse = { session_id?: string; id?: string; session?: { id?: string } }
+
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } },
@@ -38,6 +42,34 @@ export async function POST(
     )
     return NextResponse.json(data)
   } catch (err) {
+    // Sesión expirada en el backend — crear una nueva y reintentar de forma transparente
+    if (err instanceof VibeTradingError && err.status === 404) {
+      try {
+        const sessionData = await vibeJSON<SessionResponse>('/sessions', {
+          method: 'POST',
+          body: JSON.stringify({}),
+        })
+        const newSessionId =
+          sessionData?.session_id ?? sessionData?.id ?? sessionData?.session?.id
+        if (!newSessionId) {
+          return NextResponse.json(
+            { error: 'No se pudo renovar la sesión con el agente' },
+            { status: 503 },
+          )
+        }
+        // Pequeño delay para que el FastAPI inicialice la sesión nueva
+        await sleep(300)
+        const retryData = await vibeJSON(
+          `/sessions/${encodeURIComponent(String(newSessionId))}/messages`,
+          { method: 'POST', body: JSON.stringify({ content }) },
+        )
+        return NextResponse.json(retryData, {
+          headers: { 'X-New-Session-Id': String(newSessionId) },
+        })
+      } catch (retryErr) {
+        return fail(retryErr)
+      }
+    }
     return fail(err)
   }
 }

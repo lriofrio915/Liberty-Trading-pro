@@ -35,7 +35,8 @@ const SUGGESTED = [
 ]
 
 const POLL_INTERVAL_MS = 1500
-const POLL_TIMEOUT_MS = 120_000
+const POLL_TIMEOUT_MS = 480_000  // 8 min para tareas complejas
+const WARN_LONG_MS    = 120_000  // aviso visual al llegar a 2 min
 
 export default function VibeClient({ userEmail }: { userEmail: string }) {
   const [mode, setMode] = useState<Mode>('chat')
@@ -52,7 +53,12 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
 
   const lastSeenIdsRef = useRef<Set<string>>(new Set())
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pollDeadlineRef = useRef<number>(0)
   const scrollRef = useRef<HTMLDivElement | null>(null)
+  const keepaliveRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const thinkStartRef = useRef<number | null>(null)
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
 
   useEffect(() => {
     fetch('/api/trading/vibe/swarm')
@@ -78,7 +84,45 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
 
   useEffect(() => () => {
     if (pollTimerRef.current) clearTimeout(pollTimerRef.current)
+    if (keepaliveRef.current) clearInterval(keepaliveRef.current)
+    if (elapsedRef.current) clearInterval(elapsedRef.current)
   }, [])
+
+  // Keepalive: hace un GET silencioso cada 45s mientras está idle para prevenir expiración de sesión
+  useEffect(() => {
+    if (runState === 'done' && sessionId) {
+      keepaliveRef.current = setInterval(async () => {
+        try {
+          await fetch(
+            `/api/trading/vibe/sessions/${encodeURIComponent(sessionId)}/messages`,
+            { cache: 'no-store' },
+          )
+        } catch { /* silencioso */ }
+      }, 45_000)
+    }
+    return () => {
+      if (keepaliveRef.current) { clearInterval(keepaliveRef.current); keepaliveRef.current = null }
+    }
+  }, [runState, sessionId])
+
+  // Contador de tiempo transcurrido mientras el agente piensa
+  useEffect(() => {
+    if (runState === 'thinking') {
+      thinkStartRef.current = Date.now()
+      setElapsedSeconds(0)
+      elapsedRef.current = setInterval(() => {
+        if (thinkStartRef.current) {
+          setElapsedSeconds(Math.floor((Date.now() - thinkStartRef.current) / 1000))
+        }
+      }, 1000)
+    } else {
+      if (elapsedRef.current) { clearInterval(elapsedRef.current); elapsedRef.current = null }
+      if (runState !== 'done') { thinkStartRef.current = null; setElapsedSeconds(0) }
+    }
+    return () => {
+      if (elapsedRef.current) { clearInterval(elapsedRef.current); elapsedRef.current = null }
+    }
+  }, [runState])
 
   function appendLine(role: ChatLine['role'], text: string) {
     setLines(prev => [...prev, { id: crypto.randomUUID(), role, text }])
@@ -117,12 +161,13 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
   }
 
   function pollMessages(sid: string, deadline: number) {
+    pollDeadlineRef.current = deadline
     if (pollTimerRef.current) clearTimeout(pollTimerRef.current)
 
     const tick = async () => {
-      if (Date.now() > deadline) {
+      if (Date.now() > pollDeadlineRef.current) {
         setRunState('error')
-        setErrorMsg('El agente tardó más de 2 minutos. Mira los logs del backend.')
+        setErrorMsg('El agente superó el tiempo máximo de espera. Intenta de nuevo.')
         return
       }
 
@@ -181,7 +226,7 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
     setRunState('sending')
 
     try {
-      let res = await fetch(
+      const res = await fetch(
         `/api/trading/vibe/sessions/${encodeURIComponent(sid)}/messages`,
         {
           method: 'POST',
@@ -190,28 +235,26 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
         },
       )
 
-      // La sesión expiró en el backend — crear una nueva y reintentar una vez
-      if (res.status === 404) {
-        setSessionId(null)
-        const newSid = await createFreshSession()
-        if (!newSid) { setRunState('error'); return }
-        sid = newSid
-        res = await fetch(
-          `/api/trading/vibe/sessions/${encodeURIComponent(sid)}/messages`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: text }),
-          },
-        )
-      }
-
       if (!res.ok) {
         const j = await res.json().catch(() => ({}))
-        setErrorMsg(j.error ?? `HTTP ${res.status}`)
+        setErrorMsg(
+          res.status >= 500
+            ? 'El agente no está disponible temporalmente. Intenta de nuevo en unos segundos.'
+            : (j.error ?? `HTTP ${res.status}`),
+        )
         setRunState('error')
         return
       }
+
+      // El server renueva la sesión de forma transparente cuando expira (404 upstream)
+      const newSid = res.headers.get('X-New-Session-Id')
+      if (newSid) {
+        setSessionId(newSid)
+        sid = newSid
+        lastSeenIdsRef.current = new Set()
+        appendLine('system', '· Sesión renovada — el agente continuará sin contexto previo')
+      }
+
       // El POST devuelve {message_id, attempt_id} — registro el message_id del usuario para no repintarlo.
       const data = await res.json()
       if (data.message_id) lastSeenIdsRef.current.add(data.message_id)
@@ -258,6 +301,10 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
 
   function newConversation() {
     if (pollTimerRef.current) clearTimeout(pollTimerRef.current)
+    if (keepaliveRef.current) { clearInterval(keepaliveRef.current); keepaliveRef.current = null }
+    if (elapsedRef.current) { clearInterval(elapsedRef.current); elapsedRef.current = null }
+    thinkStartRef.current = null
+    setElapsedSeconds(0)
     setSessionId(null)
     lastSeenIdsRef.current = new Set()
     setLines([])
@@ -391,7 +438,13 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
           runState === 'error' ? 'text-red-400' :
           runState === 'done' ? 'text-green-400' : ''
         }>
-          {runState === 'thinking' ? 'AGENTE PENSANDO…' : runState.toUpperCase()}
+          {runState === 'thinking'
+            ? elapsedSeconds < 30
+              ? 'AGENTE PENSANDO…'
+              : elapsedSeconds < 120
+                ? `ANALIZANDO… (${elapsedSeconds}s)`
+                : `TAREA COMPLEJA… (${Math.floor(elapsedSeconds / 60)}m ${elapsedSeconds % 60}s)`
+            : runState.toUpperCase()}
         </span>
         {sessionId && <span>· session: <span className="text-[var(--text-secondary)]">{sessionId.slice(0, 8)}…</span></span>}
       </div>
@@ -438,8 +491,22 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
               </div>
             ))}
             {runState === 'thinking' && (
-              <div className="text-xs text-[var(--gold)] animate-pulse">
-                ▍ procesando… (puede tardar 5–60s en runs complejos)
+              <div className="flex flex-col gap-2">
+                <div className="text-xs text-[var(--gold)] animate-pulse">
+                  {elapsedSeconds < 30
+                    ? '▍ procesando…'
+                    : elapsedSeconds < 120
+                      ? `▍ analizando datos… (${elapsedSeconds}s — puede tardar en tareas complejas)`
+                      : `▍ tarea compleja en proceso… el agente sigue trabajando (${Math.floor(elapsedSeconds / 60)}m ${elapsedSeconds % 60}s)`}
+                </div>
+                {elapsedSeconds >= WARN_LONG_MS / 1000 && (
+                  <button
+                    onClick={() => { pollDeadlineRef.current = Date.now() + 180_000 }}
+                    className="self-start px-3 py-1 text-[10px] font-mono tracking-widest rounded border border-yellow-400/50 text-yellow-400 hover:bg-yellow-400/10"
+                  >
+                    SEGUIR ESPERANDO +3 MIN
+                  </button>
+                )}
               </div>
             )}
           </div>
