@@ -2,7 +2,7 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import LeadsClient from './LeadsClient'
 
-const ADMIN_EMAIL = 'lriofrio915@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 export default async function LeadsPage() {
   const supabase = await createSupabaseServerClient()

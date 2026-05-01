@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-const MENTOR_EMAIL = 'lriofrio915@gmail.com'
+const MENTOR_EMAIL = process.env.MENTOR_EMAIL || ''
 
 function calcMetrics(sessions: { resultado: string; pnlNeto: number; date: Date | string }[], name: string) {
   if (!sessions.length) return { name, trades: 0, winRate: 0, pnl: 0, profitFactor: 0, rrPromedio: 0, equityCurve: [] }
@@ -91,6 +91,7 @@ export async function GET() {
 
     return NextResponse.json({ mentor, topAlumnos })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('[Championship] Error:', err?.message)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

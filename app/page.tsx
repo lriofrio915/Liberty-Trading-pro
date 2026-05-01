@@ -5,7 +5,7 @@ import Footer from '@/components/Footer/Footer'
 import VincesWidget from '@/components/VincesWidget/VincesWidget'
 import Link from 'next/link'
 
-const WA = 'https://wa.me/+593996691586?text=Hola%20Luis%2C%20me%20interesa%20el%20servicio%20P2P%20de%20USDT%2FBTC'
+const WA = `https://wa.me/+${process.env.LUIS_PHONE || ''}?text=Hola%20Luis%2C%20me%20interesa%20el%20servicio%20P2P%20de%20USDT%2FBTC`
 
 export default function LandingPage() {
   return (

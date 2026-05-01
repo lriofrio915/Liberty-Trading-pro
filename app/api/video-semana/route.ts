@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
-const ADMIN_EMAIL = 'lriofrio915@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 export async function GET() {
   const video = await prisma.videoSemana.findFirst({

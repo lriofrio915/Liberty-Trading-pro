@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { prisma } from '@/lib/prisma'
 
-const ADMIN_EMAIL = 'lriofrio915@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 async function getUser() {
   const supabase = await createSupabaseServerClient()

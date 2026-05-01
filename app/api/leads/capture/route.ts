@@ -4,10 +4,10 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const EVO_URL      = process.env.EVOLUTION_API_URL  || 'https://evo.nexus-ia.com.es'
-const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || 'vinces'
-const EVO_KEY      = process.env.EVOLUTION_API_KEY  || '157B8ABC2B63-46DE-B38C-05C3C3ACAA3A'
-const LUIS_PHONE   = process.env.LUIS_PHONE         || '593996691586'
+const EVO_URL      = process.env.EVOLUTION_API_URL  || ''
+const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || ''
+const EVO_KEY      = process.env.EVOLUTION_API_KEY  || ''
+const LUIS_PHONE   = process.env.LUIS_PHONE         || ''
 const N8N_WEBHOOK         = process.env.N8N_WEBHOOK_LEADS   || ''
 const N8N_WEBHOOK_LANDING = process.env.N8N_WEBHOOK_LANDING || ''
 
@@ -185,8 +185,7 @@ export async function POST(req: NextRequest) {
       `_Vinces ya le escribió para iniciar la conversación._`
 
     // URL de n8n con fallback hardcodeado para que nunca quede vacío
-    const n8nUrl = (source === 'landing' ? N8N_WEBHOOK_LANDING : N8N_WEBHOOK)
-      || 'https://n8n.nexus-ia.com.es/webhook/formulario-landing'
+    const n8nUrl = source === 'landing' ? N8N_WEBHOOK_LANDING : N8N_WEBHOOK
 
     // Ejecutar todas las llamadas externas en paralelo con await antes de responder.
     // En Vercel serverless el contexto se cierra al hacer return — fire-and-forget no garantiza ejecución.
@@ -201,10 +200,10 @@ export async function POST(req: NextRequest) {
         : Promise.resolve(),
 
       // 3. Notificar a Luis
-      sendWA(LUIS_PHONE, msgLuis),
+      LUIS_PHONE ? sendWA(LUIS_PHONE, msgLuis) : Promise.resolve(),
 
       // 4. Webhook n8n
-      fetch(n8nUrl, {
+      n8nUrl ? fetch(n8nUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -217,7 +216,7 @@ export async function POST(req: NextRequest) {
           ts: new Date().toISOString(),
         }),
         signal: AbortSignal.timeout(10000),
-      }),
+      }) : Promise.resolve(),
     ])
 
     return NextResponse.json({ ok: true, status: 'created' })

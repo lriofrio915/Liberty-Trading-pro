@@ -34,7 +34,7 @@ export default function P2PPage() {
         </div>
 
         <a
-          href="https://wa.me/593996691586?text=Hola%20Luis%2C%20quiero%20hacer%20una%20operaci%C3%B3n%20P2P%20de%20USDT"
+          href={`https://wa.me/${process.env.LUIS_PHONE || ''}?text=Hola%20Luis%2C%20quiero%20hacer%20una%20operaci%C3%B3n%20P2P%20de%20USDT`}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-gold inline-flex items-center gap-3 text-lg py-4 px-8 rounded-xl"

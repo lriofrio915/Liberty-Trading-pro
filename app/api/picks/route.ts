@@ -5,7 +5,7 @@ import { fetchTickerFinancials, buildDataBlock } from '@/lib/yahoo-financials'
 
 export const maxDuration = 60
 
-const ADMIN_EMAIL = 'lriofrio915@gmail.com'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 const PLAN_ORDER: Record<string, number> = { FREE: 0, CLUB: 1, PRO: 2, PORTFOLIO: 3 }
 
