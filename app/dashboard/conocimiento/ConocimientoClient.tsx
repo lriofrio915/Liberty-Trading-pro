@@ -51,7 +51,7 @@ export default function ConocimientoClient() {
   const [editId, setEditId] = useState<string | null>(null)
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
-  const searchTimer = useRef<NodeJS.Timeout>()
+  const searchTimer = useRef<NodeJS.Timeout | null>(null)
 
   const fetchDocs = useCallback(async (q = '') => {
     setLoading(true)
@@ -69,7 +69,7 @@ export default function ConocimientoClient() {
   // Debounced search
   const handleSearch = (val: string) => {
     setSearch(val)
-    clearTimeout(searchTimer.current)
+    if (searchTimer.current) clearTimeout(searchTimer.current)
     searchTimer.current = setTimeout(() => fetchDocs(val), 400)
   }
 

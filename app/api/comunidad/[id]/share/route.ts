@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { createNotification } from '@/lib/notifications'
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await createSupabaseServerClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -18,20 +18,20 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const { platform } = await req.json() as { platform?: string }
 
     const post = await prisma.post.findUnique({
-      where: { id: params.id },
+      where: { id: (await params).id },
       select: { userId: true },
     })
     if (!post) return NextResponse.json({ error: 'Post no encontrado' }, { status: 404 })
 
     await prisma.postShare.create({
-      data: { userId: dbUser.id, postId: params.id, platform: platform ?? 'UNKNOWN' },
+      data: { userId: dbUser.id, postId: (await params).id, platform: platform ?? 'UNKNOWN' },
     })
 
     await createNotification({
       recipientUserId: post.userId,
       actorUserId: dbUser.id,
       type: 'SHARE',
-      postId: params.id,
+      postId: (await params).id,
     })
 
     return NextResponse.json({ ok: true })

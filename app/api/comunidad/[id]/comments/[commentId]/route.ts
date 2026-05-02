@@ -6,7 +6,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string; commentId: string } }
+  { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
   try {
     const supabase = await createSupabaseServerClient()
@@ -14,14 +14,14 @@ export async function DELETE(
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
-    const comment = await prisma.postComment.findUnique({ where: { id: params.commentId } })
+    const comment = await prisma.postComment.findUnique({ where: { id: (await params).commentId } })
 
     if (!comment) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
     if (comment.userId !== dbUser?.id && user.email !== ADMIN_EMAIL) {
       return NextResponse.json({ error: 'Sin permiso' }, { status: 403 })
     }
 
-    await prisma.postComment.delete({ where: { id: params.commentId } })
+    await prisma.postComment.delete({ where: { id: (await params).commentId } })
     return NextResponse.json({ ok: true })
   } catch (err: any) {
     console.error('[Comment DELETE] Error:', err?.message)

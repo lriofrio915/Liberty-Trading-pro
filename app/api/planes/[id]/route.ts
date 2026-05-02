@@ -9,7 +9,7 @@ async function resolveDbUser() {
   return prisma.user.findUnique({ where: { authId: user.id } })
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const dbUser = await resolveDbUser()
     if (!dbUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -17,7 +17,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const body = await req.json()
 
     await prisma.tradingPlan.updateMany({
-      where: { id: params.id, userId: dbUser.id },
+      where: { id: (await params).id, userId: dbUser.id },
       data: {
         name: body.name,
         broker: body.broker || '',
@@ -38,20 +38,20 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       },
     })
 
-    const plan = await prisma.tradingPlan.findUnique({ where: { id: params.id } })
+    const plan = await prisma.tradingPlan.findUnique({ where: { id: (await params).id } })
     return NextResponse.json({ plan })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const dbUser = await resolveDbUser()
     if (!dbUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     await prisma.tradingPlan.deleteMany({
-      where: { id: params.id, userId: dbUser.id },
+      where: { id: (await params).id, userId: dbUser.id },
     })
 
     return NextResponse.json({ ok: true })

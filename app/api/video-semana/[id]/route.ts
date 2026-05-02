@@ -10,12 +10,12 @@ async function assertAdmin() {
   return user?.email === ADMIN_EMAIL
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await assertAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
   const video = await prisma.videoSemana.update({
-    where: { id: params.id },
+    where: { id: (await params).id },
     data: {
       ...(body.titulo !== undefined && { titulo: body.titulo }),
       ...(body.descripcion !== undefined && { descripcion: body.descripcion }),
@@ -27,9 +27,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ video })
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await assertAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  await prisma.videoSemana.delete({ where: { id: params.id } })
+  await prisma.videoSemana.delete({ where: { id: (await params).id } })
   return NextResponse.json({ ok: true })
 }

@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createSupabaseServerClient()
@@ -14,12 +14,12 @@ export async function DELETE(
     const dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
     if (!dbUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const cert = await (prisma as any).certificate.findUnique({ where: { id: params.id } })
+    const cert = await (prisma as any).certificate.findUnique({ where: { id: (await params).id } })
     if (!cert || cert.userId !== dbUser.id) {
       return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
     }
 
-    await (prisma as any).certificate.delete({ where: { id: params.id } })
+    await (prisma as any).certificate.delete({ where: { id: (await params).id } })
     return NextResponse.json({ ok: true })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
@@ -28,7 +28,7 @@ export async function DELETE(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createSupabaseServerClient()
@@ -38,7 +38,7 @@ export async function PATCH(
     const dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
     if (!dbUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const cert = await (prisma as any).certificate.findUnique({ where: { id: params.id } })
+    const cert = await (prisma as any).certificate.findUnique({ where: { id: (await params).id } })
     if (!cert || cert.userId !== dbUser.id) {
       return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
     }
@@ -53,7 +53,7 @@ export async function PATCH(
     if (body.fileUrl !== undefined) data.fileUrl = body.fileUrl
     if (body.fileType !== undefined) data.fileType = body.fileType
     const updated = await (prisma as any).certificate.update({
-      where: { id: params.id },
+      where: { id: (await params).id },
       data,
     })
     return NextResponse.json({ certificate: updated })

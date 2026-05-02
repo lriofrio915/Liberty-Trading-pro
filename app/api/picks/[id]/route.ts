@@ -8,7 +8,7 @@ export const maxDuration = 60
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 // ── POST /api/picks/[id] — regenerate AI report for existing pick ──────
-export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await createSupabaseServerClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -16,7 +16,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const existing = await prisma.opportunity.findUnique({ where: { id: params.id } })
+    const existing = await prisma.opportunity.findUnique({ where: { id: (await params).id } })
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
     const yf = await fetchTickerFinancials(existing.ticker)
@@ -110,7 +110,7 @@ REGLAS ESTRICTAS:
     }
 
     const opportunity = await prisma.opportunity.update({
-      where: { id: params.id },
+      where: { id: (await params).id },
       data: { aiReport },
     })
 
@@ -122,7 +122,7 @@ REGLAS ESTRICTAS:
 }
 
 // ── PATCH /api/picks/[id] — update status, active, or any field ────────
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await createSupabaseServerClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -135,7 +135,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const { status, active, title, description, precioObjetivo, stopLoss, precioEntrada } = body
 
     const updated = await prisma.opportunity.update({
-      where: { id: params.id },
+      where: { id: (await params).id },
       data: {
         ...(status !== undefined && { status }),
         ...(active !== undefined && { active }),
@@ -155,7 +155,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 // ── DELETE /api/picks/[id] ─────────────────────────────────────────────
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await createSupabaseServerClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -164,7 +164,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    await prisma.opportunity.delete({ where: { id: params.id } })
+    await prisma.opportunity.delete({ where: { id: (await params).id } })
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('DELETE /api/picks/[id]:', err)

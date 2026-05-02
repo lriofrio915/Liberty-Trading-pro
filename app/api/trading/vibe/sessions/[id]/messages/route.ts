@@ -25,7 +25,7 @@ type SessionResponse = { session_id?: string; id?: string; session?: { id?: stri
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await requireUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -37,7 +37,7 @@ export async function POST(
 
   try {
     const data = await vibeJSON(
-      `/sessions/${encodeURIComponent(params.id)}/messages`,
+      `/sessions/${encodeURIComponent((await params).id)}/messages`,
       { method: 'POST', body: JSON.stringify({ content }) },
     )
     return NextResponse.json(data)
@@ -76,14 +76,14 @@ export async function POST(
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await requireUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
     const data = await vibeJSON(
-      `/sessions/${encodeURIComponent(params.id)}/messages`,
+      `/sessions/${encodeURIComponent((await params).id)}/messages`,
     )
     return NextResponse.json(data)
   } catch (err) {

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 
 interface ReportJSON {
   ticker: string
@@ -209,6 +210,7 @@ function ReportModal({ opp, livePrices, onClose, onRegenerate }: {
   onClose: () => void
   onRegenerate: (updated: Opportunity) => void
 }) {
+  const [mounted, setMounted] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
   const [regenError, setRegenError] = useState<string | null>(null)
   const r = parseReport(opp.aiReport)
@@ -237,22 +239,37 @@ function ReportModal({ opp, livePrices, onClose, onRegenerate }: {
     }
   }
 
-  return (
+  useEffect(() => {
+    setMounted(true)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [])
+
+  if (!mounted) return null
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 bg-black/80 flex items-start justify-center overflow-y-auto p-4"
+      className="fixed inset-0 z-[10000] bg-black/85 flex items-center justify-center overflow-hidden p-2 sm:p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
-        className="max-w-3xl w-full my-8 card text-sm space-y-5"
-        style={{ background: 'var(--bg-card)' }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`report-modal-title-${opp.id}`}
+        className="max-w-5xl w-full max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] text-sm flex flex-col overflow-hidden rounded-xl border shadow-2xl"
+        style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}
       >
         {/* Modal header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-xl font-black text-[var(--gold)]">{opp.ticker}</span>
-            <span className="ml-3 text-[var(--text-secondary)] font-semibold">{opp.title}</span>
+        <div className="flex flex-shrink-0 items-start justify-between gap-4 border-b border-[var(--border)] px-4 py-4 sm:px-6">
+          <div className="min-w-0">
+            <span id={`report-modal-title-${opp.id}`} className="text-xl font-black text-[var(--gold)]">{opp.ticker}</span>
+            <span className="ml-3 text-[var(--text-secondary)] font-semibold break-words">{opp.title}</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-shrink-0 items-center gap-3">
             {opp.aiReport && (
               <button
                 onClick={() => printReport(opp)}
@@ -270,6 +287,7 @@ function ReportModal({ opp, livePrices, onClose, onRegenerate }: {
           </div>
         </div>
 
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 space-y-5">
         {!opp.aiReport ? (
           <div className="flex flex-col gap-2 items-start">
             <p className="text-[var(--text-muted)] text-xs">Este activo aún no tiene informe generado.</p>
@@ -290,7 +308,7 @@ function ReportModal({ opp, livePrices, onClose, onRegenerate }: {
         ) : (
           <>
             {/* Precios: compra / actual / objetivo */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="rounded-lg p-3" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
                 <div className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>P. Compra</div>
                 <div className="text-lg font-bold font-mono" style={{ color: 'var(--text-primary)' }}>{precioCompraDisplay}</div>
@@ -320,13 +338,15 @@ function ReportModal({ opp, livePrices, onClose, onRegenerate }: {
                 <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--gold)' }}>Histórico Financiero</p>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs border-collapse">
-                    {r.fuentes_ingresos.map((row, i) => (
-                      <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i === 0 ? 'var(--bg-hover)' : 'transparent' }}>
-                        {row.map((cell, j) => (
-                          <td key={j} className={`px-3 py-2 ${i === 0 ? 'font-bold' : ''}`} style={{ color: i === 0 ? 'var(--text-muted)' : 'var(--text-secondary)' }}>{cell}</td>
-                        ))}
-                      </tr>
-                    ))}
+                    <tbody>
+                      {r.fuentes_ingresos.map((row, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i === 0 ? 'var(--bg-hover)' : 'transparent' }}>
+                          {row.map((cell, j) => (
+                            <td key={j} className={`px-3 py-2 ${i === 0 ? 'font-bold' : ''}`} style={{ color: i === 0 ? 'var(--text-muted)' : 'var(--text-secondary)' }}>{cell}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
                   </table>
                 </div>
               </div>
@@ -389,8 +409,10 @@ function ReportModal({ opp, livePrices, onClose, onRegenerate }: {
             </p>
           </>
         )}
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

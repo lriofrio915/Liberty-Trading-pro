@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 // ── GET /api/knowledge/[id] — get full doc with content ──────────────────────
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await createSupabaseServerClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -13,7 +13,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     const userId = dbUser?.id ?? user.id
 
     const doc = await prisma.knowledgeDoc.findFirst({
-      where: { id: params.id, userId },
+      where: { id: (await params).id, userId },
     })
     if (!doc) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
@@ -24,7 +24,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 }
 
 // ── PATCH /api/knowledge/[id] ─────────────────────────────────────────────────
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await createSupabaseServerClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -37,7 +37,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const { title, description, content, tags, source } = body
 
     const doc = await prisma.knowledgeDoc.updateMany({
-      where: { id: params.id, userId },
+      where: { id: (await params).id, userId },
       data: {
         ...(title !== undefined && { title }),
         ...(description !== undefined && { description }),
@@ -54,7 +54,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 // ── DELETE /api/knowledge/[id] ────────────────────────────────────────────────
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await createSupabaseServerClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -64,7 +64,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     const userId = dbUser?.id ?? user.id
 
     await prisma.knowledgeDoc.deleteMany({
-      where: { id: params.id, userId },
+      where: { id: (await params).id, userId },
     })
 
     return NextResponse.json({ ok: true })

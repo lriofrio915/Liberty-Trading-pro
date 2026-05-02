@@ -7,9 +7,9 @@ const ALLOWED_PATCH_FIELDS = ['estado', 'perfil', 'name', 'respuestas', 'histori
 // GET /api/bot/lead/:phone — n8n consulta el estado del lead
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { phone: string } }
+  { params }: { params: Promise<{ phone: string }> }
 ) {
-  const phone = params.phone?.trim()
+  const phone = (await params).phone?.trim()
   if (!phone) return NextResponse.json({ found: false }, { status: 400 })
 
   try {
@@ -33,9 +33,9 @@ export async function GET(
 // PATCH /api/bot/lead/:phone — n8n actualiza uno o varios campos del lead
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { phone: string } }
+  { params }: { params: Promise<{ phone: string }> }
 ) {
-  const phone = params.phone?.trim()
+  const phone = (await params).phone?.trim()
   if (!phone) return NextResponse.json({ ok: false, error: 'Phone requerido' }, { status: 400 })
 
   try {
