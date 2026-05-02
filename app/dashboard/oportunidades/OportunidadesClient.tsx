@@ -41,21 +41,31 @@ interface Opportunity {
 }
 
 const STATUS_COLORS: Record<string, string> = {
+  COMPRAR:            'bg-green-950 text-green-400',
   ACTIVA:             'bg-green-950 text-green-400',
+  MANTENER:           'bg-yellow-950 text-yellow-400',
   OBJETIVO_ALCANZADO: 'bg-blue-950 text-blue-400',
   STOP_ACTIVADO:      'bg-red-950 text-red-400',
   CANCELADA:          'bg-gray-800 text-gray-400',
 }
 const STATUS_LABELS: Record<string, string> = {
-  ACTIVA:             'Activa',
+  COMPRAR:            'Comprar',
+  ACTIVA:             'Comprar',
+  MANTENER:           'Mantener',
   OBJETIVO_ALCANZADO: 'Objetivo',
   STOP_ACTIVADO:      'Stop',
   CANCELADA:          'Cancelada',
 }
 
+const ACTIVE_STATUSES = new Set(['COMPRAR', 'MANTENER', 'ACTIVA'])
+
 function parseReport(raw: string | null): ReportJSON | null {
   if (!raw) return null
   try { return JSON.parse(raw) as ReportJSON } catch { return null }
+}
+
+function fmtPrice(n: number): string {
+  return `$${n.toFixed(2)}`
 }
 
 const TV_EXCHANGE: Record<string, string> = {
@@ -107,12 +117,14 @@ function printReport(opp: Opportunity) {
     rows.map((row, i) =>
       `<tr style="${i === 0 ? headerStyle : ''}">${row.map(c => `<td style="padding:6px 10px;border:1px solid #ddd">${c}</td>`).join('')}</tr>`
     ).join('')
+  const precioCompra = opp.precioEntrada > 0 ? opp.precioEntrada.toFixed(2) : (r?.precio_actual ?? 'N/D')
+  const precioObj = opp.precioObjetivo > 0 ? opp.precioObjetivo.toFixed(2) : (r?.precio_objetivo ?? 'N/D')
   const body = r ? `
     <h2 style="color:#C9A84C;font-size:18px;margin:0 0 4px">Informe de Inversión — ${r.ticker}</h2>
     <p style="color:#555;font-size:13px;margin:0 0 20px">${r.empresa} · ${r.bolsa} · ${r.mes_año}</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;border:1px solid #ddd;border-radius:8px;padding:16px;margin:0 0 24px">
-      <div><div style="font-size:11px;color:#777;text-transform:uppercase">Precio Actual</div><div style="font-size:20px;font-weight:bold">$${r.precio_actual}</div></div>
-      <div><div style="font-size:11px;color:#777;text-transform:uppercase">Precio Objetivo</div><div style="font-size:20px;font-weight:bold;color:#16a34a">$${r.precio_objetivo}</div></div>
+      <div><div style="font-size:11px;color:#777;text-transform:uppercase">Precio de Compra</div><div style="font-size:20px;font-weight:bold">$${precioCompra}</div></div>
+      <div><div style="font-size:11px;color:#777;text-transform:uppercase">Precio Objetivo</div><div style="font-size:20px;font-weight:bold;color:#16a34a">$${precioObj}</div></div>
     </div>
     <h3 style="font-size:13px;text-transform:uppercase;color:#C9A84C;letter-spacing:.05em;margin:24px 0 8px">Resumen Ejecutivo</h3>
     <p style="font-size:14px;line-height:1.7;margin:0 0 20px">${r.resumen}</p>
@@ -169,7 +181,7 @@ function PriceCell({ value, onSave, isAdmin }: {
   if (!isAdmin) {
     return (
       <span className="font-mono text-sm text-[var(--text-primary)]">
-        {value > 0 ? `$${value.toFixed(2)}` : '—'}
+        {value > 0 ? fmtPrice(value) : '—'}
       </span>
     )
   }
@@ -191,14 +203,24 @@ function PriceCell({ value, onSave, isAdmin }: {
 }
 
 // ─── Report Modal ──────────────────────────────────────────────────────────────
-function ReportModal({ opp, onClose, onRegenerate }: {
+function ReportModal({ opp, livePrices, onClose, onRegenerate }: {
   opp: Opportunity
+  livePrices: Record<string, number>
   onClose: () => void
   onRegenerate: (updated: Opportunity) => void
 }) {
   const [regenerating, setRegenerating] = useState(false)
   const [regenError, setRegenError] = useState<string | null>(null)
   const r = parseReport(opp.aiReport)
+
+  const precioActualLive = livePrices[opp.ticker]
+  const precioActualDisplay = precioActualLive
+    ? fmtPrice(precioActualLive)
+    : r?.precio_actual
+      ? `$${r.precio_actual.replace(/[^0-9.]/g, '')}`
+      : '—'
+  const precioObjetivoDisplay = opp.precioObjetivo > 0 ? fmtPrice(opp.precioObjetivo) : (r?.precio_objetivo ?? 'N/D')
+  const precioCompraDisplay = opp.precioEntrada > 0 ? fmtPrice(opp.precioEntrada) : '—'
 
   async function handleRegenerate() {
     setRegenerating(true)
@@ -267,15 +289,19 @@ function ReportModal({ opp, onClose, onRegenerate }: {
           </div>
         ) : (
           <>
-            {/* Precio actual vs objetivo */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Precios: compra / actual / objetivo */}
+            <div className="grid grid-cols-3 gap-3">
               <div className="rounded-lg p-3" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
-                <div className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Precio Actual</div>
-                <div className="text-lg font-bold font-mono" style={{ color: 'var(--text-primary)' }}>${r.precio_actual}</div>
+                <div className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>P. Compra</div>
+                <div className="text-lg font-bold font-mono" style={{ color: 'var(--text-primary)' }}>{precioCompraDisplay}</div>
               </div>
               <div className="rounded-lg p-3" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
-                <div className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Precio Objetivo</div>
-                <div className="text-lg font-bold font-mono text-green-400">${r.precio_objetivo}</div>
+                <div className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>P. Actual</div>
+                <div className="text-lg font-bold font-mono" style={{ color: 'var(--text-primary)' }}>{precioActualDisplay}</div>
+              </div>
+              <div className="rounded-lg p-3" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
+                <div className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>P. Objetivo</div>
+                <div className="text-lg font-bold font-mono text-green-400">{precioObjetivoDisplay}</div>
               </div>
             </div>
 
@@ -369,9 +395,10 @@ function ReportModal({ opp, onClose, onRegenerate }: {
 }
 
 // ─── Opportunities table ───────────────────────────────────────────────────────
-function OppTable({ opps, isAdmin, onDelete, onStatusChange, onPriceUpdate, onOpenModal }: {
+function OppTable({ opps, isAdmin, livePrices, onDelete, onStatusChange, onPriceUpdate, onOpenModal }: {
   opps: Opportunity[]
   isAdmin: boolean
+  livePrices: Record<string, number>
   onDelete: (id: string) => void
   onStatusChange: (id: string, status: string) => void
   onPriceUpdate: (id: string, changes: Partial<{ precioEntrada: number; precioObjetivo: number }>) => Promise<void>
@@ -395,10 +422,8 @@ function OppTable({ opps, isAdmin, onDelete, onStatusChange, onPriceUpdate, onOp
         </thead>
         <tbody>
           {opps.map((opp, idx) => {
-            const r = parseReport(opp.aiReport)
-            const precioActualRaw = r?.precio_actual
-            const precioActual = precioActualRaw ? parseFloat(precioActualRaw.replace(/[^0-9.]/g, '')) : null
-            const rendimiento = (precioActual !== null && !isNaN(precioActual) && opp.precioEntrada > 0)
+            const precioActual = livePrices[opp.ticker] ?? null
+            const rendimiento = (precioActual !== null && opp.precioEntrada > 0)
               ? ((precioActual - opp.precioEntrada) / opp.precioEntrada) * 100
               : null
 
@@ -439,10 +464,10 @@ function OppTable({ opps, isAdmin, onDelete, onStatusChange, onPriceUpdate, onOp
                   />
                 </td>
 
-                {/* P.Actual */}
+                {/* P.Actual — precio en tiempo real de Yahoo Finance */}
                 <td className="px-4 py-3 whitespace-nowrap">
                   <span className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>
-                    {precioActualRaw ? `$${precioActualRaw}` : '—'}
+                    {precioActual !== null ? fmtPrice(precioActual) : '—'}
                   </span>
                 </td>
 
@@ -475,13 +500,14 @@ function OppTable({ opps, isAdmin, onDelete, onStatusChange, onPriceUpdate, onOp
                       className="text-xs rounded-lg px-2 py-1 border border-[var(--border)] focus:outline-none focus:border-[var(--gold)] transition-colors"
                       style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
                     >
-                      <option value="ACTIVA">Activa</option>
+                      <option value="COMPRAR">Comprar</option>
+                      <option value="MANTENER">Mantener</option>
                       <option value="OBJETIVO_ALCANZADO">Objetivo alcanzado</option>
                       <option value="STOP_ACTIVADO">Stop activado</option>
                       <option value="CANCELADA">Cancelada</option>
                     </select>
                   ) : (
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLORS[opp.status] ?? STATUS_COLORS.ACTIVA}`}>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLORS[opp.status] ?? STATUS_COLORS.COMPRAR}`}>
                       {STATUS_LABELS[opp.status] ?? opp.status}
                     </span>
                   )}
@@ -490,7 +516,6 @@ function OppTable({ opps, isAdmin, onDelete, onStatusChange, onPriceUpdate, onOp
                 {/* Acciones */}
                 <td className="px-4 py-3 whitespace-nowrap">
                   <div className="flex items-center gap-3">
-                    {/* Ver informe */}
                     <button
                       onClick={() => onOpenModal(opp)}
                       title="Ver informe"
@@ -503,7 +528,6 @@ function OppTable({ opps, isAdmin, onDelete, onStatusChange, onPriceUpdate, onOp
                       </svg>
                     </button>
 
-                    {/* Descargar PDF */}
                     {opp.aiReport && (
                       <button
                         onClick={() => printReport(opp)}
@@ -518,7 +542,6 @@ function OppTable({ opps, isAdmin, onDelete, onStatusChange, onPriceUpdate, onOp
                       </button>
                     )}
 
-                    {/* Eliminar (solo admin) */}
                     {isAdmin && (
                       <button
                         onClick={() => onDelete(opp.id)}
@@ -549,13 +572,15 @@ interface Suggestion { symbol: string; name: string; exchange: string }
 
 // ─── Admin form ───────────────────────────────────────────────────────────────
 function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
-  const [open, setOpen]           = useState(false)
-  const [saving, setSaving]       = useState(false)
-  const [error, setError]         = useState<string | null>(null)
-  const [query, setQuery]         = useState('')
+  const [open, setOpen]               = useState(false)
+  const [saving, setSaving]           = useState(false)
+  const [error, setError]             = useState<string | null>(null)
+  const [query, setQuery]             = useState('')
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
-  const [searching, setSearching] = useState(false)
-  const [selected, setSelected]   = useState<Suggestion | null>(null)
+  const [searching, setSearching]     = useState(false)
+  const [selected, setSelected]       = useState<Suggestion | null>(null)
+  const [precioCompra, setPrecioCompra]   = useState('')
+  const [precioObjetivo, setPrecioObjetivo] = useState('')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wrapperRef  = useRef<HTMLDivElement>(null)
 
@@ -593,6 +618,7 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
 
   function reset() {
     setQuery(''); setSelected(null); setSuggestions([])
+    setPrecioCompra(''); setPrecioObjetivo('')
     setError(null); setOpen(false)
   }
 
@@ -602,10 +628,13 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
     if (!ticker) return
     setSaving(true); setError(null)
     try {
+      const body: Record<string, unknown> = { ticker }
+      if (precioCompra && parseFloat(precioCompra) > 0) body.precioEntradaManual = precioCompra
+      if (precioObjetivo && parseFloat(precioObjetivo) > 0) body.precioObjetivoManual = precioObjetivo
       const res = await fetch('/api/picks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticker }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Error al crear')
@@ -631,7 +660,7 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
               Nuevo Informe de Inversión
             </h3>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              Busca por empresa o ticker — los datos se obtienen de Yahoo Finance automáticamente
+              Busca por empresa o ticker — los datos financieros se obtienen de Yahoo Finance automáticamente
             </p>
           </div>
 
@@ -639,6 +668,7 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
             <p className="text-red-400 text-xs border border-red-900 bg-red-950/50 rounded px-3 py-2">{error}</p>
           )}
 
+          {/* Ticker search */}
           <div ref={wrapperRef} className="relative">
             <div className="relative">
               <input
@@ -698,6 +728,41 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
             </div>
           )}
 
+          {/* Precio de compra y precio objetivo */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>
+              Precios (opcional — se auto-calculan si se dejan en blanco)
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>Precio de Compra</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={precioCompra}
+                  onChange={e => setPrecioCompra(e.target.value)}
+                  placeholder="Auto"
+                  disabled={saving}
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>Precio Objetivo</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={precioObjetivo}
+                  onChange={e => setPrecioObjetivo(e.target.value)}
+                  placeholder="Auto"
+                  disabled={saving}
+                  className={inputCls}
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="flex items-center gap-4">
             <button
               type="submit"
@@ -732,9 +797,25 @@ export default function OportunidadesClient({
   const [previewMode, setPreviewMode] = useState(false)
   const [previewPlan, setPreviewPlan] = useState<'FREE' | 'CLUB' | 'PRO' | 'PORTFOLIO'>('CLUB')
   const [modalOpp, setModalOpp] = useState<Opportunity | null>(null)
+  const [livePrices, setLivePrices] = useState<Record<string, number>>({})
+
+  // Fetch live prices for all tickers on mount
+  useEffect(() => {
+    const tickers = [...new Set(initialOpportunities.map(o => o.ticker))]
+    if (!tickers.length) return
+    fetch(`/api/picks/price?tickers=${tickers.join(',')}`)
+      .then(r => r.json())
+      .then(d => { if (d.prices) setLivePrices(d.prices) })
+      .catch(() => {})
+  }, [initialOpportunities])
 
   const handleCreated = (opp: Opportunity) => {
     setOpportunities(prev => [opp, ...prev])
+    // Fetch price for the new ticker
+    fetch(`/api/picks/price?tickers=${opp.ticker}`)
+      .then(r => r.json())
+      .then(d => { if (d.prices) setLivePrices(prev => ({ ...prev, ...d.prices })) })
+      .catch(() => {})
   }
 
   const handleDelete = async (id: string) => {
@@ -749,13 +830,14 @@ export default function OportunidadesClient({
   }
 
   const handleStatusChange = async (id: string, status: string) => {
+    const active = ACTIVE_STATUSES.has(status)
     await fetch(`/api/picks/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, active: status === 'ACTIVA' }),
+      body: JSON.stringify({ status, active }),
     })
     setOpportunities(prev => prev.map(o =>
-      o.id === id ? { ...o, status, active: status === 'ACTIVA' } : o
+      o.id === id ? { ...o, status, active } : o
     ))
   }
 
@@ -766,6 +848,8 @@ export default function OportunidadesClient({
       body: JSON.stringify(changes),
     })
     setOpportunities(prev => prev.map(o => o.id === id ? { ...o, ...changes } : o))
+    // Update modal if open
+    setModalOpp(prev => prev && prev.id === id ? { ...prev, ...changes } : prev)
   }
 
   const PLAN_ORDER: Record<string, number> = { FREE: 0, CLUB: 1, PRO: 2, PORTFOLIO: 3 }
@@ -851,6 +935,7 @@ export default function OportunidadesClient({
         <OppTable
           opps={activeOpps}
           isAdmin={effectiveAdmin}
+          livePrices={livePrices}
           onDelete={handleDelete}
           onStatusChange={handleStatusChange}
           onPriceUpdate={handlePriceUpdate}
@@ -862,6 +947,7 @@ export default function OportunidadesClient({
       {modalOpp && (
         <ReportModal
           opp={modalOpp}
+          livePrices={livePrices}
           onClose={() => setModalOpp(null)}
           onRegenerate={handleRegenerate}
         />

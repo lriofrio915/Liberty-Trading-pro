@@ -57,6 +57,8 @@ export async function POST(req: NextRequest) {
       riesgo       = 'MEDIO',
       minPlan      = 'CLUB',
       stopLossPct  = 8,
+      precioEntradaManual,
+      precioObjetivoManual,
     } = body
 
     if (!ticker) {
@@ -67,13 +69,17 @@ export async function POST(req: NextRequest) {
     const yf = await fetchTickerFinancials(ticker.toUpperCase().trim())
     const dataBlock = buildDataBlock(yf)
 
-    const precioEntrada = yf.precioActual
+    const precioEntrada = precioEntradaManual
+      ? parseFloat(precioEntradaManual)
+      : yf.precioActual
 
     // For COMPRA: target must be ABOVE entry; for VENTA: target must be BELOW entry
     const analTarget = yf.precioObjetivoMedio
-    const precioObjetivo = direction === 'COMPRA'
-      ? (analTarget && analTarget > precioEntrada ? analTarget : parseFloat((precioEntrada * 1.15).toFixed(2)))
-      : (analTarget && analTarget < precioEntrada ? analTarget : parseFloat((precioEntrada * 0.85).toFixed(2)))
+    const precioObjetivo = precioObjetivoManual
+      ? parseFloat(precioObjetivoManual)
+      : direction === 'COMPRA'
+        ? (analTarget && analTarget > precioEntrada ? analTarget : parseFloat((precioEntrada * 1.15).toFixed(2)))
+        : (analTarget && analTarget < precioEntrada ? analTarget : parseFloat((precioEntrada * 0.85).toFixed(2)))
 
     const stopLoss = direction === 'COMPRA'
       ? parseFloat((precioEntrada * (1 - stopLossPct / 100)).toFixed(2))
@@ -85,10 +91,16 @@ export async function POST(req: NextRequest) {
       const apiKey = process.env.OPENROUTER_API_KEY
       const model = process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat-v3-0324'
 
+      const preciosAdmin = precioEntradaManual || precioObjetivoManual
+        ? `\nPRECIOS DEFINIDOS POR EL ANALISTA (usa estos valores exactos en el informe):
+- Precio de Compra recomendado: $${precioEntrada.toFixed(2)}
+- Precio Objetivo: $${precioObjetivo.toFixed(2)}\n`
+        : ''
+
       const prompt = `Eres un analista financiero senior de Liberty Trading Club. Tienes los siguientes DATOS REALES de mercado para ${yf.ticker}:
 
 ${dataBlock}
-
+${preciosAdmin}
 IDIOMA: Responde EXCLUSIVAMENTE en español. Todos los campos de texto narrativo deben estar en español.
 
 Con base EXCLUSIVAMENTE en esos datos reales, genera un informe de inversión profesional.
@@ -96,14 +108,15 @@ REGLAS ESTRICTAS:
 1. NO inventes cifras. Usa SOLO los números del bloque de datos reales de arriba.
 2. Si un dato dice "N/D" o "N/M", indícalo así en el texto o no lo menciones.
 3. El análisis cualitativo y la narrativa son tuyas, pero toda cifra debe provenir del bloque de datos.
-4. Responde ÚNICAMENTE con el JSON, sin texto adicional ni bloques markdown.
+4. Si hay PRECIOS DEFINIDOS POR EL ANALISTA, úsalos en precio_actual y precio_objetivo del JSON.
+5. Responde ÚNICAMENTE con el JSON, sin texto adicional ni bloques markdown.
 
 {
   "ticker": "${yf.ticker}",
   "empresa": "<nombre exacto del bloque>",
   "bolsa": "<exchange exacto>",
-  "precio_actual": "<precio exacto>",
-  "precio_objetivo": "<precio_obj_medio exacto, o N/D>",
+  "precio_actual": "${precioEntradaManual ? precioEntrada.toFixed(2) : '<precio exacto del bloque>'}",
+  "precio_objetivo": "${precioObjetivoManual ? precioObjetivo.toFixed(2) : '<precio_obj_medio exacto, o N/D>'}",
   "informe_numero": "N/A",
   "resumen": "3-4 oraciones en español: qué hace la empresa, precio actual, situación financiera y tesis de inversión basada en datos reales.",
   "negocio": "2-3 párrafos en español describiendo el negocio usando la descripción del bloque. Menciona sector, industria y fuentes de ingresos.",
@@ -177,7 +190,7 @@ REGLAS ESTRICTAS:
         aiReport,
         minPlan,
         active: true,
-        status: 'ACTIVA',
+        status: 'COMPRAR',
       },
     })
 
