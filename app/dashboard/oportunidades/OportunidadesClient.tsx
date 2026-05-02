@@ -801,7 +801,7 @@ export default function OportunidadesClient({
 
   // Fetch live prices for all tickers on mount
   useEffect(() => {
-    const tickers = [...new Set(initialOpportunities.map(o => o.ticker))]
+    const tickers = Array.from(new Set(initialOpportunities.map(o => o.ticker)))
     if (!tickers.length) return
     fetch(`/api/picks/price?tickers=${tickers.join(',')}`)
       .then(r => r.json())
