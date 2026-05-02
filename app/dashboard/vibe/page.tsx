@@ -8,7 +8,12 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 export const dynamic = 'force-dynamic'
 
-export default async function VibeTradingPage() {
+export const metadata = {
+  title: 'Laboratorio Quant — Liberty Trading',
+  description: 'Diseña estrategias algorítmicas, backtesting y genera código para MT5 y Ninja Trader 8 con IA.',
+}
+
+export default async function LaboratorioQuantPage() {
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -27,5 +32,5 @@ export default async function VibeTradingPage() {
 
   if (!isAdmin && !access.canAccessClub) redirect('/dashboard/upgrade')
 
-  return <VibeClient userEmail={user.email ?? ''} />
+  return <VibeClient isAdmin={isAdmin} />
 }

@@ -96,6 +96,8 @@ export interface TickerFinancials {
   epsTrailing: number | null
   epsForward: number | null
   // Balance
+  debtToEquity: number | null
+  pegRatio: number | null
   deudaTotal: number | null
   caja: number | null
   acciones: number | null // in millions
@@ -232,6 +234,8 @@ export async function fetchTickerFinancials(ticker: string): Promise<TickerFinan
     margenNeto: safeNum(finData.profitMargins?.raw) != null ? (safeNum(finData.profitMargins.raw)! * 100) : null,
     epsTrailing: safeNum(keyStats.trailingEps?.raw),
     epsForward: safeNum(keyStats.forwardEps?.raw),
+    debtToEquity: safeNum(keyStats.debtToEquity?.raw),
+    pegRatio: safeNum(keyStats.pegRatio?.raw),
     deudaTotal: safeNum(keyStats.totalDebt?.raw),
     caja: safeNum(finData.totalCash?.raw),
     acciones: safeNum(keyStats.sharesOutstanding?.raw),
@@ -285,6 +289,28 @@ ANALISTAS (${d.numAnalistas} analistas):
 
 DESCRIPCIÓN: ${d.descripcion}
 ===============================================================================`
+}
+
+// ── Batch financials fetch (with delay to avoid rate limiting) ────────────────
+export async function fetchBatchFinancials(
+  tickers: string[],
+  batchSize = 10,
+  delayMs = 1500,
+): Promise<TickerFinancials[]> {
+  const results: TickerFinancials[] = []
+  for (let i = 0; i < tickers.length; i += batchSize) {
+    const batch = tickers.slice(i, i + batchSize)
+    const batchResults = await Promise.allSettled(
+      batch.map((t) => fetchTickerFinancials(t)),
+    )
+    for (const r of batchResults) {
+      if (r.status === 'fulfilled') results.push(r.value)
+    }
+    if (i + batchSize < tickers.length) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+    }
+  }
+  return results
 }
 
 // ── Batch current-price fetch (uses same crumb auth) ─────────────────────────

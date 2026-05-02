@@ -1,0 +1,15 @@
+name: Cron — Peter Lynch Screener Refresh
+
+on:
+  schedule:
+    - cron: '0 10 * * 1-5'  # 10:00 UTC (5am ET) Mon-Fri
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger screener refresh
+        run: |
+          curl -sS -o /dev/null -w "%{http_code}" \
+            "${{ secrets.APP_URL }}/api/screener/lynch?refresh=true&secret=${{ secrets.CRON_SECRET }}"

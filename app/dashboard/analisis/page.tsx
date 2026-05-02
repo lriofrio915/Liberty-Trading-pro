@@ -4,9 +4,11 @@ import { getEffectiveAccess } from '@/lib/access'
 import { redirect } from 'next/navigation'
 import AnalisisClient from './AnalisisClient'
 
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
+
 export const metadata = {
-  title: 'Análisis de Activos — Liberty Trading',
-  description: '5 agentes de IA analizan en paralelo crypto, acciones, divisas y materiales para darte un sesgo claro y recomendación de compra/venta.',
+  title: 'CFDs — Liberty Trading',
+  description: 'Análisis de mercado en tiempo real con 7 agentes de IA: crypto, acciones, índices, divisas y materiales.',
 }
 
 export default async function AnalisisPage() {
@@ -14,6 +16,8 @@ export default async function AnalisisPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) redirect('/auth/login')
+
+  const isAdmin = user.email === ADMIN_EMAIL
 
   const dbUser = await prisma.user
     .findUnique({ where: { authId: user.id }, select: { plan: true, trialEndsAt: true } })
@@ -25,5 +29,5 @@ export default async function AnalisisPage() {
 
   if (!access.canAccessClub) redirect('/dashboard/upgrade')
 
-  return <AnalisisClient />
+  return <AnalisisClient isAdmin={isAdmin} />
 }

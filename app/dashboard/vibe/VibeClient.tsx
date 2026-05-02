@@ -40,7 +40,7 @@ const WARN_LONG_MS    = 120_000  // aviso visual al llegar a 2 min
 const STORAGE_LINES   = 'vibe:chat:lines'
 const STORAGE_SESSION = 'vibe:chat:session'
 
-export default function VibeClient({ userEmail }: { userEmail: string }) {
+export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
   const [mode, setMode] = useState<Mode>('chat')
   const [presets, setPresets] = useState<Preset[]>([])
   const [presetsErr, setPresetsErr] = useState<string | null>(null)
@@ -71,6 +71,11 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
   const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const thinkStartRef = useRef<number | null>(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [video, setVideo] = useState<{ youtubeUrl: string; title: string | null }>({ youtubeUrl: '', title: null })
+  const [editMode, setEditMode] = useState(false)
+  const [editUrl, setEditUrl] = useState('')
+  const [editTitle, setEditTitle] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     fetch('/api/trading/vibe/swarm')
@@ -88,6 +93,15 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
       .catch(err => {
         setPresetsErr(err?.message ?? 'No se pudo conectar a Vibe-Trading')
       })
+  }, [])
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/section-video?section=quant')
+        if (res.ok) { const d = await res.json(); if (d.youtubeUrl) setVideo(d) }
+      } catch {}
+    })()
   }, [])
 
   useEffect(() => {
@@ -369,11 +383,10 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
       <div className="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
           <h1 className="text-3xl font-black mb-1">
-            Copiloto <span className="gradient-gold">de Trading</span>
+            Laboratorio <span className="gradient-gold">Quant</span>
           </h1>
           <p className="text-[var(--text-secondary)] text-sm">
-            Tu asistente IA para diseñar estrategias, backtests y código Pine/MT5 ·{' '}
-            <span className="font-mono text-[var(--text-muted)]">{userEmail}</span>
+            Tu laboratorio de estrategias algorítmicas · Backtesting · Indicadores para MT5 y Ninja Trader 8
           </p>
         </div>
         <div className="flex gap-2">
@@ -400,6 +413,32 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
         </div>
       </div>
 
+      {/* Video admin */}
+      <div className="mb-5 rounded-xl border p-5" style={{ borderColor: 'rgba(201,168,76,0.18)', background: 'linear-gradient(135deg, rgba(201,168,76,0.04) 0%, transparent 70%)' }}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>VIDEO DEL PROFESIONAL</p>
+          {isAdmin && (
+            <button onClick={() => { setEditMode(!editMode); if (!editMode) { setEditUrl(video.youtubeUrl); setEditTitle(video.title || '') } }} className="text-[10px] font-mono tracking-widest px-3 py-1 rounded border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--gold)]">{editMode ? 'CANCELAR' : 'EDITAR'}</button>
+          )}
+        </div>
+        {editMode && (
+          <div className="space-y-3 mb-4">
+            <input value={editUrl} onChange={(e) => setEditUrl(e.target.value)} placeholder="URL de YouTube" className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] text-xs px-4 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)] font-mono" />
+            <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Título (opcional)" className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] text-xs px-4 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)] font-mono" />
+            <button onClick={async () => { setSaving(true); try { const r = await fetch('/api/section-video', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'quant', youtubeUrl: editUrl, title: editTitle }) }); if (r.ok) { setVideo({ youtubeUrl: editUrl, title: editTitle }); setEditMode(false) } } catch {} finally { setSaving(false) } }} disabled={!editUrl || saving} className="px-4 py-2 text-xs font-mono tracking-widest rounded-lg bg-[var(--gold)] text-black disabled:opacity-50">{saving ? 'GUARDANDO…' : 'GUARDAR'}</button>
+          </div>
+        )}
+        {video.youtubeUrl ? (
+          <div className="aspect-video rounded-lg overflow-hidden">
+            <iframe src={`https://www.youtube.com/embed/${(video.youtubeUrl.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/)||[])[1] || ''}`} title={video.title || 'Video'} className="w-full h-full" allowFullScreen />
+          </div>
+        ) : (
+          <div className="text-center py-8 border border-dashed rounded-lg" style={{ borderColor: 'var(--border)' }}>
+            <p className="text-xs text-[var(--text-muted)]">El administrador aún no ha publicado un video para esta sección.</p>
+          </div>
+        )}
+      </div>
+
       {/* What is this */}
       <div className="mb-5 rounded-xl border p-4" style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.07) 0%, transparent 80%)', borderColor: 'rgba(201,168,76,0.18)' }}>
         <p className="text-[10px] font-mono tracking-widest mb-3" style={{ color: 'var(--gold)' }}>¿QUÉ PUEDES HACER AQUÍ?</p>
@@ -414,7 +453,7 @@ export default function VibeClient({ userEmail }: { userEmail: string }) {
           </div>
           <div>
             <p className="text-xs font-bold text-white mb-1">⚡ Código listo para usar</p>
-            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>Genera indicadores Pine Script para TradingView y Expert Advisors (EA) para MetaTrader 5 automáticamente.</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>Genera indicadores para TradingView (Pine Script), MetaTrader 5 (EA) y Ninja Trader 8 (NinjaScript).</p>
           </div>
         </div>
       </div>
