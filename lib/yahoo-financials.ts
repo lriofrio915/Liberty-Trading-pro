@@ -286,3 +286,31 @@ ANALISTAS (${d.numAnalistas} analistas):
 DESCRIPCIÓN: ${d.descripcion}
 ===============================================================================`
 }
+
+// ── Batch current-price fetch (uses same crumb auth) ─────────────────────────
+export async function fetchLivePrices(tickers: string[]): Promise<Record<string, number>> {
+  if (!tickers.length) return {}
+  const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+  const prices: Record<string, number> = {}
+  try {
+    let res: Response | null = null
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (attempt === 1) _crumbCache = null
+      const { crumb, cookie } = await getYahooCrumb()
+      const url = `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(tickers.join(','))}&crumb=${encodeURIComponent(crumb)}`
+      res = await fetch(url, {
+        headers: { 'User-Agent': ua, Accept: 'application/json', ...(cookie ? { Cookie: cookie } : {}) },
+        signal: AbortSignal.timeout(10000),
+      })
+      if (res.status !== 401) break
+    }
+    if (!res || !res.ok) return prices
+    const data = await res.json()
+    for (const quote of data?.quoteResponse?.result ?? []) {
+      if (quote.symbol && typeof quote.regularMarketPrice === 'number') {
+        prices[quote.symbol] = quote.regularMarketPrice
+      }
+    }
+  } catch { /* return partial results on error */ }
+  return prices
+}
