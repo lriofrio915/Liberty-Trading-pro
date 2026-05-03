@@ -47,11 +47,12 @@ export default function ResearchTab() {
   const [sectorFilter, setSectorFilter] = useState('')
   const [minScore, setMinScore] = useState(0)
 
-  const fetchResults = useCallback(async () => {
+  const fetchResults = useCallback(async (forceRefresh = false) => {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/screener/lynch')
+      const url = forceRefresh ? '/api/screener/lynch?refresh=true' : '/api/screener/lynch'
+      const res = await fetch(url)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       setResults(data.results || [])
@@ -63,7 +64,7 @@ export default function ResearchTab() {
     }
   }, [])
 
-  useEffect(() => { fetchResults() }, [fetchResults])
+  useEffect(() => { fetchResults(false) }, [fetchResults])
 
   const sectors = Array.from(new Set(results.map((r) => r.sector).filter(Boolean))).sort()
 
@@ -100,8 +101,21 @@ export default function ResearchTab() {
     return sortDir === 'desc' ? ' ▾' : ' ▴'
   }
 
+  const handleRefresh = () => { fetchResults(true) }
+
   return (
     <div>
+      {/* Refresh Button */}
+      <div className="flex justify-end mb-3">
+        <button 
+          onClick={handleRefresh} 
+          disabled={loading}
+          className="px-3 py-1.5 text-[10px] font-mono tracking-widest rounded border border-[var(--gold)]/30 text-[var(--gold)] hover:bg-[var(--gold)]/10 disabled:opacity-50"
+        >
+          {loading ? 'ACTUALIZANDO...' : '🔄 ACTUALIZAR DATOS'}
+        </button>
+      </div>
+
       {/* Explanation */}
       <div className="rounded-xl border p-4 mb-5" style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 80%)', borderColor: 'rgba(201,168,76,0.15)' }}>
         <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>CRITERIOS DE PETER LYNCH</p>
@@ -163,7 +177,7 @@ export default function ResearchTab() {
       {error && (
         <div className="card border border-red-500/40 p-4 mb-4">
           <p className="text-xs text-red-400 font-mono">{error}</p>
-          <button onClick={fetchResults} className="mt-2 px-3 py-1 text-[10px] font-mono tracking-widest rounded border border-red-400/50 text-red-400 hover:bg-red-400/10">REINTENTAR</button>
+          <button onClick={() => fetchResults(false)} className="mt-2 px-3 py-1 text-[10px] font-mono tracking-widest rounded border border-red-400/50 text-red-400 hover:bg-red-400/10">REINTENTAR</button>
         </div>
       )}
 
