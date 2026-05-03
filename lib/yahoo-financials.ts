@@ -235,7 +235,7 @@ export async function fetchTickerFinancials(ticker: string): Promise<TickerFinan
     epsTrailing: safeNum(keyStats.trailingEps?.raw),
     epsForward: safeNum(keyStats.forwardEps?.raw),
     debtToEquity: (() => {
-      // Use Yahoo's D/E directly if available
+      // Use Yahoo's D/E directly if available (it's already a ratio)
       const yahooDE = safeNum(keyStats.debtToEquity?.raw)
       if (yahooDE != null && yahooDE >= 0) return yahooDE
       
@@ -249,12 +249,12 @@ export async function fetchTickerFinancials(ticker: string): Promise<TickerFinan
         // Net Debt = EV - Market Cap (approximation of debt - cash)
         const netDebt = ev - mktCap
         const equity = mktCap
-        if (equity > 0) return (netDebt / equity) * 100
+        if (equity > 0) return netDebt / equity
       }
       
       // Final fallback: total debt to market cap
       if (debt > 0 && mktCap > 0) {
-        return (debt / mktCap) * 100
+        return debt / mktCap
       }
       
       return null

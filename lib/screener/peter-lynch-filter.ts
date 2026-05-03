@@ -37,7 +37,7 @@ export function applyPeterLynchFilter(d: TickerFinancials): LynchResult | null {
 
   const peTrailingOk = d.peTrailing != null && d.peTrailing > 0 && d.peTrailing < 25
   const peForwardOk = d.peForward != null && d.peForward > 0 && d.peForward < 15
-  const debtToEquityOk = d.debtToEquity != null && d.debtToEquity >= 0 && d.debtToEquity < 35
+  const debtToEquityOk = d.debtToEquity != null && d.debtToEquity >= 0 && d.debtToEquity < 0.35
   const epsGrowthOk = epsGrowth != null && epsGrowth > 15
   const pegOk = d.pegRatio != null && d.pegRatio > 0 && d.pegRatio < 2
   const marketCapOk = true // already filtered above

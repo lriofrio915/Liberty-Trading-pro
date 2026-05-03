@@ -41,14 +41,14 @@ export default function ResearchTab() {
   
   // Sample data for demo when API fails
   const SAMPLE_DATA: LynchResultItem[] = [
-    { ticker: 'AAPL', empresa: 'Apple Inc.', bolsa: 'NASDAQ', sector: 'Technology', industria: 'Consumer Electronics', precioActual: 189.84, marketCap: 2890000000000, peTrailing: 29.5, peForward: 25.2, debtToEquity: 180, epsGrowthRate: 18.5, pegRatio: 1.6, score: 5, criteriaMet: [true, true, false, true, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: false, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
-    { ticker: 'MSFT', empresa: 'Microsoft Corporation', bolsa: 'NASDAQ', sector: 'Technology', industria: 'Software', precioActual: 415.50, marketCap: 3090000000000, peTrailing: 36.8, peForward: 28.4, debtToEquity: 45, epsGrowthRate: 22.1, pegRatio: 1.3, score: 5, criteriaMet: [true, true, true, true, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
-    { ticker: 'GOOGL', empresa: 'Alphabet Inc.', bolsa: 'NASDAQ', sector: 'Technology', industria: 'Internet', precioActual: 174.90, marketCap: 2180000000000, peTrailing: 24.5, peForward: 19.8, debtToEquity: 28, epsGrowthRate: 25.3, pegRatio: 0.8, score: 6, criteriaMet: [true, true, true, true, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
-    { ticker: 'AMZN', empresa: 'Amazon.com Inc.', bolsa: 'NASDAQ', sector: 'Consumer Cyclical', industria: 'E-Commerce', precioActual: 227.63, marketCap: 2370000000000, peTrailing: 42.3, peForward: 32.1, debtToEquity: 115, epsGrowthRate: 28.7, pegRatio: 1.1, score: 4, criteriaMet: [false, true, true, true, true, true], criteriaDetails: { peTrailingOk: false, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
-    { ticker: 'NVDA', empresa: 'NVIDIA Corporation', bolsa: 'NASDAQ', sector: 'Technology', industria: 'Semiconductors', precioActual: 875.28, marketCap: 2160000000000, peTrailing: 65.4, peForward: 45.2, debtToEquity: 35, epsGrowthRate: 95.2, pegRatio: 0.5, score: 5, criteriaMet: [false, true, true, true, true, true], criteriaDetails: { peTrailingOk: false, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
-    { ticker: 'JPM', empresa: 'JPMorgan Chase & Co.', bolsa: 'NYSE', sector: 'Financial', industria: 'Banks', precioActual: 198.47, marketCap: 571000000000, peTrailing: 11.2, peForward: 10.5, debtToEquity: 220, epsGrowthRate: 8.5, pegRatio: 1.3, score: 5, criteriaMet: [true, true, false, false, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: false, epsGrowthOk: false, pegOk: true, marketCapOk: true } },
-    { ticker: 'JNJ', empresa: 'Johnson & Johnson', bolsa: 'NYSE', sector: 'Healthcare', industria: 'Pharmaceuticals', precioActual: 156.74, marketCap: 377000000000, peTrailing: 15.8, peForward: 14.2, debtToEquity: 55, epsGrowthRate: 6.2, pegRatio: 2.3, score: 4, criteriaMet: [true, true, true, false, false, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: false, pegOk: false, marketCapOk: true } },
-    { ticker: 'V', empresa: 'Visa Inc.', bolsa: 'NYSE', sector: 'Financial', industria: 'Credit Services', precioActual: 279.85, marketCap: 573000000000, peTrailing: 30.5, peForward: 26.8, debtToEquity: 65, epsGrowthRate: 14.8, pegRatio: 1.8, score: 5, criteriaMet: [true, true, true, true, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
+    { ticker: 'AAPL', empresa: 'Apple Inc.', bolsa: 'NASDAQ', sector: 'Technology', industria: 'Consumer Electronics', precioActual: 189.84, marketCap: 2890000000000, peTrailing: 29.5, peForward: 25.2, debtToEquity: 1.80, epsGrowthRate: 18.5, pegRatio: 1.6, score: 5, criteriaMet: [true, true, false, true, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: false, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
+    { ticker: 'MSFT', empresa: 'Microsoft Corporation', bolsa: 'NASDAQ', sector: 'Technology', industria: 'Software', precioActual: 415.50, marketCap: 3090000000000, peTrailing: 36.8, peForward: 28.4, debtToEquity: 0.45, epsGrowthRate: 22.1, pegRatio: 1.3, score: 5, criteriaMet: [true, true, true, true, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
+    { ticker: 'GOOGL', empresa: 'Alphabet Inc.', bolsa: 'NASDAQ', sector: 'Technology', industria: 'Internet', precioActual: 174.90, marketCap: 2180000000000, peTrailing: 24.5, peForward: 19.8, debtToEquity: 0.28, epsGrowthRate: 25.3, pegRatio: 0.8, score: 6, criteriaMet: [true, true, true, true, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
+    { ticker: 'AMZN', empresa: 'Amazon.com Inc.', bolsa: 'NASDAQ', sector: 'Consumer Cyclical', industria: 'E-Commerce', precioActual: 227.63, marketCap: 2370000000000, peTrailing: 42.3, peForward: 32.1, debtToEquity: 1.15, epsGrowthRate: 28.7, pegRatio: 1.1, score: 4, criteriaMet: [false, true, true, true, true, true], criteriaDetails: { peTrailingOk: false, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
+    { ticker: 'NVDA', empresa: 'NVIDIA Corporation', bolsa: 'NASDAQ', sector: 'Technology', industria: 'Semiconductors', precioActual: 875.28, marketCap: 2160000000000, peTrailing: 65.4, peForward: 45.2, debtToEquity: 0.35, epsGrowthRate: 95.2, pegRatio: 0.5, score: 5, criteriaMet: [false, true, true, true, true, true], criteriaDetails: { peTrailingOk: false, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
+    { ticker: 'JPM', empresa: 'JPMorgan Chase & Co.', bolsa: 'NYSE', sector: 'Financial', industria: 'Banks', precioActual: 198.47, marketCap: 571000000000, peTrailing: 11.2, peForward: 10.5, debtToEquity: 2.20, epsGrowthRate: 8.5, pegRatio: 1.3, score: 5, criteriaMet: [true, true, false, false, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: false, epsGrowthOk: false, pegOk: true, marketCapOk: true } },
+    { ticker: 'JNJ', empresa: 'Johnson & Johnson', bolsa: 'NYSE', sector: 'Healthcare', industria: 'Pharmaceuticals', precioActual: 156.74, marketCap: 377000000000, peTrailing: 15.8, peForward: 14.2, debtToEquity: 0.55, epsGrowthRate: 6.2, pegRatio: 2.3, score: 4, criteriaMet: [true, true, true, false, false, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: false, pegOk: false, marketCapOk: true } },
+    { ticker: 'V', empresa: 'Visa Inc.', bolsa: 'NYSE', sector: 'Financial', industria: 'Credit Services', precioActual: 279.85, marketCap: 573000000000, peTrailing: 30.5, peForward: 26.8, debtToEquity: 0.65, epsGrowthRate: 14.8, pegRatio: 1.8, score: 5, criteriaMet: [true, true, true, true, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
   ]
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -58,6 +58,8 @@ export default function ResearchTab() {
   const [search, setSearch] = useState('')
   const [sectorFilter, setSectorFilter] = useState('')
   const [minScore, setMinScore] = useState(0)
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 30
 
   const fetchResults = useCallback(async (forceRefresh = false) => {
     setLoading(true)
@@ -104,6 +106,13 @@ export default function ResearchTab() {
       if (typeof aVal === 'number' && typeof bVal === 'number') return sortDir === 'desc' ? bVal - aVal : aVal - bVal
       return sortDir === 'desc' ? String(bVal).localeCompare(String(aVal)) : String(aVal).localeCompare(String(bVal))
     })
+
+  const totalFiltered = filtered.length
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const totalPages = Math.ceil(totalFiltered / PAGE_SIZE)
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setPage(1) }, [search, sectorFilter, minScore, sortKey])
 
   const fmtMktCap = (v: number) => {
     if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`
@@ -208,7 +217,23 @@ export default function ResearchTab() {
       )}
 
       {/* Table */}
-      {!loading && !error && results.length > 0 && (
+      {!loading && !error && paginated.length > 0 && (
+        <div className="flex justify-between items-center mb-3 px-2">
+          <span className="text-[10px] font-mono text-[var(--text-muted)]">
+            Mostrando {paginated.length} de {totalFiltered} empresas analizadas
+          </span>
+          {totalPages > 1 && (
+            <div className="flex gap-1">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-2 py-1 text-[10px] font-mono border rounded disabled:opacity-30">←</button>
+              <span className="px-2 py-1 text-[10px] font-mono">{page}/{totalPages}</span>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-2 py-1 text-[10px] font-mono border rounded disabled:opacity-30">→</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Table */}
+      {!loading && !error && paginated.length > 0 && (
         <div className="card overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
@@ -228,7 +253,7 @@ export default function ResearchTab() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r, idx) => {
+              {paginated.map((r, idx) => {
                 const details = [
                   r.criteriaDetails.peTrailingOk,
                   r.criteriaDetails.peForwardOk,
@@ -239,7 +264,7 @@ export default function ResearchTab() {
                 ]
                 return (
                   <tr key={r.ticker} className="border-t border-[var(--border)] hover:bg-white/[0.02]">
-                    <td className="p-3 text-center font-mono text-[var(--text-muted)]">{idx + 1}</td>
+                    <td className="p-3 text-center font-mono text-[var(--text-muted)]">{(page - 1) * PAGE_SIZE + idx + 1}</td>
                     <td className="p-3 font-mono font-bold text-white">{r.ticker}</td>
                     <td className="p-3 text-[var(--text-secondary)] max-w-[180px] truncate" title={r.empresa}>{r.empresa}</td>
                     <td className="p-3 text-[var(--text-muted)] font-mono text-[10px]">{r.sector}</td>
@@ -259,7 +284,7 @@ export default function ResearchTab() {
                       <span className={details[1] ? 'text-green-400' : 'text-red-400/60'}>{r.peForward?.toFixed(1) || '—'}</span>
                     </td>
                     <td className="p-3 text-center font-mono">
-                      <span className={details[2] ? 'text-green-400' : 'text-red-400/60'}>{r.debtToEquity != null && r.debtToEquity > 0 ? `${r.debtToEquity.toFixed(1)}%` : '—'}</span>
+                      <span className={details[2] ? 'text-green-400' : 'text-red-400/60'}>{r.debtToEquity != null && r.debtToEquity > 0 ? `${r.debtToEquity.toFixed(1)}x` : '—'}</span>
                     </td>
                     <td className="p-3 text-center font-mono">
                       <span className={details[3] ? 'text-green-400' : 'text-red-400/60'}>{r.epsGrowthRate != null ? `${r.epsGrowthRate.toFixed(1)}%` : '—'}</span>
