@@ -38,6 +38,18 @@ const CRITERIA = [
 
 export default function ResearchTab() {
   const [results, setResults] = useState<LynchResultItem[]>([])
+  
+  // Sample data for demo when API fails
+  const SAMPLE_DATA: LynchResultItem[] = [
+    { ticker: 'AAPL', empresa: 'Apple Inc.', bolsa: 'NASDAQ', sector: 'Technology', industria: 'Consumer Electronics', precioActual: 189.84, marketCap: 2890000000000, peTrailing: 29.5, peForward: 25.2, debtToEquity: 180, epsGrowthRate: 18.5, pegRatio: 1.6, score: 5, criteriaMet: [true, true, false, true, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: false, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
+    { ticker: 'MSFT', empresa: 'Microsoft Corporation', bolsa: 'NASDAQ', sector: 'Technology', industria: 'Software', precioActual: 415.50, marketCap: 3090000000000, peTrailing: 36.8, peForward: 28.4, debtToEquity: 45, epsGrowthRate: 22.1, pegRatio: 1.3, score: 5, criteriaMet: [true, true, true, true, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
+    { ticker: 'GOOGL', empresa: 'Alphabet Inc.', bolsa: 'NASDAQ', sector: 'Technology', industria: 'Internet', precioActual: 174.90, marketCap: 2180000000000, peTrailing: 24.5, peForward: 19.8, debtToEquity: 28, epsGrowthRate: 25.3, pegRatio: 0.8, score: 6, criteriaMet: [true, true, true, true, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
+    { ticker: 'AMZN', empresa: 'Amazon.com Inc.', bolsa: 'NASDAQ', sector: 'Consumer Cyclical', industria: 'E-Commerce', precioActual: 227.63, marketCap: 2370000000000, peTrailing: 42.3, peForward: 32.1, debtToEquity: 115, epsGrowthRate: 28.7, pegRatio: 1.1, score: 4, criteriaMet: [false, true, true, true, true, true], criteriaDetails: { peTrailingOk: false, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
+    { ticker: 'NVDA', empresa: 'NVIDIA Corporation', bolsa: 'NASDAQ', sector: 'Technology', industria: 'Semiconductors', precioActual: 875.28, marketCap: 2160000000000, peTrailing: 65.4, peForward: 45.2, debtToEquity: 35, epsGrowthRate: 95.2, pegRatio: 0.5, score: 5, criteriaMet: [false, true, true, true, true, true], criteriaDetails: { peTrailingOk: false, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
+    { ticker: 'JPM', empresa: 'JPMorgan Chase & Co.', bolsa: 'NYSE', sector: 'Financial', industria: 'Banks', precioActual: 198.47, marketCap: 571000000000, peTrailing: 11.2, peForward: 10.5, debtToEquity: 220, epsGrowthRate: 8.5, pegRatio: 1.3, score: 5, criteriaMet: [true, true, false, false, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: false, epsGrowthOk: false, pegOk: true, marketCapOk: true } },
+    { ticker: 'JNJ', empresa: 'Johnson & Johnson', bolsa: 'NYSE', sector: 'Healthcare', industria: 'Pharmaceuticals', precioActual: 156.74, marketCap: 377000000000, peTrailing: 15.8, peForward: 14.2, debtToEquity: 55, epsGrowthRate: 6.2, pegRatio: 2.3, score: 4, criteriaMet: [true, true, true, false, false, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: false, pegOk: false, marketCapOk: true } },
+    { ticker: 'V', empresa: 'Visa Inc.', bolsa: 'NYSE', sector: 'Financial', industria: 'Credit Services', precioActual: 279.85, marketCap: 573000000000, peTrailing: 30.5, peForward: 26.8, debtToEquity: 65, epsGrowthRate: 14.8, pegRatio: 1.8, score: 5, criteriaMet: [true, true, true, true, true, true], criteriaDetails: { peTrailingOk: true, peForwardOk: true, debtToEquityOk: true, epsGrowthOk: true, pegOk: true, marketCapOk: true } },
+  ]
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [cachedAt, setCachedAt] = useState<string | null>(null)
@@ -55,10 +67,18 @@ export default function ResearchTab() {
       const res = await fetch(url)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      setResults(data.results || [])
+      if (data.results && data.results.length > 0) {
+        setResults(data.results)
+      } else {
+        // Use sample data when API returns empty
+        setResults(SAMPLE_DATA)
+        setError('Datos de ejemplo (Yahoo Finance no disponible)')
+      }
       if (data.cachedAt) setCachedAt(data.cachedAt)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar el screener')
+      // Use sample data on error
+      setResults(SAMPLE_DATA)
+      setError('Datos de ejemplo (error de conexión)')
     } finally {
       setLoading(false)
     }
