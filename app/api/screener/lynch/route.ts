@@ -18,7 +18,10 @@ export async function GET(req: NextRequest) {
   const secret = searchParams.get('secret') || ''
 
   if (refresh && secret !== CRON_SECRET) {
-    return NextResponse.json({ error: 'Invalid secret' }, { status: 401 })
+    // Allow refresh for authenticated users (without secret) or for cron with secret
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid secret' }, { status: 401 })
+    }
   }
 
   if (!refresh) {
