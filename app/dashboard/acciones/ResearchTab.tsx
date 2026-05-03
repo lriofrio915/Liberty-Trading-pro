@@ -239,7 +239,7 @@ export default function ResearchTab() {
                       <span className={details[1] ? 'text-green-400' : 'text-red-400/60'}>{r.peForward?.toFixed(1) || '—'}</span>
                     </td>
                     <td className="p-3 text-center font-mono">
-                      <span className={details[2] ? 'text-green-400' : 'text-red-400/60'}>{r.debtToEquity?.toFixed(1) || '—'}</span>
+                      <span className={details[2] ? 'text-green-400' : 'text-red-400/60'}>{r.debtToEquity != null && r.debtToEquity > 0 ? `${r.debtToEquity.toFixed(1)}%` : '—'}</span>
                     </td>
                     <td className="p-3 text-center font-mono">
                       <span className={details[3] ? 'text-green-400' : 'text-red-400/60'}>{r.epsGrowthRate != null ? `${r.epsGrowthRate.toFixed(1)}%` : '—'}</span>
