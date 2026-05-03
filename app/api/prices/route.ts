@@ -12,7 +12,7 @@ interface PriceItem {
 }
 
 // ── Module-level cache (survives across warm invocations) ──────────────────────
-const CACHE_TTL = 15_000 // 15 seconds
+const CACHE_TTL = 60_000 // 60 seconds
 
 let memCache: { prices: PriceItem[]; ts: number } | null = null
 

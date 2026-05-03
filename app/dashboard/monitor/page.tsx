@@ -46,6 +46,9 @@ const TIMESPANS: { value: Timespan; label: string }[] = [
   { value: '7d', label: '7d' },
 ]
 
+const PRICES_CACHE_KEY = 'monitor-prices-cache'
+const PRICES_CACHE_TTL = 45_000
+
 const STRESS_CONFIG: Record<string, { label: string; desc: string; dangerIfHigh?: boolean }> = {
   'VIX':          { label: 'VIX',     desc: 'Volatilidad — miedo del mercado' },
   '^VIX':         { label: 'VIX',     desc: 'Volatilidad — miedo del mercado' },
@@ -105,9 +108,27 @@ export default function MonitorPage() {
 
   const fetchPrices = useCallback(async () => {
     try {
+      // Check localStorage cache first
+      const cached = localStorage.getItem(PRICES_CACHE_KEY)
+      if (cached) {
+        const { prices: cachedPrices, ts } = JSON.parse(cached)
+        if (Date.now() - ts < PRICES_CACHE_TTL) {
+          setPrices(cachedPrices)
+          setPricesLoading(false)
+          return
+        }
+      }
+
       const res = await fetch('/api/prices')
       const data = await res.json()
-      if (data.prices?.length) setPrices(data.prices)
+      if (data.prices?.length) {
+        // Cache in localStorage
+        localStorage.setItem(PRICES_CACHE_KEY, JSON.stringify({
+          prices: data.prices,
+          ts: Date.now()
+        }))
+        setPrices(data.prices)
+      }
     } finally {
       setPricesLoading(false)
     }

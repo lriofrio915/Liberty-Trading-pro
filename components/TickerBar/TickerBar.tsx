@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 
 interface PriceItem {
   symbol: string
@@ -12,6 +12,8 @@ interface PriceItem {
 }
 
 const TICKER_SYMBOLS = ['NQ=F', 'BTC/USD', 'ETH/USD', 'GC=F', 'CL=F', 'EURUSD=X']
+const CACHE_KEY = 'ticker-prices-cache'
+const CACHE_TTL = 45_000 // 45 seconds - stay under server's 60s cache
 
 function formatPrice(symbol: string, price: number): string {
   if (!price || isNaN(price)) return '—'
@@ -26,10 +28,26 @@ export default function TickerBar() {
 
   const fetchPrices = useCallback(async () => {
     try {
+      // Check localStorage cache first
+      const cached = localStorage.getItem(CACHE_KEY)
+      if (cached) {
+        const { prices: cachedPrices, ts } = JSON.parse(cached)
+        if (Date.now() - ts < CACHE_TTL) {
+          setLastPrices(cachedPrices)
+          setPrices(cachedPrices)
+          return
+        }
+      }
+
       const res = await fetch('/api/prices')
       if (!res.ok) return
       const data = await res.json()
       if (data.prices?.length) {
+        // Cache in localStorage
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          prices: data.prices,
+          ts: Date.now()
+        }))
         setLastPrices(data.prices)
         setPrices(data.prices)
       }
