@@ -235,31 +235,20 @@ export async function fetchTickerFinancials(ticker: string): Promise<TickerFinan
     epsTrailing: safeNum(keyStats.trailingEps?.raw),
     epsForward: safeNum(keyStats.forwardEps?.raw),
     debtToEquity: (() => {
-      const yahooDE = safeNum(keyStats.debtToEquity?.raw)
-      // If Yahoo provides a valid D/E, use it
-      if (yahooDE != null && yahooDE > 0) return yahooDE
-      
-      // Fallback 1: Calculate from totalDebt / equity
       const debt = safeNum(keyStats.totalDebt?.raw) ?? 0
       const cash = safeNum(finData.totalCash?.raw) ?? 0
       const mktCap = safeNum(price.marketCap?.raw) ?? 0
-      if (debt > 0 && mktCap > 0) {
-        const equity = mktCap - debt + cash
-        if (equity > 0) return (debt / equity) * 100
+      
+      // Calculate NET debt-to-equity (deuda neta = deuda - efectivo)
+      if (mktCap > 0) {
+        const netDebt = Math.max(0, debt - cash) // Deuda neta
+        const equity = Math.max(1, mktCap - debt + cash) // Equity approximated
+        if (equity > 0) return (netDebt / equity) * 100
       }
       
-      // Fallback 2: Calculate from Enterprise Value (EV) - more reliable
-      const ev = safeNum(keyStats.enterpriseValue?.raw) ?? 0
-      if (ev > 0 && mktCap > 0) {
-        // Net Debt = EV - Market Cap + Cash
-        const netDebt = ev - mktCap + cash
-        if (netDebt > 0) {
-          const equity = mktCap
-          return (netDebt / equity) * 100
-        }
-      }
-      
-      return yahooDE ?? null
+      // Fallback: Use Yahoo's D/E if available
+      const yahooDE = safeNum(keyStats.debtToEquity?.raw)
+      return yahooDE != null && yahooDE > 0 ? yahooDE : null
     })(),
     pegRatio: safeNum(keyStats.pegRatio?.raw),
     deudaTotal: safeNum(keyStats.totalDebt?.raw),
