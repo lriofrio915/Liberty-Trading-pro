@@ -431,7 +431,7 @@ function OppTable({ opps, isAdmin, livePrices, onDelete, onStatusChange, onPrice
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="border-b border-[var(--border)]" style={{ background: 'var(--bg-secondary)' }}>
-            {['Ticker', 'Empresa', 'Fecha', 'P.Compra', 'P.Actual', 'P.Obj.', 'Rendim.', 'Estado', 'Acc.'].map(col => (
+            {['#', 'Ticker', 'Empresa', 'Fecha', 'P.Compra', 'P.Actual', 'P.Obj.', 'Rendim.', 'Estado', 'Acc.'].map(col => (
               <th
                 key={col}
                 className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest whitespace-nowrap"
@@ -457,10 +457,14 @@ function OppTable({ opps, isAdmin, livePrices, onDelete, onStatusChange, onPrice
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
+                {/* # */}
+                <td className="px-4 py-3 whitespace-nowrap text-center">
+                  <span className="font-mono text-sm font-bold" style={{ color: 'var(--text-muted)' }}>{idx + 1}</span>
+                </td>
+
                 {/* Ticker */}
                 <td className="px-4 py-3 whitespace-nowrap">
                   <span className="font-black text-sm" style={{ color: 'var(--gold)' }}>{opp.ticker}</span>
-                  <span className="ml-1 text-xs font-mono" style={{ color: 'var(--text-muted)' }}>#{idx + 1}</span>
                 </td>
 
                 {/* Empresa */}
