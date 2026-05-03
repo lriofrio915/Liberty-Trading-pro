@@ -234,7 +234,16 @@ export async function fetchTickerFinancials(ticker: string): Promise<TickerFinan
     margenNeto: safeNum(finData.profitMargins?.raw) != null ? (safeNum(finData.profitMargins.raw)! * 100) : null,
     epsTrailing: safeNum(keyStats.trailingEps?.raw),
     epsForward: safeNum(keyStats.forwardEps?.raw),
-    debtToEquity: safeNum(keyStats.debtToEquity?.raw),
+    debtToEquity: safeNum(keyStats.debtToEquity?.raw) ?? (() => {
+      // Fallback: calculate D/E from totalDebt / equity (equity = marketCap - debt + cash)
+      const debt = safeNum(keyStats.totalDebt?.raw) ?? 0
+      const cash = safeNum(finData.totalCash?.raw) ?? 0
+      const mktCap = safeNum(price.marketCap?.raw) ?? 0
+      if (mktCap <= 0) return null
+      const equity = mktCap - debt + cash
+      if (equity <= 0) return null
+      return (debt / equity) * 100
+    })(),
     pegRatio: safeNum(keyStats.pegRatio?.raw),
     deudaTotal: safeNum(keyStats.totalDebt?.raw),
     caja: safeNum(finData.totalCash?.raw),
