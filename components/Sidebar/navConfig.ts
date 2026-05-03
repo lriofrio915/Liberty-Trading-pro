@@ -24,10 +24,11 @@ export const navGroups: NavGroup[] = [
   {
     label: 'Club',
     items: [
-      { href: '/dashboard/futuros',  icon: '📈', label: 'Futuros',           requiresClub: true },
-      { href: '/dashboard/acciones', icon: '💼', label: 'Acciones',          requiresClub: true },
-      { href: '/dashboard/analisis', icon: '📊', label: 'CFDs',              requiresClub: true },
-      { href: '/dashboard/vibe',     icon: '🧠', label: 'Laboratorio Quant', requiresClub: true },
+      { href: '/dashboard/futuros',     icon: '📈', label: 'Futuros',           requiresClub: true },
+      { href: '/dashboard/acciones',   icon: '💼', label: 'Acciones',          requiresClub: true },
+      { href: '/dashboard/analisis',   icon: '📊', label: 'CFDs',              requiresClub: true },
+      { href: '/dashboard/vibe',       icon: '🧠', label: 'Laboratorio Quant', requiresClub: true },
+      { href: '/dashboard/fincept',   icon: '⚡', label: 'Fincept Terminal',  requiresClub: true },
     ],
   },
 ]
