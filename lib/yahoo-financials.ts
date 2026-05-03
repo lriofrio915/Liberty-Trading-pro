@@ -235,20 +235,29 @@ export async function fetchTickerFinancials(ticker: string): Promise<TickerFinan
     epsTrailing: safeNum(keyStats.trailingEps?.raw),
     epsForward: safeNum(keyStats.forwardEps?.raw),
     debtToEquity: (() => {
+      // Use Yahoo's D/E directly if available
+      const yahooDE = safeNum(keyStats.debtToEquity?.raw)
+      if (yahooDE != null && yahooDE >= 0) return yahooDE
+      
+      // Fallback: Calculate from Enterprise Value
+      const ev = safeNum(keyStats.enterpriseValue?.raw) ?? 0
+      const mktCap = safeNum(price.marketCap?.raw) ?? 0
       const debt = safeNum(keyStats.totalDebt?.raw) ?? 0
       const cash = safeNum(finData.totalCash?.raw) ?? 0
-      const mktCap = safeNum(price.marketCap?.raw) ?? 0
       
-      // Calculate NET debt-to-equity (deuda neta = deuda - efectivo)
-      if (mktCap > 0) {
-        const netDebt = Math.max(0, debt - cash) // Deuda neta
-        const equity = Math.max(1, mktCap - debt + cash) // Equity approximated
+      if (ev > 0 && mktCap > 0) {
+        // Net Debt = EV - Market Cap (approximation of debt - cash)
+        const netDebt = ev - mktCap
+        const equity = mktCap
         if (equity > 0) return (netDebt / equity) * 100
       }
       
-      // Fallback: Use Yahoo's D/E if available
-      const yahooDE = safeNum(keyStats.debtToEquity?.raw)
-      return yahooDE != null && yahooDE > 0 ? yahooDE : null
+      // Final fallback: total debt to market cap
+      if (debt > 0 && mktCap > 0) {
+        return (debt / mktCap) * 100
+      }
+      
+      return null
     })(),
     pegRatio: safeNum(keyStats.pegRatio?.raw),
     deudaTotal: safeNum(keyStats.totalDebt?.raw),
