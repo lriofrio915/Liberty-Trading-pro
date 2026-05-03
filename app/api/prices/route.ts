@@ -11,9 +11,33 @@ interface PriceItem {
   up: boolean
 }
 
-// ── Module-level cache (survives across warm invocations) ──────────────────────
+// ── Configuration ───────────────────────────────────────────────────────────────
 const CACHE_TTL = 60_000 // 60 seconds
+const RATE_LIMIT_WINDOW = 60_000 // 1 minute
+const RATE_LIMIT_MAX = 30 // max requests per IP in window
 
+// ── In-memory rate limiting ───────────────────────────────────────────────────
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const record = rateLimitMap.get(ip)
+
+  if (!record || now > record.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW })
+    return true
+  }
+
+  if (record.count >= RATE_LIMIT_MAX) {
+    return false
+  }
+
+  record.count++
+  return true
+}
+
+// ── Request coalescing (prevent thundering herd) ───────────────────────────────
+let pendingFetch: Promise<PriceItem[]> | null = null
 let memCache: { prices: PriceItem[]; ts: number } | null = null
 
 // ── Symbol name map ────────────────────────────────────────────────────────────
@@ -88,51 +112,89 @@ async function fetchCrypto(yahooSymbol: string, display: string, name: string): 
 
 // ── Main handler ───────────────────────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Rate limiting by IP
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
+    ?? request.headers.get('x-real-ip') 
+    ?? 'unknown'
+  
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json(
+      { error: 'Too many requests', retryAfter: RATE_LIMIT_WINDOW / 1000 },
+      { status: 429, headers: { 'Retry-After': String(RATE_LIMIT_WINDOW / 1000) } }
+    )
+  }
+
   // Serve from cache if still fresh
   if (memCache && Date.now() - memCache.ts < CACHE_TTL) {
     return NextResponse.json(
       { prices: memCache.prices, timestamp: memCache.ts, cached: true },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
+          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+          'X-Cache': 'HIT',
         },
       }
     )
   }
 
-  const [nq, sp500, rut, gc, cl, eurusd, vix, dxy, cop, mxn, brl, btc, eth, sol] = await Promise.allSettled([
-    fetchYahoo('NQ=F'),
-    fetchYahoo('%5EGSPC'),
-    fetchYahoo('%5ERUT'),
-    fetchYahoo('GC=F'),
-    fetchYahoo('CL=F'),
-    fetchYahoo('EURUSD=X'),
-    fetchYahoo('%5EVIX'),
-    fetchDXY(),
-    fetchYahoo('USDCOP=X'),
-    fetchYahoo('USDMXN=X'),
-    fetchYahoo('USDBRL=X'),
-    fetchCrypto('BTC-USD', 'BTC/USD', 'Bitcoin'),
-    fetchCrypto('ETH-USD', 'ETH/USD', 'Ethereum'),
-    fetchCrypto('SOL-USD', 'SOL/USD', 'Solana'),
-  ])
-
-  const prices: PriceItem[] = []
-  for (const result of [nq, sp500, rut, gc, cl, eurusd, vix, dxy, cop, mxn, brl, btc, eth, sol]) {
-    if (result.status === 'fulfilled' && result.value) {
-      prices.push(result.value)
-    }
+  // Request coalescing - if there's already a pending fetch, wait for it
+  if (pendingFetch) {
+    const prices = await pendingFetch
+    return NextResponse.json(
+      { prices, timestamp: memCache?.ts ?? Date.now(), cached: false },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+          'X-Cache': 'HIT-STALE',
+        },
+      }
+    )
   }
 
-  // Store in module-level cache
-  memCache = { prices, ts: Date.now() }
+  // Create and store the pending fetch promise for coalescing
+  pendingFetch = (async () => {
+    const [nq, sp500, rut, gc, cl, eurusd, vix, dxy, cop, mxn, brl, btc, eth, sol] = await Promise.allSettled([
+      fetchYahoo('NQ=F'),
+      fetchYahoo('%5EGSPC'),
+      fetchYahoo('%5ERUT'),
+      fetchYahoo('GC=F'),
+      fetchYahoo('CL=F'),
+      fetchYahoo('EURUSD=X'),
+      fetchYahoo('%5EVIX'),
+      fetchDXY(),
+      fetchYahoo('USDCOP=X'),
+      fetchYahoo('USDMXN=X'),
+      fetchYahoo('USDBRL=X'),
+      fetchCrypto('BTC-USD', 'BTC/USD', 'Bitcoin'),
+      fetchCrypto('ETH-USD', 'ETH/USD', 'Ethereum'),
+      fetchCrypto('SOL-USD', 'SOL/USD', 'Solana'),
+    ])
+
+    const prices: PriceItem[] = []
+    for (const result of [nq, sp500, rut, gc, cl, eurusd, vix, dxy, cop, mxn, brl, btc, eth, sol]) {
+      if (result.status === 'fulfilled' && result.value) {
+        prices.push(result.value)
+      }
+    }
+
+    // Store in module-level cache
+    memCache = { prices, ts: Date.now() }
+    
+    // Clear pending fetch
+    pendingFetch = null
+    
+    return prices
+  })()
+
+  const prices = await pendingFetch
 
   return NextResponse.json(
-    { prices, timestamp: memCache.ts, cached: false },
+    { prices, timestamp: memCache?.ts ?? Date.now(), cached: false },
     {
       headers: {
-        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30',
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+        'X-Cache': 'MISS',
       },
     }
   )

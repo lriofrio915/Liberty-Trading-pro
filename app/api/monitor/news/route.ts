@@ -18,7 +18,39 @@ const FEEDS: { url: string; source: string }[] = [
   { url: 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada', source: 'El País' },
 ]
 
-export async function GET() {
+// ── Rate limiting ──────────────────────────────────────────────────────────────
+const NEWS_RATE_LIMIT_WINDOW = 60_000
+const NEWS_RATE_LIMIT_MAX = 20
+const newsRateLimitMap = new Map<string, { count: number; resetAt: number }>()
+
+function checkNewsRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const record = newsRateLimitMap.get(ip)
+
+  if (!record || now > record.resetAt) {
+    newsRateLimitMap.set(ip, { count: 1, resetAt: now + NEWS_RATE_LIMIT_WINDOW })
+    return true
+  }
+
+  if (record.count >= NEWS_RATE_LIMIT_MAX) {
+    return false
+  }
+
+  record.count++
+  return true
+}
+
+export async function GET(request: Request) {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
+    ?? request.headers.get('x-real-ip') 
+    ?? 'unknown'
+
+  if (!checkNewsRateLimit(ip)) {
+    return NextResponse.json(
+      { error: 'Too many requests', retryAfter: NEWS_RATE_LIMIT_WINDOW / 1000 },
+      { status: 429, headers: { 'Retry-After': String(NEWS_RATE_LIMIT_WINDOW / 1000) } }
+    )
+  }
   const parser = new Parser({
     customFields: {
       item: [
