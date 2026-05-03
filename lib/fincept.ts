@@ -51,6 +51,8 @@ export interface VaRResult {
 
 async function callFinceptProxy<T>(endpoint: string, body: Record<string, unknown>): Promise<T | null> {
   try {
+    console.log('Calling Fincept proxy for:', endpoint)
+    
     const res = await fetch(`${PROXY_URL}?endpoint=${endpoint}`, {
       method: 'POST',
       headers: {
@@ -59,12 +61,16 @@ async function callFinceptProxy<T>(endpoint: string, body: Record<string, unknow
       body: JSON.stringify(body),
     })
 
+    console.log('Response status:', res.status)
+    
     if (!res.ok) {
-      console.error('Fincept proxy error:', res.status, await res.text())
+      const errorText = await res.text()
+      console.error('Fincept proxy error:', res.status, errorText)
       return null
     }
 
     const json: FinceptResponse<T> = await res.json()
+    console.log('Response data:', JSON.stringify(json).slice(0, 200))
     return json.success && json.data ? json.data : null
   } catch (error) {
     console.error('Fincept proxy fetch error:', error)

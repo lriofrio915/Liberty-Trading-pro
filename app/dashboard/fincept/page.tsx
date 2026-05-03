@@ -1,30 +1,177 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import {
-  calculateBlackScholes,
-  calculateBondPrice,
-  calculateImpliedVolatility,
-  calculateBinomialTree,
-  getUserProfile,
-  type BlackScholesResult,
-  type BondPriceResult,
-  type FinceptUserProfile,
-} from '@/lib/fincept'
+import { useState, useCallback, useEffect } from 'react'
+
+interface BSResult {
+  price: number
+  delta: number
+  gamma: number
+  vega: number
+  theta: number
+  rho: number
+  optionType?: string
+}
+
+interface BondResult {
+  price: number
+  duration: number
+  convexity: number
+  yieldToMaturity: number
+}
+
+interface IVResult {
+  impliedVolatility: number
+}
+
+type Result = BSResult | BondResult | IVResult | { price: number; delta: number } | null
+
+// ── Local Black-Scholes Implementation ─────────────────────────────────────────
+function blackScholesLocal(spot: number, strike: number, rate: number, volatility: number, timeToMaturity: number, optionType: 'call' | 'put') {
+  const d1 = (Math.log(spot / strike) + (rate + (volatility * volatility) / 2) * timeToMaturity) / (volatility * Math.sqrt(timeToMaturity))
+  const d2 = d1 - volatility * Math.sqrt(timeToMaturity)
+  
+  const nd1 = normalCDF(d1)
+  const nd2 = normalCDF(d2)
+  const nd1Prime = (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-(d1 * d1) / 2)
+  
+  let price: number
+  let delta: number
+  let gamma = nd1Prime / (spot * volatility * Math.sqrt(timeToMaturity))
+  let vega = spot * Math.sqrt(timeToMaturity) * nd1Prime / 100
+  let theta: number
+  
+  if (optionType === 'call') {
+    price = spot * nd1 - strike * Math.exp(-rate * timeToMaturity) * nd2
+    delta = nd1
+    theta = (-(spot * nd1Prime * volatility) / (2 * Math.sqrt(timeToMaturity)) - rate * strike * Math.exp(-rate * timeToMaturity) * nd2)
+  } else {
+    price = strike * Math.exp(-rate * timeToMaturity) * (1 - nd2) - spot * (1 - nd1)
+    delta = nd1 - 1
+    gamma = nd1Prime / (spot * volatility * Math.sqrt(timeToMaturity))
+    theta = (-(spot * nd1Prime * volatility) / (2 * Math.sqrt(timeToMaturity)) + rate * strike * Math.exp(-rate * timeToMaturity) * (1 - nd2))
+  }
+  
+  theta = theta / 365 // Daily theta
+  
+  return { price, delta, gamma, vega, theta, rho: 0 }
+}
+
+function normalCDF(x: number): number {
+  const a1 = 0.254829592
+  const a2 = -0.284496736
+  const a3 = 1.421413741
+  const a4 = -1.453152027
+  const a5 = 1.061405429
+  const p = 0.3275911
+  const sign = x < 0 ? -1 : 1
+  x = Math.abs(x) / Math.sqrt(2)
+  const t = 1 / (1 + p * x)
+  const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x)
+  return 0.5 * (1 + sign * y)
+}
+
+// ── Local Bond Pricing ─────────────────────────────────────────────────────────
+function bondPriceLocal(faceValue: number, couponRate: number, yieldRate: number, yearsToMaturity: number, frequency: number) {
+  const periods = yearsToMaturity * frequency
+  const coupon = (couponRate * faceValue) / frequency
+  const periodicYield = yieldRate / frequency
+  
+  let pvCoupons = 0
+  for (let i = 1; i <= periods; i++) {
+    pvCoupons += coupon / Math.pow(1 + periodicYield, i)
+  }
+  
+  const pvFace = faceValue / Math.pow(1 + periodicYield, periods)
+  const price = pvCoupons + pvFace
+  
+  // Duration and Convexity
+  let weightedTime = 0
+  for (let i = 1; i <= periods; i++) {
+    const pv = coupon / Math.pow(1 + periodicYield, i)
+    weightedTime += (i / frequency) * pv
+  }
+  weightedTime += periods / frequency * pvFace
+  
+  const duration = weightedTime / price
+  let convexitySum = 0
+  for (let i = 1; i <= periods; i++) {
+    const pv = coupon / Math.pow(1 + periodicYield, i)
+    convexitySum += (i * (i + 1) * pv) / Math.pow(1 + periodicYield, 2)
+  }
+  convexitySum += (periods * (periods + 1) * pvFace) / Math.pow(1 + periodicYield, 2)
+  const convexity = convexitySum / (price * Math.pow(frequency, 2))
+  
+  return { price, duration, convexity, yieldToMaturity: yieldRate }
+}
+
+// ── Local Implied Volatility (Newton-Raphson) ────────────────────────────────────
+function impliedVolLocal(spot: number, strike: number, rate: number, optionPrice: number, timeToMaturity: number, optionType: 'call' | 'put') {
+  let sigma = 0.3 // Initial guess
+  for (let i = 0; i < 100; i++) {
+    const bs = blackScholesLocal(spot, strike, rate, sigma, timeToMaturity, optionType)
+    const diff = bs.price - optionPrice
+    if (Math.abs(diff) < 0.0001) break
+    
+    // Vega (for Newton-Raphson)
+    const d1 = (Math.log(spot / strike) + (rate + (sigma * sigma) / 2) * timeToMaturity) / (sigma * Math.sqrt(timeToMaturity))
+    const vega = spot * Math.sqrt(timeToMaturity) * (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-(d1 * d1) / 2)
+    
+    if (Math.abs(vega) < 0.0001) break
+    sigma = sigma - diff / vega
+  }
+  return sigma
+}
+
+// ── Local Binomial Tree ─────────────────────────────────────────────────────────
+function binomialTreeLocal(spot: number, strike: number, rate: number, volatility: number, timeToMaturity: number, optionType: 'call' | 'put', steps: number = 50): { price: number; delta: number } {
+  const dt = timeToMaturity / steps
+  const u = Math.exp(volatility * Math.sqrt(dt))
+  const d = 1 / u
+  const p = (Math.exp(rate * dt) - d) / (u - d)
+  
+  const prices: number[][] = []
+  for (let i = 0; i <= steps; i++) {
+    prices[i] = []
+    for (let j = 0; j <= i; j++) {
+      prices[i][j] = spot * Math.pow(u, i - j) * Math.pow(d, j)
+    }
+  }
+  
+  // Initialize option values at maturity
+  let values: number[] = []
+  for (let j = 0; j <= steps; j++) {
+    const price = prices[steps][j]
+    if (optionType === 'call') {
+      values.push(Math.max(0, price - strike))
+    } else {
+      values.push(Math.max(0, strike - price))
+    }
+  }
+  
+  // Backward induction
+  for (let i = steps - 1; i >= 0; i--) {
+    for (let j = 0; j <= i; j++) {
+      const price = prices[i][j]
+      const exercise = optionType === 'call' ? Math.max(0, price - strike) : Math.max(0, strike - price)
+      const hold = Math.exp(-rate * dt) * (p * values[j] + (1 - p) * values[j + 1])
+      values[j] = Math.max(exercise, hold)
+    }
+  }
+  
+  const price = values[0]
+  // Delta approximation
+  const delta = (binomialTreeLocal(spot * 1.01, strike, rate, volatility, timeToMaturity, optionType, steps).price - price) / (spot * 0.01)
+  
+  return { price, delta }
+}
 
 type Tool = 'options' | 'bond' | 'iv' | 'binomial'
 
 export default function FinceptTerminalPage() {
   const [tool, setTool] = useState<Tool>('options')
-  const [profile, setProfile] = useState<FinceptUserProfile | null>(null)
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<BlackScholesResult | BondPriceResult | number | null>(null)
+  const [result, setResult] = useState<Result>(null)
   const [error, setError] = useState<string | null>(null)
-
-  // Load user profile
-  useEffect(() => {
-    getUserProfile().then(setProfile).catch(() => {})
-  }, [])
 
   // ── Option Pricing State ───────────────────────────────────────────────────────
   const [optionParams, setOptionParams] = useState({
@@ -71,26 +218,56 @@ export default function FinceptTerminalPage() {
     setError(null)
     setResult(null)
 
+    console.log('Starting calculation for tool:', tool)
+
     try {
+      // Use local implementations instead of API (Fincept API requires Pro tier for pricing)
       if (tool === 'options') {
-        const data = await calculateBlackScholes(optionParams)
-        if (data) setResult(data)
-        else setError('Error al calcular. Verifica los parámetros.')
+        console.log('Running local Black-Scholes with params:', optionParams)
+        const data = blackScholesLocal(
+          optionParams.spot,
+          optionParams.strike,
+          optionParams.rate,
+          optionParams.volatility,
+          optionParams.timeToMaturity,
+          optionParams.optionType
+        )
+        console.log('Black-Scholes result:', data)
+        setResult({ ...data, optionType: optionParams.optionType } as any)
       } else if (tool === 'bond') {
-        const data = await calculateBondPrice(bondParams)
-        if (data) setResult(data)
-        else setError('Error al calcular precio del bono.')
+        const data = bondPriceLocal(
+          bondParams.faceValue,
+          bondParams.couponRate,
+          bondParams.yield,
+          bondParams.yearsToMaturity,
+          bondParams.frequency
+        )
+        setResult({ ...data, price: data.price } as any)
       } else if (tool === 'iv') {
-        const data = await calculateImpliedVolatility(ivParams)
-        if (data !== null) setResult(data)
-        else setError('No se pudo calcular IV. Verifica el precio de la opción.')
+        const data = impliedVolLocal(
+          ivParams.spot,
+          ivParams.strike,
+          ivParams.rate,
+          ivParams.price,
+          ivParams.timeToMaturity,
+          ivParams.optionType
+        )
+        setResult({ impliedVolatility: data } as any)
       } else if (tool === 'binomial') {
-        const data = await calculateBinomialTree(binomialParams)
-        if (data) setResult({ price: data.price, delta: data.delta, gamma: 0, vega: 0, theta: 0, rho: 0 } as BlackScholesResult)
-        else setError('Error al calcular con árbol binomial.')
+        const data = binomialTreeLocal(
+          binomialParams.spot,
+          binomialParams.strike,
+          binomialParams.rate,
+          binomialParams.volatility,
+          binomialParams.timeToMaturity,
+          binomialParams.optionType,
+          binomialParams.steps
+        )
+        setResult({ price: data.price, delta: data.delta } as any)
       }
     } catch (e) {
-      setError('Error de conexión con Fincept API')
+      console.error('Calculation error:', e)
+      setError('Error de conexión: Verifica tu conexión a internet e intenta de nuevo.')
     } finally {
       setLoading(false)
     }
@@ -120,15 +297,9 @@ export default function FinceptTerminalPage() {
             <span className="gradient-gold">Fincept Terminal</span>
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Herramientas de finanzas cuantitativas · API de Fincept
+            Herramientas de finanzas cuantitativas · Cálculos locales
           </p>
         </div>
-        {profile && (
-          <div className="text-right">
-            <div className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>CRÉDITOS DISPONIBLES</div>
-            <div className="text-2xl font-black text-[var(--gold)]">{profile.credits}</div>
-          </div>
-        )}
       </div>
 
       {/* Tool Selection */}
@@ -455,25 +626,25 @@ export default function FinceptTerminalPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 rounded-lg" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
                   <div className="text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Precio</div>
-                  <div className="text-2xl font-black text-green-400">${(result as BlackScholesResult).price.toFixed(2)}</div>
+                  <div className="text-2xl font-black text-green-400">${(result as BSResult).price.toFixed(2)}</div>
                 </div>
                 <div className="p-4 rounded-lg" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
                   <div className="text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Delta</div>
-                  <div className="text-2xl font-mono" style={{ color: 'var(--text-primary)' }}>{(result as BlackScholesResult).delta.toFixed(4)}</div>
+                  <div className="text-2xl font-mono" style={{ color: 'var(--text-primary)' }}>{(result as BSResult).delta.toFixed(4)}</div>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3 rounded-lg text-center" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
                   <div className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Gamma</div>
-                  <div className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>{(result as BlackScholesResult).gamma.toFixed(4)}</div>
+                  <div className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>{(result as BSResult).gamma.toFixed(4)}</div>
                 </div>
                 <div className="p-3 rounded-lg text-center" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
                   <div className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Theta</div>
-                  <div className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>{(result as BlackScholesResult).theta.toFixed(4)}</div>
+                  <div className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>{(result as BSResult).theta.toFixed(4)}</div>
                 </div>
                 <div className="p-3 rounded-lg text-center" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
                   <div className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Vega</div>
-                  <div className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>{(result as BlackScholesResult).vega.toFixed(4)}</div>
+                  <div className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>{(result as BSResult).vega.toFixed(4)}</div>
                 </div>
               </div>
 
@@ -494,21 +665,21 @@ export default function FinceptTerminalPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 rounded-lg" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
                   <div className="text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Precio</div>
-                  <div className="text-2xl font-black" style={{ color: 'var(--gold)' }}>${(result as BondPriceResult).price.toFixed(2)}</div>
+                  <div className="text-2xl font-black" style={{ color: 'var(--gold)' }}>${(result as BondResult).price.toFixed(2)}</div>
                 </div>
                 <div className="p-4 rounded-lg" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
                   <div className="text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Yield</div>
-                  <div className="text-2xl font-mono text-green-400">{((result as BondPriceResult).yieldToMaturity * 100).toFixed(2)}%</div>
+                  <div className="text-2xl font-mono text-green-400">{((result as BondResult).yieldToMaturity * 100).toFixed(2)}%</div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 rounded-lg" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
                   <div className="text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Duration</div>
-                  <div className="text-xl font-mono" style={{ color: 'var(--text-primary)' }}>{(result as BondPriceResult).duration.toFixed(2)}</div>
+                  <div className="text-xl font-mono" style={{ color: 'var(--text-primary)' }}>{(result as BondResult).duration.toFixed(2)}</div>
                 </div>
                 <div className="p-4 rounded-lg" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
                   <div className="text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Convexidad</div>
-                  <div className="text-xl font-mono" style={{ color: 'var(--text-primary)' }}>{(result as BondPriceResult).convexity.toFixed(2)}</div>
+                  <div className="text-xl font-mono" style={{ color: 'var(--text-primary)' }}>{(result as BondResult).convexity.toFixed(2)}</div>
                 </div>
               </div>
 
