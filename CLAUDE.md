@@ -128,15 +128,22 @@ npm run dev                # Dev server en puerto 3000
 - **No hay tests actualmente:** El backtest engine (`algolab-backtest.ts`) es prioridad para cobertura
 - **Track Record público:** `/track-record/[slug]` es intencional — sirve como marketing
 
-## Skill Routing
+## Skill routing
 
-Cuando el usuario pida algo que corresponda a un skill disponible, invoca el skill antes de responder directamente.
+When the user's request matches an available skill, ALWAYS invoke it using the Skill
+tool as your FIRST action. Do NOT answer directly, do NOT use other tools first.
+The skill has specialized workflows that produce better results than ad-hoc answers.
 
-Reglas clave:
-- Bugs, errores, 500s → `/investigate`
-- Deploy, push, PR → `/ship`
-- QA, probar el sitio → `/qa`
-- Review de código → `/review`
-- Health check, calidad → `/health`
-- Diseño, UI/UX → `/design-review`
-- Arquitectura → `/plan-eng-review`
+Key routing rules:
+- Product ideas, "is this worth building", brainstorming → invoke office-hours
+- Bugs, errors, "why is this broken", 500 errors → invoke investigate
+- Ship, deploy, push, create PR → invoke ship
+- QA, test the site, find bugs → invoke qa
+- Code review, check my diff → invoke review
+- Update docs after shipping → invoke document-release
+- Weekly retro → invoke retro
+- Design system, brand → invoke design-consultation
+- Visual audit, design polish → invoke design-review
+- Architecture review → invoke plan-eng-review
+- Save progress, checkpoint, resume → invoke checkpoint
+- Code quality, health check → invoke health
