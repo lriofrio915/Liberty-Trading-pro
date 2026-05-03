@@ -179,6 +179,7 @@ export default function ResearchTab() {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-[var(--border)]">
+                <th className="text-center p-3 font-mono text-[10px] tracking-widest text-[var(--text-muted)]">Nº</th>
                 <th className="text-left p-3 font-mono text-[10px] tracking-widest text-[var(--text-muted)] cursor-pointer" onClick={() => handleSort('ticker')}>TICKER{sortArrow('ticker')}</th>
                 <th className="text-left p-3 font-mono text-[10px] tracking-widest text-[var(--text-muted)] cursor-pointer" onClick={() => handleSort('empresa')}>EMPRESA{sortArrow('empresa')}</th>
                 <th className="text-left p-3 font-mono text-[10px] tracking-widest text-[var(--text-muted)]">SECTOR</th>
@@ -193,7 +194,7 @@ export default function ResearchTab() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r) => {
+              {filtered.map((r, idx) => {
                 const details = [
                   r.criteriaDetails.peTrailingOk,
                   r.criteriaDetails.peForwardOk,
@@ -204,6 +205,7 @@ export default function ResearchTab() {
                 ]
                 return (
                   <tr key={r.ticker} className="border-t border-[var(--border)] hover:bg-white/[0.02]">
+                    <td className="p-3 text-center font-mono text-[var(--text-muted)]">{idx + 1}</td>
                     <td className="p-3 font-mono font-bold text-white">{r.ticker}</td>
                     <td className="p-3 text-[var(--text-secondary)] max-w-[180px] truncate" title={r.empresa}>{r.empresa}</td>
                     <td className="p-3 text-[var(--text-muted)] font-mono text-[10px]">{r.sector}</td>
