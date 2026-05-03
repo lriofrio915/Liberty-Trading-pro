@@ -1,10 +1,8 @@
 // lib/fincept.ts
 // Fincept API client for quantitative finance
+// Uses server-side proxy to avoid CORS issues from browser
 
-const FINCEPT_BASE_URL = 'https://api.fincept.in'
-
-// Use environment variable for API key - user provided their key
-const getApiKey = () => process.env.FINCEPT_API_KEY || 'fk_user_NrTr5aPzJ4W2M0kqlQWc8FDo5cYnSR3TzsW9yBwfsnk'
+const PROXY_URL = '/api/fincept'
 
 export interface FinceptResponse<T> {
   success: boolean
@@ -49,6 +47,49 @@ export interface VaRResult {
   percentile: number
 }
 
+// ── Private fetch function ──────────────────────────────────────────────────────
+
+async function callFinceptProxy<T>(endpoint: string, body: Record<string, unknown>): Promise<T | null> {
+  try {
+    const res = await fetch(`${PROXY_URL}?endpoint=${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+
+    if (!res.ok) {
+      console.error('Fincept proxy error:', res.status, await res.text())
+      return null
+    }
+
+    const json: FinceptResponse<T> = await res.json()
+    return json.success && json.data ? json.data : null
+  } catch (error) {
+    console.error('Fincept proxy fetch error:', error)
+    return null
+  }
+}
+
+async function callFinceptProxyGet(path: string): Promise<unknown | null> {
+  try {
+    const res = await fetch(`${PROXY_URL}?path=${encodeURIComponent(path)}`, {
+      method: 'GET',
+    })
+
+    if (!res.ok) {
+      console.error('Fincept proxy GET error:', res.status)
+      return null
+    }
+
+    return await res.json()
+  } catch (error) {
+    console.error('Fincept proxy GET fetch error:', error)
+    return null
+  }
+}
+
 // ── API Calls ───────────────────────────────────────────────────────────────────
 
 // Black-Scholes Option Pricing (Standard tier - 2 credits)
@@ -60,28 +101,14 @@ export async function calculateBlackScholes(params: {
   timeToMaturity: number
   optionType: 'call' | 'put'
 }): Promise<BlackScholesResult | null> {
-  try {
-    const res = await fetch(`${FINCEPT_BASE_URL}/quantlib/pricing/black-scholes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': getApiKey(),
-      },
-      body: JSON.stringify({
-        spot: params.spot,
-        strike: params.strike,
-        rate: params.rate,
-        volatility: params.volatility,
-        time_to_maturity: params.timeToMaturity,
-        option_type: params.optionType,
-      }),
-    })
-    const json: FinceptResponse<BlackScholesResult> = await res.json()
-    return json.success && json.data ? json.data : null
-  } catch (error) {
-    console.error('Fincept Black-Scholes error:', error)
-    return null
-  }
+  return callFinceptProxy<BlackScholesResult>('pricing/black-scholes', {
+    spot: params.spot,
+    strike: params.strike,
+    rate: params.rate,
+    volatility: params.volatility,
+    time_to_maturity: params.timeToMaturity,
+    option_type: params.optionType,
+  })
 }
 
 // Bond Pricing (Standard tier - 2 credits)
@@ -92,27 +119,13 @@ export async function calculateBondPrice(params: {
   yearsToMaturity: number
   frequency: number
 }): Promise<BondPriceResult | null> {
-  try {
-    const res = await fetch(`${FINCEPT_BASE_URL}/quantlib/pricing/bond-price`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': getApiKey(),
-      },
-      body: JSON.stringify({
-        face_value: params.faceValue,
-        coupon_rate: params.couponRate,
-        yield: params.yield,
-        years_to_maturity: params.yearsToMaturity,
-        frequency: params.frequency,
-      }),
-    })
-    const json: FinceptResponse<BondPriceResult> = await res.json()
-    return json.success && json.data ? json.data : null
-  } catch (error) {
-    console.error('Fincept Bond Pricing error:', error)
-    return null
-  }
+  return callFinceptProxy<BondPriceResult>('pricing/bond-price', {
+    face_value: params.faceValue,
+    coupon_rate: params.couponRate,
+    yield: params.yield,
+    years_to_maturity: params.yearsToMaturity,
+    frequency: params.frequency,
+  })
 }
 
 // Calculate Implied Volatility (Basic tier - 1 credit)
@@ -124,87 +137,53 @@ export async function calculateImpliedVolatility(params: {
   timeToMaturity: number
   optionType: 'call' | 'put'
 }): Promise<number | null> {
-  try {
-    const res = await fetch(`${FINCEPT_BASE_URL}/quantlib/solver/implied-volatility`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': getApiKey(),
-      },
-      body: JSON.stringify({
-        spot: params.spot,
-        strike: params.strike,
-        rate: params.rate,
-        price: params.price,
-        time_to_maturity: params.timeToMaturity,
-        option_type: params.optionType,
-      }),
-    })
-    const json: FinceptResponse<{ implied_volatility: number }> = await res.json()
-    return json.success && json.data ? json.data.implied_volatility : null
-  } catch (error) {
-    console.error('Fincept Implied Volatility error:', error)
-    return null
-  }
+  const result = await callFinceptProxy<{ implied_volatility: number }>('solver/implied-volatility', {
+    spot: params.spot,
+    strike: params.strike,
+    rate: params.rate,
+    price: params.price,
+    time_to_maturity: params.timeToMaturity,
+    option_type: params.optionType,
+  })
+  return result?.implied_volatility ?? null
 }
 
 // Yield Curve Construction (Standard tier - 2 credits)
 export async function buildYieldCurve(dates: string[], rates: number[]): Promise<YieldCurvePoint[] | null> {
-  try {
-    const res = await fetch(`${FINCEPT_BASE_URL}/quantlib/curves/zero-curve`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': getApiKey(),
-      },
-      body: JSON.stringify({
-        dates,
-        rates,
-        interpolation: 'cubic_spline',
-      }),
-    })
-    const json: FinceptResponse<{ curve: YieldCurvePoint[] }> = await res.json()
-    return json.success && json.data ? json.data.curve : null
-  } catch (error) {
-    console.error('Fincept Yield Curve error:', error)
-    return null
-  }
+  return callFinceptProxy<{ curve: YieldCurvePoint[] }>('curves/zero-curve', {
+    dates,
+    rates,
+    interpolation: 'cubic_spline',
+  })?.then(r => r?.curve ?? null)
 }
 
 // Portfolio VaR (Pro tier - 5 credits)
 export async function calculateVaR(returns: number[], confidenceLevel: number = 0.95): Promise<VaRResult | null> {
-  try {
-    const res = await fetch(`${FINCEPT_BASE_URL}/quantlib/risk/var`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': getApiKey(),
-      },
-      body: JSON.stringify({
-        returns,
-        confidence_level: confidenceLevel,
-      }),
-    })
-    const json: FinceptResponse<VaRResult> = await res.json()
-    return json.success && json.data ? json.data : null
-  } catch (error) {
-    console.error('Fincept VaR error:', error)
-    return null
-  }
+  return callFinceptProxy<VaRResult>('risk/var', {
+    returns,
+    confidence_level: confidenceLevel,
+  })
 }
 
 // Get User Profile & Credits (Free - 0 credits)
-export async function getUserProfile() {
+export interface FinceptUserProfile {
+  email: string
+  credits: number
+  plan: string
+}
+
+export async function getUserProfile(): Promise<FinceptUserProfile | null> {
   try {
-    const res = await fetch(`${FINCEPT_BASE_URL}/user/profile`, {
-      headers: {
-        'X-API-Key': getApiKey(),
-      },
-    })
-    const json = await res.json()
-    return json.success ? json.data : null
-  } catch (error) {
-    console.error('Fincept Profile error:', error)
+    const result = await callFinceptProxyGet('user/profile')
+    if (result && typeof result === 'object') {
+      const r = result as Record<string, unknown>
+      if (r.success === true && r.data && typeof r.data === 'object') {
+        const data = r.data as FinceptUserProfile
+        return data
+      }
+    }
+    return null
+  } catch {
     return null
   }
 }
@@ -217,27 +196,14 @@ export async function calculateBondYield(params: {
   yearsToMaturity: number
   frequency: number
 }): Promise<number | null> {
-  try {
-    const res = await fetch(`${FINCEPT_BASE_URL}/quantlib/solver/bond-yield`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': getApiKey(),
-      },
-      body: JSON.stringify({
-        face_value: params.faceValue,
-        price: params.price,
-        coupon_rate: params.couponRate,
-        years_to_maturity: params.yearsToMaturity,
-        frequency: params.frequency,
-      }),
-    })
-    const json: FinceptResponse<{ yield: number }> = await res.json()
-    return json.success && json.data ? json.data.yield : null
-  } catch (error) {
-    console.error('Fincept Bond Yield error:', error)
-    return null
-  }
+  const result = await callFinceptProxy<{ yield: number }>('solver/bond-yield', {
+    face_value: params.faceValue,
+    price: params.price,
+    coupon_rate: params.couponRate,
+    years_to_maturity: params.yearsToMaturity,
+    frequency: params.frequency,
+  })
+  return result?.yield ?? null
 }
 
 // Binomial Tree Option Pricing (Standard tier - 2 credits)
@@ -250,27 +216,13 @@ export async function calculateBinomialTree(params: {
   optionType: 'call' | 'put'
   steps?: number
 }): Promise<{ price: number; delta: number } | null> {
-  try {
-    const res = await fetch(`${FINCEPT_BASE_URL}/quantlib/pricing/binomial-tree`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': getApiKey(),
-      },
-      body: JSON.stringify({
-        spot: params.spot,
-        strike: params.strike,
-        rate: params.rate,
-        volatility: params.volatility,
-        time_to_maturity: params.timeToMaturity,
-        option_type: params.optionType,
-        steps: params.steps || 100,
-      }),
-    })
-    const json: FinceptResponse<{ price: number; delta: number }> = await res.json()
-    return json.success && json.data ? json.data : null
-  } catch (error) {
-    console.error('Fincept Binomial Tree error:', error)
-    return null
-  }
+  return callFinceptProxy<{ price: number; delta: number }>('pricing/binomial-tree', {
+    spot: params.spot,
+    strike: params.strike,
+    rate: params.rate,
+    volatility: params.volatility,
+    time_to_maturity: params.timeToMaturity,
+    option_type: params.optionType,
+    steps: params.steps || 100,
+  })
 }

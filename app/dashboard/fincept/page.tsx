@@ -9,19 +9,14 @@ import {
   getUserProfile,
   type BlackScholesResult,
   type BondPriceResult,
+  type FinceptUserProfile,
 } from '@/lib/fincept'
 
 type Tool = 'options' | 'bond' | 'iv' | 'binomial'
 
-interface UserProfile {
-  email: string
-  credits: number
-  plan: string
-}
-
 export default function FinceptTerminalPage() {
   const [tool, setTool] = useState<Tool>('options')
-  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [profile, setProfile] = useState<FinceptUserProfile | null>(null)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<BlackScholesResult | BondPriceResult | number | null>(null)
   const [error, setError] = useState<string | null>(null)
