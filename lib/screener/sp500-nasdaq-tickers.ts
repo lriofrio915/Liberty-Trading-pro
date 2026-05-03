@@ -70,18 +70,6 @@ export const NASDAQ100_TICKERS: string[] = [
 ]
 
 export function getLynchScreenerTickers(): string[] {
-  // Use top 100 most liquid tickers for faster processing
-  const TOP_TICKERS = [
-    'AAPL', 'MSFT', 'GOOG', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'BRKB', 'UNH',
-    'JNJ', 'V', 'XOM', 'JPM', 'WMT', 'PG', 'MA', 'HD', 'CVX', 'MRK',
-    'ABBV', 'LLY', 'PEP', 'KO', 'COST', 'AVGO', 'TMO', 'MCD', 'CSCO', 'ACN',
-    'ABT', 'DHR', 'BAC', 'DIS', 'ADBE', 'CRM', 'AMD', 'NFLX', 'INTC', 'NKE',
-    'TXN', 'CMCSA', 'PM', 'VZ', 'NEE', 'INTU', 'UNP', 'BA', 'RTX', 'IBM',
-    'HON', 'QCOM', 'AMGN', 'AMAT', 'SPGI', 'LOW', 'CAT', 'ORCL', 'GS', 'GE',
-    'AMT', 'MDT', 'NOW', 'SBUX', 'BLK', 'AXP', 'DE', 'BKNG', 'ISRG', 'GILD',
-    'ADP', 'LRCX', 'MU', 'SYK', 'CI', 'TJX', 'CVS', 'ETN', 'PLD', 'ADI',
-    'CB', 'MO', 'MMC', 'PFE', 'SCHW', 'UPS', 'BSX', 'C', 'REGN', 'ZTS',
-    'ELV', 'TGT', 'ITW', 'FI', 'COP', 'AEP', 'SLB', 'APD', 'WM', 'WM',
-  ]
-  return TOP_TICKERS
+  const set = new Set([...SP500_TICKERS, ...NASDAQ100_TICKERS])
+  return Array.from(set).sort()
 }

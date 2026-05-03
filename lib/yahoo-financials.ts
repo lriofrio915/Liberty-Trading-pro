@@ -318,8 +318,8 @@ DESCRIPCIÓN: ${d.descripcion}
 // ── Batch financials fetch (with delay to avoid rate limiting) ────────────────
 export async function fetchBatchFinancials(
   tickers: string[],
-  batchSize = 10,
-  delayMs = 1500,
+  batchSize = 12,
+  delayMs = 1200,
 ): Promise<TickerFinancials[]> {
   const results: TickerFinancials[] = []
   for (let i = 0; i < tickers.length; i += batchSize) {
