@@ -28,7 +28,6 @@ export const navGroups: NavGroup[] = [
       { href: '/dashboard/acciones',   icon: '💼', label: 'Acciones',          requiresClub: true },
       { href: '/dashboard/analisis',   icon: '📊', label: 'CFDs',              requiresClub: true },
       { href: '/dashboard/vibe',       icon: '🧠', label: 'Laboratorio Quant', requiresClub: true },
-      { href: '/dashboard/fincept',   icon: '⚡', label: 'Fincept Terminal',  requiresClub: true },
     ],
   },
 ]
