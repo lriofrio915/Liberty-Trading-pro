@@ -16,22 +16,29 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   const supabase = await createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // getSession() reads JWT from cookie locally — no network round-trip to Supabase.
+  // getUser() would add ~300-500ms per render (server-side token validation).
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user
 
   if (!user) redirect('/login')
 
+  // Single query: user fields + unread notification count in one DB round-trip.
   const dbUser = await prisma.user.findUnique({
     where: { authId: user.id },
-    select: { id: true, plan: true, trialEndsAt: true },
+    select: {
+      id: true,
+      plan: true,
+      trialEndsAt: true,
+      _count: { select: { notifications: { where: { read: false } } } },
+    },
   }).catch(() => null)
 
   const access = dbUser
     ? getEffectiveAccess({ plan: dbUser.plan, trialEndsAt: dbUser.trialEndsAt })
     : { isOnTrial: false, trialDaysLeft: null, trialExpired: false, canAccessClub: false, level: 'FREE' as const }
 
-  const initialNotifCount = dbUser
-    ? await prisma.notification.count({ where: { userId: dbUser.id, read: false } }).catch(() => 0)
-    : 0
+  const initialNotifCount = dbUser?._count?.notifications ?? 0
 
   return (
     <ThemeProvider>
