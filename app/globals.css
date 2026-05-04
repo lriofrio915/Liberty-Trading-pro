@@ -136,9 +136,13 @@ html, body {
   border-radius: 6px;
   border: none;
   cursor: pointer;
+  user-select: none;
   transition: all 0.2s;
   display: inline-block;
   text-align: center;
+}
+.btn-gold * {
+  cursor: pointer;
 }
 .btn-gold:hover {
   background: linear-gradient(135deg, var(--gold), var(--gold-light));

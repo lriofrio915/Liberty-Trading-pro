@@ -59,17 +59,17 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           {user ? (
             <Link href="/dashboard"
-              className="btn-gold text-[11px] py-2 px-4 rounded-md">
+              className="btn-gold text-[11px] py-2 px-4 rounded-md cursor-pointer select-none">
               Mi Dashboard →
             </Link>
           ) : (
             <>
               <Link href="/login"
-                className="hidden sm:block label-mono text-[11px] text-[var(--text-muted)] hover:text-white transition-colors px-3 py-1.5 cursor-pointer">
+                className="hidden sm:block label-mono text-[11px] text-[var(--text-muted)] hover:text-white transition-colors px-3 py-1.5 cursor-pointer select-none">
                 Ingresar
               </Link>
               <Link href="/register"
-                className="btn-gold text-[11px] py-2 px-4 rounded-md">
+                className="btn-gold text-[11px] py-2 px-4 rounded-md cursor-pointer select-none">
                 Comenzar
               </Link>
             </>
