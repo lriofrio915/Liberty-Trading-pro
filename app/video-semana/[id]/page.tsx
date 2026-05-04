@@ -20,8 +20,9 @@ function formatSemana(d: Date) {
   })
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const video = await prisma.videoSemana.findUnique({ where: { id: params.id } })
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const video = await prisma.videoSemana.findUnique({ where: { id } })
   if (!video) return {}
 
   const title = `${video.titulo} · Liberty Trading Pro`
@@ -46,8 +47,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 }
 
-export default async function PublicVideoSemanaPage({ params }: { params: { id: string } }) {
-  const video = await prisma.videoSemana.findUnique({ where: { id: params.id, publicado: true } })
+export default async function PublicVideoSemanaPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const video = await prisma.videoSemana.findUnique({ where: { id, publicado: true } })
   if (!video) notFound()
 
   const ytId = getYouTubeId(video.youtubeUrl)

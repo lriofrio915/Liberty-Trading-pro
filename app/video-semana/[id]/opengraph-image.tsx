@@ -15,8 +15,9 @@ function formatSemana(d: Date) {
   })
 }
 
-export default async function OgImage({ params }: { params: { id: string } }) {
-  const video = await prisma.videoSemana.findUnique({ where: { id: params.id } })
+export default async function OgImage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const video = await prisma.videoSemana.findUnique({ where: { id } })
 
   const titulo = video?.titulo ?? 'Video de la Semana'
   const descripcion = video?.descripcion ?? 'Trading real, entradas válidas, resultados verificables.'
