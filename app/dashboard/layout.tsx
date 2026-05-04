@@ -1,8 +1,6 @@
 import Link from 'next/link'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
-import { getEffectiveAccess } from '@/lib/access'
 import SidebarNav from '@/components/Sidebar/SidebarNav'
 import MobileNav from '@/components/Sidebar/MobileNav'
 import TopBar from '@/components/Dashboard/TopBar'
@@ -16,29 +14,17 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   const supabase = await createSupabaseServerClient()
-  // getSession() reads JWT from cookie locally — no network round-trip to Supabase.
-  // getUser() would add ~300-500ms per render (server-side token validation).
+  // getSession() reads JWT from cookie — no network round-trip (~0ms).
+  // Prisma query moved out of layout so the shell renders immediately on navigation.
+  // Individual pages and client components load plan/notif data asynchronously.
   const { data: { session } } = await supabase.auth.getSession()
   const user = session?.user
 
   if (!user) redirect('/login')
 
-  // Single query: user fields + unread notification count in one DB round-trip.
-  const dbUser = await prisma.user.findUnique({
-    where: { authId: user.id },
-    select: {
-      id: true,
-      plan: true,
-      trialEndsAt: true,
-      _count: { select: { notifications: { where: { read: false } } } },
-    },
-  }).catch(() => null)
-
-  const access = dbUser
-    ? getEffectiveAccess({ plan: dbUser.plan, trialEndsAt: dbUser.trialEndsAt })
-    : { isOnTrial: false, trialDaysLeft: null, trialExpired: false, canAccessClub: false, level: 'FREE' as const }
-
-  const initialNotifCount = dbUser?._count?.notifications ?? 0
+  // Defaults — pages and client components load the real values asynchronously
+  const canAccessClub = true   // SidebarNav shows all items; pages enforce access
+  const initialNotifCount = 0  // TopBar fetches real count client-side on mount
 
   return (
     <ThemeProvider>
@@ -50,22 +36,22 @@ export default async function DashboardLayout({
           <div className="px-6 h-16 flex items-center border-b border-[var(--border)]">
             <Link href="/" className="text-lg font-black gradient-gold">Liberty Trading</Link>
           </div>
-          <SidebarNav email={user.email ?? ''} canAccessClub={access.canAccessClub} />
+          <SidebarNav email={user.email ?? ''} canAccessClub={canAccessClub} />
         </aside>
 
         {/* Main */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Mobile nav (top bar + drawer + bottom tabs) */}
-          <MobileNav email={user.email ?? ''} canAccessClub={access.canAccessClub} initialNotifCount={initialNotifCount} />
+          <MobileNav email={user.email ?? ''} canAccessClub={canAccessClub} initialNotifCount={initialNotifCount} />
 
           {/* Desktop top bar — user controls (hidden on mobile) */}
           <TopBar email={user.email ?? ''} initialNotifCount={initialNotifCount} />
 
-          {/* Trial banner — shown when on trial or expired */}
+          {/* Trial banner — loads asynchronously via client component */}
           <TrialBanner
-            isOnTrial={access.isOnTrial}
-            trialExpired={access.trialExpired}
-            daysLeft={access.trialDaysLeft}
+            isOnTrial={false}
+            trialExpired={false}
+            daysLeft={null}
           />
 
           <main className="flex-1 overflow-auto">
