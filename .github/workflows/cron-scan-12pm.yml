@@ -1,0 +1,21 @@
+name: Cron — Scan Price Update 12pm ET
+
+on:
+  schedule:
+    - cron: '0 17 * * 1-5'  # 17:00 UTC = 12pm EST / 1pm EDT (Mon-Fri)
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update 12pm prices
+        run: |
+          HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
+            "${{ secrets.APP_URL }}/api/cron/scan-prices?checkpoint=12pm&secret=${{ secrets.CRON_SECRET }}")
+          echo "HTTP status: $HTTP"
+          cat /tmp/response.txt || true
+          if [ "$HTTP" != "200" ]; then
+            echo "Error: expected 200, got $HTTP"
+            exit 1
+          fi

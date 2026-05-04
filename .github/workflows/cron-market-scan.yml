@@ -1,0 +1,22 @@
+name: Cron — Market Scan 9am ET
+
+on:
+  schedule:
+    - cron: '0 14 * * 1-5'  # 14:00 UTC = 9am EST / 10am EDT (Mon-Fri)
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run market scan
+        run: |
+          HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
+            --max-time 100 \
+            "${{ secrets.APP_URL }}/api/cron/market-scan?secret=${{ secrets.CRON_SECRET }}")
+          echo "HTTP status: $HTTP"
+          cat /tmp/response.txt || true
+          if [ "$HTTP" != "200" ]; then
+            echo "Error: expected 200, got $HTTP"
+            exit 1
+          fi

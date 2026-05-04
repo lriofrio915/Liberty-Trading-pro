@@ -1,0 +1,22 @@
+name: Cron — Bias Monitor (cada 30 min)
+
+on:
+  schedule:
+    # Every 30 min from 14:00-21:30 UTC = 9am-4:30pm EST (Mon-Fri)
+    - cron: '0,30 14-21 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check bias flips
+        run: |
+          HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
+            "${{ secrets.APP_URL }}/api/cron/bias-monitor?secret=${{ secrets.CRON_SECRET }}")
+          echo "HTTP status: $HTTP"
+          cat /tmp/response.txt || true
+          if [ "$HTTP" != "200" ]; then
+            echo "Error: expected 200, got $HTTP"
+            exit 1
+          fi
