@@ -114,9 +114,9 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
     if (elapsedRef.current) clearInterval(elapsedRef.current)
   }, [])
 
-  // Keepalive: hace un GET silencioso cada 45s mientras está idle para prevenir expiración de sesión
+  // Keepalive: hace un GET silencioso cada 45s para prevenir expiración de sesión
   useEffect(() => {
-    if (runState === 'done' && sessionId) {
+    if ((runState === 'done' || runState === 'thinking') && sessionId) {
       keepaliveRef.current = setInterval(async () => {
         try {
           await fetch(
@@ -277,13 +277,21 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
       let sid = await ensureSession()
       if (!sid) { setRunState('error'); return }
 
+      // Construir contexto de los últimos mensajes para recuperación si la sesión expira
+      const contextStr = lines.slice(-10).length > 0
+        ? lines.slice(-10)
+            .map(l => `[${l.role === 'user' ? 'USUARIO' : l.role === 'agent' ? 'AGENTE' : 'SISTEMA'}]: ${l.text}`)
+            .join('\n')
+            .slice(0, 3000)
+        : ''
+
       try {
         const res = await fetch(
           `/api/trading/vibe/sessions/${encodeURIComponent(sid)}/messages`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: text }),
+            body: JSON.stringify({ content: text, context: contextStr }),
           },
         )
 
@@ -310,7 +318,10 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
           setSessionId(newSid)
           sid = newSid
           lastSeenIdsRef.current = new Set()
-          appendLine('system', '· Sesión renovada — el agente continuará sin contexto previo')
+          appendLine('system', contextStr
+            ? '· Sesión renovada — contexto anterior inyectado, el agente puede continuar'
+            : '· Sesión renovada — el agente continuará sin contexto previo'
+          )
         }
 
         // El POST devuelve {message_id, attempt_id} — registro el message_id del usuario para no repintarlo.

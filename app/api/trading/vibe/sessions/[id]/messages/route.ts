@@ -33,6 +33,7 @@ export async function POST(
   const body = await req.json().catch(() => ({}))
   // Vibe-Trading sólo acepta { content: string } (1-5000 chars).
   const content = String(body.content ?? body.message ?? '').slice(0, 5000)
+  const context = String(body.context ?? '').slice(0, 3000)
   if (!content) return NextResponse.json({ error: 'content required' }, { status: 400 })
 
   try {
@@ -59,9 +60,12 @@ export async function POST(
         }
         // Pequeño delay para que el FastAPI inicialice la sesión nueva
         await sleep(300)
+        const fullContent = context
+          ? `[CONTEXTO DE SESIÓN ANTERIOR]\n${context}\n[FIN DE CONTEXTO]\n\nPetición: ${content}`
+          : content
         const retryData = await vibeJSON(
           `/sessions/${encodeURIComponent(String(newSessionId))}/messages`,
-          { method: 'POST', body: JSON.stringify({ content }) },
+          { method: 'POST', body: JSON.stringify({ content: fullContent }) },
         )
         return NextResponse.json(retryData, {
           headers: { 'X-New-Session-Id': String(newSessionId) },
