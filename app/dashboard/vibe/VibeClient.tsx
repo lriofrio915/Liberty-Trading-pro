@@ -104,6 +104,26 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
     })()
   }, [])
 
+  // Cargar historial desde DB al montar. Tiene precedencia sobre localStorage.
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const res = await fetch('/api/trading/vibe/history')
+        if (!res.ok) return
+        const data: { id: string; role: string; text: string }[] = await res.json()
+        if (data.length > 0) {
+          const dbLines = data.map(m => ({
+            id: m.id,
+            role: m.role as ChatLine['role'],
+            text: m.text,
+          }))
+          setLines(dbLines)
+          try { localStorage.setItem(STORAGE_LINES, JSON.stringify(dbLines.slice(-200))) } catch {}
+        }
+      } catch {}
+    })()
+  }, [])
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [lines.length, runState])
@@ -170,6 +190,14 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
     setLines(prev => [...prev, { id: crypto.randomUUID(), role, text }])
   }
 
+  function saveMessage(role: 'user' | 'agent', text: string) {
+    fetch('/api/trading/vibe/history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role, text }),
+    }).catch(() => {})
+  }
+
   async function createFreshSession(): Promise<string | null> {
     try {
       const res = await fetch('/api/trading/vibe/sessions', {
@@ -231,7 +259,9 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
             if (status && status !== 'completed' && status !== 'success') {
               appendLine('system', `· ${status}`)
             } else {
-              appendLine('agent', m.content || '(respuesta vacía)')
+              const agentText = m.content || '(respuesta vacía)'
+              appendLine('agent', agentText)
+              saveMessage('agent', agentText)
               gotAssistant = true
             }
           }
@@ -271,6 +301,7 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
       // Feedback visual inmediato — el usuario ve su mensaje y el botón cargando
       // antes de que se cree la sesión (que puede tardar 1-2s en el primer mensaje)
       appendLine('user', text)
+      saveMessage('user', text)
       setInput('')
       setRunState('sending')
 
@@ -388,6 +419,8 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
     setLines([])
     setErrorMsg(null)
     setRunState('idle')
+    // Borrar historial de DB al limpiar chat
+    fetch('/api/trading/vibe/history', { method: 'DELETE' }).catch(() => {})
   }
 
   const busy = runState === 'sending' || runState === 'thinking'

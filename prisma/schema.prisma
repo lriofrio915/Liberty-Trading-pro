@@ -58,6 +58,7 @@ model User {
   mt5Account        MT5Account?
   notifications         Notification[]
   notificationsActed    Notification[] @relation("NotifActor")
+  vibeMessages          VibeMessage[]
 }
 
 model TradingPlan {
@@ -423,6 +424,19 @@ model PostShare {
   creadoEn DateTime @default(now())
 }
 
+
+// ─── VIBE AGENT CHAT HISTORY ─────────────────────────────────────────────────
+
+model VibeMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   // user | agent
+  text      String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
 
 // ─── LABORATORIO DE ESTRATEGIA ────────────────────────────────────────────────
 
