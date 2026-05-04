@@ -7,7 +7,8 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 export default async function ComunidadPage() {
   const supabase = await createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user
 
   const dbUser = user
     ? await prisma.user.findUnique({ where: { authId: user.id }, select: { id: true, name: true, plan: true, trialEndsAt: true } })

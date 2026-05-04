@@ -7,7 +7,8 @@ import TrackRecordClient from '@/components/TrackRecord/TrackRecordClient'
 
 export default async function TrackRecordPage() {
   const supabase = await createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user
 
   let sessions: any[] = []
   let plans: { id: string; name: string }[] = []

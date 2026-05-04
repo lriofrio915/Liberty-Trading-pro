@@ -16,7 +16,8 @@ const CATEGORIAS = [
 
 export default async function AcademiaPage() {
   const supabase = await createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user
 
   const isAdmin = user?.email === ADMIN_EMAIL
 

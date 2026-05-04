@@ -6,7 +6,8 @@ import VincesClient from './VincesClient'
 
 export default async function VincesPage() {
   const supabase = await createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user
 
   const dbUser = await prisma.user.findUnique({
     where: { authId: user?.id },

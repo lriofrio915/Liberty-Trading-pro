@@ -6,7 +6,8 @@ import ConocimientoClient from './ConocimientoClient'
 
 export default async function ConocimientoPage() {
   const supabase = await createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user
 
   const dbUser = await prisma.user.findUnique({
     where: { authId: user?.id },

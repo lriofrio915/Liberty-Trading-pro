@@ -6,7 +6,8 @@ import RetirosClient from './RetirosClient'
 
 export default async function RetirosPage() {
   const supabase = await createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user
 
   let retiros: any[] = []
   let plans: any[] = []

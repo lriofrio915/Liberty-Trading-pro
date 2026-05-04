@@ -15,7 +15,8 @@ export const metadata = {
 
 export default async function LaboratorioQuantPage() {
   const supabase = await createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user
   if (!user) redirect('/login')
 
   const isAdmin = user.email === ADMIN_EMAIL
