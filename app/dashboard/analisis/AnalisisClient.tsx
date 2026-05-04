@@ -378,16 +378,92 @@ function FarosPanel({ faros }: { faros: FarosAgentResult }) {
   )
 }
 
-// ── AssetCard (with optional MT5 trade button) ─────────────────────────────────
+// ── AssetCard helpers ──────────────────────────────────────────────────────────
 
-function AssetCard({ asset, mt5Connected, onTrade }: {
+const FAROS_SYMBOL_ALIASES: Record<string, string> = {
+  'EUR/USD': 'EURUSD', 'GBP/USD': 'GBPUSD', 'USD/JPY': 'USDJPY', 'USD/CAD': 'USDCAD',
+  'DXY': 'DXY', 'SP500': 'SP500', 'RUSSELL': 'RUSSELL',
+}
+
+function findFarosAsset(simbolo: string, activos: FarosAssetItem[]): FarosAssetItem | undefined {
+  const s = simbolo.toUpperCase()
+  const direct = activos.find(f => f.symbol === s)
+  if (direct) return direct
+  const mapped = FAROS_SYMBOL_ALIASES[s]
+  if (mapped) return activos.find(f => f.symbol === mapped)
+  return activos.find(f => f.symbol.includes(s) || s.includes(f.symbol))
+}
+
+function FarosAnnotation({ fa }: { fa: FarosAssetItem }) {
+  const govColor: Record<string, string> = {
+    BUY: 'text-green-400', BUY_CAUTION: 'text-blue-400',
+    HOLD: 'text-yellow-400', SELL: 'text-red-400', CASH: 'text-orange-400',
+  }
+  const obs = fa.killSwitch
+    ? 'FAROS veta esta señal — turbulencia extrema, evitar posición'
+    : fa.psiScore > 0.65 && fa.alphaFlow > 0.55
+      ? 'FAROS confirma — flujo orgánico con régimen estable'
+      : fa.psiScore > 0.40
+        ? 'FAROS neutral — señal operable, confirmar en gráfico'
+        : 'FAROS débil — presión vendedora o liquidez sintética'
+  const obsColor = fa.killSwitch ? 'bg-red-500/10 text-red-400 border-red-500/25'
+    : fa.psiScore > 0.65 ? 'bg-green-500/10 text-green-400 border-green-500/20'
+    : fa.psiScore > 0.40 ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+    : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+
+  return (
+    <div className="mt-3 pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+      <div className="text-[9px] font-bold uppercase tracking-widest mb-2 opacity-60" style={{ color: 'var(--gold)' }}>
+        FAROS v7.0
+      </div>
+      {fa.killSwitch && (
+        <div className="text-[10px] font-bold text-red-400 bg-red-500/10 border border-red-500/25 rounded-lg px-2 py-1 mb-2 flex items-center gap-1.5">
+          ✕ KILL SWITCH ACTIVO
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px] mb-2">
+        <div>
+          <span style={{ color: 'var(--text-muted)' }}>Ψ Score: </span>
+          <span className={`font-mono font-bold ${fa.psiScore > 0.6 ? 'text-green-400' : fa.psiScore > 0.35 ? 'text-yellow-400' : 'text-red-400'}`}>
+            {(fa.psiScore * 100).toFixed(0)}%
+          </span>
+        </div>
+        <div>
+          <span style={{ color: 'var(--text-muted)' }}>Señal: </span>
+          <span className={`font-mono font-bold ${govColor[fa.governanceSignal] ?? 'text-gray-400'}`}>
+            {fa.governanceSignal}
+          </span>
+        </div>
+        <div>
+          <span style={{ color: 'var(--text-muted)' }}>αflow: </span>
+          <span className="font-mono font-bold" style={{ color: fa.alphaFlow > 0.6 ? '#4ade80' : fa.alphaFlow < 0.35 ? '#f87171' : '#facc15' }}>
+            {fa.alphaFlow.toFixed(2)}
+          </span>
+        </div>
+        <div>
+          <span style={{ color: 'var(--text-muted)' }}>Estado: </span>
+          <span className="font-mono text-[9px]" style={{ color: 'var(--text-secondary)' }}>{fa.thermodynamicState}</span>
+        </div>
+      </div>
+      <div className={`text-[10px] font-medium px-2 py-1 rounded-lg border leading-snug ${obsColor}`}>
+        {obs}
+      </div>
+    </div>
+  )
+}
+
+// ── AssetCard (with optional MT5 trade button + FAROS annotation) ──────────────
+
+function AssetCard({ asset, mt5Connected, onTrade, farosActivos }: {
   asset: AssetAnalysis
   mt5Connected: boolean
   onTrade?: (symbol: string, direction: 'BUY' | 'SELL') => void
+  farosActivos?: FarosAssetItem[]
 }) {
   const s = SESGO_STYLES[asset.sesgo] ?? SESGO_STYLES.NEUTRAL
   const tradeDirection: 'BUY' | 'SELL' | null =
     asset.sesgo === 'COMPRA' ? 'BUY' : asset.sesgo === 'VENTA' ? 'SELL' : null
+  const fa = farosActivos ? findFarosAsset(asset.simbolo, farosActivos) : undefined
 
   return (
     <div className={`rounded-xl border p-4 transition-transform hover:scale-[1.02] ${s.bg} ${s.border}`}>
@@ -451,6 +527,8 @@ function AssetCard({ asset, mt5Connected, onTrade }: {
           </button>
         )}
       </div>
+
+      {fa && <FarosAnnotation fa={fa} />}
     </div>
   )
 }
@@ -747,6 +825,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
   const [savedCount, setSavedCount] = useState<number | null>(null)
   const [signalHistory, setSignalHistory] = useState<CfdSignalRecord[]>([])
   const [updatingResultado, setUpdatingResultado] = useState<string | null>(null)
+  const [skippedSignals, setSkippedSignals] = useState<{ skipped: string[]; updated: string[] } | null>(null)
 
   const [video, setVideo] = useState<{ youtubeUrl: string; title: string | null }>({ youtubeUrl: '', title: null })
   const [editMode, setEditMode] = useState(false)
@@ -879,15 +958,58 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
   const handleSaveSignals = async (signals: CfdSignalCalc[]) => {
     setSavingSignals(true)
     setSavedCount(null)
+    setSkippedSignals(null)
+
+    // Build map of existing PENDIENTE signals by symbol
+    const pendingMap = new Map(
+      signalHistory
+        .filter(s => s.resultado === 'PENDIENTE')
+        .map(s => [s.simbolo, s]),
+    )
+
+    const toSave: CfdSignalCalc[] = []
+    const skipped: string[] = []
+    const updated: string[] = []
+
+    for (const sig of signals) {
+      const existing = pendingMap.get(sig.simbolo)
+      if (!existing) {
+        toSave.push(sig)
+      } else {
+        const dirChanged = existing.sesgo !== sig.sesgo
+        const confDiff = Math.abs(sig.confianza - existing.confianza)
+        if (dirChanged || confDiff >= 10) {
+          // Significant change — save new signal and report
+          updated.push(
+            dirChanged
+              ? `${sig.simbolo} (dirección: ${existing.sesgo}→${sig.sesgo})`
+              : `${sig.simbolo} (confianza: ${existing.confianza}%→${sig.confianza}%)`,
+          )
+          toSave.push(sig)
+        } else {
+          skipped.push(sig.simbolo)
+        }
+      }
+    }
+
+    if (skipped.length > 0 || updated.length > 0) {
+      setSkippedSignals({ skipped, updated })
+    }
+
+    if (toSave.length === 0) {
+      setSavingSignals(false)
+      return
+    }
+
     try {
       const res = await fetch('/api/cfds/signals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ signals }),
+        body: JSON.stringify({ signals: toSave }),
       })
       if (res.ok) {
         const d = await res.json()
-        setSavedCount(d.saved ?? signals.length)
+        setSavedCount(d.saved ?? toSave.length)
         await loadSignalHistory()
       }
     } catch {} finally {
@@ -1067,6 +1189,23 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
               {savedCount != null && (
                 <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2.5 text-sm text-green-400">
                   ✓ {savedCount} señal{savedCount !== 1 ? 'es' : ''} guardada{savedCount !== 1 ? 's' : ''} en Supabase
+                </div>
+              )}
+
+              {skippedSignals && (skippedSignals.skipped.length > 0 || skippedSignals.updated.length > 0) && (
+                <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/8 px-4 py-3 space-y-1">
+                  {skippedSignals.skipped.length > 0 && (
+                    <p className="text-xs text-yellow-400">
+                      <span className="font-bold">Sin cambios — no guardadas:</span>{' '}
+                      {skippedSignals.skipped.join(', ')} ya tienen señal PENDIENTE activa con score similar.
+                    </p>
+                  )}
+                  {skippedSignals.updated.length > 0 && (
+                    <p className="text-xs text-orange-400">
+                      <span className="font-bold">Score cambió — guardadas de nuevo:</span>{' '}
+                      {skippedSignals.updated.join(' · ')}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -1416,6 +1555,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                           asset={asset}
                           mt5Connected={!!mt5Account}
                           onTrade={handleTrade}
+                          farosActivos={result.faros?.activos_faros}
                         />
                       ))}
                     </div>
