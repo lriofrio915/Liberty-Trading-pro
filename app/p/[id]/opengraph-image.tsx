@@ -14,9 +14,10 @@ const TIPO_META: Record<string, { label: string; icon: string; color: string }> 
   ANALISIS:     { label: 'Análisis',     icon: '🔍', color: '#f97316' },
 }
 
-export default async function OgImage({ params }: { params: { id: string } }) {
+export default async function OgImage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const post = await prisma.post.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { user: { select: { name: true } } },
   })
 

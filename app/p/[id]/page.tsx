@@ -12,9 +12,10 @@ const TIPO_LABELS: Record<string, string> = {
   ANALISIS:     'Análisis',
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
   const post = await prisma.post.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { user: { select: { name: true } } },
   })
 
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const tipoLabel = TIPO_LABELS[post.tipo] ?? post.tipo
   const title = `${tipoLabel} de ${authorName} — Liberty Trading Pro`
   const description = post.contenido.slice(0, 160)
-  const ogImage = post.imageUrl ?? `${APP_URL}/p/${params.id}/opengraph-image`
+  const ogImage = post.imageUrl ?? `${APP_URL}/p/${id}/opengraph-image`
 
   return {
     title,
@@ -32,7 +33,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     openGraph: {
       title,
       description,
-      url: `${APP_URL}/p/${params.id}`,
+      url: `${APP_URL}/p/${id}`,
       siteName: 'Liberty Trading Pro',
       images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
       type: 'article',
@@ -46,14 +47,14 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 }
 
-export default async function PublicPostPage({ params }: { params: { id: string } }) {
+export default async function PublicPostPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const post = await prisma.post.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { user: { select: { name: true } } },
   })
 
   if (!post) notFound()
 
-  // Redirect to community feed anchored to the post
-  redirect(`${APP_URL}/dashboard/comunidad#post-${params.id}`)
+  redirect(`${APP_URL}/dashboard/comunidad#post-${id}`)
 }
