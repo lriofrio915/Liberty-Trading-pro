@@ -143,6 +143,7 @@ html, body {
 }
 .btn-gold * {
   cursor: pointer;
+  pointer-events: none;
 }
 .btn-gold:hover {
   background: linear-gradient(135deg, var(--gold), var(--gold-light));
