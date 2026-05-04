@@ -1032,11 +1032,17 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
   }
 
   const activosByRanking = result?.activos ? [...result.activos].sort((a, b) => b.confianza - a.confianza) : []
-  const signalActivos: CfdSignalCalc[] = result
+
+  // All candidates: confianza >=70, sesgo direccional
+  const allCandidates: CfdSignalCalc[] = result
     ? result.activos
         .filter(a => a.confianza >= 70 && a.sesgo !== 'NEUTRAL')
         .map(a => calcSignal(a, riskProfile, result.faros))
     : []
+
+  // FAROS filter: aprobadas = no killSwitch (or no faros data for that asset)
+  const signalActivos = allCandidates.filter(s => !s.killSwitch)
+  const signalesVetadas = allCandidates.filter(s => s.killSwitch)
 
   const sesgoGeneral = result?.estrategia?.sesgo_general ?? 'NEUTRAL'
   const gs = GENERAL_STYLES[sesgoGeneral] ?? GENERAL_STYLES.NEUTRAL
@@ -1086,7 +1092,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
       <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         {[
           { id: 'analisis' as ActiveTab, label: '🔍 Análisis de Mercado' },
-          { id: 'senales' as ActiveTab, label: `📋 Señales CFD${signalActivos.length > 0 ? ` (${signalActivos.length})` : ''}` },
+          { id: 'senales' as ActiveTab, label: `📋 Señales CFD${signalActivos.length > 0 ? ` (${signalActivos.length}✓${signalesVetadas.length > 0 ? ` ${signalesVetadas.length}✕` : ''})` : ''}` },
           { id: 'mt5' as ActiveTab, label: `🤖 Trading MT5${mt5Account ? ' ✓' : ''}` },
         ].map(tab => (
           <button
@@ -1211,11 +1217,40 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {signalActivos.map((sig, i) => (
-                  <SignalCard key={`${sig.simbolo}-${i}`} signal={sig} onCopy={handleCopySignal} />
-                ))}
-              </div>
+              {signalActivos.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {signalActivos.map((sig, i) => (
+                    <SignalCard key={`${sig.simbolo}-${i}`} signal={sig} onCopy={handleCopySignal} />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl border p-5 text-center" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    Ninguna señal aprobada por FAROS. Todos los candidatos con ≥70% confianza tienen Kill Switch activo.
+                  </p>
+                </div>
+              )}
+
+              {/* Vetadas por FAROS */}
+              {signalesVetadas.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-px" style={{ background: 'rgba(239,68,68,0.2)' }} />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-red-400 flex-shrink-0">
+                      ✕ FAROS vetó {signalesVetadas.length} señal{signalesVetadas.length !== 1 ? 'es' : ''} — Kill Switch activo
+                    </p>
+                    <div className="flex-1 h-px" style={{ background: 'rgba(239,68,68,0.2)' }} />
+                  </div>
+                  <p className="text-[10px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                    Los agentes recomendaron estas entradas pero FAROS detectó turbulencia extrema (Reynolds% &gt;90% o régimen STRUCTURAL_BREAK). Ψ forzado a 0. No operar.
+                  </p>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 opacity-50 pointer-events-none select-none">
+                    {signalesVetadas.map((sig, i) => (
+                      <SignalCard key={`veto-${sig.simbolo}-${i}`} signal={sig} onCopy={() => {}} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
