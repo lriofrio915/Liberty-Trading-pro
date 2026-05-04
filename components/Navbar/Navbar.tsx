@@ -65,7 +65,7 @@ export default function Navbar() {
           ) : (
             <>
               <Link href="/login"
-                className="hidden sm:block label-mono text-[11px] text-[var(--text-muted)] hover:text-white transition-colors px-3 py-1.5">
+                className="hidden sm:block label-mono text-[11px] text-[var(--text-muted)] hover:text-white transition-colors px-3 py-1.5 cursor-pointer">
                 Ingresar
               </Link>
               <Link href="/register"
@@ -100,12 +100,12 @@ export default function Navbar() {
           ))}
           {user ? (
             <Link href="/dashboard" onClick={() => setMenuOpen(false)}
-              className="label-mono text-[11px] text-[var(--gold)] hover:text-white transition-colors">
+              className="label-mono text-[11px] text-[var(--gold)] hover:text-white transition-colors cursor-pointer">
               Mi Dashboard →
             </Link>
           ) : (
             <Link href="/login" onClick={() => setMenuOpen(false)}
-              className="label-mono text-[11px] text-[var(--text-muted)] hover:text-white transition-colors">
+              className="label-mono text-[11px] text-[var(--text-muted)] hover:text-white transition-colors cursor-pointer">
               Ingresar
             </Link>
           )}
