@@ -26,9 +26,10 @@ async function findUser(slugOrId: string) {
 // ── Meta ──────────────────────────────────────────────────────────────────────
 
 export async function generateMetadata(
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
-  const user = await findUser(params.slug)
+  const { slug } = await params
+  const user = await findUser(slug)
   const sessions = user
     ? await prisma.tradingSession.findMany({
         where: { userId: user.id },
@@ -47,7 +48,7 @@ export async function generateMetadata(
   const description = user?.bio
     ? `${user.bio} · ${winRate}% Win Rate · ${pnlStr} P&L Neto · ${total} operaciones verificadas.`
     : `${winRate}% Win Rate · ${pnlStr} P&L Neto · ${total} operaciones reales verificadas. Sin filtros.`
-  const urlSlug = user?.slug ?? params.slug
+  const urlSlug = user?.slug ?? slug
   const url = `${process.env.NEXT_PUBLIC_APP_URL}/track-record/${urlSlug}`
 
   const ogImage = {
@@ -267,8 +268,9 @@ async function getTraderProfile(slugOrId: string) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default async function PublicTrackRecordPage({ params }: { params: { slug: string } }) {
-  const data = await getTraderProfile(params.slug)
+export default async function PublicTrackRecordPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const data = await getTraderProfile(slug)
   if (!data) notFound()
 
   const { user, sessions, metrics, monthlyData, certificates } = data

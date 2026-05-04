@@ -18,8 +18,9 @@ async function findUser(slugOrId: string) {
   })
 }
 
-export default async function OgImage({ params }: { params: { slug: string } }) {
-  const user = await findUser(params.slug)
+export default async function OgImage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const user = await findUser(slug)
 
   const sessions = user
     ? await prisma.tradingSession.findMany({
