@@ -518,5 +518,9 @@ model ScanOpportunity {
   horaSesgoFlip   String? // hora local del cambio detectado (ej: "11:30 ET")
   rendimientoFlip Float?  // % de movimiento 9am → flip a favor del sesgo original
 
+  // FAROS al momento del scan (para comparar portafolio con/sin FAROS)
+  farosKillSwitch Boolean?
+  farosPsiScore   Float?
+
   createdAt DateTime @default(now())
 }

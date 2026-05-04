@@ -136,12 +136,6 @@ interface CfdSignalRecord extends CfdSignalCalc {
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const RISK_PROFILES: { id: RiskProfile; label: string; icon: string; desc: string }[] = [
-  { id: 'conservador', label: 'Conservador', icon: '🛡️', desc: 'Estabilidad y activos refugio' },
-  { id: 'moderado', label: 'Moderado', icon: '⚖️', desc: 'Balance riesgo-oportunidad' },
-  { id: 'agresivo', label: 'Agresivo', icon: '🚀', desc: 'Máximo potencial de ganancia' },
-]
-
 const AGENTS = [
   { key: 'crypto',     label: 'Crypto',     icon: '₿',  desc: 'BTC, ETH, BNB, XRP' },
   { key: 'acciones',   label: 'Acciones',   icon: '📈', desc: '7 Magnificas' },
@@ -804,7 +798,7 @@ function SignalCard({ signal, onCopy }: { signal: CfdSignalCalc; onCopy: (text: 
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
-  const [riskProfile, setRiskProfile] = useState<RiskProfile>('moderado')
+  const riskProfile: RiskProfile = 'agresivo'
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -841,6 +835,10 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
       } catch {}
     })()
   }, [])
+
+  // Auto-run analysis on first mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { runAnalysis() }, [])
 
   const fetchMt5Account = useCallback(async () => {
     try {
@@ -1405,31 +1403,13 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
       {/* ── Analysis Tab ── */}
       {activeTab === 'analisis' && (
         <div className="space-y-6">
-          {/* Risk selector + CTA */}
-          <div className="card p-6 space-y-5">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
-                Perfil de riesgo
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {RISK_PROFILES.map(rp => (
-                  <button
-                    key={rp.id}
-                    onClick={() => setRiskProfile(rp.id)}
-                    className={`p-4 rounded-xl border text-left transition-all duration-200 ${
-                      riskProfile === rp.id
-                        ? 'border-[var(--gold)] bg-[var(--gold)]/10'
-                        : 'border-[var(--border)] hover:border-[var(--gold)]/40 hover:bg-white/3'
-                    }`}
-                  >
-                    <div className="text-2xl mb-1.5">{rp.icon}</div>
-                    <div className="text-sm font-semibold" style={{ color: riskProfile === rp.id ? 'var(--gold)' : 'var(--text-primary)' }}>
-                      {rp.label}
-                    </div>
-                    <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{rp.desc}</div>
-                  </button>
-                ))}
-              </div>
+          {/* CTA */}
+          <div className="card p-5 space-y-4">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[var(--gold)]/15 text-[var(--gold)] border border-[var(--gold)]/30">
+                🚀 Perfil Agresivo
+              </span>
+              <span style={{ color: 'var(--text-muted)' }}>Máximo potencial — análisis se ejecuta automáticamente al entrar</span>
             </div>
 
             {mt5Account && (

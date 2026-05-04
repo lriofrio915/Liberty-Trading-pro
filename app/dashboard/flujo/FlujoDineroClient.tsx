@@ -43,11 +43,11 @@ function fmtPrice(n: number): string {
 }
 
 function mfColor(pct: number): string {
-  if (pct > 35)  return 'bg-emerald-500/40 border-emerald-500/50'
-  if (pct > 10)  return 'bg-green-500/25 border-green-500/35'
-  if (pct > -10) return 'bg-yellow-500/15 border-yellow-500/25'
-  if (pct > -35) return 'bg-red-500/20 border-red-500/30'
-  return 'bg-red-500/35 border-red-500/50'
+  if (pct > 35)  return 'bg-emerald-500/15 border-emerald-500/30'
+  if (pct > 10)  return 'bg-green-500/10 border-green-500/20'
+  if (pct > -10) return 'bg-yellow-500/10 border-yellow-500/20'
+  if (pct > -35) return 'bg-red-500/12 border-red-500/25'
+  return 'bg-red-500/20 border-red-500/35'
 }
 
 function mfTextColor(pct: number): string {

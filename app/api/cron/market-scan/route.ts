@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const result = await runFullAnalysis('moderado')
+    const result = await runFullAnalysis('agresivo')
 
     const sesgogeneral = result.estrategia?.sesgo_general ?? 'NEUTRAL'
     const resumen = result.estrategia?.resumen ?? null
@@ -22,6 +22,11 @@ export async function GET(req: NextRequest) {
     // Filter: confianza >= 70, sesgo direccional, never NEUTRAL
     const oportunidades = result.activos.filter(
       a => a.confianza >= 70 && (a.sesgo === 'COMPRA' || a.sesgo === 'VENTA'),
+    )
+
+    // FAROS lookup map: symbol → killSwitch + psiScore
+    const farosMap = new Map(
+      (result.faros?.activos_faros ?? []).map(f => [f.symbol, f])
     )
 
     // Mark as today's scan date at midnight UTC
@@ -34,17 +39,22 @@ export async function GET(req: NextRequest) {
         hora: '09:00 ET',
         sesgogeneral,
         resumen,
-        riskProfile: 'moderado',
+        riskProfile: 'agresivo',
         oportunidades: {
-          create: oportunidades.map(a => ({
-            simbolo:   a.simbolo,
-            nombre:    a.nombre,
-            sesgo:     a.sesgo,
-            confianza: a.confianza,
-            precio9am: a.precio,
-            razon:     a.razon,
-            sector:    a.sector,
-          })),
+          create: oportunidades.map(a => {
+            const fa = farosMap.get(a.simbolo)
+            return {
+              simbolo:         a.simbolo,
+              nombre:          a.nombre,
+              sesgo:           a.sesgo,
+              confianza:       a.confianza,
+              precio9am:       a.precio,
+              razon:           a.razon,
+              sector:          a.sector,
+              farosKillSwitch: fa?.killSwitch ?? null,
+              farosPsiScore:   fa?.psiScore   ?? null,
+            }
+          }),
         },
       },
       include: { oportunidades: true },
