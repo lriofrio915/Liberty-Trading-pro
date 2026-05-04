@@ -297,9 +297,13 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
 
         if (!res.ok) {
           if (res.status === 404) {
-            // Recovery del server también falló — resetear automáticamente
-            appendLine('system', '· Sesión perdida. Iniciando conversación nueva…')
-            newConversation()
+            // Recovery del server falló — resetear sesión pero PRESERVAR historial.
+            // newConversation() borraría el historial; aquí solo limpiamos la sesión.
+            appendLine('system', '· Sesión no disponible. Intenta enviar el mensaje de nuevo.')
+            setSessionId(null)
+            localStorage.removeItem(STORAGE_SESSION)
+            lastSeenIdsRef.current = new Set()
+            setRunState('error')
             return
           }
           const j = await res.json().catch(() => ({}))

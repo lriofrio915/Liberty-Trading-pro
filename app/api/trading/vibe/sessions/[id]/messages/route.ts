@@ -60,8 +60,12 @@ export async function POST(
         }
         // Pequeño delay para que el FastAPI inicialice la sesión nueva
         await sleep(300)
-        const fullContent = context
-          ? `[CONTEXTO DE SESIÓN ANTERIOR]\n${context}\n[FIN DE CONTEXTO]\n\nPetición: ${content}`
+        // Calcular espacio disponible para contexto respetando límite de 5000 chars.
+        const TEMPLATE_OVERHEAD = 65 // "[CONTEXTO DE SESIÓN ANTERIOR]\n...\n[FIN DE CONTEXTO]\n\nPetición: "
+        const maxCtxLen = Math.max(0, 5000 - content.length - TEMPLATE_OVERHEAD)
+        const trimmedContext = context.slice(0, maxCtxLen)
+        const fullContent = trimmedContext
+          ? `[CONTEXTO DE SESIÓN ANTERIOR]\n${trimmedContext}\n[FIN DE CONTEXTO]\n\nPetición: ${content}`
           : content
         const retryData = await vibeJSON(
           `/sessions/${encodeURIComponent(String(newSessionId))}/messages`,
