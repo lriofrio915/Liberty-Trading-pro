@@ -9,19 +9,17 @@ const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 const CRON_SECRET = process.env.CRON_SECRET || ''
 
 export async function GET(req: NextRequest) {
-  const supabase = await createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { searchParams } = new URL(req.url)
   const refresh = searchParams.get('refresh') === 'true'
   const secret = searchParams.get('secret') || ''
 
-  if (refresh && secret !== CRON_SECRET) {
-    // Allow refresh for authenticated users (without secret) or for cron with secret
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid secret' }, { status: 401 })
-    }
+  // Cron path: valid secret bypasses Supabase auth entirely
+  const isCron = refresh && CRON_SECRET && secret === CRON_SECRET
+
+  if (!isCron) {
+    const supabase = await createSupabaseServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   if (!refresh) {
