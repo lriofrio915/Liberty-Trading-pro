@@ -102,7 +102,37 @@ interface TradeModalState {
 }
 
 type RiskProfile = 'conservador' | 'moderado' | 'agresivo'
-type ActiveTab = 'analisis' | 'mt5'
+type ActiveTab = 'analisis' | 'mt5' | 'senales'
+
+// ── CFD Signal types ────────────────────────────────────────────────────────────
+
+interface CfdSignalCalc {
+  simbolo: string
+  nombre: string
+  sector: string
+  sesgo: string
+  confianza: number
+  razon: string
+  precioEntrada: number
+  stopLoss: number
+  takeProfit: number
+  lotaje: number
+  riesgoUsd: number
+  rrRatio: number
+  riskProfile: string
+  farosSesgo?: string
+  farosRegimen?: string
+  psiScore?: number
+  killSwitch: boolean
+}
+
+interface CfdSignalRecord extends CfdSignalCalc {
+  id: string
+  createdAt: string
+  resultado: string
+  pnlUsd?: number | null
+  closedPrice?: number | null
+}
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -536,6 +566,163 @@ function PortfolioTooltip({ active, payload }: { active?: boolean; payload?: Arr
   )
 }
 
+// ── CFD Signal calculation ─────────────────────────────────────────────────────
+
+const RISK_USD = 10
+const RR_RATIO = 2.0
+
+const SL_PCT: Record<string, number> = {
+  Crypto:     0.020,
+  Acciones:   0.020,
+  'Índices':  0.005,
+  Divisas:    0.003,
+  Materiales: 0.010,
+}
+
+const LOT_MULTIPLIER: Record<string, number> = {
+  'EUR/USD': 100000, 'GBP/USD': 100000, 'USD/CAD': 100000, 'USD/JPY': 100000,
+  'DXY': 10000,
+  'ORO': 100, 'PLATA': 5000, 'WTI': 1000,
+  'NQ': 2, 'SP500': 0.5, 'RUSSELL': 1, 'DOW': 1,
+  'BTC': 1, 'ETH': 10, 'BNB': 10, 'XRP': 10000,
+}
+
+function calcSignal(
+  asset: AssetAnalysis,
+  riskProfile: string,
+  faros?: FarosAgentResult,
+): CfdSignalCalc {
+  const entry = asset.precio
+  const slPct = SL_PCT[asset.sector] ?? 0.010
+  const slDist = entry * slPct
+  const tpDist = slDist * RR_RATIO
+  const isCompra = asset.sesgo === 'COMPRA'
+  const stopLoss = parseFloat((isCompra ? entry - slDist : entry + slDist).toFixed(5))
+  const takeProfit = parseFloat((isCompra ? entry + tpDist : entry - tpDist).toFixed(5))
+  const mult = LOT_MULTIPLIER[asset.simbolo] ?? 1
+  const rawLot = RISK_USD / (slDist * mult)
+  const lotaje = parseFloat(Math.max(0.01, rawLot).toFixed(2))
+
+  const farosAsset = faros?.activos_faros?.find(f => f.symbol === asset.simbolo)
+
+  return {
+    simbolo:       asset.simbolo,
+    nombre:        asset.nombre,
+    sector:        asset.sector,
+    sesgo:         asset.sesgo,
+    confianza:     asset.confianza,
+    razon:         asset.razon,
+    precioEntrada: entry,
+    stopLoss,
+    takeProfit,
+    lotaje,
+    riesgoUsd:     RISK_USD,
+    rrRatio:       RR_RATIO,
+    riskProfile,
+    farosSesgo:    faros?.sesgo_faros,
+    farosRegimen:  faros?.regimen_dominante,
+    psiScore:      farosAsset?.psiScore,
+    killSwitch:    farosAsset?.killSwitch ?? false,
+  }
+}
+
+function formatSignalText(s: CfdSignalCalc): string {
+  const dir = s.sesgo === 'COMPRA' ? '▲ COMPRA' : '▼ VENTA'
+  const slDist = Math.abs(s.precioEntrada - s.stopLoss)
+  const tpDist = Math.abs(s.takeProfit - s.precioEntrada)
+  const formatP = (n: number) =>
+    n >= 1000 ? n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : n.toFixed(5)
+  const psiLine = s.psiScore != null ? `  FAROS Ψ: ${(s.psiScore * 100).toFixed(0)}%` : ''
+  return [
+    `${dir} ${s.simbolo}`,
+    `Entrada:     ${formatP(s.precioEntrada)}`,
+    `Stop Loss:   ${formatP(s.stopLoss)}  (-${formatP(slDist)})`,
+    `Take Profit: ${formatP(s.takeProfit)}  (+${formatP(tpDist)})`,
+    `Lotaje:      ${s.lotaje} lotes`,
+    `RR: 1:${s.rrRatio}  |  Riesgo: $${s.riesgoUsd.toFixed(2)}`,
+    `Confianza: ${s.confianza}%${psiLine}`,
+  ].join('\n')
+}
+
+// ── SignalCard ─────────────────────────────────────────────────────────────────
+
+function SignalCard({ signal, onCopy }: { signal: CfdSignalCalc; onCopy: (text: string) => void }) {
+  const isCompra = signal.sesgo === 'COMPRA'
+  const accent = isCompra ? 'text-green-400' : 'text-red-400'
+  const bg = isCompra ? 'bg-green-500/10 border-green-500/25' : 'bg-red-500/10 border-red-500/25'
+  const formatP = (n: number) =>
+    n >= 1000 ? n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : n.toFixed(5)
+  const slDist = Math.abs(signal.precioEntrada - signal.stopLoss)
+  const tpDist = Math.abs(signal.takeProfit - signal.precioEntrada)
+
+  return (
+    <div className={`rounded-xl border p-4 space-y-3 ${bg}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className={`text-sm font-black ${accent}`}>{isCompra ? '▲' : '▼'} {signal.simbolo}</span>
+            {signal.killSwitch && (
+              <span className="text-[10px] font-bold text-red-400 bg-red-500/15 border border-red-500/30 px-2 py-0.5 rounded-full animate-pulse">
+                VETADO FAROS
+              </span>
+            )}
+          </div>
+          <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{signal.nombre} · {signal.sector}</div>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <div className={`text-xs font-bold ${accent}`}>{signal.confianza}% confianza</div>
+          {signal.psiScore != null && (
+            <div className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
+              FAROS Ψ {(signal.psiScore * 100).toFixed(0)}%
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 font-mono text-xs">
+        <div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Entrada</div>
+          <div className="font-bold mt-0.5" style={{ color: 'var(--text-primary)' }}>{formatP(signal.precioEntrada)}</div>
+        </div>
+        <div>
+          <div className="text-red-400" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stop Loss</div>
+          <div className="font-bold text-red-400 mt-0.5">{formatP(signal.stopLoss)}</div>
+          <div className="text-[10px] text-red-400 opacity-70">-{formatP(slDist)}</div>
+        </div>
+        <div>
+          <div className="text-green-400" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Take Profit</div>
+          <div className="font-bold text-green-400 mt-0.5">{formatP(signal.takeProfit)}</div>
+          <div className="text-[10px] text-green-400 opacity-70">+{formatP(tpDist)}</div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        <div className="flex items-center gap-3 text-xs font-mono">
+          <span>
+            <span style={{ color: 'var(--text-muted)' }}>Lotaje: </span>
+            <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{signal.lotaje}</span>
+          </span>
+          <span>
+            <span style={{ color: 'var(--text-muted)' }}>RR: </span>
+            <span className="font-bold" style={{ color: 'var(--text-primary)' }}>1:{signal.rrRatio}</span>
+          </span>
+          <span>
+            <span style={{ color: 'var(--text-muted)' }}>Riesgo: </span>
+            <span className="font-bold text-yellow-400">${signal.riesgoUsd}</span>
+          </span>
+        </div>
+        <button
+          onClick={() => onCopy(formatSignalText(signal))}
+          className="text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all hover:scale-105"
+          style={{ background: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+        >
+          Copiar
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
@@ -553,6 +740,13 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
   const [mt5PositionsLoading, setMt5PositionsLoading] = useState(false)
   const [tradeModal, setTradeModal] = useState<TradeModalState | null>(null)
   const [tradeSuccess, setTradeSuccess] = useState<string | null>(null)
+
+  // Signals state
+  const [copiedSignal, setCopiedSignal] = useState<string | null>(null)
+  const [savingSignals, setSavingSignals] = useState(false)
+  const [savedCount, setSavedCount] = useState<number | null>(null)
+  const [signalHistory, setSignalHistory] = useState<CfdSignalRecord[]>([])
+  const [updatingResultado, setUpdatingResultado] = useState<string | null>(null)
 
   const [video, setVideo] = useState<{ youtubeUrl: string; title: string | null }>({ youtubeUrl: '', title: null })
   const [editMode, setEditMode] = useState(false)
@@ -663,7 +857,65 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
     setTimeout(() => setTradeSuccess(null), 5000)
   }
 
+  const loadSignalHistory = useCallback(async () => {
+    try {
+      const res = await fetch('/api/cfds/signals')
+      if (res.ok) setSignalHistory(await res.json())
+    } catch {}
+  }, [])
+
+  useEffect(() => { loadSignalHistory() }, [loadSignalHistory])
+
+  useEffect(() => {
+    if (activeTab === 'senales') loadSignalHistory()
+  }, [activeTab, loadSignalHistory])
+
+  const handleCopySignal = (text: string) => {
+    navigator.clipboard.writeText(text).catch(() => {})
+    setCopiedSignal(text.split('\n')[0])
+    setTimeout(() => setCopiedSignal(null), 2500)
+  }
+
+  const handleSaveSignals = async (signals: CfdSignalCalc[]) => {
+    setSavingSignals(true)
+    setSavedCount(null)
+    try {
+      const res = await fetch('/api/cfds/signals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ signals }),
+      })
+      if (res.ok) {
+        const d = await res.json()
+        setSavedCount(d.saved ?? signals.length)
+        await loadSignalHistory()
+      }
+    } catch {} finally {
+      setSavingSignals(false)
+    }
+  }
+
+  const handleUpdateResultado = async (id: string, resultado: string) => {
+    setUpdatingResultado(id)
+    try {
+      await fetch(`/api/cfds/signals/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resultado }),
+      })
+      await loadSignalHistory()
+    } catch {} finally {
+      setUpdatingResultado(null)
+    }
+  }
+
   const activosByRanking = result?.activos ? [...result.activos].sort((a, b) => b.confianza - a.confianza) : []
+  const signalActivos: CfdSignalCalc[] = result
+    ? result.activos
+        .filter(a => a.confianza >= 70 && a.sesgo !== 'NEUTRAL')
+        .map(a => calcSignal(a, riskProfile, result.faros))
+    : []
+
   const sesgoGeneral = result?.estrategia?.sesgo_general ?? 'NEUTRAL'
   const gs = GENERAL_STYLES[sesgoGeneral] ?? GENERAL_STYLES.NEUTRAL
 
@@ -712,6 +964,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
       <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         {[
           { id: 'analisis' as ActiveTab, label: '🔍 Análisis de Mercado' },
+          { id: 'senales' as ActiveTab, label: `📋 Señales CFD${signalActivos.length > 0 ? ` (${signalActivos.length})` : ''}` },
           { id: 'mt5' as ActiveTab, label: `🤖 Trading MT5${mt5Account ? ' ✓' : ''}` },
         ].map(tab => (
           <button
@@ -728,6 +981,199 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
           </button>
         ))}
       </div>
+
+      {/* ── Copy toast ── */}
+      {copiedSignal && (
+        <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2.5 text-sm text-green-400 flex items-center gap-2">
+          ✓ Señal copiada: {copiedSignal}
+        </div>
+      )}
+
+      {/* ── Señales CFD Tab ── */}
+      {activeTab === 'senales' && (
+        <div className="space-y-6">
+          {/* Explainer FAROS */}
+          <div className="rounded-xl border p-5 space-y-3" style={{ background: 'rgba(201,168,76,0.04)', borderColor: 'rgba(201,168,76,0.18)' }}>
+            <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>FAROS v7.0 — QUÉ HACE Y POR QUÉ IMPORTA</p>
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+              Los 5 agentes estándar analizan solo el precio del día (cambio 24h). <strong className="text-[var(--text-secondary)]">FAROS añade la dimensión de régimen de mercado</strong> usando 30 días de OHLCV y física de fluidos (Navier-Stokes):
+              Z-Score termodinámico · Reynolds% (turbulencia) · αflow (demanda orgánica) · Ψ Governance.
+            </p>
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+              <strong className="text-yellow-400">Sin FAROS</strong>: una señal COMPRA BTC al 82% confianza en régimen PLASMA (euforia extrema, Reynolds{'>'}90%) parece igual de válida que en régimen LÍQUIDO saludable.{' '}
+              <strong className="text-[var(--text-secondary)]">Con FAROS</strong>: la señal se marca como <span className="text-red-400 font-bold">VETADA</span> cuando killSwitch=true — independiente del sesgo del agente.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+              {[
+                { k: 'Z-Score', v: 'Estado termodinámico. LÍQUIDO=OK, PLASMA=veto' },
+                { k: 'Reynolds%', v: '<50% laminar · >75% turbulento · >95% colapso' },
+                { k: 'αflow', v: 'Cerca 1=orgánico · cerca 0=manipulado' },
+                { k: 'Ψ Score', v: '>0.6 señal fuerte · =0 Kill Switch activo' },
+              ].map(item => (
+                <div key={item.k} className="rounded-lg p-2.5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                  <div className="text-[10px] font-bold font-mono mb-1" style={{ color: 'var(--gold)' }}>{item.k}</div>
+                  <div className="text-[10px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>{item.v}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* No analysis yet */}
+          {!result && (
+            <div className="rounded-xl border p-8 text-center" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
+              <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>
+                Primero corre el análisis de mercado para generar señales con confianza ≥70%.
+              </p>
+              <button
+                onClick={() => setActiveTab('analisis')}
+                className="text-xs px-4 py-2 rounded-lg border transition-all hover:bg-white/5"
+                style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+              >
+                Ir a Análisis de Mercado
+              </button>
+            </div>
+          )}
+
+          {/* Signals from current analysis */}
+          {result && signalActivos.length === 0 && (
+            <div className="rounded-xl border p-6 text-center" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                Ningún activo alcanzó ≥70% de confianza con sesgo direccional en este análisis.
+              </p>
+            </div>
+          )}
+
+          {result && signalActivos.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                    Señales activas — Cuenta $1,000 · Riesgo 1% ($10)
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>
+                    {signalActivos.length} activo{signalActivos.length !== 1 ? 's' : ''} con confianza ≥70% · RR 1:2
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleSaveSignals(signalActivos)}
+                  disabled={savingSignals}
+                  className="text-xs font-bold px-4 py-2 rounded-lg border transition-all hover:scale-105 disabled:opacity-50"
+                  style={{ background: 'rgba(201,168,76,0.1)', borderColor: 'rgba(201,168,76,0.3)', color: 'var(--gold)' }}
+                >
+                  {savingSignals ? 'Guardando...' : 'Guardar en DB'}
+                </button>
+              </div>
+
+              {savedCount != null && (
+                <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2.5 text-sm text-green-400">
+                  ✓ {savedCount} señal{savedCount !== 1 ? 'es' : ''} guardada{savedCount !== 1 ? 's' : ''} en Supabase
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {signalActivos.map((sig, i) => (
+                  <SignalCard key={`${sig.simbolo}-${i}`} signal={sig} onCopy={handleCopySignal} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Signal history */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                Historial de señales guardadas
+              </p>
+              <button
+                onClick={loadSignalHistory}
+                className="text-[10px] px-2.5 py-1 rounded-lg border transition-all"
+                style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+              >
+                Actualizar
+              </button>
+            </div>
+
+            {signalHistory.length === 0 ? (
+              <div className="rounded-xl border p-4 text-center text-xs" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+                No hay señales guardadas aún. Corre un análisis y haz clic en &quot;Guardar en DB&quot;.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {/* Stats */}
+                {(() => {
+                  const ganadas = signalHistory.filter(s => s.resultado === 'GANADA').length
+                  const perdidas = signalHistory.filter(s => s.resultado === 'PERDIDA').length
+                  const total = ganadas + perdidas
+                  const wr = total > 0 ? ((ganadas / total) * 100).toFixed(0) : '—'
+                  const pnl = signalHistory.reduce((acc, s) => acc + (s.pnlUsd ?? 0), 0)
+                  return (
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      {[
+                        { label: 'Win Rate', value: `${wr}%`, color: 'text-green-400' },
+                        { label: 'Operaciones', value: `${total}/${signalHistory.length}`, color: 'var(--text-primary)' },
+                        { label: 'PnL Total', value: `${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}`, color: pnl >= 0 ? 'text-green-400' : 'text-red-400' },
+                      ].map(stat => (
+                        <div key={stat.label} className="rounded-xl border p-3 text-center" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+                          <div className={`text-lg font-black font-mono ${stat.color}`} style={typeof stat.color === 'string' && stat.color.startsWith('var') ? { color: stat.color } : {}}>{stat.value}</div>
+                          <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{stat.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
+
+                {/* History rows */}
+                {signalHistory.map(sig => {
+                  const isCompra = sig.sesgo === 'COMPRA'
+                  const resultColor: Record<string, string> = {
+                    GANADA: 'text-green-400', PERDIDA: 'text-red-400',
+                    BREAKEVEN: 'text-yellow-400', PENDIENTE: 'text-gray-400',
+                  }
+                  const formatP = (n: number) =>
+                    n >= 1000 ? n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : n.toFixed(5)
+                  return (
+                    <div key={sig.id} className="rounded-xl border p-3.5 flex items-center gap-3" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg flex-shrink-0 ${isCompra ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
+                        {isCompra ? '▲' : '▼'} {sig.simbolo}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-mono font-bold" style={{ color: 'var(--text-primary)' }}>
+                            {formatP(sig.precioEntrada)}
+                          </span>
+                          <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                            SL {formatP(sig.stopLoss)} · TP {formatP(sig.takeProfit)} · {sig.lotaje} lotes
+                          </span>
+                        </div>
+                        <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                          {new Date(sig.createdAt).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                          {sig.killSwitch && <span className="ml-1 text-red-400">· VETADO FAROS</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className={`text-[11px] font-bold ${resultColor[sig.resultado] ?? 'text-gray-400'}`}>
+                          {sig.resultado}
+                        </span>
+                        <select
+                          value={sig.resultado}
+                          disabled={updatingResultado === sig.id}
+                          onChange={e => handleUpdateResultado(sig.id, e.target.value)}
+                          className="text-[10px] rounded-lg px-2 py-1 border"
+                          style={{ background: 'var(--bg-hover)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+                        >
+                          {['PENDIENTE', 'GANADA', 'PERDIDA', 'BREAKEVEN'].map(r => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Trade success toast ── */}
       {tradeSuccess && (

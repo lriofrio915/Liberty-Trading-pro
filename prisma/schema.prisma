@@ -438,6 +438,44 @@ model VibeMessage {
   @@index([userId, createdAt])
 }
 
+// ─── CFD SEÑALES DE TRADING ───────────────────────────────────────────────────
+
+model CfdSignal {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+
+  simbolo       String
+  nombre        String
+  sector        String
+  sesgo         String                           // COMPRA | VENTA
+  confianza     Int
+  razon         String    @db.Text
+
+  precioEntrada Float
+  stopLoss      Float
+  takeProfit    Float
+  lotaje        Float
+  riesgoUsd     Float     @default(10)
+  rrRatio       Float     @default(2.0)
+  riskProfile   String    @default("moderado")
+
+  // Contexto FAROS al momento del análisis
+  farosSesgo    String?
+  farosRegimen  String?
+  psiScore      Float?
+  killSwitch    Boolean   @default(false)
+
+  // Forward testing / backtesting
+  resultado     String    @default("PENDIENTE") // GANADA|PERDIDA|BREAKEVEN|PENDIENTE
+  pnlUsd        Float?
+  closedAt      DateTime?
+  closedPrice   Float?
+
+  @@index([createdAt])
+  @@index([simbolo, createdAt])
+  @@index([resultado])
+}
+
 // ─── LABORATORIO DE ESTRATEGIA ────────────────────────────────────────────────
 
 // Escaneo automático diario a las 9am ET (lunes a viernes)
