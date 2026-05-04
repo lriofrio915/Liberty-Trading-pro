@@ -1176,23 +1176,25 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                     {signalActivos.length} activo{signalActivos.length !== 1 ? 's' : ''} con confianza ≥70% · RR 1:2
                   </p>
                 </div>
-                <button
-                  onClick={() => handleSaveSignals(signalActivos)}
-                  disabled={savingSignals}
-                  className="text-xs font-bold px-4 py-2 rounded-lg border transition-all hover:scale-105 disabled:opacity-50"
-                  style={{ background: 'rgba(201,168,76,0.1)', borderColor: 'rgba(201,168,76,0.3)', color: 'var(--gold)' }}
-                >
-                  {savingSignals ? 'Guardando...' : 'Guardar en DB'}
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => handleSaveSignals(signalActivos)}
+                    disabled={savingSignals}
+                    className="text-xs font-bold px-4 py-2 rounded-lg border transition-all hover:scale-105 disabled:opacity-50"
+                    style={{ background: 'rgba(201,168,76,0.1)', borderColor: 'rgba(201,168,76,0.3)', color: 'var(--gold)' }}
+                  >
+                    {savingSignals ? 'Guardando...' : 'Guardar en DB'}
+                  </button>
+                )}
               </div>
 
-              {savedCount != null && (
+              {isAdmin && savedCount != null && (
                 <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2.5 text-sm text-green-400">
                   ✓ {savedCount} señal{savedCount !== 1 ? 'es' : ''} guardada{savedCount !== 1 ? 's' : ''} en Supabase
                 </div>
               )}
 
-              {skippedSignals && (skippedSignals.skipped.length > 0 || skippedSignals.updated.length > 0) && (
+              {isAdmin && skippedSignals && (skippedSignals.skipped.length > 0 || skippedSignals.updated.length > 0) && (
                 <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/8 px-4 py-3 space-y-1">
                   {skippedSignals.skipped.length > 0 && (
                     <p className="text-xs text-yellow-400">
@@ -1293,17 +1295,19 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                         <span className={`text-[11px] font-bold ${resultColor[sig.resultado] ?? 'text-gray-400'}`}>
                           {sig.resultado}
                         </span>
-                        <select
-                          value={sig.resultado}
-                          disabled={updatingResultado === sig.id}
-                          onChange={e => handleUpdateResultado(sig.id, e.target.value)}
-                          className="text-[10px] rounded-lg px-2 py-1 border"
-                          style={{ background: 'var(--bg-hover)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-                        >
-                          {['PENDIENTE', 'GANADA', 'PERDIDA', 'BREAKEVEN'].map(r => (
-                            <option key={r} value={r}>{r}</option>
-                          ))}
-                        </select>
+                        {isAdmin && (
+                          <select
+                            value={sig.resultado}
+                            disabled={updatingResultado === sig.id}
+                            onChange={e => handleUpdateResultado(sig.id, e.target.value)}
+                            className="text-[10px] rounded-lg px-2 py-1 border"
+                            style={{ background: 'var(--bg-hover)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+                          >
+                            {['PENDIENTE', 'GANADA', 'PERDIDA', 'BREAKEVEN'].map(r => (
+                              <option key={r} value={r}>{r}</option>
+                            ))}
+                          </select>
+                        )}
                       </div>
                     </div>
                   )
