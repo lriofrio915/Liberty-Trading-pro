@@ -46,9 +46,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={`${cormorant.variable} ${dmMono.variable} ${syne.variable}`}>
-      <head>
-        <link rel="stylesheet" href="https://static.hotmart.com/css/hotmart-fb.min.css" />
-      </head>
       <body>
         <LanguageProvider>{children}</LanguageProvider>
         <ScrollToTop />
