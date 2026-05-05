@@ -4,13 +4,17 @@ import Pricing from '@/components/Pricing/Pricing'
 import Footer from '@/components/Footer/Footer'
 import VincesWidget from '@/components/VincesWidget/VincesWidget'
 import Link from 'next/link'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 const WA = `https://wa.me/+${process.env.LUIS_PHONE || ''}?text=Hola%20Luis%2C%20me%20interesa%20el%20servicio%20P2P%20de%20USDT%2FBTC`
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createSupabaseServerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+
   return (
     <main className="relative noise">
-      <Navbar />
+      <Navbar initialUser={session?.user ?? null} />
       <Hero />
 
       {/* ─── QUÉ INCLUYE LA SUSCRIPCIÓN ──────────────────────── */}

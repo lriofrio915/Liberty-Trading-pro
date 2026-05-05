@@ -13,19 +13,23 @@ const NAV_LINKS = [
   { href: '#p2p', label: 'P2P Cripto' },
 ]
 
-export default function Navbar() {
+interface NavbarProps {
+  initialUser?: User | null
+}
+
+export default function Navbar({ initialUser = null }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
+  // Start with server-resolved user — eliminates flash of wrong buttons on hydration
+  const [user, setUser] = useState<User | null>(initialUser)
 
   useEffect(() => {
     const supabase = createClient()
 
-    // Get current session
+    // Sync in case session changed since SSR (e.g. tab was left open, token refreshed)
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
     })
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null)

@@ -3,13 +3,17 @@ import Footer from '@/components/Footer/Footer'
 import LeadCaptureForm from '@/components/LeadCaptureForm/LeadCaptureForm'
 import PersonalContactForm from '@/components/PersonalContactForm/PersonalContactForm'
 import VincesWidget from '@/components/VincesWidget/VincesWidget'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 const HOTMART_MENSUAL = process.env.HOTMART_LINK_MENSUAL || ''
 
-export default function MentoriaIntegralPage() {
+export default async function MentoriaIntegralPage() {
+  const supabase = await createSupabaseServerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+
   return (
     <main className="relative noise">
-      <Navbar />
+      <Navbar initialUser={session?.user ?? null} />
 
       {/* ─── HERO ───────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center overflow-hidden grid-bg pt-16">
