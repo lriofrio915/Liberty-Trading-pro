@@ -13,7 +13,8 @@ jobs:
         run: |
           HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
             --max-time 100 \
-            "${{ secrets.APP_URL }}/api/cron/market-scan?secret=${{ secrets.CRON_SECRET }}")
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/market-scan")
           echo "HTTP status: $HTTP"
           cat /tmp/response.txt || true
           if [ "$HTTP" != "200" ]; then

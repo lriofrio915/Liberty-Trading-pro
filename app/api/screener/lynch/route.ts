@@ -11,7 +11,7 @@ const CRON_SECRET = process.env.CRON_SECRET || ''
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const refresh = searchParams.get('refresh') === 'true'
-  const secret = searchParams.get('secret') || ''
+  const secret = req.headers.get('authorization')?.replace('Bearer ', '') || searchParams.get('secret') || ''
 
   // Cron path: valid secret bypasses Supabase auth entirely
   const isCron = refresh && CRON_SECRET && secret === CRON_SECRET

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import DOMPurify from 'dompurify'
 import type { ChatMessage } from '@/types'
 
 export default function VincesClient() {
@@ -90,7 +91,7 @@ export default function VincesClient() {
               }`}
             >
               {msg.role === 'assistant' ? (
-                <div dangerouslySetInnerHTML={{ __html: formatMessage(msg.content) }} />
+                <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatMessage(msg.content)) }} />
               ) : (
                 msg.content
               )}

@@ -12,7 +12,8 @@ jobs:
       - name: Trigger screener refresh
         run: |
           HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
-            "${{ secrets.APP_URL }}/api/screener/lynch?refresh=true&secret=${{ secrets.CRON_SECRET }}")
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/screener/lynch?refresh=true")
           echo "HTTP status: $HTTP"
           cat /tmp/response.txt || true
           if [ "$HTTP" != "200" ]; then

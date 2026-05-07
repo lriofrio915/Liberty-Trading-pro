@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
+import DOMPurify from 'dompurify'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -623,7 +624,7 @@ export default function ReportesClient() {
             {analysis && (
               <div
                 className="text-sm text-[var(--text-secondary)] leading-relaxed border-t border-[var(--border)] pt-4"
-                dangerouslySetInnerHTML={{ __html: formatAnalysis(analysis) }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatAnalysis(analysis)) }}
               />
             )}
 

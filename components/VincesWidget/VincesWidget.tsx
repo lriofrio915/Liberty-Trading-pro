@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Image from 'next/image'
+import DOMPurify from 'dompurify'
 import type { ChatMessage } from '@/types'
 
 // ─── Config por modo ─────────────────────────────────────────────────────────
@@ -392,7 +393,7 @@ export default function VincesWidget({ mode = 'dashboard' }: Props) {
                   {msg.role === 'assistant' ? (
                     <div
                       className="text-[var(--text-primary)]"
-                      dangerouslySetInnerHTML={{ __html: formatMessage(msg.content) }}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatMessage(msg.content)) }}
                     />
                   ) : (
                     msg.content

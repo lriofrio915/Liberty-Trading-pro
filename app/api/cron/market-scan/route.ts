@@ -8,7 +8,7 @@ export const maxDuration = 90
 const CRON_SECRET = process.env.CRON_SECRET || ''
 
 export async function GET(req: NextRequest) {
-  const secret = new URL(req.url).searchParams.get('secret') || ''
+  const secret = req.headers.get('authorization')?.replace('Bearer ', '') || new URL(req.url).searchParams.get('secret') || ''
   if (!CRON_SECRET || secret !== CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

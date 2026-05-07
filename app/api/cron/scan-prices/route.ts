@@ -27,7 +27,7 @@ function calcRendimiento(precio9am: number, precioNow: number, sesgo: string): n
 
 export async function GET(req: NextRequest) {
   const params = new URL(req.url).searchParams
-  const secret = params.get('secret') || ''
+  const secret = req.headers.get('authorization')?.replace('Bearer ', '') || params.get('secret') || ''
   const checkpoint = params.get('checkpoint') // '12pm' | '3pm'
 
   if (!CRON_SECRET || secret !== CRON_SECRET) {

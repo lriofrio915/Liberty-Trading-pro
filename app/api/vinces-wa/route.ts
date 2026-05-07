@@ -7,9 +7,10 @@ const LINKS = {
   ANUAL:   process.env.HOTMART_LINK_ANUAL   || 'https://pay.hotmart.com/L104900408S?checkoutMode=2',
 }
 
-const EVO_URL      = process.env.EVOLUTION_API_URL || 'https://evo.nexus-ia.com.es'
-const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || 'vinces'
-const EVO_KEY      = process.env.EVOLUTION_API_KEY  || ''
+const EVO_URL           = process.env.EVOLUTION_API_URL || 'https://evo.nexus-ia.com.es'
+const EVO_INSTANCE      = process.env.EVOLUTION_INSTANCE || 'vinces'
+const EVO_KEY           = process.env.EVOLUTION_API_KEY  || ''
+const EVO_WEBHOOK_SECRET = process.env.EVOLUTION_WEBHOOK_SECRET || ''
 
 // ── Contexto de Liberty Trading Pro ───────────────────────────────────────────
 const CONTEXTO_LUIS = `
@@ -302,6 +303,13 @@ REGLAS ESTRICTAS:
 
 export async function POST(req: NextRequest) {
   try {
+    if (EVO_WEBHOOK_SECRET) {
+      const incomingSecret = req.headers.get('x-evolution-secret') || ''
+      if (incomingSecret !== EVO_WEBHOOK_SECRET) {
+        return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+      }
+    }
+
     const body = await req.json()
     const { phone: rawPhone, pushName, isAudio, rawMessage } = body as {
       phone: string

@@ -12,7 +12,8 @@ jobs:
       - name: Update 3pm prices
         run: |
           HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
-            "${{ secrets.APP_URL }}/api/cron/scan-prices?checkpoint=3pm&secret=${{ secrets.CRON_SECRET }}")
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/scan-prices?checkpoint=3pm")
           echo "HTTP status: $HTTP"
           cat /tmp/response.txt || true
           if [ "$HTTP" != "200" ]; then
