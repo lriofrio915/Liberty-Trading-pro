@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { callAI } from '@/lib/ai-providers'
+import { notifyNexus } from '@/lib/notify-nexus'
 
-const EVO_URL      = process.env.EVOLUTION_API_URL  || ''
-const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || 'vinces'
-const EVO_KEY      = process.env.EVOLUTION_API_KEY  || ''
-const LUIS_PHONE   = process.env.LUIS_PHONE         || ''
 const N8N_WEBHOOK_LANDING = process.env.N8N_WEBHOOK_LANDING || ''
 
 const LINKS = {
@@ -26,20 +24,6 @@ function sanitizeText(text: string): string {
     .replace(/\u201D/g, '"')
     .replace(/\u2026/g, '...')
     .replace(/[^\x00-\x7F]/g, '')
-}
-
-async function sendWA(phone: string, text: string) {
-  if (!EVO_URL || !EVO_KEY) return
-  try {
-    await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
-      method: 'POST',
-      headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ number: phone, text }),
-      signal: AbortSignal.timeout(12000),
-    })
-  } catch (e) {
-    console.error('[VincesLanding] sendWA error:', e)
-  }
 }
 
 async function captureLead(name: string, phone: string, email: string, plan: string) {
@@ -83,7 +67,14 @@ async function captureLead(name: string, phone: string, email: string, plan: str
       `_Capturado desde el chat de la landing._`
 
     await Promise.allSettled([
-      sendWA(LUIS_PHONE, msgLuis),
+      notifyNexus('lead_landing', {
+        name: name.trim(),
+        phone: cleanedPhone,
+        email: email || '',
+        plan: planNorm,
+        planLabel,
+        fuente: 'chat_landing',
+      }),
       N8N_WEBHOOK_LANDING
         ? fetch(N8N_WEBHOOK_LANDING, {
             method: 'POST',
@@ -113,9 +104,9 @@ export async function POST(req: NextRequest) {
   try {
     const { messages, leadSession } = await req.json()
 
-    const apiKey = process.env.OPENROUTER_API_KEY
-    const model  = process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat-v3-0324'
-    if (!apiKey) return NextResponse.json({ error: 'API key not configured' }, { status: 500 })
+    if (!process.env.OPENROUTER_API_KEY && !process.env.MINIMAX_API_KEY) {
+      return NextResponse.json({ error: 'No AI provider configured' }, { status: 500 })
+    }
 
     const systemPrompt = sanitizeText(
       `Eres Vinces, el asistente de ventas de Liberty Trading Pro, la plataforma de trading de Luis Riofrio (Ecuador).\n\n` +
@@ -154,32 +145,18 @@ export async function POST(req: NextRequest) {
       content: sanitizeText(String(m.content ?? '')),
     }))
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
-        'X-Title': 'Liberty Trading Pro -- Vinces Landing',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...mensajesSanitizados,
-        ],
-        max_tokens: 400,
-        temperature: 0.75,
-      }),
+    const result = await callAI({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...mensajesSanitizados,
+      ],
+      maxTokens: 400,
+      temperature: 0.75,
+      httpReferer: process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
+      xTitle: 'Liberty Trading Pro -- Vinces Landing',
     })
 
-    if (!response.ok) {
-      const error = await response.text()
-      return NextResponse.json({ error }, { status: response.status })
-    }
-
-    const data = await response.json()
-    let content: string = data.choices?.[0]?.message?.content || ''
+    let content: string = result.content || ''
     if (!content) return NextResponse.json({ error: 'No response from AI' }, { status: 500 })
 
     // Extract LEAD marker if present

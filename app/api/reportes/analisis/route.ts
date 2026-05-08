@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { callAI } from '@/lib/ai-providers'
 
 function sanitize(text: string): string {
   return text
@@ -18,8 +19,9 @@ export async function POST(req: NextRequest) {
 
     const { stats, periodLabel, sessions } = await req.json()
 
-    const apiKey = process.env.OPENROUTER_API_KEY
-    if (!apiKey) return NextResponse.json({ error: 'API key not configured' }, { status: 500 })
+    if (!process.env.OPENROUTER_API_KEY && !process.env.MINIMAX_API_KEY) {
+      return NextResponse.json({ error: 'No AI provider configured' }, { status: 500 })
+    }
 
     // Build a compact sessions summary (last 20 for context)
     const sessionLines = (sessions as any[])
@@ -54,24 +56,15 @@ export async function POST(req: NextRequest) {
       `Sé directo, honesto y actionable. Escribe en espanol. Maximo 400 palabras.`
     )
 
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
-        'X-Title': 'Liberty Trading Pro -- Report Analysis',
-      },
-      body: JSON.stringify({
-        model: process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat-v3-0324',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 1000,
-        temperature: 0.5,
-      }),
+    const result = await callAI({
+      messages: [{ role: 'user', content: prompt }],
+      maxTokens: 1000,
+      temperature: 0.5,
+      httpReferer: process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
+      xTitle: 'Liberty Trading Pro -- Report Analysis',
     })
 
-    const data = await res.json()
-    const analysis = data.choices?.[0]?.message?.content ?? null
+    const analysis = result.content || null
 
     return NextResponse.json({ analysis })
   } catch (err: any) {

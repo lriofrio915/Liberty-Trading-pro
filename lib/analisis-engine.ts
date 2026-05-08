@@ -234,36 +234,18 @@ export function extractJSON(text: string): string {
 }
 
 export async function runAgent(systemPrompt: string, userMessage: string): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY
-  if (!apiKey) throw new Error('OPENROUTER_API_KEY not set')
-
-  const model = process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat-v3-0324'
-
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://liberty-trading.pro',
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-      temperature: 0.2,
-      max_tokens: 1100,
-    }),
+  const { callAI } = await import('@/lib/ai-providers')
+  const result = await callAI({
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage },
+    ],
+    maxTokens: 1100,
+    temperature: 0.2,
+    httpReferer: 'https://liberty-trading.pro',
     signal: AbortSignal.timeout(50000),
   })
-
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`OpenRouter ${res.status}: ${err}`)
-  }
-  const data = await res.json()
-  return data.choices?.[0]?.message?.content ?? '{}'
+  return result.content
 }
 
 // ── Agent definitions ──────────────────────────────────────────────────────────

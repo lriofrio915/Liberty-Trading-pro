@@ -1,22 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-
-const EVO_URL      = process.env.EVOLUTION_API_URL  || 'https://evo.nexus-ia.com.es'
-const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || 'vinces'
-const EVO_KEY      = process.env.EVOLUTION_API_KEY  || ''
-const LUIS_PHONE   = process.env.LUIS_PHONE         || ''
+import { notifyLeadContact } from '@/lib/notify-nexus'
 
 function cleanPhone(phone: string) {
   return phone.replace(/[\s\-\+\(\)]/g, '')
-}
-
-async function sendWA(phone: string, text: string) {
-  await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
-    method: 'POST',
-    headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ number: phone, text }),
-    signal: AbortSignal.timeout(15000),
-  })
 }
 
 export async function POST(req: NextRequest) {
@@ -57,17 +44,14 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Notify Luis personally — NOT automated Vinces
-    const msgLuis =
-      `📞 *Solicitud de contacto personal* — formulario web\n\n` +
-      `👤 *Nombre:* ${name.trim()}\n` +
-      `📱 *WhatsApp:* +${cleanedPhone}\n` +
-      `📧 *Email:* ${email || 'no proporcionado'}\n` +
-      `🎯 *Plan de interés:* ${planLabel}\n` +
-      (mensaje?.trim() ? `💬 *Mensaje:* ${mensaje.trim()}\n` : '') +
-      `\n_Este lead quiere hablar contigo directamente. Vinces NO le ha escrito._`
-
-    await sendWA(LUIS_PHONE, msgLuis)
+    // Notify nexus_claw
+    await notifyLeadContact({
+      name: name.trim(),
+      phone: cleanedPhone,
+      email: email?.trim() || undefined,
+      mensaje: mensaje?.trim() || undefined,
+      planInteres: planLabel,
+    })
 
     return NextResponse.json({ ok: true })
   } catch (err: any) {

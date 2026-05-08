@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { prisma } from '@/lib/prisma'
+import { callAI } from '@/lib/ai-providers'
 import { fetchTickerFinancials, buildDataBlock } from '@/lib/yahoo-financials'
 
 export const maxDuration = 60
@@ -88,8 +89,6 @@ export async function POST(req: NextRequest) {
     // ── 2. Generate structured AI report ──
     let aiReport: string | null = null
     try {
-      const apiKey = process.env.OPENROUTER_API_KEY
-      const model = process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat-v3-0324'
 
       const preciosAdmin = precioEntradaManual || precioObjetivoManual
         ? `\nPRECIOS DEFINIDOS POR EL ANALISTA (usa estos valores exactos en el informe):
@@ -146,25 +145,17 @@ REGLAS ESTRICTAS:
   "mes_año": "${new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}"
 }`
 
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
-          'X-Title': 'Liberty Trading Pro - Investment Report',
-        },
-        body: JSON.stringify({
-          model,
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.15,
-          max_tokens: 4096,
-        }),
+      const result = await callAI({
+        model: 'openai/gpt-4.1',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.15,
+        maxTokens: 4096,
+        httpReferer: process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
+        xTitle: 'Liberty Trading Pro - Investment Report',
         signal: AbortSignal.timeout(55000),
       })
 
-      const data = await res.json()
-      const raw = data.choices?.[0]?.message?.content ?? null
+      const raw = result.content || null
       if (raw) {
         const start = raw.indexOf('{')
         const end = raw.lastIndexOf('}')

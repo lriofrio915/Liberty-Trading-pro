@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { prisma } from '@/lib/prisma'
+import { callAI } from '@/lib/ai-providers'
 import { fetchTickerFinancials, buildDataBlock } from '@/lib/yahoo-financials'
 
 export const maxDuration = 60
@@ -22,8 +23,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const yf = await fetchTickerFinancials(existing.ticker)
     const dataBlock = buildDataBlock(yf)
 
-    const apiKey = process.env.OPENROUTER_API_KEY
-    const model = process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat-v3-0324'
+    // AI report generation delegated to centralized provider
 
     const prompt = `Eres un analista financiero senior de Liberty Trading Club. Tienes los siguientes DATOS REALES de mercado para ${yf.ticker}:
 
@@ -73,31 +73,17 @@ REGLAS ESTRICTAS:
   "mes_año": "${new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}"
 }`
 
-    const aiRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
-        'X-Title': 'Liberty Trading Pro - Investment Report',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.15,
-        max_tokens: 4096,
-      }),
+    const result = await callAI({
+      model: 'openai/gpt-4.1',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.15,
+      maxTokens: 4096,
+      httpReferer: process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
+      xTitle: 'Liberty Trading Pro - Investment Report',
       signal: AbortSignal.timeout(55000),
     })
 
-    if (!aiRes.ok) {
-      const errText = await aiRes.text()
-      console.error('[picks POST] OpenRouter error:', aiRes.status, errText)
-      return NextResponse.json({ error: `OpenRouter ${aiRes.status}: ${errText.slice(0, 200)}` }, { status: 502 })
-    }
-
-    const aiData = await aiRes.json()
-    const raw = aiData.choices?.[0]?.message?.content ?? null
+    const raw = result.content || null
     let aiReport: string | null = null
     if (raw) {
       const start = raw.indexOf('{')
