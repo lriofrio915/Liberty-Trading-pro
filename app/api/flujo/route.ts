@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { fetchAllOHLCV, fetchAllPrices, type PriceItem } from '@/lib/analisis-engine'
-import { computeFarosMetrics, type OHLCVData, type FarosMetrics } from '@/lib/faros-metrics'
+import { fetchAllPrices, type PriceItem, type OHLCVData } from '@/lib/analisis-engine'
+import { computeFarosMetrics, type FarosMetrics } from '@/lib/faros-metrics'
 
 export const runtime = 'nodejs'
 export const revalidate = 900 // cache 15 min — OHLCV is daily data

@@ -24,11 +24,6 @@ export async function GET(req: NextRequest) {
       a => a.confianza >= 70 && (a.sesgo === 'COMPRA' || a.sesgo === 'VENTA'),
     )
 
-    // FAROS lookup map: symbol → killSwitch + psiScore
-    const farosMap = new Map(
-      (result.faros?.activos_faros ?? []).map(f => [f.symbol, f])
-    )
-
     // Mark as today's scan date at midnight UTC
     const today = new Date()
     today.setUTCHours(0, 0, 0, 0)
@@ -41,20 +36,15 @@ export async function GET(req: NextRequest) {
         resumen,
         riskProfile: 'agresivo',
         oportunidades: {
-          create: oportunidades.map(a => {
-            const fa = farosMap.get(a.simbolo)
-            return {
-              simbolo:         a.simbolo,
-              nombre:          a.nombre,
-              sesgo:           a.sesgo,
-              confianza:       a.confianza,
-              precio9am:       a.precio,
-              razon:           a.razon,
-              sector:          a.sector,
-              farosKillSwitch: fa?.killSwitch ?? null,
-              farosPsiScore:   fa?.psiScore   ?? null,
-            }
-          }),
+          create: oportunidades.map(a => ({
+            simbolo:   a.simbolo,
+            nombre:    a.nombre,
+            sesgo:     a.sesgo,
+            confianza: a.confianza,
+            precio9am: a.precio,
+            razon:     a.razon,
+            sector:    a.sector,
+          })),
         },
       },
       include: { oportunidades: true },

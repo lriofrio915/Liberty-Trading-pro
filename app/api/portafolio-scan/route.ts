@@ -8,15 +8,15 @@ export const dynamic = 'force-dynamic'
 function calcStats(opps: {
   rendimiento12pm: number | null
   rendimiento3pm: number | null
+  rendimiento1445: number | null
   rendimientoFlip: number | null
-  farosKillSwitch: boolean | null
 }[]) {
   const closed = opps.filter(o => o.rendimiento3pm !== null || o.rendimiento12pm !== null)
   if (closed.length === 0) return { total: opps.length, closed: 0, winRate: null, avgRend: null, best: null, worst: null }
 
   const rends = closed.map(o => {
-    // Use flip rendimiento if available (signal closed early), else 3pm, else 12pm
-    return o.rendimientoFlip ?? o.rendimiento3pm ?? o.rendimiento12pm ?? 0
+    // Use flip rendimiento if available, else 14:45pm close, else 3pm, else 12pm
+    return o.rendimientoFlip ?? o.rendimiento1445 ?? o.rendimiento3pm ?? o.rendimiento12pm ?? 0
   })
   const wins = rends.filter(r => r > 0).length
   const winRate = (wins / rends.length) * 100
@@ -44,8 +44,6 @@ export async function GET() {
 
   const result = scans.map(scan => {
     const all = scan.oportunidades
-    const sinFaros = all
-    const conFaros = all.filter(o => o.farosKillSwitch !== true)
 
     return {
       id:           scan.id,
@@ -56,9 +54,7 @@ export async function GET() {
       riskProfile:  scan.riskProfile,
       createdAt:    scan.createdAt,
       stats: {
-        sinFaros: calcStats(sinFaros),
-        conFaros: calcStats(conFaros),
-        vetadas:  all.filter(o => o.farosKillSwitch === true).length,
+        total: calcStats(all),
       },
       oportunidades: all,
     }

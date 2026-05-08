@@ -47,10 +47,6 @@ export async function POST(req: NextRequest) {
       riesgoUsd:     Number(s.riesgoUsd ?? 10),
       rrRatio:       Number(s.rrRatio ?? 2),
       riskProfile:   String(s.riskProfile ?? 'moderado'),
-      farosSesgo:    s.farosSesgo ? String(s.farosSesgo) : null,
-      farosRegimen:  s.farosRegimen ? String(s.farosRegimen) : null,
-      psiScore:      s.psiScore != null ? Number(s.psiScore) : null,
-      killSwitch:    Boolean(s.killSwitch ?? false),
     })),
     skipDuplicates: false,
   })

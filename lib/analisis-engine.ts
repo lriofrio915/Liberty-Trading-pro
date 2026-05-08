@@ -1,7 +1,7 @@
 // lib/analisis-engine.ts
 // Shared analysis engine — used by /api/analisis and all cron jobs
 
-import { computeFarosMetrics, formatFarosContext, type FarosMetrics, type OHLCVData } from './faros-metrics'
+// FAROS (TAI-ACF Framework) removed — using 6 MAIA agents only
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -40,37 +40,12 @@ export interface EstrategiaResult {
   alerta_riesgo: string
 }
 
-export interface FarosAssetItem {
-  symbol: string
-  zScore: number
-  thermodynamicState: string
-  reynoldsPercentile: number
-  entropy: number
-  alphaFlow: number
-  psiScore: number
-  marketRegime: string
-  governanceSignal: string
-  killSwitch: boolean
-  trendStrength5d: number
-}
-
-export interface FarosAgentResult {
-  sesgo_faros: 'ALCISTA' | 'BAJISTA' | 'NEUTRAL' | 'KILL_SWITCH'
-  regimen_dominante: string
-  activos_faros: FarosAssetItem[]
-  resumen_faros: string
-  kill_switch_activos: string[]
-  oportunidades_faros: string
-  advertencias_faros: string
-}
-
 export interface AnalysisResult {
   timestamp: string
   riskProfile: string
   activos: AssetAnalysis[]
   estrategia: EstrategiaResult | null
   precios: PriceItem[]
-  faros?: FarosAgentResult
 }
 
 // ── Price fetching ─────────────────────────────────────────────────────────────
@@ -150,77 +125,7 @@ export async function fetchAllPrices(): Promise<PriceItem[]> {
   })
 }
 
-// ── OHLCV fetch for FAROS metrics ─────────────────────────────────────────────
 
-const FAROS_SYMBOLS: { yahoo: string; label: string }[] = [
-  { yahoo: 'BTC-USD',   label: 'BTC' },
-  { yahoo: 'ETH-USD',   label: 'ETH' },
-  { yahoo: 'NVDA',      label: 'NVDA' },
-  { yahoo: 'AAPL',      label: 'AAPL' },
-  { yahoo: 'MSFT',      label: 'MSFT' },
-  { yahoo: 'TSLA',      label: 'TSLA' },
-  { yahoo: '^GSPC',     label: 'SP500' },
-  { yahoo: 'NQ=F',      label: 'NQ' },
-  { yahoo: '%5EVIX',    label: 'VIX' },
-  { yahoo: 'DX=F',      label: 'DXY' },
-  { yahoo: 'EURUSD=X',  label: 'EURUSD' },
-  { yahoo: 'GC=F',      label: 'ORO' },
-  { yahoo: 'CL=F',      label: 'WTI' },
-  { yahoo: 'SI=F',      label: 'PLATA' },
-]
-
-export async function fetchYahooOHLCV(symbol: string, label: string): Promise<OHLCVData | null> {
-  try {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=2mo`
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        Accept: 'application/json',
-      },
-      signal: AbortSignal.timeout(15000),
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    const result = data?.chart?.result?.[0]
-    if (!result) return null
-
-    const timestamps: number[] = result.timestamp ?? []
-    const quote = result.indicators?.quote?.[0]
-    if (!quote || timestamps.length === 0) return null
-
-    const filter = (arr: (number | null)[] | undefined) =>
-      (arr ?? []).map(v => (v == null || isNaN(v) ? 0 : v))
-
-    return {
-      symbol: label,
-      timestamps,
-      opens:   filter(quote.open),
-      highs:   filter(quote.high),
-      lows:    filter(quote.low),
-      closes:  filter(quote.close),
-      volumes: filter(quote.volume),
-    }
-  } catch {
-    return null
-  }
-}
-
-export async function fetchAllOHLCV(): Promise<FarosMetrics[]> {
-  const results = await Promise.allSettled(
-    FAROS_SYMBOLS.map(s => fetchYahooOHLCV(s.yahoo, s.label))
-  )
-  const metrics: FarosMetrics[] = []
-  for (const r of results) {
-    if (r.status === 'fulfilled' && r.value && r.value.closes.length >= 10) {
-      try {
-        metrics.push(computeFarosMetrics(r.value))
-      } catch {
-        // skip if computation fails
-      }
-    }
-  }
-  return metrics
-}
 
 // ── OpenRouter agent call ──────────────────────────────────────────────────────
 
@@ -248,9 +153,54 @@ export async function runAgent(systemPrompt: string, userMessage: string): Promi
   return result.content
 }
 
+// ── OHLCV fetch utility (used by /api/flujo — NOT part of MAIA analysis) ──────
+
+export interface OHLCVData {
+  symbol: string
+  timestamps: number[]
+  opens: number[]
+  highs: number[]
+  lows: number[]
+  closes: number[]
+  volumes: number[]
+}
+
+export async function fetchYahooOHLCV(symbol: string, label: string): Promise<OHLCVData | null> {
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=2mo`
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        Accept: 'application/json',
+      },
+      signal: AbortSignal.timeout(15000),
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    const result = data?.chart?.result?.[0]
+    if (!result) return null
+    const timestamps: number[] = result.timestamp ?? []
+    const quote = result.indicators?.quote?.[0]
+    if (!quote || timestamps.length === 0) return null
+    const filter = (arr: (number | null)[] | undefined) =>
+      (arr ?? []).map(v => (v == null || isNaN(v) ? 0 : v))
+    return {
+      symbol: label,
+      timestamps,
+      opens:   filter(quote.open),
+      highs:   filter(quote.high),
+      lows:    filter(quote.low),
+      closes:  filter(quote.close),
+      volumes: filter(quote.volume),
+    }
+  } catch {
+    return null
+  }
+}
+
 // ── Agent definitions ──────────────────────────────────────────────────────────
 
-export function buildAgents(pricesCtx: string, riskProfile: string, today: string, farosMetrics?: FarosMetrics[]) {
+export function buildAgents(pricesCtx: string, riskProfile: string, today: string) {
   const base = `Fecha: ${today}. Perfil de riesgo del usuario: ${riskProfile}. Datos de mercado en tiempo real:\n${pricesCtx}`
 
   const riskNote =
@@ -318,29 +268,6 @@ RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
         : 'Perfil MODERADO: Acciones (25%), Índices (20%), Divisas (20%), Crypto (15%), Materiales (20%).'
       }\n\nCrea la estrategia de portafolio global con los datos de mercado proporcionados.`,
     },
-    ...(farosMetrics && farosMetrics.length > 0
-      ? [
-          {
-            name: 'faros' as const,
-            system: `Eres el Agente FAROS v7.0 — TAI-ACF Framework (Future-Oriented Actor-Critic System).
-Recibes métricas cuantitativas pre-calculadas con física de fluidos financieros (Navier-Stokes).
-Tu misión: interpretar los regímenes de mercado, identificar Kill Switches activos y generar un sesgo de gobernanza Ψ consolidado.
-
-METODOLOGÍA FAROS (resumen operativo):
-- Z-Score: estado termodinámico del capital. LÍQUIDO (0.5<Z<2) = zona óptima. GAS/PLASMA = veto.
-- Reynolds%: turbulencia. <50% = laminar (alta exposición permitida). 50-75% = transición. >75% = turbulento. >95% = colapso entrópico.
-- αflow: autenticidad del flujo. Cerca de 0 = liquidez sintética/manipulación. Cerca de 1 = demanda orgánica.
-- Ψ score (0-1): gobernanza de capital. 0 = Kill Switch activo. >0.6 = señal fuerte.
-- Regímenes: INSTITUTIONAL_ACCUMULATION=BUY, HIGH_MOMENTUM=BUY_CAUTION, CONSOLIDATION=HOLD, STRUCTURAL_BREAK=CASH/Kill Switch, DISTRIBUTION_BEAR=SELL.
-
-RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
-{"sesgo_faros":"ALCISTA","regimen_dominante":"INSTITUTIONAL_ACCUMULATION","activos_faros":[{"symbol":"BTC","zScore":1.2,"thermodynamicState":"LÍQUIDO","reynoldsPercentile":45,"entropy":0.78,"alphaFlow":0.72,"psiScore":0.65,"marketRegime":"INSTITUTIONAL_ACCUMULATION","governanceSignal":"BUY","killSwitch":false,"trendStrength5d":3.5}],"resumen_faros":"Resumen del estado hidrodinámico del mercado.","kill_switch_activos":[],"oportunidades_faros":"Activos con mayor Ψ score y régimen laminar.","advertencias_faros":"Activos con Kill Switch o turbulencia elevada."}
-
-"sesgo_faros" solo: ALCISTA, BAJISTA, NEUTRAL o KILL_SWITCH. Incluye TODOS los activos recibidos en "activos_faros". "kill_switch_activos" es lista de símbolos con killSwitch=true.`,
-            user: `${base}\n\nMÉTRICAS FAROS v7.0 PRE-CALCULADAS (30 días OHLCV):\n${formatFarosContext(farosMetrics)}\n\nGenera el análisis FAROS consolidado con todos los activos proporcionados.`,
-          },
-        ]
-      : []),
   ]
 }
 
@@ -403,11 +330,7 @@ export async function runFullAnalysis(riskProfile: string = 'moderado'): Promise
     day: 'numeric',
   })
 
-  // Fetch spot prices and OHLCV history in parallel
-  const [prices, farosMetrics] = await Promise.all([
-    fetchAllPrices(),
-    fetchAllOHLCV(),
-  ])
+  const prices = await fetchAllPrices()
 
   const pricesCtx = prices
     .map(
@@ -416,14 +339,13 @@ export async function runFullAnalysis(riskProfile: string = 'moderado'): Promise
     )
     .join('\n')
 
-  const agents = buildAgents(pricesCtx, riskProfile, today, farosMetrics)
+  const agents = buildAgents(pricesCtx, riskProfile, today)
 
-  // Run all agents in parallel (6 standard + 1 FAROS if metrics available)
+  // Run all 6 MAIA agents in parallel
   const rawResults = await Promise.allSettled(agents.map(a => runAgent(a.system, a.user)))
 
   const activos: AssetAnalysis[] = []
   let estrategia: EstrategiaResult | null = null
-  let faros: FarosAgentResult | undefined
 
   rawResults.forEach((result, i) => {
     if (result.status !== 'fulfilled') {
@@ -435,26 +357,6 @@ export async function runFullAnalysis(riskProfile: string = 'moderado'): Promise
       const data = JSON.parse(json)
       if (agents[i].name === 'estrategia') {
         estrategia = data as EstrategiaResult
-      } else if (agents[i].name === 'faros') {
-        // Merge pre-computed metrics into agent result to guarantee accuracy
-        const agentResult = data as FarosAgentResult
-        agentResult.activos_faros = farosMetrics.map(m => ({
-          symbol: m.symbol,
-          zScore: m.zScore,
-          thermodynamicState: m.thermodynamicState,
-          reynoldsPercentile: m.reynoldsPercentile,
-          entropy: m.entropy,
-          alphaFlow: m.alphaFlow,
-          psiScore: m.psiScore,
-          marketRegime: m.marketRegime,
-          governanceSignal: m.governanceSignal,
-          killSwitch: m.killSwitch,
-          trendStrength5d: m.trendStrength5d,
-        }))
-        agentResult.kill_switch_activos = farosMetrics
-          .filter(m => m.killSwitch)
-          .map(m => m.symbol)
-        faros = agentResult
       } else if (Array.isArray(data.activos)) {
         for (const asset of data.activos as AssetAnalysis[]) {
           const real = matchPrice(asset, prices)
@@ -476,6 +378,5 @@ export async function runFullAnalysis(riskProfile: string = 'moderado'): Promise
     activos,
     estrategia,
     precios: prices,
-    faros,
   }
 }

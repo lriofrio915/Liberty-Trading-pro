@@ -40,28 +40,16 @@ interface EstrategiaResult {
   alerta_riesgo: string
 }
 
+// FAROS types kept for dead-code component functions — not used in new pipeline
 interface FarosAssetItem {
-  symbol: string
-  zScore: number
-  thermodynamicState: string
-  reynoldsPercentile: number
-  entropy: number
-  alphaFlow: number
-  psiScore: number
-  marketRegime: string
-  governanceSignal: string
-  killSwitch: boolean
-  trendStrength5d: number
+  symbol: string; zScore: number; thermodynamicState: string; reynoldsPercentile: number
+  entropy: number; alphaFlow: number; psiScore: number; marketRegime: string
+  governanceSignal: string; killSwitch: boolean; trendStrength5d: number
 }
-
 interface FarosAgentResult {
-  sesgo_faros: 'ALCISTA' | 'BAJISTA' | 'NEUTRAL' | 'KILL_SWITCH'
-  regimen_dominante: string
-  activos_faros: FarosAssetItem[]
-  resumen_faros: string
-  kill_switch_activos: string[]
-  oportunidades_faros: string
-  advertencias_faros: string
+  sesgo_faros: 'ALCISTA' | 'BAJISTA' | 'NEUTRAL' | 'KILL_SWITCH'; regimen_dominante: string
+  activos_faros: FarosAssetItem[]; resumen_faros: string; kill_switch_activos: string[]
+  oportunidades_faros: string; advertencias_faros: string
 }
 
 interface AnalysisResult {
@@ -69,7 +57,6 @@ interface AnalysisResult {
   riskProfile: string
   activos: AssetAnalysis[]
   estrategia: EstrategiaResult | null
-  faros?: FarosAgentResult
 }
 
 interface MT5AccountData {
@@ -120,10 +107,6 @@ interface CfdSignalCalc {
   riesgoUsd: number
   rrRatio: number
   riskProfile: string
-  farosSesgo?: string
-  farosRegimen?: string
-  psiScore?: number
-  killSwitch: boolean
 }
 
 interface CfdSignalRecord extends CfdSignalCalc {
@@ -143,7 +126,6 @@ const AGENTS = [
   { key: 'divisas',    label: 'Divisas',    icon: '💱', desc: 'DXY, EUR/USD, JPY, CAD, GBP' },
   { key: 'materiales', label: 'Materias',   icon: '🏗️', desc: 'Oro, Petróleo, Plata' },
   { key: 'estrategia', label: 'Estrategia', icon: '🎯', desc: 'Portafolio global' },
-  { key: 'faros',      label: 'FAROS v7',   icon: '🔭', desc: 'TAI-ACF — Física de fluidos' },
 ]
 
 const SECTOR_ORDER = ['Crypto', 'Acciones', 'Índices', 'Divisas', 'Materiales']
@@ -211,7 +193,8 @@ function formatPriceNum(price: number): string {
   return price.toFixed(6)
 }
 
-// ── FAROS helpers ─────────────────────────────────────────────────────────────
+// ── FAROS helpers REMOVED ─────────────────────────────────────────────────────
+// (TAI-ACF Framework removed — using 6 MAIA agents only)
 
 const REGIME_STYLES: Record<string, { bg: string; text: string; border: string; label: string }> = {
   INSTITUTIONAL_ACCUMULATION: { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/25', label: 'Acumulación Institucional' },
@@ -659,11 +642,7 @@ const LOT_MULTIPLIER: Record<string, number> = {
   'BTC': 1, 'ETH': 10, 'BNB': 10, 'XRP': 10000,
 }
 
-function calcSignal(
-  asset: AssetAnalysis,
-  riskProfile: string,
-  faros?: FarosAgentResult,
-): CfdSignalCalc {
+function calcSignal(asset: AssetAnalysis, riskProfile: string): CfdSignalCalc {
   const entry = asset.precio
   const slPct = SL_PCT[asset.sector] ?? 0.010
   const slDist = entry * slPct
@@ -674,8 +653,6 @@ function calcSignal(
   const mult = LOT_MULTIPLIER[asset.simbolo] ?? 1
   const rawLot = RISK_USD / (slDist * mult)
   const lotaje = parseFloat(Math.max(0.01, rawLot).toFixed(2))
-
-  const farosAsset = faros?.activos_faros?.find(f => f.symbol === asset.simbolo)
 
   return {
     simbolo:       asset.simbolo,
@@ -691,10 +668,6 @@ function calcSignal(
     riesgoUsd:     RISK_USD,
     rrRatio:       RR_RATIO,
     riskProfile,
-    farosSesgo:    faros?.sesgo_faros,
-    farosRegimen:  faros?.regimen_dominante,
-    psiScore:      farosAsset?.psiScore,
-    killSwitch:    farosAsset?.killSwitch ?? false,
   }
 }
 
@@ -704,7 +677,6 @@ function formatSignalText(s: CfdSignalCalc): string {
   const tpDist = Math.abs(s.takeProfit - s.precioEntrada)
   const formatP = (n: number) =>
     n >= 1000 ? n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : n.toFixed(5)
-  const psiLine = s.psiScore != null ? `  FAROS Ψ: ${(s.psiScore * 100).toFixed(0)}%` : ''
   return [
     `${dir} ${s.simbolo}`,
     `Entrada:     ${formatP(s.precioEntrada)}`,
@@ -712,7 +684,7 @@ function formatSignalText(s: CfdSignalCalc): string {
     `Take Profit: ${formatP(s.takeProfit)}  (+${formatP(tpDist)})`,
     `Lotaje:      ${s.lotaje} lotes`,
     `RR: 1:${s.rrRatio}  |  Riesgo: $${s.riesgoUsd.toFixed(2)}`,
-    `Confianza: ${s.confianza}%${psiLine}`,
+    `Confianza: ${s.confianza}%`,
   ].join('\n')
 }
 
@@ -733,21 +705,11 @@ function SignalCard({ signal, onCopy }: { signal: CfdSignalCalc; onCopy: (text: 
         <div>
           <div className="flex items-center gap-2">
             <span className={`text-sm font-black ${accent}`}>{isCompra ? '▲' : '▼'} {signal.simbolo}</span>
-            {signal.killSwitch && (
-              <span className="text-[10px] font-bold text-red-400 bg-red-500/15 border border-red-500/30 px-2 py-0.5 rounded-full animate-pulse">
-                VETADO FAROS
-              </span>
-            )}
           </div>
           <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{signal.nombre} · {signal.sector}</div>
         </div>
         <div className="text-right flex-shrink-0">
           <div className={`text-xs font-bold ${accent}`}>{signal.confianza}% confianza</div>
-          {signal.psiScore != null && (
-            <div className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
-              FAROS Ψ {(signal.psiScore * 100).toFixed(0)}%
-            </div>
-          )}
         </div>
       </div>
 
@@ -820,6 +782,19 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
   const [signalHistory, setSignalHistory] = useState<CfdSignalRecord[]>([])
   const [updatingResultado, setUpdatingResultado] = useState<string | null>(null)
   const [skippedSignals, setSkippedSignals] = useState<{ skipped: string[]; updated: string[] } | null>(null)
+
+  // Today's scan opportunities (auto-populated at 09:00am by cron)
+  const [todayScan, setTodayScan] = useState<{
+    id: string; fecha: string; hora: string; sesgogeneral: string; resumen?: string | null
+  } | null>(null)
+  const [todayOps, setTodayOps] = useState<{
+    id: string; simbolo: string; nombre: string; sector: string; sesgo: string
+    confianza: number; precio9am: number; razon: string | null
+    precio12pm: number | null; rendimiento12pm: number | null
+    precio3pm: number | null; rendimiento3pm: number | null
+    precio1445: number | null; rendimiento1445: number | null
+  }[]>([])
+  const [loadingTodayScan, setLoadingTodayScan] = useState(false)
 
   const [video, setVideo] = useState<{ youtubeUrl: string; title: string | null }>({ youtubeUrl: '', title: null })
   const [editMode, setEditMode] = useState(false)
@@ -944,7 +919,16 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
   useEffect(() => { loadSignalHistory() }, [loadSignalHistory])
 
   useEffect(() => {
-    if (activeTab === 'senales') loadSignalHistory()
+    if (activeTab === 'senales') {
+      loadSignalHistory()
+      // Load today's scan opportunities
+      setLoadingTodayScan(true)
+      fetch('/api/scan-today')
+        .then(r => r.json())
+        .then(d => { setTodayScan(d.scan ?? null); setTodayOps(d.oportunidades ?? []) })
+        .catch(() => {})
+        .finally(() => setLoadingTodayScan(false))
+    }
   }, [activeTab, loadSignalHistory])
 
   const handleCopySignal = (text: string) => {
@@ -1031,16 +1015,12 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
 
   const activosByRanking = result?.activos ? [...result.activos].sort((a, b) => b.confianza - a.confianza) : []
 
-  // All candidates: confianza >=70, sesgo direccional
+  // Candidates from manual analysis (for signals tab history reference)
   const allCandidates: CfdSignalCalc[] = result
     ? result.activos
         .filter(a => a.confianza >= 70 && a.sesgo !== 'NEUTRAL')
-        .map(a => calcSignal(a, riskProfile, result.faros))
+        .map(a => calcSignal(a, riskProfile))
     : []
-
-  // FAROS filter: aprobadas = no killSwitch (or no faros data for that asset)
-  const signalActivos = allCandidates.filter(s => !s.killSwitch)
-  const signalesVetadas = allCandidates.filter(s => s.killSwitch)
 
   const sesgoGeneral = result?.estrategia?.sesgo_general ?? 'NEUTRAL'
   const gs = GENERAL_STYLES[sesgoGeneral] ?? GENERAL_STYLES.NEUTRAL
@@ -1090,7 +1070,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
       <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         {[
           { id: 'analisis' as ActiveTab, label: '🔍 Análisis de Mercado' },
-          { id: 'senales' as ActiveTab, label: `📋 Señales CFD${signalActivos.length > 0 ? ` (${signalActivos.length}✓${signalesVetadas.length > 0 ? ` ${signalesVetadas.length}✕` : ''})` : ''}` },
+          { id: 'senales' as ActiveTab, label: `📋 Señales CFD${todayOps.length > 0 ? ` (${todayOps.length})` : ''}` },
           { id: 'mt5' as ActiveTab, label: `🤖 Trading MT5${mt5Account ? ' ✓' : ''}` },
         ].map(tab => (
           <button
@@ -1118,7 +1098,80 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
       {/* ── Señales CFD Tab ── */}
       {activeTab === 'senales' && (
         <div className="space-y-6">
-          {/* Explainer FAROS */}
+          {/* Today's scan header */}
+          {todayScan && (
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <div className="label-mono text-[10px] text-[var(--text-muted)]">
+                  Análisis automático · {new Date(todayScan.fecha).toLocaleDateString('es-EC', { weekday: 'long', day: '2-digit', month: 'short' })} · {todayScan.hora}
+                </div>
+                <div className={`text-sm font-bold mt-0.5 ${todayScan.sesgogeneral === 'ALCISTA' ? 'text-green-400' : todayScan.sesgogeneral === 'BAJISTA' ? 'text-red-400' : 'text-yellow-400'}`}>
+                  {todayScan.sesgogeneral} — {todayOps.length} señales
+                </div>
+              </div>
+              <button onClick={() => {
+                setLoadingTodayScan(true)
+                fetch('/api/scan-today').then(r => r.json()).then(d => { setTodayScan(d.scan ?? null); setTodayOps(d.oportunidades ?? []) }).catch(() => {}).finally(() => setLoadingTodayScan(false))
+              }} className="label-mono text-[10px] px-3 py-1.5 rounded-lg border transition-colors hover:border-[var(--gold-dark)]" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+                {loadingTodayScan ? '...' : 'Actualizar'}
+              </button>
+            </div>
+          )}
+
+          {/* Compact signals table */}
+          {loadingTodayScan && !todayScan && (
+            <div className="rounded-xl border p-6 text-center text-xs" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>Cargando señales del día...</div>
+          )}
+
+          {!loadingTodayScan && !todayScan && (
+            <div className="rounded-xl border p-8 text-center" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
+              <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>No hay análisis automático para hoy.</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>El cron genera las señales a las 09:00am ET de lunes a viernes.</p>
+            </div>
+          )}
+
+          {todayOps.length > 0 && (
+            <div className="rounded-xl overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
+              <table className="w-full text-xs">
+                <thead>
+                  <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+                    {['Símbolo', 'Sector', 'Dirección', 'Conf%', 'Precio 09am', '12pm', '3pm', '14:45', 'R%'].map(h => (
+                      <th key={h} className="px-3 py-2.5 text-left label-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {todayOps.map((op, i) => {
+                    const isCompra = op.sesgo === 'COMPRA'
+                    const rend = op.rendimiento1445 ?? op.rendimiento3pm ?? op.rendimiento12pm
+                    const rendColor = rend == null ? '' : rend >= 0 ? 'text-green-400' : 'text-red-400'
+                    const fmtP = (n: number | null) => n == null ? '—' : n >= 1000 ? n.toLocaleString('en-US', { maximumFractionDigits: 1 }) : n.toFixed(4)
+                    const fmtR = (r: number | null) => r == null ? '—' : `${r >= 0 ? '+' : ''}${r.toFixed(2)}%`
+                    return (
+                      <tr key={op.id} className="border-b last:border-0 hover:bg-white/3 transition-colors" style={{ borderColor: 'var(--border)' }}>
+                        <td className="px-3 py-2.5 font-bold" style={{ color: 'var(--text-primary)' }}>{op.simbolo}</td>
+                        <td className="px-3 py-2.5 label-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>{op.sector}</td>
+                        <td className="px-3 py-2.5">
+                          <span className={`label-mono text-[10px] px-2 py-0.5 rounded-full font-bold ${isCompra ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
+                            {isCompra ? '▲ COMPRA' : '▼ VENTA'}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 label-mono font-bold" style={{ color: 'var(--gold)' }}>{op.confianza}%</td>
+                        <td className="px-3 py-2.5 label-mono" style={{ color: 'var(--text-secondary)' }}>{fmtP(op.precio9am)}</td>
+                        <td className="px-3 py-2.5 label-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>{fmtP(op.precio12pm)}</td>
+                        <td className="px-3 py-2.5 label-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>{fmtP(op.precio3pm)}</td>
+                        <td className="px-3 py-2.5 label-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>{fmtP(op.precio1445)}</td>
+                        <td className={`px-3 py-2.5 label-mono font-bold text-[11px] ${rendColor}`}>{fmtR(rend)}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Legacy FAROS block placeholder — REMOVED */}
+          {false && (
           <div className="rounded-xl border p-5 space-y-3" style={{ background: 'rgba(201,168,76,0.04)', borderColor: 'rgba(201,168,76,0.18)' }}>
             <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>FAROS v7.0 — QUÉ HACE Y POR QUÉ IMPORTA</p>
             <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
@@ -1143,113 +1196,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
               ))}
             </div>
           </div>
-
-          {/* No analysis yet */}
-          {!result && (
-            <div className="rounded-xl border p-8 text-center" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
-              <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>
-                Primero corre el análisis de mercado para generar señales con confianza ≥70%.
-              </p>
-              <button
-                onClick={() => setActiveTab('analisis')}
-                className="text-xs px-4 py-2 rounded-lg border transition-all hover:bg-white/5"
-                style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-              >
-                Ir a Análisis de Mercado
-              </button>
-            </div>
-          )}
-
-          {/* Signals from current analysis */}
-          {result && signalActivos.length === 0 && (
-            <div className="rounded-xl border p-6 text-center" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                Ningún activo alcanzó ≥70% de confianza con sesgo direccional en este análisis.
-              </p>
-            </div>
-          )}
-
-          {result && signalActivos.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                    Señales activas — Cuenta $1,000 · Riesgo 1% ($10)
-                  </p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>
-                    {signalActivos.length} activo{signalActivos.length !== 1 ? 's' : ''} con confianza ≥70% · RR 1:2
-                  </p>
-                </div>
-                {isAdmin && (
-                  <button
-                    onClick={() => handleSaveSignals(signalActivos)}
-                    disabled={savingSignals}
-                    className="text-xs font-bold px-4 py-2 rounded-lg border transition-all hover:scale-105 disabled:opacity-50"
-                    style={{ background: 'rgba(201,168,76,0.1)', borderColor: 'rgba(201,168,76,0.3)', color: 'var(--gold)' }}
-                  >
-                    {savingSignals ? 'Guardando...' : 'Guardar en DB'}
-                  </button>
-                )}
-              </div>
-
-              {isAdmin && savedCount != null && (
-                <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2.5 text-sm text-green-400">
-                  ✓ {savedCount} señal{savedCount !== 1 ? 'es' : ''} guardada{savedCount !== 1 ? 's' : ''} en Supabase
-                </div>
-              )}
-
-              {isAdmin && skippedSignals && (skippedSignals.skipped.length > 0 || skippedSignals.updated.length > 0) && (
-                <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/8 px-4 py-3 space-y-1">
-                  {skippedSignals.skipped.length > 0 && (
-                    <p className="text-xs text-yellow-400">
-                      <span className="font-bold">Sin cambios — no guardadas:</span>{' '}
-                      {skippedSignals.skipped.join(', ')} ya tienen señal PENDIENTE activa con score similar.
-                    </p>
-                  )}
-                  {skippedSignals.updated.length > 0 && (
-                    <p className="text-xs text-orange-400">
-                      <span className="font-bold">Score cambió — guardadas de nuevo:</span>{' '}
-                      {skippedSignals.updated.join(' · ')}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {signalActivos.length > 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {signalActivos.map((sig, i) => (
-                    <SignalCard key={`${sig.simbolo}-${i}`} signal={sig} onCopy={handleCopySignal} />
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-xl border p-5 text-center" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    Ninguna señal aprobada por FAROS. Todos los candidatos con ≥70% confianza tienen Kill Switch activo.
-                  </p>
-                </div>
-              )}
-
-              {/* Vetadas por FAROS */}
-              {signalesVetadas.length > 0 && (
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-px" style={{ background: 'rgba(239,68,68,0.2)' }} />
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-red-400 flex-shrink-0">
-                      ✕ FAROS vetó {signalesVetadas.length} señal{signalesVetadas.length !== 1 ? 'es' : ''} — Kill Switch activo
-                    </p>
-                    <div className="flex-1 h-px" style={{ background: 'rgba(239,68,68,0.2)' }} />
-                  </div>
-                  <p className="text-[10px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                    Los agentes recomendaron estas entradas pero FAROS detectó turbulencia extrema (Reynolds% &gt;90% o régimen STRUCTURAL_BREAK). Ψ forzado a 0. No operar.
-                  </p>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 opacity-50 pointer-events-none select-none">
-                    {signalesVetadas.map((sig, i) => (
-                      <SignalCard key={`veto-${sig.simbolo}-${i}`} signal={sig} onCopy={() => {}} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
           )}
 
           {/* Signal history */}
@@ -1321,7 +1267,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                         </div>
                         <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
                           {new Date(sig.createdAt).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
-                          {sig.killSwitch && <span className="ml-1 text-red-400">· VETADO FAROS</span>}
+                          {(sig as any).killSwitch && <span className="ml-1 text-red-400">· VETADO</span>}
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
@@ -1361,6 +1307,37 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
       {/* ── MT5 Tab ── */}
       {activeTab === 'mt5' && (
         <div className="space-y-5">
+
+          {/* EA Auto-Trade section */}
+          <div className="rounded-xl border p-5 space-y-4" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="label-mono text-[10px] text-[var(--gold)] mb-1">MT5 AUTO-TRADE — EA GRATUITO</div>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                  Sin MetaAPI. Instala el EA en tu MT5 y ejecuta señales automáticamente a las 09:05am ET. El EA sondea este servidor cada 60 segundos.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <a
+                href="/api/mt5/download-ea"
+                className="flex items-center gap-2 rounded-lg border px-4 py-3 transition-colors hover:border-[var(--gold-dark)]"
+                style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+              >
+                <span className="text-[var(--gold)]">↓</span>
+                <span>Descargar LibertyAutoTrade.mq5</span>
+              </a>
+              <div className="rounded-lg border px-4 py-3" style={{ borderColor: 'var(--border)' }}>
+                <div className="label-mono text-[10px] mb-1" style={{ color: 'var(--text-muted)' }}>App URL para el EA</div>
+                <code className="text-[11px]" style={{ color: 'var(--gold)' }}>{typeof window !== 'undefined' ? window.location.origin : ''}</code>
+              </div>
+            </div>
+            <div className="text-[10px] leading-relaxed space-y-1" style={{ color: 'var(--text-muted)' }}>
+              <p><strong className="text-[var(--text-secondary)]">Instalación:</strong> Copia LibertyAutoTrade.mq5 a MQL5/Experts/ en tu MT5 → compila → arrastra al gráfico → ingresa App URL y tu secreto EA → activa el toggle de abajo.</p>
+              <p><strong className="text-[var(--text-secondary)]">Parámetros:</strong> Volume: 0.01 lots · SL: 0.5% · TP: 1.0% · Señales con confianza ≥70%.</p>
+            </div>
+          </div>
+
           <MT5ConnectPanel
             account={mt5Account}
             metaInfo={mt5MetaInfo as Record<string, number & string> | null}
@@ -1495,7 +1472,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                 </div>
               )}
 
-              {result.faros && <FarosPanel faros={result.faros} />}
+              {(result as any).faros && <FarosPanel faros={(result as any).faros} />}
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {result.estrategia?.distribucion && result.estrategia.distribucion.length > 0 && (
@@ -1574,7 +1551,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                           asset={asset}
                           mt5Connected={!!mt5Account}
                           onTrade={handleTrade}
-                          farosActivos={result.faros?.activos_faros}
+                          farosActivos={(result as any).faros?.activos_faros}
                         />
                       ))}
                     </div>

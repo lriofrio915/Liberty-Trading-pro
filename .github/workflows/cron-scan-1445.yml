@@ -1,19 +1,19 @@
-name: Cron — Scan Price Update 12pm ET
+name: Cron — Scan Price Update 14:45pm ET
 
 on:
   schedule:
-    - cron: '0 17 * * 1-5'  # 17:00 UTC = 12pm EST / 1pm EDT (Mon-Fri)
+    - cron: '45 19 * * 1-5'  # 19:45 UTC = 14:45pm EST / 15:45pm EDT (Mon-Fri)
   workflow_dispatch:
 
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - name: Update 12pm prices
+      - name: Update 14:45pm prices (day close)
         run: |
           HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "${{ secrets.APP_URL }}/api/cron/scan-prices?checkpoint=12pm")
+            "${{ secrets.APP_URL }}/api/cron/scan-prices?checkpoint=1445pm")
           echo "HTTP status: $HTTP"
           cat /tmp/response.txt || true
           if [ "$HTTP" != "200" ]; then

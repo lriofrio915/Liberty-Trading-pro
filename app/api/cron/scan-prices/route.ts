@@ -28,13 +28,13 @@ function calcRendimiento(precio9am: number, precioNow: number, sesgo: string): n
 export async function GET(req: NextRequest) {
   const params = new URL(req.url).searchParams
   const secret = req.headers.get('authorization')?.replace('Bearer ', '') || params.get('secret') || ''
-  const checkpoint = params.get('checkpoint') // '12pm' | '3pm'
+  const checkpoint = params.get('checkpoint') // '12pm' | '3pm' | '1445pm'
 
   if (!CRON_SECRET || secret !== CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  if (checkpoint !== '12pm' && checkpoint !== '3pm') {
-    return NextResponse.json({ error: 'checkpoint must be 12pm or 3pm' }, { status: 400 })
+  if (checkpoint !== '12pm' && checkpoint !== '3pm' && checkpoint !== '1445pm') {
+    return NextResponse.json({ error: 'checkpoint must be 12pm, 3pm, or 1445pm' }, { status: 400 })
   }
 
   try {
@@ -57,7 +57,9 @@ export async function GET(req: NextRequest) {
     // Filter: only those without this checkpoint price yet
     const pending = checkpoint === '12pm'
       ? scan.oportunidades.filter(o => o.precio12pm === null)
-      : scan.oportunidades.filter(o => o.precio3pm === null)
+      : checkpoint === '3pm'
+        ? scan.oportunidades.filter(o => o.precio3pm === null)
+        : scan.oportunidades.filter(o => o.precio1445 === null)
 
     if (pending.length === 0) {
       return NextResponse.json({ ok: true, message: 'All prices already updated', updated: 0 })
@@ -85,10 +87,15 @@ export async function GET(req: NextRequest) {
           where: { id: opp.id },
           data: { precio12pm: precioNow, rendimiento12pm: rendimiento },
         })
-      } else {
+      } else if (checkpoint === '3pm') {
         await prisma.scanOpportunity.update({
           where: { id: opp.id },
           data: { precio3pm: precioNow, rendimiento3pm: rendimiento },
+        })
+      } else {
+        await prisma.scanOpportunity.update({
+          where: { id: opp.id },
+          data: { precio1445: precioNow, rendimiento1445: rendimiento },
         })
       }
       updated++

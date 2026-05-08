@@ -369,10 +369,13 @@ model MT5Account {
   server           String?              // servidor MT5 del broker
   isConnected      Boolean  @default(false)
   lastSyncAt       DateTime?
+  autoTradeEnabled Boolean  @default(false)  // toggle para auto-ejecutar señales vía EA
+  mt5EaSecret      String?  @unique          // secreto que el EA usa para autenticarse
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  trades MT5Trade[]
+  trades       MT5Trade[]
+  signalQueue  SignalQueue[]
 }
 
 model MT5Trade {
@@ -459,12 +462,6 @@ model CfdSignal {
   rrRatio       Float     @default(2.0)
   riskProfile   String    @default("moderado")
 
-  // Contexto FAROS al momento del análisis
-  farosSesgo    String?
-  farosRegimen  String?
-  psiScore      Float?
-  killSwitch    Boolean   @default(false)
-
   // Forward testing / backtesting
   resultado     String    @default("PENDIENTE") // GANADA|PERDIDA|BREAKEVEN|PENDIENTE
   pnlUsd        Float?
@@ -518,9 +515,44 @@ model ScanOpportunity {
   horaSesgoFlip   String? // hora local del cambio detectado (ej: "11:30 ET")
   rendimientoFlip Float?  // % de movimiento 9am → flip a favor del sesgo original
 
-  // FAROS al momento del scan (para comparar portafolio con/sin FAROS)
-  farosKillSwitch Boolean?
-  farosPsiScore   Float?
+  // Cierre 4: 14:45pm ET — cierre de día operativo
+  precio1445       Float?
+  rendimiento1445  Float?  // % a favor del sesgo: positivo = ganó, negativo = perdió
 
   createdAt DateTime @default(now())
+
+  signalQueue SignalQueue[]
+}
+
+// ─── MT5 AUTO-TRADE (EA POLLING) ────────────────────────────────────────────
+
+// Cola de señales generadas por el market-scan 09:00am.
+// El MQL5 EA instalado en MT5 del usuario sondea GET /api/mt5/pending-signals
+// y ejecuta OrderSend() por cada señal PENDING.
+model SignalQueue {
+  id            String      @id @default(cuid())
+  mt5AccountId  String
+  mt5Account    MT5Account  @relation(fields: [mt5AccountId], references: [id], onDelete: Cascade)
+  scanOpId      String?     // link a ScanOpportunity de donde vino la señal
+  scanOp        ScanOpportunity? @relation(fields: [scanOpId], references: [id])
+
+  symbol        String      // símbolo MT5 (ej: "NQ100", "BTCUSD")
+  symbolRaw     String      // símbolo original del scan (ej: "NQ", "BTC")
+  type          String      // BUY | SELL
+  volume        Float       @default(0.01)
+  entryPrice    Float       // precio9am del scan
+  sl            Float       // entryPrice * (1 ∓ 0.005)
+  tp            Float       // entryPrice * (1 ± 0.010)
+
+  status        String      @default("PENDING")  // PENDING|SENT|EXECUTED|FAILED|CANCELLED
+  mt5Ticket     Int?        // ticket number devuelto por MT5 tras ejecución
+  executedPrice Float?      // precio real de ejecución
+  executedAt    DateTime?
+  comment       String?     // "Auto:scan=xxx,conf=87%"
+  errorMsg      String?
+
+  createdAt     DateTime    @default(now())
+
+  @@index([mt5AccountId, status])
+  @@index([createdAt])
 }
