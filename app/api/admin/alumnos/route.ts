@@ -5,6 +5,10 @@ import { prisma } from '@/lib/prisma'
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 async function checkAdmin() {
+  if (!ADMIN_EMAIL) {
+    console.error('[checkAdmin] ADMIN_EMAIL no está configurado en las variables de entorno')
+    return null
+  }
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user || user.email !== ADMIN_EMAIL) return null

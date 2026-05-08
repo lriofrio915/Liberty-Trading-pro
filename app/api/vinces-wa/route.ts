@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { notifyNexus } from '@/lib/notify-nexus'
+import { callAI } from '@/lib/ai-providers'
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const LINKS = {
@@ -7,10 +9,7 @@ const LINKS = {
   ANUAL:   process.env.HOTMART_LINK_ANUAL   || 'https://pay.hotmart.com/L104900408S?checkoutMode=2',
 }
 
-const EVO_URL           = process.env.EVOLUTION_API_URL || 'https://evo.nexus-ia.com.es'
-const EVO_INSTANCE      = process.env.EVOLUTION_INSTANCE || 'vinces'
-const EVO_KEY           = process.env.EVOLUTION_API_KEY  || ''
-const EVO_WEBHOOK_SECRET = process.env.EVOLUTION_WEBHOOK_SECRET || ''
+const OPENCLAW_WEBHOOK_SECRET = process.env.OPENCLAW_WEBHOOK_SECRET || ''
 
 // ── Contexto de Liberty Trading Pro ───────────────────────────────────────────
 const CONTEXTO_LUIS = `
@@ -80,6 +79,12 @@ function cleanPhone(jid: string): string {
   return jid.replace('@s.whatsapp.net', '').replace('@c.us', '').trim()
 }
 
+/** Sanitiza el nombre antes de inyectarlo en prompts o almacenarlo */
+function sanitizeName(name: string | null | undefined): string {
+  if (!name) return ''
+  return name.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').slice(0, 30).trim()
+}
+
 /** Detecta mensajes de despedida o agradecimiento cortos */
 function esDespadida(texto: string): boolean {
   const t = texto.trim().toLowerCase()
@@ -91,45 +96,21 @@ function primerNombre(fullName: string | null | undefined): string | null {
   return fullName.trim().split(/\s+/)[0]
 }
 
-// ── Transcripción de audio con Groq Whisper ───────────────────────────────────
+// ── Transcripción de audio con Groq Whisper (recibe base64 del caller) ────────
 
-async function transcribirAudio(rawMessage: any): Promise<string> {
+async function transcribirAudioBase64(base64: string): Promise<string> {
   const groqKey = process.env.GROQ_API_KEY
   if (!groqKey) {
     console.error('[Vinces WA] GROQ_API_KEY no configurada')
     return ''
   }
 
+  if (!base64) {
+    console.error('[Vinces WA] No se recibió base64 del audio')
+    return ''
+  }
+
   try {
-    const audioMsg = rawMessage?.message?.audioMessage || rawMessage?.message?.pttMessage
-    let base64: string = audioMsg?.base64 || ''
-
-    if (!base64) {
-      console.log('[Vinces WA] base64 no en payload, llamando getBase64FromMediaMessage...')
-      const evoRes = await fetch(`${EVO_URL}/chat/getBase64FromMediaMessage/${EVO_INSTANCE}`, {
-        method: 'POST',
-        headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: rawMessage, convertToMp4: false }),
-        signal: AbortSignal.timeout(30000),
-      })
-      if (evoRes.ok) {
-        const evoData = await evoRes.json()
-        base64 = evoData.base64 || ''
-        console.log('[Vinces WA] base64 obtenido de Evolution API, longitud:', base64.length)
-      } else {
-        const txt = await evoRes.text()
-        console.error(`[Vinces WA] Evolution getBase64 error ${evoRes.status}:`, txt.slice(0, 300))
-        return ''
-      }
-    }
-
-    if (!base64) {
-      console.error('[Vinces WA] No se pudo obtener base64 del audio')
-      return ''
-    }
-
-    console.log('[Vinces WA] base64 listo, longitud:', base64.length)
-
     const audioBuffer = Buffer.from(base64, 'base64')
     const formData = new FormData()
     formData.append('file', new Blob([audioBuffer], { type: 'audio/ogg' }), 'audio.ogg')
@@ -159,65 +140,48 @@ async function transcribirAudio(rawMessage: any): Promise<string> {
   }
 }
 
-// ── OpenRouter AI ─────────────────────────────────────────────────────────────
+// ── AI Provider ──────────────────────────────────────────────────────────────
 
-async function callAI(messages: { role: string; content: string }[]): Promise<string> {
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
-      'X-Title': 'Liberty Trading - Vinces WA',
-    },
-    body: JSON.stringify({
-      model: process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat-v3-0324',
-      messages,
-      max_tokens: 600,
-      temperature: 0.7,
-    }),
+async function callAIWrapper(messages: { role: string; content: string }[]): Promise<string> {
+  const result = await callAI({
+    messages,
+    maxTokens: 600,
+    temperature: 0.7,
+    httpReferer: process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
+    xTitle: 'Liberty Trading - Vinces WA',
   })
-  const data = await res.json()
-  return data.choices?.[0]?.message?.content || ''
+  return result.content
 }
 
-// ── Notificar a Luis cuando un lead llega a CTA ───────────────────────────────
+// ── Notificar a Luis cuando un lead llega a CTA (via nexus_claw) ──────────────
 
-const LUIS_PHONE = process.env.LUIS_PHONE || '' // formato sin + ni espacios
-
-async function notificarLuis(lead: {
+async function notificarLuisCTA(lead: {
   name: string | null
   phone: string
   perfil: string
   respuestas: Record<string, string>
+  productoUrl: string
 }) {
+  const perfilLabel = lead.perfil === 'ANUAL'
+    ? 'Plan Pro Anual ($649/año)'
+    : 'Plan Pro Mensual ($79/mes)'
+
+  const resumen = Object.entries(lead.respuestas)
+    .map(([k, v]) => `• ${PREGUNTAS[k]}\n  → ${v}`)
+    .join('\n\n')
+
   try {
-    const perfilLabel = lead.perfil === 'ANUAL' ? '⭐ Plan Pro Anual ($649/año)' : '📅 Plan Pro Mensual ($79/mes)'
-    const resumen = Object.entries(lead.respuestas)
-      .map(([k, v]) => `• ${PREGUNTAS[k]}\n  → ${v}`)
-      .join('\n\n')
-
-    const msg =
-      `🔔 *Nuevo lead listo para cierre*\n\n` +
-      `👤 *Nombre:* ${lead.name || 'sin nombre'}\n` +
-      `📱 *WhatsApp:* +${lead.phone}\n` +
-      `🎯 *Perfil:* ${perfilLabel}\n\n` +
-      `📋 *Respuestas del formulario:*\n\n${resumen}\n\n` +
-      `_Este lead ya recibió el link de pago de Vinces. Puedes hacer seguimiento directo._`
-
-    await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
-      method: 'POST',
-      headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        number: LUIS_PHONE,
-        text: msg,
-      }),
-      signal: AbortSignal.timeout(15000),
+    await notifyNexus('lead_cta', {
+      name: lead.name || 'sin nombre',
+      phone: lead.phone,
+      perfil: lead.perfil,
+      perfilLabel,
+      productoUrl: lead.productoUrl,
+      respuestas: resumen,
+      nota: 'Este lead ya recibió el link de pago de Vinces. Puedes hacer seguimiento directo.',
     })
-
-    console.log('[Vinces WA] Notificación enviada a Luis para lead:', lead.phone)
   } catch (e: any) {
-    console.error('[Vinces WA] Error notificando a Luis:', e?.message)
+    console.error('[Vinces WA] Error notificando lead CTA:', e?.message)
   }
 }
 
@@ -251,7 +215,7 @@ Reglas del mensaje:
 - Sin links, sin asteriscos, sin markdown, sin emojis en exceso
 - Termina con una invitación a revisar el plan`
 
-  const raw = await callAI([{ role: 'user', content: prompt }])
+  const raw = await callAIWrapper([{ role: 'user', content: prompt }])
 
   try {
     const parsed = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] || '{}')
@@ -292,7 +256,7 @@ REGLAS ESTRICTAS:
 6. Usa máximo 1 emoji natural.
 7. Si la persona menciona que no sabe algo (activos, términos), tranquilízala: "eso es exactamente para lo que estamos aquí".`
 
-  return callAI([
+  return callAIWrapper([
     { role: 'system', content: system },
     ...historial.slice(-6),
     { role: 'user', content: ultimoMensaje },
@@ -303,36 +267,31 @@ REGLAS ESTRICTAS:
 
 export async function POST(req: NextRequest) {
   try {
-    if (EVO_WEBHOOK_SECRET) {
-      const incomingSecret = req.headers.get('x-evolution-secret') || ''
-      if (incomingSecret !== EVO_WEBHOOK_SECRET) {
+    // Auth: validate webhook secret if configured
+    if (OPENCLAW_WEBHOOK_SECRET) {
+      const incomingSecret = req.headers.get('x-openclaw-secret') || ''
+      if (incomingSecret !== OPENCLAW_WEBHOOK_SECRET) {
         return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
       }
     }
 
     const body = await req.json()
-    const { phone: rawPhone, pushName, isAudio, rawMessage } = body as {
+    const { phone: rawPhone, pushName: rawPushName, isAudio, audioBase64 } = body as {
       phone: string
       pushName?: string
       isAudio?: boolean
-      rawMessage?: any
+      audioBase64?: string
     }
+    const pushName = sanitizeName(rawPushName)
     let { message } = body as { message?: string }
 
     if (!rawPhone) return NextResponse.json({ ok: false, error: 'Missing phone' })
 
     const phone = cleanPhone(rawPhone)
 
-    // ── Typing indicator: fire-and-forget ────────────────────────────────────
-    fetch(`${EVO_URL}/chat/sendPresence/${EVO_INSTANCE}`, {
-      method: 'POST',
-      headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ number: phone, presence: 'composing', delay: 25000 }),
-    }).catch(() => {})
-
-    // ── Transcribir audio si es nota de voz ──────────────────────────────────
-    if (isAudio && rawMessage) {
-      const transcripcion = await transcribirAudio(rawMessage)
+    // ── Transcribir audio si es nota de voz (nexus_claw envía el base64) ────
+    if (isAudio && audioBase64) {
+      const transcripcion = await transcribirAudioBase64(audioBase64)
       if (!transcripcion || transcripcion.startsWith('[')) {
         const nombreGuardado = primerNombre(
           ((await (prisma as any).whatsappLead.findUnique({ where: { phone } }))?.name) || pushName
@@ -436,8 +395,14 @@ export async function POST(req: NextRequest) {
           },
         })
 
-        // Notificar a Luis (fire-and-forget)
-        notificarLuis({ name, phone, perfil: clasificacion.perfil, respuestas }).catch(() => {})
+        // Notificar a Luis via nexus_claw (fire-and-forget)
+        notificarLuisCTA({
+          name,
+          phone,
+          perfil: clasificacion.perfil,
+          respuestas,
+          productoUrl: clasificacion.productoUrl,
+        }).catch(() => {})
 
         return NextResponse.json({ ok: true, messages: [respuesta, clasificacion.mensaje] })
       }
@@ -448,7 +413,7 @@ export async function POST(req: NextRequest) {
 
 Estás hablando con ${name || 'un prospecto'} que ya recibió tu recomendación de plan. Responde sus dudas con calidez y precisión usando el contexto de Liberty Trading Pro. Si pregunta sobre qué incluye el club, recuérdale que ambos planes tienen todo incluido. Si pregunta la diferencia entre mensual y anual, explica que es solo el precio: $79/mes vs $649/año (ahorra $299). Si muestra interés en suscribirse, refuerza positivamente. Sin markdown, sin asteriscos, máximo 3 oraciones.`
 
-      respuesta = await callAI([
+      respuesta = await callAIWrapper([
         { role: 'system', content: system },
         ...historial.slice(-8),
         { role: 'user', content: texto },

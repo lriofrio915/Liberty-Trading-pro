@@ -1,0 +1,80 @@
+# Gitleaks configuration for Liberty-Trading-pro
+# Prevents accidental commits of secrets, API keys, and tokens.
+
+title: "Liberty-Trading-pro Gitleaks Config"
+
+# Allowlist — known safe patterns
+allowlist:
+  description: "Known safe values"
+  paths:
+    - ".gitleaks.toml"
+    - "*.test.ts"
+    - "*.test.tsx"
+    - "__tests__/**"
+  regexes:
+    # Placeholder/example values used in docs
+    - "your-api-key-here"
+    - "example-secret"
+    - "CHANGEME"
+    - "fake-.*-key"
+
+rules:
+  # ── Generic API keys & tokens ───────────────────────────
+  - id: "generic-api-key"
+    description: "Generic API key / bearer token"
+    regex: '''(?i)(?:api[_-]?key|apikey|api[_-]?secret|secret[_-]?key|bearer[_-]?token|access[_-]?token|auth[_-]?token)["'\s]*(?::|=>|=)\s*["'][A-Za-z0-9_\-\.]{20,}["']'''
+    tags: ["api-key", "secret"]
+
+  # ── Supabase keys ───────────────────────────────────────
+  - id: "supabase-service-role"
+    description: "Supabase service_role key"
+    regex: '''eyJ[A-Za-z0-9_\-]{50,}'''
+    tags: ["supabase", "secret"]
+
+  # ── OpenRouter API key ──────────────────────────────────
+  - id: "openrouter-api-key"
+    description: "OpenRouter API key"
+    regex: '''sk-or-v1-[A-Za-z0-9]{32,}'''
+    tags: ["openrouter", "secret"]
+
+  # ── Groq API key ─ ──────────────────────────────────────
+  - id: "groq-api-key"
+    description: "Groq API key"
+    regex: '''gsk_[A-Za-z0-9]{20,}'''
+    tags: ["groq", "secret"]
+
+  # ── Resend API key ──────────────────────────────────────
+  - id: "resend-api-key"
+    description: "Resend API key"
+    regex: '''re_[A-Za-z0-9]{20,}'''
+    tags: ["resend", "secret"]
+
+  # ── GitHub tokens ───────────────────────────────────────
+  - id: "github-token"
+    description: "GitHub personal access token"
+    regex: '''gh[pousr]_[A-Za-z0-9_]{20,}'''
+    tags: ["github", "secret"]
+
+  # ── Generic private keys ────────────────────────────────
+  - id: "private-key"
+    description: "Private key (PEM format)"
+    regex: '''-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----'''
+    tags: ["private-key"]
+
+  # ── Database URLs ───────────────────────────────────────
+  - id: "database-url"
+    description: "Database connection string with credentials"
+    regex: '''(?i)(?:postgres|mysql|mongodb(?:\+srv)?)://[^@\s]+:[^@\s]+@'''
+    tags: ["database", "secret"]
+
+  # ── JWT tokens ──────────────────────────────────────────
+  - id: "jwt-token"
+    description: "JWT token"
+    regex: '''eyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{10,}'''
+    tags: ["jwt"]
+
+  # ── Cloudinary URL ──────────────────────────────────────
+  - id: "cloudinary-url"
+    description: "Cloudinary URL with credentials"
+    regex: '''cloudinary://\d+:[A-Za-z0-9_\-]+@'''
+    tags: ["cloudinary", "secret"]
