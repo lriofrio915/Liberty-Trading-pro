@@ -157,6 +157,68 @@ export default function TrackRecordClient({
     URL.revokeObjectURL(url)
   }
 
+  function exportXLSX() {
+    const wins = filtered.filter(s => s.resultado === 'WIN')
+    const losses = filtered.filter(s => s.resultado === 'LOSS')
+    const totalPnl = filtered.reduce((acc, s) => acc + s.pnlNeto, 0)
+    const totalComisiones = filtered.reduce((acc, s) => acc + s.comisiones, 0)
+    const sumWins = wins.reduce((acc, s) => acc + Math.abs(s.pnlNeto), 0)
+    const sumLosses = losses.reduce((acc, s) => acc + Math.abs(s.pnlNeto), 0)
+    const avgGanador = wins.length ? sumWins / wins.length : 0
+    const avgPerdedor = losses.length ? sumLosses / losses.length : 0
+    const rrProm = avgPerdedor > 0 ? avgGanador / avgPerdedor : 0
+    const profitFactor = sumLosses > 0 ? sumWins / sumLosses : sumWins > 0 ? Infinity : 0
+    const pnls = filtered.map(s => s.pnlNeto)
+    const bestTrade = pnls.length ? Math.max(...pnls) : 0
+    const worstTrade = pnls.length ? Math.min(...pnls) : 0
+    const dates = filtered.map(s => new Date(s.date).toLocaleDateString('en-CA', { timeZone: TZ })).sort()
+    const periodo = dates.length ? `${dates[0]} → ${dates[dates.length - 1]}` : '—'
+
+    // Sheet 1: raw sessions
+    const sesHeaders = ['Fecha', 'Instrumento', 'Dirección', 'Resultado', 'PnL Neto', 'PnL Bruto', 'Comisiones', 'Contratos', 'Entry', 'Exit', 'Siguió Plan', 'Sentimiento', 'Notas']
+    const sesRows = filtered.map(s => [
+      new Date(s.date).toLocaleDateString('en-CA', { timeZone: TZ }),
+      s.instrumento, s.direccion, s.resultado,
+      s.pnlNeto, s.pnlBruto, s.comisiones, s.contratos,
+      s.entryPrice ?? '', s.exitPrice ?? '',
+      s.siguioPlan ? 'Sí' : 'No',
+      s.sentimiento ?? '', s.notas ?? '',
+    ])
+    const ws1 = XLSX.utils.aoa_to_sheet([sesHeaders, ...sesRows])
+    ws1['!cols'] = [10, 14, 12, 12, 12, 12, 12, 11, 10, 10, 13, 14, 30].map(w => ({ wch: w }))
+
+    // Sheet 2: metrics summary
+    const fmt = (n: number) => parseFloat(n.toFixed(2))
+    const metricsData = [
+      ['MÉTRICAS DEL TRACK RECORD', ''],
+      ['Período', periodo],
+      ['', ''],
+      ['Total operaciones', filtered.length],
+      ['Ganadoras (WIN)', wins.length],
+      ['Perdedoras (LOSS)', losses.length],
+      ['Breakeven', filtered.length - wins.length - losses.length],
+      ['Win Rate %', fmt(filtered.length ? (wins.length / filtered.length) * 100 : 0)],
+      ['', ''],
+      ['PnL Neto Total', fmt(totalPnl)],
+      ['PnL Bruto Total', fmt(filtered.reduce((a, s) => a + s.pnlBruto, 0))],
+      ['Total Comisiones', fmt(totalComisiones)],
+      ['Mejor Operación', fmt(bestTrade)],
+      ['Peor Operación', fmt(worstTrade)],
+      ['', ''],
+      ['Promedio Ganadora', fmt(avgGanador)],
+      ['Promedio Perdedora', fmt(avgPerdedor)],
+      ['R:R Promedio', fmt(rrProm)],
+      ['Profit Factor', profitFactor === Infinity ? '∞' : fmt(profitFactor)],
+    ]
+    const ws2 = XLSX.utils.aoa_to_sheet(metricsData)
+    ws2['!cols'] = [{ wch: 22 }, { wch: 20 }]
+
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws1, 'Operaciones')
+    XLSX.utils.book_append_sheet(wb, ws2, 'Métricas')
+    XLSX.writeFile(wb, `track-record-${new Date().toLocaleDateString('en-CA')}.xlsx`)
+  }
+
   // ── Import ───────────────────────────────────────────────────────────────────
 
   const importRef = useRef<HTMLInputElement>(null)
@@ -484,17 +546,30 @@ export default function TrackRecordClient({
           <p className="text-[var(--text-secondary)] text-sm">Historial completo de operaciones</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={exportCSV}
-            className="btn-outline py-2.5 px-4 rounded-lg text-sm"
-          >
-            ⬆ Exportar CSV
-          </button>
+          {/* Export split group */}
+          <div className="flex items-stretch" style={{ borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(201,168,76,0.4)' }}>
+            <button
+              onClick={exportCSV}
+              className="text-[var(--gold)] font-mono text-xs font-semibold px-4 py-2.5 hover:bg-[rgba(201,168,76,0.08)] transition-colors"
+              style={{ borderRight: '1px solid rgba(201,168,76,0.4)' }}
+              title="Exportar sesiones filtradas como CSV"
+            >
+              ↑ CSV
+            </button>
+            <button
+              onClick={exportXLSX}
+              className="text-[var(--gold)] font-mono text-xs font-semibold px-4 py-2.5 hover:bg-[rgba(201,168,76,0.08)] transition-colors"
+              title="Exportar sesiones + métricas como Excel (.xlsx con 2 hojas)"
+            >
+              ↑ Excel
+            </button>
+          </div>
           <button
             onClick={() => importRef.current?.click()}
             className="btn-outline py-2.5 px-4 rounded-lg text-sm"
+            title="Importar operaciones desde CSV o Excel"
           >
-            ⬇ Importar
+            ↓ Importar CSV
           </button>
           <input
             ref={importRef}
