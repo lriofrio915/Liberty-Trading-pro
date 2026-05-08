@@ -26,6 +26,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { href: '/dashboard/futuros',     icon: '📈', label: 'Futuros',           requiresClub: true },
       { href: '/dashboard/acciones',   icon: '💼', label: 'Acciones',          requiresClub: true },
+      { href: '/dashboard/opciones',   icon: '⌁', label: 'Opciones',          requiresClub: true },
       { href: '/dashboard/analisis',   icon: '📊', label: 'CFDs',              requiresClub: true },
       { href: '/dashboard/flujo',           icon: '🌊', label: 'Flujo del Dinero',   requiresClub: true },
       { href: '/dashboard/portafolio-scan', icon: '📈', label: 'Portafolio Scan',   requiresClub: true },

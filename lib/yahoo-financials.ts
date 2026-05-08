@@ -14,7 +14,7 @@ function extractCookies(headers: Headers): string {
   return setCookies.map((c) => c.split(';')[0]).join('; ')
 }
 
-async function getYahooCrumb(): Promise<{ crumb: string; cookie: string }> {
+export async function getYahooCrumb(): Promise<{ crumb: string; cookie: string }> {
   if (_crumbCache && Date.now() - _crumbCache.at < 3_600_000) return _crumbCache
 
   const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
