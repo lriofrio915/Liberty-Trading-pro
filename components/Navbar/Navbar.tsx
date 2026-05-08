@@ -7,7 +7,7 @@ import type { User } from '@supabase/supabase-js'
 
 const NAV_LINKS = [
   { href: '#servicios', label: 'Servicios' },
-  { href: '#academia', label: 'Academy' },
+  { href: '#track-record', label: 'Track Record' },
   { href: '#precios', label: 'Planes' },
   { href: '#sobre-luis', label: 'Luis Riofrio' },
   { href: '#p2p', label: 'P2P Cripto' },
