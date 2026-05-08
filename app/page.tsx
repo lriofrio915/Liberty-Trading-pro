@@ -35,54 +35,50 @@ export default async function LandingPage() {
             {[
               {
                 num: '01',
-                icon: '🎓',
                 title: 'Formación Completa',
                 desc: 'Desde cero hasta trader profesional. Mentoría Integral de Mercados Financieros + Especialización en Day Trading de Futuros NQ/MNQ — todo incluido.',
                 badge: 'Academia',
               },
               {
                 num: '02',
-                icon: '🤝',
                 title: 'Mentorías 1:1 con Luis',
                 desc: 'Sesiones personalizadas con Luis Riofrio cada mes mientras mantengas tu membresía activa. Revisión de tu operativa, dudas y estrategia en vivo.',
                 badge: 'Mentoría',
               },
               {
                 num: '03',
-                icon: '🤖',
                 title: 'Vinces Coach IA',
                 desc: 'Tu mentor de trading con inteligencia artificial. Analiza tu operativa diaria, detecta patrones de error y genera reportes de coaching personalizados.',
                 badge: 'IA',
               },
               {
                 num: '04',
-                icon: '💡',
                 title: 'Reportes de Inversión',
                 desc: 'Reportes y análisis de oportunidades en acciones y ETFs — entrada sugerida, objetivo, stop loss y contexto fundamental para que tomes tu propia decisión.',
                 badge: 'Club',
               },
               {
                 num: '05',
-                icon: '📊',
                 title: 'Track Record Real',
                 desc: 'Accede al historial operativo completo de Luis Riofrio — cada operación con datos reales. Transparencia total, incluyendo pérdidas.',
                 badge: 'Verificado',
               },
               {
                 num: '06',
-                icon: '🌐',
                 title: 'Monitor Mundial',
                 desc: 'Seguimiento de eventos geopolíticos y macroeconómicos que impactan los mercados en tiempo real para tomar mejores decisiones de trading.',
                 badge: 'Live',
               },
             ].map((s) => (
               <div key={s.num}
-                className="card hover:border-[var(--gold-dark)] transition-all duration-300 group relative overflow-hidden">
+                className="card hover:border-[var(--gold-dark)] group relative overflow-hidden">
                 <div className="absolute top-4 right-4 label-mono text-[9px] px-2 py-0.5 border border-[var(--border)] rounded-full">
                   {s.badge}
                 </div>
-                <div className="label-mono text-[10px] mb-3 text-[var(--gold-dark)]">{s.num}</div>
-                <div className="text-3xl mb-3">{s.icon}</div>
+                <div className="w-8 h-8 rounded-lg border border-[var(--gold-dark)] flex items-center justify-center mb-3"
+                  style={{ background: 'rgba(201,168,76,0.08)' }}>
+                  <span className="font-mono-custom text-xs text-[var(--gold)]">{s.num}</span>
+                </div>
                 <h3 className="text-base font-bold mb-2 group-hover:text-[var(--gold)] transition-colors">
                   {s.title}
                 </h3>
@@ -97,7 +93,7 @@ export default async function LandingPage() {
       <section id="para-quien" className="py-24 px-4 border-y border-[var(--border)]"
         style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-6xl mx-auto">
-          <div className="mb-14 text-center">
+          <div className="mb-14">
             <div className="label-mono mb-3">¿Esto es para mí?</div>
             <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)]">
               Para <span className="gradient-gold">cualquier punto de partida</span>
@@ -112,7 +108,6 @@ export default async function LandingPage() {
             {[
               {
                 tag: 'NUEVO EN INVERSIONES',
-                icon: '🌱',
                 title: 'El curioso que quiere probar',
                 desc: [
                   'Pagas $79 y descubres en 1 mes si el trading es para ti',
@@ -123,7 +118,6 @@ export default async function LandingPage() {
               },
               {
                 tag: 'QUIERO APRENDER EN SERIO',
-                icon: '📚',
                 title: 'El que ya decidió aprender',
                 desc: [
                   'Accedes a toda la formación desde cero hasta futuros Nasdaq',
@@ -134,7 +128,6 @@ export default async function LandingPage() {
               },
               {
                 tag: 'QUIERO SER TRADER PROFESIONAL',
-                icon: '🏆',
                 title: 'El que hace del trading su vida',
                 desc: [
                   'El plan anual a $649 te da 12 meses completos por $54/mes',
@@ -147,7 +140,6 @@ export default async function LandingPage() {
               <div key={card.tag} className="card-panel relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-40 h-40 opacity-5"
                   style={{ background: 'radial-gradient(circle, var(--gold) 0%, transparent 70%)' }} />
-                <div className="text-4xl mb-3">{card.icon}</div>
                 <div className="inline-block label-mono text-[9px] px-2 py-0.5 border border-[var(--gold-dark)] rounded-full text-[var(--gold)] mb-3">
                   {card.tag}
                 </div>
@@ -251,12 +243,12 @@ export default async function LandingPage() {
               {/* Credentials */}
               <div className="space-y-2.5 mb-8">
                 {[
-                  '🏛 Operador Financiero en Emporium Quality Funds',
-                  '📈 Trader de Futuros Nasdaq (NQ/MNQ)',
-                  '🤝 Fundador de Liberty Trading Club',
-                  '🏦 Gestor de portafolios vía IBKR + NinjaTrader 8',
-                  '💱 Operador P2P USDT y BTC — Ecuador y Latinoamérica',
-                  '🎓 Mentor con más de 5 años formando traders en Latinoamérica',
+                  'Operador Financiero en Emporium Quality Funds',
+                  'Trader de Futuros Nasdaq (NQ/MNQ)',
+                  'Fundador de Liberty Trading Club',
+                  'Gestor de portafolios vía IBKR + NinjaTrader 8',
+                  'Operador P2P USDT y BTC — Ecuador y Latinoamérica',
+                  'Mentor con más de 5 años formando traders en Latinoamérica',
                 ].map((c) => (
                   <div key={c} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
                     <span>{c}</span>
@@ -308,12 +300,12 @@ export default async function LandingPage() {
 
       {/* ─── P2P CRIPTO ─────────────────────────────────────── */}
       <section id="p2p" className="py-24 px-4">
-        <div className="max-w-5xl mx-auto text-center">
+        <div className="max-w-5xl mx-auto">
           <div className="label-mono mb-3 text-[var(--gold)]">Ecuador · Latinoamérica</div>
           <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)] mb-5">
             Compra y vende<br /><span className="gradient-gold">USDT y BTC</span>
           </h2>
-          <p className="text-[var(--text-secondary)] max-w-xl mx-auto mb-12">
+          <p className="text-[var(--text-secondary)] max-w-xl mb-12">
             Servicio P2P directo con Luis. Sin intermediarios, sin complicaciones.
             Disponible en Ecuador y toda Latinoamérica.
           </p>
@@ -321,14 +313,13 @@ export default async function LandingPage() {
           {/* Process */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
             {[
-              { n: '01', icon: '💬', title: 'Contáctanos', desc: 'Escríbenos por WhatsApp indicando monto y operación' },
-              { n: '02', icon: '🤝', title: 'Acordamos precio', desc: 'Revisamos la tasa del mercado y acordamos el precio' },
-              { n: '03', icon: '💸', title: 'Realizas el pago', desc: 'Transferencia bancaria o efectivo según tu preferencia' },
-              { n: '04', icon: '✅', title: 'Recibes tu cripto', desc: 'Enviamos a tu wallet en minutos, con comprobante' },
+              { n: '01', title: 'Contáctanos', desc: 'Escríbenos por WhatsApp indicando monto y operación' },
+              { n: '02', title: 'Acordamos precio', desc: 'Revisamos la tasa del mercado y acordamos el precio' },
+              { n: '03', title: 'Realizas el pago', desc: 'Transferencia bancaria o efectivo según tu preferencia' },
+              { n: '04', title: 'Recibes tu cripto', desc: 'Enviamos a tu wallet en minutos, con comprobante' },
             ].map((step) => (
               <div key={step.n} className="card text-left">
                 <div className="label-mono text-[10px] text-[var(--gold)] mb-2">{step.n}</div>
-                <div className="text-2xl mb-2">{step.icon}</div>
                 <div className="font-bold text-sm mb-1">{step.title}</div>
                 <div className="text-xs text-[var(--text-muted)]">{step.desc}</div>
               </div>
