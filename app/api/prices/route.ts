@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
@@ -13,28 +14,8 @@ interface PriceItem {
 
 // ── Configuration ───────────────────────────────────────────────────────────────
 const CACHE_TTL = 60_000 // 60 seconds
-const RATE_LIMIT_WINDOW = 60_000 // 1 minute
-const RATE_LIMIT_MAX = 30 // max requests per IP in window
-
-// ── In-memory rate limiting ───────────────────────────────────────────────────
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const record = rateLimitMap.get(ip)
-
-  if (!record || now > record.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW })
-    return true
-  }
-
-  if (record.count >= RATE_LIMIT_MAX) {
-    return false
-  }
-
-  record.count++
-  return true
-}
+const RATE_LIMIT_WINDOW = 60_000
+const RATE_LIMIT_MAX = 30
 
 // ── Request coalescing (prevent thundering herd) ───────────────────────────────
 let pendingFetch: Promise<PriceItem[]> | null = null
@@ -118,7 +99,7 @@ export async function GET(request: Request) {
     ?? request.headers.get('x-real-ip') 
     ?? 'unknown'
   
-  if (!checkRateLimit(ip)) {
+  if (!(await checkRateLimit(`prices:${ip}`, { max: RATE_LIMIT_MAX, windowMs: RATE_LIMIT_WINDOW }))) {
     return NextResponse.json(
       { error: 'Too many requests', retryAfter: RATE_LIMIT_WINDOW / 1000 },
       { status: 429, headers: { 'Retry-After': String(RATE_LIMIT_WINDOW / 1000) } }
