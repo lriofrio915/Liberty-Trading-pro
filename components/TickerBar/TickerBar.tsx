@@ -24,7 +24,7 @@ function formatPrice(symbol: string, price: number): string {
 
 export default function TickerBar() {
   const [prices, setPrices] = useState<PriceItem[]>([])
-  const [lastPrices, setLastPrices] = useState<PriceItem[]>([])
+  const lastPricesRef = useRef<PriceItem[]>([])
 
   const fetchPrices = useCallback(async () => {
     try {
@@ -33,7 +33,7 @@ export default function TickerBar() {
       if (cached) {
         const { prices: cachedPrices, ts } = JSON.parse(cached)
         if (Date.now() - ts < CACHE_TTL) {
-          setLastPrices(cachedPrices)
+          lastPricesRef.current = cachedPrices
           setPrices(cachedPrices)
           return
         }
@@ -48,14 +48,14 @@ export default function TickerBar() {
           prices: data.prices,
           ts: Date.now()
         }))
-        setLastPrices(data.prices)
+        lastPricesRef.current = data.prices
         setPrices(data.prices)
       }
     } catch {
       // Show last known prices on error
-      if (lastPrices.length) setPrices(lastPrices)
+      if (lastPricesRef.current.length) setPrices(lastPricesRef.current)
     }
-  }, [lastPrices])
+  }, [])
 
   useEffect(() => {
     fetchPrices()
