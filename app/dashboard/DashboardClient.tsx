@@ -360,9 +360,9 @@ export default function DashboardClient({
               <div className="text-2xl font-black" style={{ color: 'var(--gold)' }}>
                 {metricas.totalTrades}
               </div>
-              <div className="flex gap-3 mt-2 text-xs">
-                <span className="text-green-400">✅ {metricas.wins}</span>
-                <span className="text-red-400">❌ {metricas.losses}</span>
+              <div className="flex gap-3 mt-2 text-xs label-mono">
+                <span className="text-green-400">W {metricas.wins}</span>
+                <span className="text-red-400">L {metricas.losses}</span>
               </div>
             </div>
 
@@ -435,12 +435,12 @@ export default function DashboardClient({
               <div className="label-mono text-xs mb-3 text-[var(--text-muted)]">Win Rate Dirección</div>
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-green-400 font-mono">📈 Long</span>
+                  <span className="label-mono text-[10px] text-green-400">LONG</span>
                   <span className="font-bold text-white">{metricas.winRateLong.toFixed(0)}%</span>
                   <span className="text-[var(--text-muted)]">{metricas.longsWin}/{metricas.longsTotal}</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-red-400 font-mono">📉 Short</span>
+                  <span className="label-mono text-[10px] text-red-400">SHORT</span>
                   <span className="font-bold text-white">{metricas.winRateShort.toFixed(0)}%</span>
                   <span className="text-[var(--text-muted)]">{metricas.shortsWin}/{metricas.shortsTotal}</span>
                 </div>
@@ -468,12 +468,12 @@ export default function DashboardClient({
               <div className="label-mono text-xs mb-3 text-[var(--text-muted)]">Rachas</div>
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span>🏆 Ganadora</span>
-                  <span className="font-bold text-green-400">{metricas.maxRachaGanadora} trades</span>
+                  <span className="text-[var(--text-secondary)]">Ganadora</span>
+                  <span className="font-bold text-green-400 label-mono">{metricas.maxRachaGanadora}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span>⚠️ Perdedora</span>
-                  <span className="font-bold text-red-400">{metricas.maxRachaPerdedora} trades</span>
+                  <span className="text-[var(--text-secondary)]">Perdedora</span>
+                  <span className="font-bold text-red-400 label-mono">{metricas.maxRachaPerdedora}</span>
                 </div>
               </div>
             </div>
@@ -690,8 +690,8 @@ export default function DashboardClient({
                       return (
                         <p className="text-xs" style={{ color: supera ? 'var(--green)' : 'var(--text-muted)' }}>
                           {supera
-                            ? `✅ Tu cuenta superó al Nasdaq 100 por ${diff.toFixed(2)} puntos porcentuales`
-                            : `⚠️ El Nasdaq 100 superó tu cuenta por ${Math.abs(diff).toFixed(2)} puntos porcentuales`}
+                            ? `+${diff.toFixed(2)}pp vs Nasdaq 100`
+                            : `${diff.toFixed(2)}pp vs Nasdaq 100`}
                         </p>
                       )
                     })()}
