@@ -52,10 +52,10 @@ export default function Navbar({ initialUser = null }: NavbarProps) {
         {/* Desktop Nav */}
         <div className="hidden lg:flex items-center gap-7">
           {NAV_LINKS.map((link) => (
-            <Link key={link.href} href={link.href}
+            <a key={link.href} href={link.href}
               className="label-mono text-[11px] text-[var(--text-muted)] hover:text-[var(--gold)] transition-colors">
               {link.label}
-            </Link>
+            </a>
           ))}
         </div>
 
@@ -97,10 +97,10 @@ export default function Navbar({ initialUser = null }: NavbarProps) {
         <div className="lg:hidden border-t border-[var(--border)] px-4 py-5 flex flex-col gap-4"
           style={{ background: 'rgba(8,8,8,0.98)' }}>
           {NAV_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}
+            <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}
               className="label-mono text-[11px] text-[var(--text-secondary)] hover:text-[var(--gold)] transition-colors">
               {link.label}
-            </Link>
+            </a>
           ))}
           {user ? (
             <Link href="/dashboard" onClick={() => setMenuOpen(false)}

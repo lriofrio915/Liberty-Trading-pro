@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import TickerBar from '@/components/TickerBar/TickerBar'
 
@@ -35,8 +35,11 @@ function formatPnl(pnl: number) {
 
 export default function Hero() {
   const [data, setData] = useState<TrackRecord | null>(null)
+  const fetched = useRef(false)
 
   useEffect(() => {
+    if (fetched.current) return
+    fetched.current = true
     fetch('/api/public-track-record')
       .then((r) => r.json())
       .then((d) => setData(d))
