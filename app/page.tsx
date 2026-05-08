@@ -8,9 +8,27 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 const WA = `https://wa.me/+${process.env.LUIS_PHONE || ''}?text=Hola%20Luis%2C%20me%20interesa%20el%20servicio%20P2P%20de%20USDT%2FBTC`
 
+interface TrackRecordData {
+  totalTrades: number
+  wins: number
+  losses: number
+  winRate: number
+  profitFactor: number
+  totalNetPnl: number
+  rendimientoYTD: number
+  recentSessions: { date: string; instrumento: string; direccion: string; resultado: string; pnlNeto: number }[]
+}
+
 export default async function LandingPage() {
   const supabase = await createSupabaseServerClient()
   const { data: { session } } = await supabase.auth.getSession()
+
+  let trackRecord: TrackRecordData | null = null
+  try {
+    const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const r = await fetch(`${base}/api/public-track-record`, { next: { revalidate: 3600 } })
+    if (r.ok) trackRecord = await r.json()
+  } catch { /* non-critical — page renders without live data */ }
 
   return (
     <main className="relative noise">
@@ -86,6 +104,91 @@ export default async function LandingPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ─── TRACK RECORD EN VIVO ───────────────────────── */}
+      <section id="track-record" className="py-24 px-4" style={{ background: 'var(--bg-secondary)' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-12">
+            <div className="label-mono mb-3 text-[var(--gold)]">Transparencia total</div>
+            <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)]">
+              Track Record<br /><span className="gradient-gold">de Luis Riofrio</span>
+            </h2>
+            <p className="text-[var(--text-secondary)] mt-4 max-w-lg">
+              Operaciones reales — incluyendo pérdidas. Año {new Date().getFullYear()} en curso.
+            </p>
+          </div>
+
+          {trackRecord ? (
+            <>
+              {/* Stats grid */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+                {[
+                  { label: 'Win Rate', value: `${trackRecord.winRate}%`, sub: `${trackRecord.wins}W / ${trackRecord.losses}L` },
+                  { label: 'Profit Factor', value: trackRecord.profitFactor >= 999 ? '∞' : trackRecord.profitFactor.toFixed(2), sub: 'ganancias / pérdidas' },
+                  { label: 'Rendimiento YTD', value: `${trackRecord.rendimientoYTD > 0 ? '+' : ''}${trackRecord.rendimientoYTD.toFixed(1)}%`, sub: 'sobre capital inicial' },
+                  { label: 'Operaciones', value: String(trackRecord.totalTrades), sub: `YTD ${new Date().getFullYear()}` },
+                ].map((s) => (
+                  <div key={s.label} className="card p-5">
+                    <div className="label-mono text-[10px] text-[var(--text-muted)] mb-1">{s.label}</div>
+                    <div className="text-3xl font-black gradient-gold">{s.value}</div>
+                    <div className="text-xs text-[var(--text-muted)] mt-1">{s.sub}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Recent sessions table */}
+              {trackRecord.recentSessions.length > 0 && (
+                <div className="card p-0 overflow-hidden">
+                  <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
+                    <span className="label-mono text-[10px] text-[var(--text-muted)]">Últimas operaciones</span>
+                    <Link href="/dashboard/track-record" className="label-mono text-[10px] text-[var(--gold)] hover:underline">
+                      Ver historial completo →
+                    </Link>
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[var(--border)]">
+                        {['Fecha', 'Instrumento', 'Dirección', 'Resultado', 'PnL'].map(h => (
+                          <th key={h} className="px-5 py-3 text-left label-mono text-[10px] text-[var(--text-muted)]">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {trackRecord.recentSessions.map((s, i) => (
+                        <tr key={i} className="border-b border-[var(--border)] last:border-0 hover:bg-[rgba(201,168,76,0.03)] transition-colors">
+                          <td className="px-5 py-3 label-mono text-xs text-[var(--text-muted)]">
+                            {new Date(s.date).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })}
+                          </td>
+                          <td className="px-5 py-3 font-bold text-[var(--text-primary)] text-xs">{s.instrumento}</td>
+                          <td className="px-5 py-3 label-mono text-xs text-[var(--text-secondary)]">{s.direccion}</td>
+                          <td className="px-5 py-3">
+                            <span className={`label-mono text-[10px] px-2 py-0.5 rounded-full ${
+                              s.resultado === 'WIN'
+                                ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40'
+                                : s.resultado === 'LOSS'
+                                  ? 'bg-red-950/40 text-red-400 border border-red-800/40'
+                                  : 'text-[var(--text-muted)] border border-[var(--border)]'
+                            }`}>
+                              {s.resultado}
+                            </span>
+                          </td>
+                          <td className={`px-5 py-3 label-mono text-xs font-bold ${s.pnlNeto >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {s.pnlNeto >= 0 ? '+' : ''}{s.pnlNeto.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="card p-8 text-center text-[var(--text-muted)] text-sm">
+              Track record cargando...
+            </div>
+          )}
         </div>
       </section>
 
