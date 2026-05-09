@@ -89,7 +89,7 @@ interface TickerSuggestion {
 }
 
 export default function OpcionesClient() {
-  const [ticker, setTicker] = useState('BAC')
+  const [ticker, setTicker] = useState('')
   const [activeStrategy, setActiveStrategy] = useState<StrategyKind>('sell-put')
   const [data, setData] = useState<OptionsAnalyzeResult | null>(null)
   const [loading, setLoading] = useState(false)
@@ -183,7 +183,7 @@ export default function OpcionesClient() {
               ref={inputRef}
               value={ticker}
               onChange={(e) => handleTickerChange(e.target.value)}
-              onFocus={() => { if (ticker.trim()) setShowSuggestions(true) }}
+              onFocus={() => { if (ticker.trim() && suggestions.length > 0) setShowSuggestions(true) }}
               onKeyDown={(e) => { if (e.key === 'Escape') setShowSuggestions(false) }}
               placeholder="Ej: BAC, Bank of America, INTC..."
               autoComplete="off"

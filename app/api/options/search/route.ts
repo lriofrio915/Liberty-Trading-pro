@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     if (!res.ok) return NextResponse.json([])
 
     const json = await res.json()
-    const quotes: YahooQuote[] = json?.finance?.result?.[0]?.quotes ?? []
+    const quotes: YahooQuote[] = json?.quotes ?? []
 
     const suggestions = quotes
       .filter(q => q.quoteType === 'EQUITY' && q.symbol && !q.symbol.includes('.'))
