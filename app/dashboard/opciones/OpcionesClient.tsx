@@ -125,7 +125,7 @@ export default function OpcionesClient() {
     setTicker(s.ticker)
     setSuggestions([])
     setShowSuggestions(false)
-    inputRef.current?.focus()
+    analyze(undefined, s.ticker)
   }
 
   // Close dropdown on outside click
@@ -142,16 +142,18 @@ export default function OpcionesClient() {
 
   const activePicks = useMemo(() => data?.strategies?.[activeStrategy] ?? [], [activeStrategy, data])
 
-  const analyze = async (event?: FormEvent) => {
+  const analyze = async (event?: FormEvent, tickerOverride?: string) => {
     event?.preventDefault()
-    if (!ticker.trim()) return
+    const t = (tickerOverride ?? ticker).trim()
+    if (!t) return
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/options/analyze?ticker=${encodeURIComponent(ticker.trim().toUpperCase())}`)
+      const res = await fetch(`/api/options/analyze?ticker=${encodeURIComponent(t.toUpperCase())}`)
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'No se pudo analizar el ticker')
       setData(json)
+      if (json.recommendation?.strategy) setActiveStrategy(json.recommendation.strategy)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al analizar opciones')
     } finally {
