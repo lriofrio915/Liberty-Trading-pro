@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 function calcStats(opps: {
   rendimiento12pm: number | null
   rendimiento3pm: number | null
-  rendimiento1445: number | null
+  rendimiento1445?: number | null
   rendimientoFlip: number | null
 }[]) {
   const closed = opps.filter(o => o.rendimiento3pm !== null || o.rendimiento12pm !== null)
@@ -45,6 +45,10 @@ export async function GET() {
   const result = scans.map(scan => {
     const all = scan.oportunidades
 
+    // FAROS fields not in schema yet — treat all opps as approved (vetadas = 0)
+    const sinFaros = calcStats(all)
+    const conFaros = calcStats(all)
+
     return {
       id:           scan.id,
       fecha:        scan.fecha,
@@ -54,9 +58,15 @@ export async function GET() {
       riskProfile:  scan.riskProfile,
       createdAt:    scan.createdAt,
       stats: {
-        total: calcStats(all),
+        sinFaros,
+        conFaros,
+        vetadas: 0,
       },
-      oportunidades: all,
+      oportunidades: all.map(o => ({
+        ...o,
+        farosKillSwitch: null,
+        farosPsiScore:   null,
+      })),
     }
   })
 
