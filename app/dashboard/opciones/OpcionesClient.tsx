@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useMemo, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 type StrategyKind = 'sell-put' | 'covered-call' | 'buy-call' | 'buy-put'
 
@@ -82,12 +82,63 @@ const STRATEGIES: Array<{ key: StrategyKind; label: string; desc: string }> = [
   { key: 'buy-put', label: 'Comprar Put', desc: 'Apuesta direccional bajista' },
 ]
 
+interface TickerSuggestion {
+  ticker: string
+  name: string
+  exchange: string
+}
+
 export default function OpcionesClient() {
   const [ticker, setTicker] = useState('BAC')
   const [activeStrategy, setActiveStrategy] = useState<StrategyKind>('sell-put')
   const [data, setData] = useState<OptionsAnalyzeResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const [suggestions, setSuggestions] = useState<TickerSuggestion[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const fetchSuggestions = useCallback(async (q: string) => {
+    if (!q.trim()) { setSuggestions([]); return }
+    setSuggestionsLoading(true)
+    try {
+      const res = await fetch(`/api/options/search?q=${encodeURIComponent(q)}`)
+      if (res.ok) setSuggestions(await res.json())
+    } finally {
+      setSuggestionsLoading(false)
+    }
+  }, [])
+
+  const handleTickerChange = (value: string) => {
+    const upper = value.toUpperCase()
+    setTicker(upper)
+    setShowSuggestions(true)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => fetchSuggestions(upper), 300)
+  }
+
+  const selectSuggestion = (s: TickerSuggestion) => {
+    setTicker(s.ticker)
+    setSuggestions([])
+    setShowSuggestions(false)
+    inputRef.current?.focus()
+  }
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+        inputRef.current && !inputRef.current.contains(e.target as Node)
+      ) setShowSuggestions(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const activePicks = useMemo(() => data?.strategies?.[activeStrategy] ?? [], [activeStrategy, data])
 
@@ -124,16 +175,55 @@ export default function OpcionesClient() {
 
       <form onSubmit={analyze} className="card p-5 mb-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-end">
-          <div>
+          <div className="relative">
             <label className="block text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>
               TICKER O EMPRESA
             </label>
             <input
+              ref={inputRef}
               value={ticker}
-              onChange={(e) => setTicker(e.target.value.toUpperCase())}
-              placeholder="Ej: BAC, INTC, WFC"
+              onChange={(e) => handleTickerChange(e.target.value)}
+              onFocus={() => { if (ticker.trim()) setShowSuggestions(true) }}
+              onKeyDown={(e) => { if (e.key === 'Escape') setShowSuggestions(false) }}
+              placeholder="Ej: BAC, Bank of America, INTC..."
+              autoComplete="off"
               className="w-full bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm px-4 py-3 rounded-lg focus:outline-none focus:border-[var(--gold-dark)] font-mono"
             />
+            {showSuggestions && (suggestions.length > 0 || suggestionsLoading) && (
+              <div
+                ref={dropdownRef}
+                className="absolute z-50 w-full mt-1 rounded-xl border overflow-hidden shadow-xl"
+                style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}
+              >
+                {suggestionsLoading && suggestions.length === 0 && (
+                  <div className="px-4 py-3 text-[11px] font-mono animate-pulse" style={{ color: 'var(--text-muted)' }}>
+                    Buscando...
+                  </div>
+                )}
+                {suggestions.map((s) => (
+                  <button
+                    key={s.ticker}
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); selectSuggestion(s) }}
+                    className="w-full text-left px-4 py-2.5 flex items-center justify-between gap-3 hover:bg-white/5 transition-colors"
+                  >
+                    <span className="flex items-center gap-3 min-w-0">
+                      <span className="font-mono font-bold text-sm shrink-0" style={{ color: 'var(--gold)' }}>
+                        {s.ticker}
+                      </span>
+                      <span className="text-[11px] truncate" style={{ color: 'var(--text-secondary)' }}>
+                        {s.name}
+                      </span>
+                    </span>
+                    {s.exchange && (
+                      <span className="text-[9px] font-mono shrink-0" style={{ color: 'var(--text-muted)' }}>
+                        {s.exchange}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <button
             type="submit"
