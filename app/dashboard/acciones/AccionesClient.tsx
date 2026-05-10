@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import ResearchTab from './ResearchTab'
+import TauricResearchTab from './TauricResearchTab'
 
 const OportunidadesClient = dynamic(
   () => import('@/app/dashboard/oportunidades/OportunidadesClient'),
@@ -13,7 +14,7 @@ const OportunidadesClient = dynamic(
   isAdmin: boolean
 }>
 
-type Tab = 'recomendaciones' | 'research'
+type Tab = 'recomendaciones' | 'research' | 'tauric'
 
 export default function AccionesClient({
   initialOpportunities,
@@ -149,15 +150,25 @@ export default function AccionesClient({
               : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
           }`}
         >
-          RESEARCH
+          LINCH RESEARCH
+        </button>
+        <button
+          onClick={() => setTab('tauric')}
+          className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border ${
+            tab === 'tauric'
+              ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
+          }`}
+        >
+          TAURIC RESEARCH
         </button>
       </div>
 
-      {tab === 'recomendaciones' ? (
+      {tab === 'recomendaciones' && (
         <OportunidadesClient initialOpportunities={initialOpportunities} plan={plan} isAdmin={isAdmin} />
-      ) : (
-        <ResearchTab />
       )}
+      {tab === 'research' && <ResearchTab />}
+      {tab === 'tauric' && <TauricResearchTab />}
     </div>
   )
 }
