@@ -1,6 +1,7 @@
 'use client'
 
 import AgentePeter from './AgentePeter'
+import AgenteMonitor from './AgenteMonitor'
 
 export default function AgentesClient({ isAdmin }: { isAdmin: boolean }) {
   return (
@@ -10,11 +11,12 @@ export default function AgentesClient({ isAdmin }: { isAdmin: boolean }) {
       </h1>
       <p className="text-[var(--text-secondary)] text-sm max-w-2xl mb-8">
         Agentes automatizados que orquestan los filtros del sistema para identificar,
-        confirmar y publicar recomendaciones de inversión.
+        confirmar, publicar y monitorear recomendaciones de inversión.
       </p>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         <AgentePeter isAdmin={isAdmin} />
+        <AgenteMonitor isAdmin={isAdmin} />
       </div>
     </div>
   )
