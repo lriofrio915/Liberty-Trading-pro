@@ -26,7 +26,14 @@ export async function GET() {
 
     const all = await prisma.opportunity.findMany({
       orderBy: { publishedAt: 'desc' },
-      ...(isAdmin ? {} : { where: { active: true } }),
+      ...(isAdmin ? {} : {
+        where: {
+          OR: [
+            { active: true },
+            { precioVenta: { not: null } },  // cerradas con precio documentado → track record
+          ],
+        },
+      }),
     })
 
     const visible = isAdmin

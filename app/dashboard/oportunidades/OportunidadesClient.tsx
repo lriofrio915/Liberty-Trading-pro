@@ -955,6 +955,22 @@ export default function OportunidadesClient({
     return isAdmin ? opportunities : opportunities.filter(o => o.active)
   })()
 
+  // Track record: recomendaciones cerradas con precio de venta documentado
+  // Solo visible para usuarios regulares (admin ya ve todo en la tabla principal)
+  const trackRecordOpps = (!isAdmin && !previewMode)
+    ? opportunities.filter(o => !o.active && o.precioVenta != null && o.precioVenta > 0)
+    : []
+
+  const trTotal   = trackRecordOpps.length
+  const trGanadas = trackRecordOpps.filter(o => o.precioVenta! > o.precioEntrada).length
+  const trRendPcts = trackRecordOpps.map(o =>
+    ((o.precioVenta! - o.precioEntrada) / o.precioEntrada) * 100
+  )
+  const trAvgRend = trTotal > 0
+    ? trRendPcts.reduce((s, v) => s + v, 0) / trTotal
+    : 0
+  const trWinRate = trTotal > 0 ? (trGanadas / trTotal) * 100 : 0
+
   return (
     <div className="animate-fadeIn">
       {/* Header */}
@@ -1033,6 +1049,123 @@ export default function OportunidadesClient({
           onPriceUpdate={handlePriceUpdate}
           onOpenModal={setModalOpp}
         />
+      )}
+
+      {/* Track Record — recomendaciones cerradas con precio de venta documentado */}
+      {trackRecordOpps.length > 0 && (
+        <div className="mt-10">
+          {/* Header con métricas */}
+          <div className="flex items-end justify-between flex-wrap gap-4 mb-4">
+            <div>
+              <p className="text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--gold)' }}>
+                TRACK RECORD — RECOMENDACIONES CERRADAS
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Historial de operaciones completadas con precio de venta registrado
+              </p>
+            </div>
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="text-center">
+                <div className="text-lg font-black font-mono" style={{ color: 'var(--text-primary)' }}>{trTotal}</div>
+                <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>operaciones</div>
+              </div>
+              <div className="text-center">
+                <div className={`text-lg font-black font-mono ${trWinRate >= 60 ? 'text-green-400' : trWinRate >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
+                  {trWinRate.toFixed(0)}%
+                </div>
+                <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>tasa de éxito</div>
+              </div>
+              <div className="text-center">
+                <div className={`text-lg font-black font-mono ${trAvgRend >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {trAvgRend >= 0 ? '+' : ''}{trAvgRend.toFixed(2)}%
+                </div>
+                <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>rendimiento promedio</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabla simplificada read-only */}
+          <div className="card overflow-x-auto p-0" style={{ borderColor: 'rgba(201,168,76,0.2)' }}>
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="border-b border-[var(--border)]" style={{ background: 'rgba(201,168,76,0.05)' }}>
+                  {['#', 'Ticker', 'Empresa', 'Fecha', 'P.Compra', 'P.Venta', 'Rendimiento', 'Resultado'].map(col => (
+                    <th
+                      key={col}
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest whitespace-nowrap"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {trackRecordOpps.map((opp, idx) => {
+                  const rend = ((opp.precioVenta! - opp.precioEntrada) / opp.precioEntrada) * 100
+                  const ganada = rend >= 0
+                  const statusLabel: Record<string, string> = {
+                    OBJETIVO_ALCANZADO: 'Objetivo ✓',
+                    STOP_ACTIVADO:      'Stop ✗',
+                    CANCELADA:          'Cancelada',
+                  }
+                  const statusColor: Record<string, string> = {
+                    OBJETIVO_ALCANZADO: 'bg-blue-950 text-blue-400',
+                    STOP_ACTIVADO:      'bg-red-950 text-red-400',
+                    CANCELADA:          'bg-gray-800 text-gray-400',
+                  }
+                  return (
+                    <tr
+                      key={opp.id}
+                      className="border-b border-[var(--border)] transition-colors"
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <td className="px-4 py-3 text-center">
+                        <span className="font-mono text-sm font-bold" style={{ color: 'var(--text-muted)' }}>{idx + 1}</span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="font-black text-sm" style={{ color: 'var(--gold)' }}>{opp.ticker}</span>
+                      </td>
+                      <td className="px-4 py-3 max-w-[180px]">
+                        <span className="text-sm font-medium truncate block" style={{ color: 'var(--text-primary)' }} title={opp.title}>
+                          {opp.title}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>
+                          {new Date(opp.publishedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="font-mono text-sm" style={{ color: 'var(--text-secondary)' }}>
+                          {fmtPrice(opp.precioEntrada)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>
+                          {fmtPrice(opp.precioVenta!)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex flex-col gap-0.5">
+                          <span className={`font-mono text-sm font-bold ${ganada ? 'text-green-400' : 'text-red-400'}`}>
+                            {rend >= 0 ? '+' : ''}{rend.toFixed(2)}% 🔒
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statusColor[opp.status] ?? 'bg-gray-800 text-gray-400'}`}>
+                          {statusLabel[opp.status] ?? opp.status}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {/* Report modal */}
