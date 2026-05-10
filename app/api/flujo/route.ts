@@ -3,7 +3,7 @@ import { fetchAllPrices, type OHLCVData } from '@/lib/analisis-engine'
 import { computeFarosMetrics, type FarosMetrics } from '@/lib/faros-metrics'
 
 export const runtime = 'nodejs'
-export const revalidate = 900 // cache 15 min — OHLCV is daily data
+export const dynamic = 'force-dynamic'
 
 // ── Asset metadata ────────────────────────────────────────────────────────────
 

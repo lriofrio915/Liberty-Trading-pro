@@ -375,7 +375,7 @@ export default function FlujoDineroClient({ hasAccess }: { hasAccess: boolean })
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/flujo', { signal: AbortSignal.timeout(30000) })
+      const res = await fetch('/api/flujo', { cache: 'no-store', signal: AbortSignal.timeout(30000) })
       if (!res.ok) {
         const b = await res.json().catch(() => ({}))
         throw new Error(b?.error ?? `Error ${res.status}`)
