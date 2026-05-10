@@ -80,7 +80,7 @@ export default function TauricResearchTab() {
   const [showDrop, setShowDrop]       = useState(false)
   const [searching, setSearching]     = useState(false)
   const [date, setDate]   = useState(() => new Date().toISOString().split('T')[0])
-  const [depth, setDepth] = useState('shallow')
+  const depth = 'deep'
 
   // Run state
   const [status, setStatus]   = useState<RunStatus>('idle')
@@ -387,24 +387,6 @@ export default function TauricResearchTab() {
                 onChange={e => setDate(e.target.value)}
                 className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] font-mono text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)]"
               />
-            </div>
-          </div>
-
-          {/* Depth */}
-          <div>
-            <label className="text-[10px] font-mono tracking-widest block mb-2" style={{ color: 'var(--text-muted)' }}>PROFUNDIDAD DE ANÁLISIS</label>
-            <div className="grid sm:grid-cols-3 gap-2">
-              {DEPTH_OPTIONS.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setDepth(opt.value)}
-                  className={`p-3 rounded-xl border text-left transition-all ${depth === opt.value ? 'border-[var(--gold)] bg-[var(--gold)]/10' : 'border-[var(--border)] hover:border-[var(--gold-dark)]'}`}
-                >
-                  <div className={`text-xs font-bold font-mono mb-0.5 ${depth === opt.value ? 'text-[var(--gold)]' : 'text-[var(--text-primary)]'}`}>{opt.label}</div>
-                  <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{opt.desc}</div>
-                  <div className="text-[10px] mt-1" style={{ color: 'var(--gold)' }}>~{opt.time}</div>
-                </button>
-              ))}
             </div>
           </div>
 

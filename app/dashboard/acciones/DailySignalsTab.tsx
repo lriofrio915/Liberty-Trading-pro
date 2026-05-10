@@ -34,9 +34,6 @@ type TaskStatus = {
 
 const LS_BOT_TOKEN = 'ds_telegram_bot_token'
 const LS_CHAT_ID   = 'ds_telegram_chat_id'
-const LS_STOCKS    = 'ds_stock_list'
-
-const DEFAULT_STOCKS = 'AAPL,NVDA,TSLA,MSFT,AMZN'
 
 function signalBadge(sig?: string): { label: string; color: string } {
   const up = (sig ?? '').toUpperCase()
@@ -66,7 +63,7 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
 
   const [botToken, setBotToken]   = useState(() => lsGet(LS_BOT_TOKEN))
   const [chatId, setChatId]       = useState(() => lsGet(LS_CHAT_ID))
-  const [stockList, setStockList] = useState(() => lsGet(LS_STOCKS) || defaultTickers || DEFAULT_STOCKS)
+  const [stockList, setStockList] = useState(defaultTickers || 'AAPL,NVDA,TSLA,MSFT,AMZN')
   const [tgStatus, setTgStatus]   = useState<TelegramStatus>('unchecked')
   const [tgError, setTgError]     = useState<string | null>(null)
 
@@ -99,10 +96,20 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
   }, [])
 
   useEffect(() => {
-    if (defaultTickers && !lsGet(LS_STOCKS)) {
-      setStockList(defaultTickers)
-    }
-  }, [defaultTickers])
+    try { localStorage.removeItem('ds_stock_list') } catch {}
+    fetch('/api/picks')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.opportunities) return
+        type Opp = { active: boolean; precioVenta: number | null; ticker: string }
+        const tickers = (data.opportunities as Opp[])
+          .filter(o => o.active && (o.precioVenta == null || o.precioVenta === 0))
+          .map(o => o.ticker)
+          .filter(Boolean)
+        if (tickers.length > 0) setStockList(tickers.join(','))
+      })
+      .catch(() => {})
+  }, [])
 
   async function checkStatus() {
     setServerStatus('checking')
@@ -171,7 +178,6 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
   function saveConfig() {
     lsSet(LS_BOT_TOKEN, botToken)
     lsSet(LS_CHAT_ID, chatId)
-    lsSet(LS_STOCKS, stockList)
     setShowConfig(false)
   }
 
@@ -365,19 +371,17 @@ flyctl secrets set \\
 
           {showConfig && (
             <div className="mt-4 space-y-4">
-              {/* Stock list */}
+              {/* Stock list — read-only, synced from RECOMENDACIONES */}
               <div>
-                <label className="text-[10px] font-mono tracking-widest block mb-1.5" style={{ color: 'var(--text-muted)' }}>
-                  ACCIONES A MONITOREAR <span className="opacity-50">(separadas por coma)</span>
-                </label>
-                <input
-                  value={stockList}
-                  onChange={e => setStockList(e.target.value.toUpperCase())}
-                  placeholder="AAPL,NVDA,TSLA,MSFT,AMZN"
-                  className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--gold)] font-mono text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)]"
-                />
+                <p className="text-[10px] font-mono tracking-widest mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                  ACCIONES ACTIVAS (desde RECOMENDACIONES)
+                </p>
+                <p className="font-mono text-sm px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] break-all"
+                   style={{ color: 'var(--gold)' }}>
+                  {stockList || '—'}
+                </p>
                 <p className="text-[9px] mt-1 font-mono" style={{ color: 'var(--text-muted)' }}>
-                  Para cambiar la lista permanente en Fly.io: <code>flyctl secrets set STOCK_LIST="..."</code>
+                  Se actualiza automáticamente con las alertas activas de RECOMENDACIONES.
                 </p>
               </div>
 
