@@ -2,11 +2,19 @@
 
 import { useEffect, useRef, useState } from 'react'
 
+type PresetVar = {
+  name: string
+  description?: string
+  required?: boolean
+}
+
 type Preset = {
   id?: string
   name?: string
   preset?: string
+  title?: string
   description?: string
+  variables?: PresetVar[]
 }
 
 type Mode = 'chat' | 'swarm'
@@ -25,6 +33,20 @@ type RemoteMessage = {
   content: string
   created_at?: string
   metadata?: { run_id?: string; status?: string } | null
+}
+
+/** Builds a JSON template from preset variable definitions */
+function buildVarsTemplate(preset: Preset): string {
+  if (!preset.variables?.length) return '{}'
+  const obj: Record<string, string> = {}
+  for (const v of preset.variables) {
+    // Use description as placeholder hint, stripped to first example
+    const hint = v.description
+      ? v.description.split(/[,/]/)[0].trim()
+      : v.name
+    obj[v.name] = hint
+  }
+  return JSON.stringify(obj, null, 2)
 }
 
 const SUGGESTED = [
@@ -87,8 +109,16 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
         const arr = Array.isArray(data)
           ? data
           : (data as { presets?: unknown[] })?.presets ?? []
-        setPresets(arr as Preset[])
+        const presetList = arr as Preset[]
+        setPresets(presetList)
         setPresetsErr(null)
+        // Auto-select first preset and populate vars template
+        if (presetList.length > 0) {
+          const first = presetList[0]
+          const firstId = (first.id ?? first.preset ?? first.name ?? '') as string
+          setSelectedPreset(firstId)
+          setVars(buildVarsTemplate(first))
+        }
       })
       .catch(err => {
         setPresetsErr(err?.message ?? 'No se pudo conectar a Vibe-Trading')
@@ -527,7 +557,13 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
               <label className="text-[10px] font-mono text-[var(--text-muted)] tracking-widest">PRESET</label>
               <select
                 value={selectedPreset}
-                onChange={e => setSelectedPreset(e.target.value)}
+                onChange={e => {
+                  setSelectedPreset(e.target.value)
+                  const found = presets.find(p =>
+                    (p.id ?? p.preset ?? p.name) === e.target.value
+                  )
+                  if (found) setVars(buildVarsTemplate(found))
+                }}
                 className="mt-1 w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--gold)] font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)]"
               >
                 <option value="">— Selecciona —</option>
@@ -542,6 +578,15 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
                   El backend no tiene swarm presets configurados. Usa el modo CHAT.
                 </p>
               )}
+              {/* Preset description */}
+              {selectedPreset && (() => {
+                const p = presets.find(p => (p.id ?? p.preset ?? p.name) === selectedPreset)
+                return p?.description ? (
+                  <p className="mt-1.5 text-[10px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                    {p.description}
+                  </p>
+                ) : null
+              })()}
             </div>
             <div>
               <label className="text-[10px] font-mono text-[var(--text-muted)] tracking-widest">VARIABLES (JSON)</label>
@@ -551,6 +596,22 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
                 rows={4}
                 className="mt-1 w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)]"
               />
+              {/* Variable hints */}
+              {selectedPreset && (() => {
+                const p = presets.find(p => (p.id ?? p.preset ?? p.name) === selectedPreset)
+                if (!p?.variables?.length) return null
+                return (
+                  <div className="mt-1.5 space-y-0.5">
+                    {p.variables.map(v => (
+                      <p key={v.name} className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                        <span className="text-[var(--gold)] font-mono">{v.name}</span>
+                        {v.required && <span className="text-red-400 ml-0.5">*</span>}
+                        {v.description && <span> — {v.description}</span>}
+                      </p>
+                    ))}
+                  </div>
+                )
+              })()}
             </div>
           </div>
           <div className="mt-4 flex justify-end">
