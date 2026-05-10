@@ -956,10 +956,15 @@ export default function OportunidadesClient({
   })()
 
   // Track record: recomendaciones cerradas con precio de venta documentado
-  // Solo visible para usuarios regulares (admin ya ve todo en la tabla principal)
-  const trackRecordOpps = (!isAdmin && !previewMode)
-    ? opportunities.filter(o => !o.active && o.precioVenta != null && o.precioVenta > 0)
-    : []
+  const trackRecordOpps = (() => {
+    if (isAdmin && !previewMode) return []  // admin normal: ya ve todo en tabla principal
+    const base = opportunities.filter(o => !o.active && o.precioVenta != null && o.precioVenta > 0)
+    if (previewMode) {
+      const level = PLAN_ORDER[previewPlan] ?? 0
+      return base.filter(o => (PLAN_ORDER[o.minPlan] ?? 1) <= level)
+    }
+    return base  // usuario real
+  })()
 
   const trTotal   = trackRecordOpps.length
   const trGanadas = trackRecordOpps.filter(o => o.precioVenta! > o.precioEntrada).length
