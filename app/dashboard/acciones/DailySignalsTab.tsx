@@ -78,8 +78,19 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
 
   const [sendingTg, setSendingTg] = useState(false)
 
-  const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null)
-  const pollRef    = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Consulta rápida (admin only)
+  type LookupSuggestion = { symbol: string; name: string; exchange: string }
+  const [lookupQuery,       setLookupQuery]       = useState('')
+  const [lookupSuggestions, setLookupSuggestions] = useState<LookupSuggestion[]>([])
+  const [lookupSelected,    setLookupSelected]    = useState<LookupSuggestion | null>(null)
+  const [lookupAnalyzing,   setLookupAnalyzing]   = useState(false)
+  const [lookupSignal,      setLookupSignal]      = useState<Signal | null>(null)
+  const [lookupError,       setLookupError]       = useState<string | null>(null)
+
+  const timerRef      = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollRef       = useRef<ReturnType<typeof setInterval> | null>(null)
+  const lookupPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const lookupDebRef  = useRef<ReturnType<typeof setTimeout>  | null>(null)
   const botTokRef  = useRef(lsGet(LS_BOT_TOKEN))
   const chatIdRef  = useRef(lsGet(LS_CHAT_ID))
 
@@ -93,8 +104,10 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
   }, [])
 
   useEffect(() => () => {
-    if (timerRef.current) clearInterval(timerRef.current)
-    if (pollRef.current) clearInterval(pollRef.current)
+    if (timerRef.current)      clearInterval(timerRef.current)
+    if (pollRef.current)       clearInterval(pollRef.current)
+    if (lookupPollRef.current) clearInterval(lookupPollRef.current)
+    if (lookupDebRef.current)  clearTimeout(lookupDebRef.current)
   }, [])
 
   useEffect(() => {
@@ -119,6 +132,19 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
       .catch(() => {})
       .finally(() => setTickersLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (lookupDebRef.current) clearTimeout(lookupDebRef.current)
+    const q = lookupQuery.trim()
+    if (!q || lookupSelected) { setLookupSuggestions([]); return }
+    lookupDebRef.current = setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/picks/search?q=${encodeURIComponent(q)}`)
+        const d = await r.json()
+        setLookupSuggestions(d.suggestions ?? [])
+      } catch { setLookupSuggestions([]) }
+    }, 400)
+  }, [lookupQuery, lookupSelected])
 
   async function checkStatus() {
     setServerStatus('checking')
@@ -201,6 +227,61 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
     lsSet(LS_BOT_TOKEN, botToken)
     lsSet(LS_CHAT_ID, chatId)
     setShowConfig(false)
+  }
+
+  async function runLookup() {
+    if (!lookupSelected) return
+    setLookupAnalyzing(true)
+    setLookupSignal(null)
+    setLookupError(null)
+    setLookupSuggestions([])
+    const sym = lookupSelected.symbol.toUpperCase()
+    try {
+      const r = await fetch('/api/daily-signals/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stocks: [sym] }),
+      })
+      const d = await r.json()
+      if (!r.ok) { setLookupError(d.error ?? `Error ${r.status}`); setLookupAnalyzing(false); return }
+
+      type AT = { task_id: string }
+      const taskIds: string[] = d?.accepted
+        ? (d.accepted as AT[]).map((t: AT) => t.task_id).filter(Boolean)
+        : d?.task_id ? [d.task_id as string] : []
+
+      if (!taskIds.length) { setLookupError('Sin tareas generadas'); setLookupAnalyzing(false); return }
+
+      let attempts = 0
+      lookupPollRef.current = setInterval(async () => {
+        attempts++
+        if (attempts > 60) {
+          clearInterval(lookupPollRef.current!)
+          setLookupError('Tiempo de espera agotado')
+          setLookupAnalyzing(false)
+          return
+        }
+        try {
+          const statuses = await Promise.all(
+            taskIds.map(id =>
+              fetch(`/api/daily-signals/tasks?task_id=${id}`).then(res => res.json()) as Promise<TaskStatus>
+            )
+          )
+          const allDone = statuses.every(t => t.status === 'completed' || t.status === 'failed')
+          if (allDone) {
+            clearInterval(lookupPollRef.current!)
+            const list = await fetchResults()
+            const found = list.find(s => (s.stock_code ?? s.symbol ?? '').toUpperCase() === sym)
+            if (found) setLookupSignal(found)
+            else setLookupError('Análisis completado pero sin resultado para este ticker')
+            setLookupAnalyzing(false)
+          }
+        } catch { /* silent poll error */ }
+      }, 15_000)
+    } catch (err) {
+      setLookupError(err instanceof Error ? err.message : 'Error de red')
+      setLookupAnalyzing(false)
+    }
   }
 
   async function runAnalysis() {
@@ -477,6 +558,96 @@ flyctl secrets set \\
               </span>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Consulta rápida — admin only */}
+      {isAdmin && !previewMode && (
+        <div className="card space-y-3">
+          <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>CONSULTA RÁPIDA</p>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                value={lookupQuery}
+                onChange={e => { setLookupQuery(e.target.value); setLookupSelected(null); setLookupSignal(null) }}
+                onKeyDown={e => { if (e.key === 'Enter' && lookupSelected) runLookup() }}
+                placeholder="Busca empresa o ticker…"
+                disabled={lookupAnalyzing}
+                className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] font-mono text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)] disabled:opacity-50"
+              />
+              {lookupSuggestions.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 rounded-xl overflow-hidden shadow-xl"
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                  {lookupSuggestions.map(s => (
+                    <button key={s.symbol} type="button"
+                      onClick={() => { setLookupSelected(s); setLookupQuery(s.symbol); setLookupSuggestions([]) }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-white/5 transition-colors">
+                      <span className="font-mono font-bold text-sm min-w-[56px]" style={{ color: 'var(--gold)' }}>{s.symbol}</span>
+                      <span className="text-sm flex-1 truncate" style={{ color: 'var(--text-primary)' }}>{s.name}</span>
+                      <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{s.exchange}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              disabled={!lookupSelected || lookupAnalyzing || serverStatus !== 'online'}
+              onClick={runLookup}
+              className="px-4 py-2 text-[10px] font-mono tracking-widest rounded-lg bg-[var(--gold)] text-black font-bold disabled:opacity-40 hover:opacity-90 whitespace-nowrap"
+            >
+              {lookupAnalyzing ? '…' : 'CONSULTAR →'}
+            </button>
+          </div>
+          {lookupAnalyzing && (
+            <p className="text-[10px] font-mono animate-pulse" style={{ color: 'var(--text-muted)' }}>
+              Analizando {lookupSelected?.symbol}… puede tardar hasta 2 min
+            </p>
+          )}
+          {lookupError && <p className="text-[10px] font-mono text-red-400">⚠ {lookupError}</p>}
+          {lookupSignal && (() => {
+            const s = lookupSignal
+            const sym2   = s.stock_code ?? s.symbol ?? '—'
+            const name   = s.stock_name ?? s.name
+            const sig    = s.operation_advice ?? s.recommendation ?? s.signal ?? ''
+            const { label, color } = signalBadge(sig)
+            const scoreVal = s.sentiment_score ?? s.score
+            const summary  = s.summary ?? s.analysis ?? s.analysis_detail ?? ''
+            const ts       = s.date ?? s.created_at ?? s.timestamp ?? ''
+            return (
+              <div className="rounded-xl border p-4 space-y-2 relative"
+                style={{ background: 'rgba(201,168,76,0.04)', borderColor: 'rgba(201,168,76,0.3)' }}>
+                <button
+                  onClick={() => { setLookupSignal(null); setLookupQuery(''); setLookupSelected(null) }}
+                  className="absolute top-3 right-3 text-[10px] font-mono px-2 py-0.5 rounded border border-[var(--border)] hover:border-red-400 hover:text-red-400 transition-colors"
+                  style={{ color: 'var(--text-muted)' }}
+                >✕ CERRAR</button>
+                <p className="text-[9px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>RESULTADO CONSULTA</p>
+                <div className="flex items-start justify-between gap-2 pr-16">
+                  <div>
+                    <p className="text-base font-black font-mono" style={{ color: 'var(--text-primary)' }}>{sym2}</p>
+                    {name && <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{name}</p>}
+                  </div>
+                  <div className="flex flex-col items-end gap-0.5">
+                    <span className={`px-2 py-0.5 rounded-md border text-[10px] font-mono font-bold ${color}`}>{label}</span>
+                    {sig && <span className="text-[9px] font-mono opacity-50" style={{ color: 'var(--text-muted)' }}>{sig}</span>}
+                  </div>
+                </div>
+                {scoreVal != null && (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--border)' }}>
+                      <div className="h-1.5 rounded-full" style={{
+                        width: `${Math.min(scoreVal, 100)}%`,
+                        background: scoreVal >= 70 ? '#4ade80' : scoreVal >= 40 ? '#facc15' : '#f87171',
+                      }} />
+                    </div>
+                    <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>{scoreVal}/100</span>
+                  </div>
+                )}
+                {summary && <p className="text-[11px] leading-relaxed line-clamp-4" style={{ color: 'var(--text-secondary)' }}>{summary}</p>}
+                {ts && <p className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>{fmtEcuador(ts)}</p>}
+              </div>
+            )
+          })()}
         </div>
       )}
 
