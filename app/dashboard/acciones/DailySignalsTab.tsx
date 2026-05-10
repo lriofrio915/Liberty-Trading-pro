@@ -59,13 +59,14 @@ function lsSet(key: string, val: string) {
   try { localStorage.setItem(key, val) } catch {}
 }
 
-export default function DailySignalsTab() {
+export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: boolean; defaultTickers?: string }) {
   const [serverStatus, setServerStatus] = useState<ServerStatus>('checking')
   const [showConfig, setShowConfig]     = useState(false)
+  const [previewMode, setPreviewMode]   = useState(false)
 
   const [botToken, setBotToken]   = useState(() => lsGet(LS_BOT_TOKEN))
   const [chatId, setChatId]       = useState(() => lsGet(LS_CHAT_ID))
-  const [stockList, setStockList] = useState(() => lsGet(LS_STOCKS, DEFAULT_STOCKS))
+  const [stockList, setStockList] = useState(() => lsGet(LS_STOCKS) || defaultTickers || DEFAULT_STOCKS)
   const [tgStatus, setTgStatus]   = useState<TelegramStatus>('unchecked')
   const [tgError, setTgError]     = useState<string | null>(null)
 
@@ -96,6 +97,12 @@ export default function DailySignalsTab() {
     if (timerRef.current) clearInterval(timerRef.current)
     if (pollRef.current) clearInterval(pollRef.current)
   }, [])
+
+  useEffect(() => {
+    if (defaultTickers && !lsGet(LS_STOCKS)) {
+      setStockList(defaultTickers)
+    }
+  }, [defaultTickers])
 
   async function checkStatus() {
     setServerStatus('checking')
@@ -286,7 +293,7 @@ export default function DailySignalsTab() {
             </p>
           </div>
 
-          {/* Server status badge */}
+          {/* Server status badge + admin preview toggle */}
           <div className="flex flex-col items-end gap-2 flex-shrink-0">
             <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-mono
               ${serverStatus === 'online'   ? 'border-green-500/40 text-green-400 bg-green-500/10' : ''}
@@ -299,17 +306,31 @@ export default function DailySignalsTab() {
             <button onClick={checkStatus} className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>
               {serverStatus === 'checking' ? 'verificando…' : 'verificar'}
             </button>
+            {isAdmin && (
+              <button
+                onClick={() => setPreviewMode(v => !v)}
+                className={`text-[9px] font-mono tracking-widest px-2.5 py-1 rounded-full border transition-colors ${
+                  previewMode
+                    ? 'border-[var(--gold)] text-[var(--gold)] bg-[var(--gold)]/10'
+                    : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--gold-dark)]'
+                }`}
+                title="Ver como usuario normal"
+              >
+                {previewMode ? '◉ SALIR VISTA USUARIO' : '◎ VISTA USUARIO'}
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Offline setup guide */}
+      {/* Offline notice */}
       {serverStatus === 'offline' && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 space-y-3">
-          <p className="text-xs font-bold font-mono" style={{ color: 'var(--gold)' }}>SERVIDOR NO DISPONIBLE — SETUP REQUERIDO</p>
-          <div className="space-y-2 text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>
-            <p>El servidor Daily Scanner no está corriendo. Para activarlo en Fly.io:</p>
-            <pre className="text-[10px] rounded-lg p-3 overflow-x-auto" style={{ background: '#0d0d0d', color: '#4ade80' }}>{`cd ~/Desktop/Desarrollo\\ de\\ Software/daily-signals-runtime
+        isAdmin && !previewMode ? (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 space-y-3">
+            <p className="text-xs font-bold font-mono" style={{ color: 'var(--gold)' }}>SERVIDOR NO DISPONIBLE — SETUP REQUERIDO</p>
+            <div className="space-y-2 text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>
+              <p>El servidor Daily Scanner no está corriendo. Para activarlo en Fly.io:</p>
+              <pre className="text-[10px] rounded-lg p-3 overflow-x-auto" style={{ background: '#0d0d0d', color: '#4ade80' }}>{`cd ~/Desktop/Desarrollo\\ de\\ Software/daily-signals-runtime
 flyctl apps create daily-signals-liberty
 flyctl deploy
 flyctl secrets set \\
@@ -319,101 +340,108 @@ flyctl secrets set \\
   OPENAI_MODEL="deepseek/deepseek-chat-v3-0324" \\
   TELEGRAM_BOT_TOKEN="..." \\
   TELEGRAM_CHAT_ID="..."`}</pre>
-            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-              Agrega <code className="px-1 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.05)' }}>DAILY_SIGNALS_BASE_URL=https://daily-signals-liberty.fly.dev</code> a tu <code>.env.local</code>
-            </p>
+              <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                Agrega <code className="px-1 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.05)' }}>DAILY_SIGNALS_BASE_URL=https://daily-signals-liberty.fly.dev</code> a tu <code>.env.local</code>
+              </p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+            <p className="text-xs font-mono text-amber-400">Servidor en mantenimiento. Intenta de nuevo más tarde.</p>
+          </div>
+        )
       )}
 
-      {/* Config panel */}
-      <div className="card">
-        <button
-          onClick={() => setShowConfig(v => !v)}
-          className="w-full flex items-center justify-between"
-        >
-          <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>CONFIGURACIÓN</p>
-          <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>{showConfig ? '▲ CERRAR' : '▼ EXPANDIR'}</span>
-        </button>
+      {/* Config panel — admin only, hidden in preview mode */}
+      {isAdmin && !previewMode && (
+        <div className="card">
+          <button
+            onClick={() => setShowConfig(v => !v)}
+            className="w-full flex items-center justify-between"
+          >
+            <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>CONFIGURACIÓN</p>
+            <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>{showConfig ? '▲ CERRAR' : '▼ EXPANDIR'}</span>
+          </button>
 
-        {showConfig && (
-          <div className="mt-4 space-y-4">
-            {/* Stock list */}
-            <div>
-              <label className="text-[10px] font-mono tracking-widest block mb-1.5" style={{ color: 'var(--text-muted)' }}>
-                ACCIONES A MONITOREAR <span className="opacity-50">(separadas por coma)</span>
-              </label>
-              <input
-                value={stockList}
-                onChange={e => setStockList(e.target.value.toUpperCase())}
-                placeholder="AAPL,NVDA,TSLA,MSFT,AMZN"
-                className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--gold)] font-mono text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)]"
-              />
-              <p className="text-[9px] mt-1 font-mono" style={{ color: 'var(--text-muted)' }}>
-                Para cambiar la lista permanente en Fly.io: <code>flyctl secrets set STOCK_LIST="..."</code>
-              </p>
-            </div>
-
-            {/* Telegram */}
-            <div className="rounded-lg border p-4 space-y-3" style={{ borderColor: 'rgba(201,168,76,0.2)', background: 'rgba(201,168,76,0.03)' }}>
-              <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>TELEGRAM</p>
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[9px] font-mono tracking-widest block mb-1" style={{ color: 'var(--text-muted)' }}>BOT TOKEN</label>
-                  <input
-                    type="password"
-                    value={botToken}
-                    onChange={e => setBotToken(e.target.value)}
-                    placeholder="1234567890:ABC..."
-                    className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)]"
-                  />
-                </div>
-                <div>
-                  <label className="text-[9px] font-mono tracking-widest block mb-1" style={{ color: 'var(--text-muted)' }}>CHAT ID</label>
-                  <input
-                    type="text"
-                    value={chatId}
-                    onChange={e => setChatId(e.target.value)}
-                    placeholder="-100123456789 o @channel"
-                    className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)]"
-                  />
-                </div>
+          {showConfig && (
+            <div className="mt-4 space-y-4">
+              {/* Stock list */}
+              <div>
+                <label className="text-[10px] font-mono tracking-widest block mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                  ACCIONES A MONITOREAR <span className="opacity-50">(separadas por coma)</span>
+                </label>
+                <input
+                  value={stockList}
+                  onChange={e => setStockList(e.target.value.toUpperCase())}
+                  placeholder="AAPL,NVDA,TSLA,MSFT,AMZN"
+                  className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--gold)] font-mono text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)]"
+                />
+                <p className="text-[9px] mt-1 font-mono" style={{ color: 'var(--text-muted)' }}>
+                  Para cambiar la lista permanente en Fly.io: <code>flyctl secrets set STOCK_LIST="..."</code>
+                </p>
               </div>
-              <div className="flex items-center gap-3">
-                <button
-                  disabled={!botToken || !chatId || tgStatus === 'testing'}
-                  onClick={testTelegram}
-                  className="px-4 py-1.5 text-[10px] font-mono tracking-widest rounded-lg border border-[var(--border)] text-[var(--text-secondary)] disabled:opacity-40 hover:border-[var(--gold-dark)]"
-                >
-                  {tgStatus === 'testing' ? 'ENVIANDO…' : 'PROBAR CONEXIÓN'}
-                </button>
-                {tgStatus === 'ok'    && <span className="text-[10px] font-mono text-green-400">✓ Mensaje enviado correctamente</span>}
-                {tgStatus === 'error' && <span className="text-[10px] font-mono text-red-400">✗ {tgError}</span>}
+
+              {/* Telegram */}
+              <div className="rounded-lg border p-4 space-y-3" style={{ borderColor: 'rgba(201,168,76,0.2)', background: 'rgba(201,168,76,0.03)' }}>
+                <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>TELEGRAM</p>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[9px] font-mono tracking-widest block mb-1" style={{ color: 'var(--text-muted)' }}>BOT TOKEN</label>
+                    <input
+                      type="password"
+                      value={botToken}
+                      onChange={e => setBotToken(e.target.value)}
+                      placeholder="1234567890:ABC..."
+                      className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-mono tracking-widest block mb-1" style={{ color: 'var(--text-muted)' }}>CHAT ID</label>
+                    <input
+                      type="text"
+                      value={chatId}
+                      onChange={e => setChatId(e.target.value)}
+                      placeholder="-100123456789 o @channel"
+                      className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)]"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    disabled={!botToken || !chatId || tgStatus === 'testing'}
+                    onClick={testTelegram}
+                    className="px-4 py-1.5 text-[10px] font-mono tracking-widest rounded-lg border border-[var(--border)] text-[var(--text-secondary)] disabled:opacity-40 hover:border-[var(--gold-dark)]"
+                  >
+                    {tgStatus === 'testing' ? 'ENVIANDO…' : 'PROBAR CONEXIÓN'}
+                  </button>
+                  {tgStatus === 'ok'    && <span className="text-[10px] font-mono text-green-400">✓ Mensaje enviado correctamente</span>}
+                  {tgStatus === 'error' && <span className="text-[10px] font-mono text-red-400">✗ {tgError}</span>}
+                </div>
+                <p className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>
+                  Crea tu bot con <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="underline">@BotFather</a> en Telegram. El Chat ID puedes obtenerlo con <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" className="underline">@userinfobot</a>.
+                </p>
               </div>
-              <p className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>
-                Crea tu bot con <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="underline">@BotFather</a> en Telegram. El Chat ID puedes obtenerlo con <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" className="underline">@userinfobot</a>.
-              </p>
+
+              <button
+                onClick={saveConfig}
+                className="px-5 py-2 text-xs font-mono tracking-widest rounded-xl bg-[var(--gold)] text-black font-bold hover:opacity-90"
+              >
+                GUARDAR CONFIGURACIÓN
+              </button>
             </div>
+          )}
 
-            <button
-              onClick={saveConfig}
-              className="px-5 py-2 text-xs font-mono tracking-widest rounded-xl bg-[var(--gold)] text-black font-bold hover:opacity-90"
-            >
-              GUARDAR CONFIGURACIÓN
-            </button>
-          </div>
-        )}
-
-        {/* Config summary when collapsed */}
-        {!showConfig && (
-          <div className="mt-3 flex items-center gap-4 text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
-            <span>Stocks: <span style={{ color: 'var(--text-secondary)' }}>{lsGet(LS_STOCKS, DEFAULT_STOCKS)}</span></span>
-            <span className={telegramReady ? 'text-green-400' : ''}>
-              {telegramReady ? '📬 Telegram configurado' : '⚠ Telegram no configurado'}
-            </span>
-          </div>
-        )}
-      </div>
+          {/* Config summary when collapsed */}
+          {!showConfig && (
+            <div className="mt-3 flex items-center gap-4 text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
+              <span>Stocks: <span style={{ color: 'var(--text-secondary)' }}>{stockList}</span></span>
+              <span className={telegramReady ? 'text-green-400' : ''}>
+                {telegramReady ? '📬 Telegram configurado' : '⚠ Telegram no configurado'}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Run control */}
       <div className="card space-y-4">

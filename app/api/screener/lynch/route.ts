@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
   const tickers = getLynchScreenerTickers()
   console.log(`Analyzing ${tickers.length} tickers...`)
 
-  const financials = await fetchBatchFinancials(tickers, 15, 1000)
+  const financials = await fetchBatchFinancials(tickers, 25, 700)
 
   const results: LynchResult[] = []
   for (const f of financials) {

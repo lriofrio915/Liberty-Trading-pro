@@ -65,6 +65,13 @@ export default function AccionesClient({
     return match?.[1] || ''
   }
 
+  type ActiveOpp = { ticker: string; precioVenta: number | null; active: boolean }
+  const activeTickers = (initialOpportunities as ActiveOpp[])
+    .filter(o => o.active && (o.precioVenta == null || o.precioVenta === 0))
+    .map(o => o.ticker)
+    .filter(Boolean)
+    .join(',')
+
   return (
     <div className="animate-fadeIn">
       <h1 className="text-3xl font-black mb-2">
@@ -161,7 +168,7 @@ export default function AccionesClient({
               : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
           }`}
         >
-          LINCH RESEARCH
+          INVESTIGACION
         </button>
         <button
           onClick={() => setTab('tauric')}
@@ -171,7 +178,7 @@ export default function AccionesClient({
               : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
           }`}
         >
-          TAURIC RESEARCH
+          CONFIRMACION
         </button>
       </div>
 
@@ -180,7 +187,7 @@ export default function AccionesClient({
       )}
       {tab === 'research' && <ResearchTab />}
       {tab === 'tauric' && <TauricResearchTab />}
-      {tab === 'signals' && <DailySignalsTab />}
+      {tab === 'signals' && <DailySignalsTab isAdmin={isAdmin} defaultTickers={activeTickers} />}
     </div>
   )
 }

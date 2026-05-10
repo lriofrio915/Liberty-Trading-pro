@@ -33,7 +33,7 @@ const CRITERIA = [
   { label: 'Deuda/Capital < 35%', description: 'Menos deuda = menos riesgo' },
   { label: 'Crecimiento EPS > 15%', description: 'Motor de crecimiento sólido' },
   { label: 'PEG < 2', description: 'Crecimiento a precio razonable' },
-  { label: 'Market Cap > $5B', description: 'Empresa probada con margen para crecer' },
+  { label: 'Market Cap > $5B (large cap bonus)', description: 'Empresa probada con margen para crecer' },
 ]
 
 export default function ResearchTab() {
@@ -58,6 +58,7 @@ export default function ResearchTab() {
   const [search, setSearch] = useState('')
   const [sectorFilter, setSectorFilter] = useState('')
   const [minScore, setMinScore] = useState(0)
+  const [marketCapFilter, setMarketCapFilter] = useState('')
   const [page, setPage] = useState(1)
   const PAGE_SIZE = 30
 
@@ -95,6 +96,7 @@ export default function ResearchTab() {
       if (search && !r.ticker.toLowerCase().includes(search.toLowerCase()) && !r.empresa.toLowerCase().includes(search.toLowerCase())) return false
       if (sectorFilter && r.sector !== sectorFilter) return false
       if (r.score < minScore) return false
+      if (marketCapFilter && getMarketCapCategory(r.marketCap) !== marketCapFilter) return false
       return true
     })
     .sort((a, b) => {
@@ -112,7 +114,14 @@ export default function ResearchTab() {
   const totalPages = Math.ceil(totalFiltered / PAGE_SIZE)
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1) }, [search, sectorFilter, minScore, sortKey])
+  useEffect(() => { setPage(1) }, [search, sectorFilter, minScore, sortKey, marketCapFilter])
+
+  function getMarketCapCategory(cap: number): string {
+    if (cap < 300e6) return 'micro'
+    if (cap < 2e9)   return 'small'
+    if (cap < 10e9)  return 'mid'
+    return 'large'
+  }
 
   const fmtMktCap = (v: number) => {
     if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`
@@ -149,7 +158,7 @@ export default function ResearchTab() {
       <div className="rounded-xl border p-4 mb-5" style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 80%)', borderColor: 'rgba(201,168,76,0.15)' }}>
         <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>CRITERIOS DE PETER LYNCH</p>
         <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>
-          Este screener analiza las empresas del S&P 500 y NASDAQ 100 aplicando los 6 criterios de inversión
+          Este screener analiza empresas del S&P 500, NASDAQ 100, Russell 2000 y S&P SmallCap 600 aplicando los 6 criterios de inversión
           de Peter Lynch, legendario gestor del Fidelity Magellan Fund (29.2% anualizado por 13 años).
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -189,6 +198,17 @@ export default function ResearchTab() {
           <option value={4}>Score: 4-6</option>
           <option value={3}>Score: 3-6</option>
         </select>
+        <select
+          value={marketCapFilter}
+          onChange={(e) => setMarketCapFilter(e.target.value)}
+          className="bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)] font-mono"
+        >
+          <option value="">Todos los tamaños</option>
+          <option value="micro">Micro-cap (&lt;$300M)</option>
+          <option value="small">Small-cap ($300M–$2B)</option>
+          <option value="mid">Mid-cap ($2B–$10B)</option>
+          <option value="large">Large-cap (&gt;$10B)</option>
+        </select>
         <span className="text-[10px] font-mono self-center" style={{ color: 'var(--text-muted)' }}>
           {filtered.length} de {results.length} resultados
           {cachedAt ? ` · cache: ${new Date(cachedAt).toLocaleDateString()}` : ''}
@@ -198,7 +218,7 @@ export default function ResearchTab() {
       {/* Loading / Error / Empty */}
       {loading && (
         <div className="card text-center py-12">
-          <div className="animate-pulse text-[var(--gold)] text-xs font-mono">Analizando ~600 empresas del S&P 500 + NASDAQ 100…</div>
+          <div className="animate-pulse text-[var(--gold)] text-xs font-mono">Analizando ~1300 empresas del S&P 500, NASDAQ 100, Russell 2000 y S&P 600…</div>
           <p className="text-[10px] mt-2 text-[var(--text-muted)]">Esto puede tardar varios minutos la primera vez. Los resultados se cachean por 24 horas.</p>
         </div>
       )}

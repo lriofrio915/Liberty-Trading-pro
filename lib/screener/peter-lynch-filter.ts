@@ -30,9 +30,6 @@ function calcEpsGrowth(historico: Array<[string, string, string, string]>): numb
 export function applyPeterLynchFilter(d: TickerFinancials): LynchResult | null {
   const marketCapB = d.marketCap / 1e9 // convert to billions
 
-  // 6. Market cap > $5B (must pass to be included)
-  if (marketCapB < 5) return null
-
   const epsGrowth = calcEpsGrowth(d.historico)
 
   const peTrailingOk = d.peTrailing != null && d.peTrailing > 0 && d.peTrailing < 25
@@ -67,5 +64,5 @@ export const CRITERIA_LABELS = [
   { key: 'debtToEquityOk', label: 'Deuda/Capital < 35%', description: 'Menos deuda = menos riesgo' },
   { key: 'epsGrowthOk', label: 'Crecimiento EPS > 15%', description: 'Motor de crecimiento sólido' },
   { key: 'pegOk', label: 'PEG < 2', description: 'Crecimiento a precio razonable' },
-  { key: 'marketCapOk', label: 'Market Cap > $5B', description: 'Empresa probada con margen para crecer' },
+  { key: 'marketCapOk', label: 'Market Cap > $5B (large cap bonus)', description: 'Empresa probada con margen para crecer' },
 ] as const

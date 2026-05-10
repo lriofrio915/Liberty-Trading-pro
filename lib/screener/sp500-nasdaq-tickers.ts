@@ -69,7 +69,72 @@ export const NASDAQ100_TICKERS: string[] = [
   'WDAY', 'XEL', 'ZM', 'ZS',
 ]
 
+export const RUSSELL2000_TICKERS: string[] = [
+  // Technology
+  'ACMR','ALRM','APPF','BAND','BIGC','BLZE','BOX','BRZE','CAMT','CLFD',
+  'CNXC','COUR','CSGS','DOMO','ENVX','EVBG','FARO','FRSH','GFAI','GTLB',
+  'HAYW','HLIT','IOTS','JAMF','KTOS','LPSN','MARA','MIRM','NABL','NRDS',
+  'NTGR','PAYO','PRCT','PRGS','PUBM','RDDT','RELY','RSKD','TASK','TTGT',
+  'VRNS','WRBY','XMTR','YEXT','ALTR','ANAB','ATNI','ATEN','AVNW','AXTI',
+  'CDXC','COHU','CRNX','ESGR','KNSA','LSPD','MLKN','PCVX','SAIC','TWKS',
+  'VNET','RMBS','RPAY','SMPL','UDMY','WOLF','UPWK',
+  // Healthcare
+  'ACCD','ACET','AGIO','ALKS','AMRX','ARDX','ARQT','ASRT','ATRC','AVNS',
+  'AXNX','BBIO','CERT','CNMD','COLL','DOCS','ENTA','FLGT','GKOS','HIMS',
+  'INBX','IOVA','IRWD','KIDS','LQDA','NKTX','NVAX','ORGO','PACB','PTCT',
+  'RCKT','REPL','RVNC','RYTM','TGTX','VTRS','HALO','BCPC','IMVT','BLFS',
+  'CARA','MASS','OPRT','PETQ','PRST','SEER','SHLS','SLDB','STRO','URGN',
+  'VBIV','VERV','VICR','VKTX','VNDA','SMED','NRXP','MGTX','LMND','FLXS',
+  'DNLI','CRVS','ANIP','ANIK','AMPH','AMRK','ALDX',
+  // Financial
+  'AROW','BANF','BHLB','CATY','CHCO','COLB','COOP','CVBF','DCOM','ENVA',
+  'EVTC','FFIN','FULT','GBCI','HOPE','HTLF','INDB','LKFN','MBIN','NBTB',
+  'OPFI','PGNY','SMBC','STBA','WAFD','WASH','PRAA','GCMG','OCSL','TPVG',
+  'SAMG','UVSP','WSBF','WSBC','UFCS','TCBK','NWBI','IBCP','HTBK','FMBH',
+  'ESXB','CZWI','CBSH','CFB','AMNB','AMSF','AMTB','ACNB','EQBK','TRMK',
+  // Consumer / Retail
+  'ARKO','BJRI','BOOT','CAKE','CATO','CBRL','CHEF','CROX','DRVN','EAT',
+  'HIBB','IBP','JOUT','LEVI','NDLS','NOMD','PRDO','RRGB','SHAK','SKYW',
+  'TXRH','WDFC','WGO','XPEL','DBRG','MGRC','MNTK','SAFE','TILE',
+  'VSTO','UNVR','USNA','TAST','SXI','RVLV','RDUS','PDCO','PLAY',
+  'ODP','NWLI','NGVC','NATR','MNRO','MDXG','MCFT','JACK','HAYN',
+  'CVCO','CNXN',
+  // Energy / Industrials
+  'AMRC','AROC','ARIS','CEIX','CENX','DXPE','ESTE','FWRD','GLDD','GPRE',
+  'HEES','JELD','KALU','KFRC','LCII','MTRN','MWA','NES','PARR','POWL',
+  'PUMP','RGP','ROCK','BWEN','DSGR','GRC','PINE','UHAL','ULH','WLDN',
+  'HYLN','INDO','KLXE','KRT','MFAC','MGPI','MTRX','NACCO','NRP','NSTG',
+  'NX','PESI','PLM','PLOW','PLPC','PPIH','PRFT','RRBI','SGL','SHBI',
+  'SPTN','SRTS','STRC','TMCI','TMST','TRIN','TUSK','VITL',
+  // Real Estate
+  'AIRC','ALEX','ANDE','BDN','BRSP','CHCT','CLDT','CPLG','EPRT',
+  'FCPT','GMRE','GTY','IIPR','JBGS','KRG','LXP','NHI','NXRT','PECO',
+  'PLYM','ROIC','RPT','SITC','STRE','UE','UHT','WHLR',
+]
+
+export const SP600_TICKERS: string[] = [
+  // Technology
+  'ACLS','AGYS','AMSC','AMSWA','AEIS','AEYE','CSWI','DXC','KLIC','NVEC',
+  'QLYS','SMTC','SPSC','ZETA','FTNT','GRMN',
+  // Healthcare
+  'ABCB','AIKO','AMBC','AMWD','CRVS','AGIO','ALDX',
+  // Financial
+  'FFBC','FBIZ','FBMS','FBNC','FCFS','MCBC','MBTF',
+  // Consumer / Industrials
+  'ABM','ACU','AEO','AIXI','ALGT','AMTN','ANGO','ASIX','BL','BLBD',
+  'CDAQ','CNSL','COES','CLVT','DADA','EGY','GIFI','GNSS','LAZR',
+  'LEGH','MRCY','NN','NTIC','NVRI','OFIX','OPCH','PGTI','TSRI',
+  'UCBI','VNCE','WALD','WLFC','XPOF','SVRA','KFRC',
+  // Real Estate
+  'BCEI','GMRE','NXRT','PECO','PLYM','ROIC','RPT','SITC','UE','UHT','WHLR',
+]
+
 export function getLynchScreenerTickers(): string[] {
-  const set = new Set([...SP500_TICKERS, ...NASDAQ100_TICKERS])
+  const set = new Set([
+    ...SP500_TICKERS,
+    ...NASDAQ100_TICKERS,
+    ...RUSSELL2000_TICKERS,
+    ...SP600_TICKERS,
+  ])
   return Array.from(set).sort()
 }
