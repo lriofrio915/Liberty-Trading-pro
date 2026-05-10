@@ -52,6 +52,39 @@ const SUGGESTED = [
   'Genera indicador Pine Script: VWAP + bandas de desviación estándar.',
 ]
 
+/** Descripciones en español para los presets SWARM */
+const PRESET_DESC_ES: Record<string, string> = {
+  commodity_research_team:      'Análisis paralelo de oferta/demanda, macro y técnico; estratega sintetiza visión integral de materias primas.',
+  macro_strategy_forum:         'Perspectivas global, doméstica y de política convergen en asignación cross-asset por horizonte definido.',
+  geopolitical_war_room:        'Sala de crisis: impacto geopolítico en mercados, rutas de escape y oportunidades por región y clase de activo.',
+  crypto_research_lab:          'Análisis on-chain, DeFi y sentimiento en paralelo; estratega entrega recomendación de posicionamiento crypto.',
+  crypto_trading_desk:          'Señales técnicas y de flujo para trading activo en crypto; incluye niveles de entrada, stop y objetivo.',
+  social_alpha_team:            'Señales de redes sociales, flujo institucional y sentimiento retail; detecta alpha antes de que se refleje en precio.',
+  event_driven_task_force:      'Análisis de catalizadores corporativos (earnings, M&A, regulación) y su impacto en el precio objetivo.',
+  technical_analysis_panel:     'Cinco escuelas de análisis técnico en paralelo (Clásico, Ichimoku, Elliott, Armónico, SMC) con resonancia consolidada.',
+  credit_research_team:         'Análisis tridimensional de calidad crediticia, entorno de tasas y sector; estratega entrega visión completa de renta fija.',
+  equity_research_team:         'Investigación de renta variable: fundamental, técnico y catalizadores sectoriales consolidados.',
+  investment_committee:         'Comité de inversiones: debate de tesis, consenso y allocación final con gestión de riesgo explícita.',
+  risk_committee:               'Evaluación de riesgos macro, de mercado y de portafolio; escenarios de estrés y planes de contingencia.',
+  sector_rotation_team:         'Señales de rotación sectorial basadas en ciclo económico, flujos y momentum relativo.',
+  factor_research_committee:    'Investigación de factores quant (valor, momentum, calidad, baja volatilidad); validación estadística rigurosa.',
+  fundamental_research_team:    'Análisis fundamental profundo: estados financieros, ventaja competitiva, valoración intrínseca.',
+  global_allocation_committee:  'Asignación global multi-activo: acciones, bonos, commodities y FX con gestión de riesgo integrada.',
+  global_equities_desk:         'Renta variable global: análisis regional, sectorial y de stock-picking con visión top-down y bottom-up.',
+  macro_rates_fx_desk:          'Mesa integrada de macro, tasas de interés y divisas; perspectiva cross-market para carry y cobertura.',
+  ml_quant_lab:                 'Ingeniería de features y diseño de modelos ML en paralelo; backtest estricto fuera de muestra.',
+  quant_strategy_desk:          'Desarrollo de estrategias cuantitativas sistemáticas con análisis de capacidad y drawdown esperado.',
+  portfolio_review_board:       'Revisión completa de portafolio: atribución de rendimiento, riesgo concentrado y rebalanceo óptimo.',
+  pairs_research_lab:           'Investigación de pares estadísticos: cointegración, spreads y estrategias market-neutral.',
+  statistical_arbitrage_desk:   'Arbitraje estadístico: mean-reversion, z-score y gestión de riesgo en estrategias de baja correlación.',
+  sentiment_intelligence_team:  'Inteligencia de sentimiento multi-fuente: opciones, encuestas, flows y posicionamiento institucional.',
+  derivatives_strategy_desk:    'Estrategias con derivados: volatilidad implícita, griegas, spreads y cobertura de portafolio.',
+  etf_allocation_desk:          'Asignación táctica con ETFs: exposición eficiente a factores, sectores y geografías con costo mínimo.',
+  convertible_bond_team:        'Análisis de bonos convertibles: valor del bono, prima de conversión y perfil riesgo/retorno híbrido.',
+  earnings_research_desk:       'Investigación pre-earnings: estimados vs consenso, posicionamiento de opciones y reacción histórica al precio.',
+  fund_selection_panel:         'Selección de fondos: análisis de alfa, consistencia, costos y adecuación al perfil de riesgo.',
+}
+
 /** Nombres en español para los presets SWARM */
 const PRESET_ES: Record<string, string> = {
   commodity_research_team:      'Equipo de Materias Primas',
@@ -784,15 +817,12 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
                   Sin presets disponibles. Usa el modo CHAT.
                 </p>
               )}
-              {/* Preset description */}
-              {selectedPreset && (() => {
-                const p = presets.find(p => (p.id ?? p.preset ?? p.name) === selectedPreset)
-                return p?.description ? (
-                  <p className="mt-1.5 text-[10px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                    {p.description}
-                  </p>
-                ) : null
-              })()}
+              {/* Preset description — Spanish override */}
+              {selectedPreset && (
+                <p className="mt-1.5 text-[10px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                  {PRESET_DESC_ES[selectedPreset] ?? presets.find(p => (p.id ?? p.preset ?? p.name) === selectedPreset)?.description ?? ''}
+                </p>
+              )}
             </div>
             <div>
               <label className="text-[10px] font-mono text-[var(--text-muted)] tracking-widest">VARIABLES (JSON)</label>
@@ -802,12 +832,15 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
                 rows={4}
                 className="mt-1 w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)]"
               />
-              {/* Variable hints */}
+              {/* Variable hints — label in Spanish, description kept for reference */}
               {selectedPreset && (() => {
                 const p = presets.find(p => (p.id ?? p.preset ?? p.name) === selectedPreset)
                 if (!p?.variables?.length) return null
                 return (
                   <div className="mt-1.5 space-y-0.5">
+                    <p className="text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--gold)' }}>
+                      COMPLETA LAS VARIABLES:
+                    </p>
                     {p.variables.map(v => (
                       <p key={v.name} className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
                         <span className="text-[var(--gold)] font-mono">{v.name}</span>
@@ -815,6 +848,7 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
                         {v.description && <span> — {v.description}</span>}
                       </p>
                     ))}
+                    <p className="text-[10px] text-yellow-400 mt-1">⚠ Reemplaza los valores vacíos con datos reales antes de ejecutar.</p>
                   </div>
                 )
               })()}
