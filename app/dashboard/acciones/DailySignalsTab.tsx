@@ -76,8 +76,15 @@ export default function DailySignalsTab() {
   const [taskProgress, setTaskProgress] = useState<number | null>(null)
   const [scanEmpty, setScanEmpty]   = useState(false)
 
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const pollRef  = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [sendingTg, setSendingTg] = useState(false)
+
+  const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollRef    = useRef<ReturnType<typeof setInterval> | null>(null)
+  const botTokRef  = useRef(lsGet(LS_BOT_TOKEN))
+  const chatIdRef  = useRef(lsGet(LS_CHAT_ID))
+
+  useEffect(() => { botTokRef.current = botToken }, [botToken])
+  useEffect(() => { chatIdRef.current = chatId }, [chatId])
 
   useEffect(() => {
     checkStatus()
@@ -117,6 +124,21 @@ export default function DailySignalsTab() {
       console.debug('[DailyScanner] fetchResults error:', e)
       return []
     }
+  }
+
+  async function sendTelegramSpanish(list: Signal[]) {
+    const tok = botTokRef.current
+    const cid = chatIdRef.current
+    if (!tok || !cid || list.length === 0) return
+    setSendingTg(true)
+    try {
+      await fetch('/api/daily-signals/telegram/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ signals: list, bot_token: tok, chat_id: cid }),
+      })
+    } catch { /* silent — Telegram send is best-effort */ }
+    finally { setSendingTg(false) }
   }
 
   async function testTelegram() {
@@ -213,7 +235,11 @@ export default function DailySignalsTab() {
                 setRunError('Todos los análisis fallaron. Revisa los logs del servidor.')
               } else {
                 const list = await fetchResults()
-                if (list.length === 0) setScanEmpty(true)
+                if (list.length === 0) {
+                  setScanEmpty(true)
+                } else {
+                  sendTelegramSpanish(list)
+                }
               }
             }
           } catch (e) {
@@ -557,6 +583,15 @@ flyctl secrets set \\
           >
             Ver logs en Fly.io →
           </a>
+        </div>
+      )}
+
+      {/* Sending indicator */}
+      {sendingTg && (
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border text-[11px] font-mono"
+          style={{ borderColor: 'rgba(201,168,76,0.2)', background: 'rgba(201,168,76,0.04)', color: 'var(--gold)' }}>
+          <span className="animate-pulse">●</span>
+          Traduciendo y enviando señales al Telegram…
         </div>
       )}
 
