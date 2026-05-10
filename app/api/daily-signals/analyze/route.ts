@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     // POST /api/v1/analysis/analyze — AnalyzeRequest: { stock_codes: string[] }
     const data = await dailySignalsJSON('/api/v1/analysis/analyze', {
       method: 'POST',
-      body: JSON.stringify({ stock_codes }),
+      body: JSON.stringify({ stock_codes, async_mode: true }),
     }, 55_000)
     return NextResponse.json(data ?? { started: true })
   } catch (err) {
