@@ -4,6 +4,7 @@ import { tauricSSEProxy } from '@/lib/tauric'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+export const maxDuration = 300
 
 export async function GET(
   _req: NextRequest,

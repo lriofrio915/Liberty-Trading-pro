@@ -4,6 +4,7 @@ import { tauricJSON, TauricError } from '@/lib/tauric'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   const supabase = await createSupabaseServerClient()

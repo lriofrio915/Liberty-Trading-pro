@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-type RunStatus = 'idle' | 'starting' | 'running' | 'completed' | 'failed'
+type RunStatus = 'idle' | 'starting' | 'running' | 'reconnecting' | 'completed' | 'failed'
 
 type SSEEvent =
   | { type: 'log'; message: string }
@@ -14,6 +14,8 @@ const DEPTH_OPTIONS = [
   { value: 'moderate', label: 'Moderado',      time: '3-7 min',  desc: '3 analistas por categoría' },
   { value: 'deep',     label: 'Profundo',      time: '10-20 min',desc: 'Todos los analistas (máx. precisión)' },
 ]
+
+const MAX_POLL_ATTEMPTS = 240 // 20 min at 5s intervals
 
 function decisionBadge(result: string): { label: string; color: string } {
   const up = result.toUpperCase()
@@ -36,9 +38,21 @@ export default function TauricResearchTab() {
   const [elapsed, setElapsed] = useState(0)
   const [error, setError]     = useState<string | null>(null)
 
-  const evtRef    = useRef<EventSource | null>(null)
-  const timerRef  = useRef<ReturnType<typeof setInterval> | null>(null)
+  const evtRef     = useRef<EventSource | null>(null)
+  const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollRef    = useRef<ReturnType<typeof setInterval> | null>(null)
+  const statusRef  = useRef<RunStatus>('idle')
+  const runIdRef   = useRef<string | null>(null)
   const logsEndRef = useRef<HTMLDivElement | null>(null)
+
+  function updateStatus(s: RunStatus) {
+    statusRef.current = s
+    setStatus(s)
+  }
+
+  function clearPoll() {
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+  }
 
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -47,17 +61,57 @@ export default function TauricResearchTab() {
   useEffect(() => () => {
     evtRef.current?.close()
     if (timerRef.current) clearInterval(timerRef.current)
+    clearPoll()
   }, [])
+
+  function startPolling(runId: string) {
+    updateStatus('reconnecting')
+    let attempts = 0
+    pollRef.current = setInterval(async () => {
+      attempts++
+      if (attempts > MAX_POLL_ATTEMPTS) {
+        clearPoll()
+        setError('El análisis tardó demasiado. Intenta de nuevo.')
+        updateStatus('failed')
+        if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+        return
+      }
+      try {
+        const r = await fetch(`/api/tauric/runs/${encodeURIComponent(runId)}`)
+        if (!r.ok) return
+        const d = await r.json() as {
+          status?: string
+          logs?: string[]
+          result?: string
+          output?: string
+        }
+        if (Array.isArray(d.logs) && d.logs.length > 0) setLogs(d.logs)
+        const done = d.status === 'completed' || d.status === 'failed'
+        if (done) {
+          clearPoll()
+          if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+          const res = d.result ?? d.output ?? null
+          setResult(res)
+          updateStatus(d.status === 'completed' ? 'completed' : 'failed')
+          if (d.status === 'failed') setError(res ?? 'Análisis fallido')
+        }
+      } catch {
+        // silent — retry next interval
+      }
+    }, 5000)
+  }
 
   async function handleAnalyze() {
     if (!ticker.trim()) return
-    setStatus('starting')
+    updateStatus('starting')
     setLogs([])
     setResult(null)
     setError(null)
     setElapsed(0)
+    runIdRef.current = null
     evtRef.current?.close()
     if (timerRef.current) clearInterval(timerRef.current)
+    clearPoll()
 
     try {
       const res = await fetch('/api/tauric/analyze', {
@@ -66,10 +120,11 @@ export default function TauricResearchTab() {
         body: JSON.stringify({ ticker: ticker.trim().toUpperCase(), date, depth }),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? `Error ${res.status}`); setStatus('failed'); return }
+      if (!res.ok) { setError(data.error ?? `Error ${res.status}`); updateStatus('failed'); return }
 
       const runId: string = data.run_id
-      setStatus('running')
+      runIdRef.current = runId
+      updateStatus('running')
       timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000)
 
       const es = new EventSource(`/api/tauric/runs/${encodeURIComponent(runId)}/stream`)
@@ -81,42 +136,50 @@ export default function TauricResearchTab() {
           setLogs(prev => [...prev, payload.message])
         } else if (payload.type === 'done') {
           es.close()
-          if (timerRef.current) clearInterval(timerRef.current)
+          if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
           setResult(payload.result)
-          setStatus(payload.status === 'completed' ? 'completed' : 'failed')
+          updateStatus(payload.status === 'completed' ? 'completed' : 'failed')
           if (payload.status === 'failed') setError(payload.result)
         } else if (payload.type === 'error') {
           es.close()
-          if (timerRef.current) clearInterval(timerRef.current)
+          if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
           setError(payload.message)
-          setStatus('failed')
+          updateStatus('failed')
         }
       }
+
       es.onerror = () => {
         es.close()
-        if (timerRef.current) clearInterval(timerRef.current)
-        if (status !== 'completed') {
+        if (statusRef.current === 'completed' || statusRef.current === 'failed') return
+        // SSE dropped — fall back to polling if we have a run ID
+        const rid = runIdRef.current
+        if (rid) {
+          startPolling(rid)
+        } else {
+          if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
           setError('Conexión interrumpida. Intenta de nuevo.')
-          setStatus('failed')
+          updateStatus('failed')
         }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido')
-      setStatus('failed')
+      updateStatus('failed')
     }
   }
 
   function reset() {
     evtRef.current?.close()
     if (timerRef.current) clearInterval(timerRef.current)
-    setStatus('idle')
+    clearPoll()
+    runIdRef.current = null
+    updateStatus('idle')
     setLogs([])
     setResult(null)
     setError(null)
     setElapsed(0)
   }
 
-  const busy = status === 'starting' || status === 'running'
+  const busy = status === 'starting' || status === 'running' || status === 'reconnecting'
   const mins = Math.floor(elapsed / 60)
   const secs = elapsed % 60
   const elapsedStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
@@ -199,7 +262,7 @@ export default function TauricResearchTab() {
         </div>
       )}
 
-      {/* Running */}
+      {/* Running / Reconnecting */}
       {busy && (
         <div className="card space-y-4">
           <div className="flex items-center gap-3">
@@ -216,6 +279,15 @@ export default function TauricResearchTab() {
               </p>
             </div>
           </div>
+
+          {status === 'reconnecting' && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border text-[10px] font-mono"
+              style={{ borderColor: 'rgba(201,168,76,0.3)', background: 'rgba(201,168,76,0.06)', color: 'var(--gold)' }}>
+              <span className="animate-pulse">●</span>
+              <span>Stream interrumpido — reconectando vía polling cada 5s…</span>
+            </div>
+          )}
+
           <div
             className="rounded-lg border p-3 font-mono text-xs overflow-y-auto space-y-1"
             style={{ background: '#0d0d0d', borderColor: 'var(--border)', maxHeight: '200px', color: '#4ade80' }}
@@ -233,7 +305,6 @@ export default function TauricResearchTab() {
       {/* Result */}
       {status === 'completed' && result && (
         <div className="space-y-4">
-          {/* Decision badge */}
           {(() => {
             const { label, color } = decisionBadge(result)
             return (
@@ -244,7 +315,6 @@ export default function TauricResearchTab() {
               </div>
             )
           })()}
-          {/* Full analysis */}
           <div className="card">
             <p className="text-[10px] font-mono tracking-widest mb-3" style={{ color: 'var(--gold)' }}>ANÁLISIS COMPLETO</p>
             <pre className="text-xs leading-relaxed whitespace-pre-wrap break-words" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono, monospace)' }}>
