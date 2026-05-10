@@ -260,6 +260,35 @@ model Opportunity {
   category       String   @default("OPERATOR") // OPERATOR | PETER_LYNCH | SMALL_CAPS
 }
 
+model OptionRecommendation {
+  id              String   @id @default(cuid())
+  ticker          String
+  company         String   @default("")
+  direction       String   // 'ALCISTA' | 'BAJISTA'
+  strategy        String   // 'buy-call' | 'sell-put' | 'buy-put' | 'covered-call'
+  action          String   // 'COMPRAR CALL' | 'VENDER PUT' | etc.
+  contractSymbol  String
+  contractType    String   // 'call' | 'put'
+  strike          Float
+  expiration      String   // 'YYYY-MM-DD'
+  dte             Int
+  score           Int
+  label           String   // 'IDEAL' | 'ACEPTABLE'
+  underlyingPrice Float
+  bid             Float?
+  ask             Float?
+  mid             Float?
+  impliedVolatility Float?
+  delta           Float?
+  breakeven       Float?
+  maxLossHint     String?
+  maxProfitHint   String?
+  publishedAt     DateTime @default(now())
+  status          String   @default("ACTIVA") // 'ACTIVA' | 'CERRADA' | 'EXPIRADA'
+  precioSalida    Float?
+  active          Boolean  @default(true)
+}
+
 model KnowledgeDoc {
   id          String   @id @default(cuid())
   userId      String

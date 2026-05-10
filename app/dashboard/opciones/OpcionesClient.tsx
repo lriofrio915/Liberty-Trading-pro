@@ -88,7 +88,7 @@ interface TickerSuggestion {
   exchange: string
 }
 
-export default function OpcionesClient() {
+export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean }) {
   const [ticker, setTicker] = useState('')
   const [activeStrategy, setActiveStrategy] = useState<StrategyKind>('sell-put')
   const [data, setData] = useState<OptionsAnalyzeResult | null>(null)
@@ -101,6 +101,27 @@ export default function OpcionesClient() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Track record de recomendaciones de opciones
+  type OptRec = {
+    id: string; ticker: string; company: string; direction: string; action: string
+    contractSymbol: string; contractType: string; strike: number; expiration: string
+    dte: number; score: number; label: string; underlyingPrice: number
+    bid: number | null; ask: number | null; mid: number | null; delta: number | null
+    breakeven: number | null; maxLossHint: string | null; maxProfitHint: string | null
+    publishedAt: string; status: string; precioSalida: number | null; active: boolean
+  }
+  const [optRecs, setOptRecs] = useState<OptRec[]>([])
+  const [optRecsLoading, setOptRecsLoading] = useState(false)
+
+  useEffect(() => {
+    setOptRecsLoading(true)
+    fetch('/api/options-recs')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.recommendations) setOptRecs(d.recommendations) })
+      .catch(() => {})
+      .finally(() => setOptRecsLoading(false))
+  }, [])
 
   const fetchSuggestions = useCallback(async (q: string) => {
     if (!q.trim()) { setSuggestions([]); return }
@@ -395,6 +416,110 @@ export default function OpcionesClient() {
           </section>
         </>
       )}
+
+      {/* Track Record de Opciones */}
+      <section className="mt-12 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--gold)' }}>RECOMENDACIONES DE OPCIONES</p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Track record de contratos recomendados por el Agente Vanilla</p>
+          </div>
+          {optRecsLoading && <span className="text-[9px] font-mono animate-pulse" style={{ color: 'var(--text-muted)' }}>cargando…</span>}
+        </div>
+
+        {optRecs.length === 0 && !optRecsLoading ? (
+          <div className="card text-center py-10">
+            <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>Sin recomendaciones — ejecuta el Agente Vanilla para generar la primera</p>
+          </div>
+        ) : (
+          <div className="card overflow-x-auto p-0">
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-[var(--border)]" style={{ background: 'rgba(201,168,76,0.05)' }}>
+                  {['Fecha','Ticker','Acción','Contrato','Strike','Exp.','DTE','Subyacente','Bid/Ask','Delta','Score','Estado','Acc.'].map(col => (
+                    <th key={col} className="px-3 py-2 text-left text-[9px] font-semibold uppercase tracking-widest whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {optRecs.map((rec, idx) => {
+                  const expDays = Math.ceil((new Date(rec.expiration).getTime() - Date.now()) / 86_400_000)
+                  const isExpired = expDays < 0
+                  const statusColor = rec.status === 'ACTIVA' ? 'text-green-400'
+                    : rec.status === 'CERRADA' ? 'text-blue-400' : 'text-red-400'
+                  return (
+                    <tr key={rec.id} className="border-b border-[var(--border)] hover:bg-white/5 transition-colors">
+                      <td className="px-3 py-2 text-[9px] font-mono whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
+                        {new Date(rec.publishedAt).toLocaleDateString('es-EC', { day:'2-digit', month:'short', year:'numeric', timeZone:'America/Guayaquil' })}
+                      </td>
+                      <td className="px-3 py-2 font-mono font-bold whitespace-nowrap" style={{ color: 'var(--gold)' }}>{rec.ticker}</td>
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${
+                          rec.action.includes('COMPRAR') ? 'border-green-500/40 bg-green-500/10 text-green-400'
+                            : 'border-red-500/40 bg-red-500/10 text-red-400'
+                        }`}>{rec.action}</span>
+                      </td>
+                      <td className="px-3 py-2 font-mono text-[9px]" style={{ color: 'var(--text-secondary)' }}>{rec.contractSymbol}</td>
+                      <td className="px-3 py-2 font-mono whitespace-nowrap">${rec.strike.toFixed(2)}</td>
+                      <td className="px-3 py-2 font-mono whitespace-nowrap text-[9px]">{rec.expiration}</td>
+                      <td className="px-3 py-2 font-mono whitespace-nowrap">
+                        <span className={isExpired ? 'text-red-400' : expDays <= 7 ? 'text-yellow-400' : ''}>{isExpired ? 'EXP' : `${expDays}d`}</span>
+                      </td>
+                      <td className="px-3 py-2 font-mono">${rec.underlyingPrice.toFixed(2)}</td>
+                      <td className="px-3 py-2 font-mono text-[9px]">{rec.bid != null && rec.ask != null ? `${rec.bid.toFixed(2)}/${rec.ask.toFixed(2)}` : '—'}</td>
+                      <td className="px-3 py-2 font-mono">{rec.delta != null ? rec.delta.toFixed(2) : '—'}</td>
+                      <td className="px-3 py-2 font-mono">{rec.score}</td>
+                      <td className="px-3 py-2">
+                        {isAdmin ? (
+                          <select
+                            value={rec.status}
+                            onChange={async e => {
+                              const newStatus = e.target.value
+                              await fetch(`/api/options-recs/${rec.id}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ status: newStatus, active: newStatus === 'ACTIVA' }),
+                              })
+                              setOptRecs(prev => prev.map(r => r.id === rec.id ? { ...r, status: newStatus, active: newStatus === 'ACTIVA' } : r))
+                            }}
+                            className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5"
+                            style={{ color: rec.status === 'ACTIVA' ? '#4ade80' : rec.status === 'CERRADA' ? '#60a5fa' : '#f87171' }}
+                          >
+                            <option value="ACTIVA">ACTIVA</option>
+                            <option value="CERRADA">CERRADA</option>
+                            <option value="EXPIRADA">EXPIRADA</option>
+                          </select>
+                        ) : (
+                          <span className={`text-[9px] font-mono ${statusColor}`}>{rec.status}</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2">
+                        {isAdmin && (
+                          <button onClick={async () => {
+                            if (!confirm('¿Eliminar esta recomendación?')) return
+                            await fetch(`/api/options-recs/${rec.id}`, { method: 'DELETE' })
+                            setOptRecs(prev => prev.filter(r => r.id !== rec.id))
+                          }} className="text-red-400 hover:text-red-300 text-[9px] font-mono">✕</button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Stats */}
+        {optRecs.length > 0 && (
+          <div className="flex gap-4 text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
+            <span>Total: {optRecs.length}</span>
+            <span className="text-green-400">Activas: {optRecs.filter(r => r.status === 'ACTIVA').length}</span>
+            <span className="text-blue-400">Cerradas: {optRecs.filter(r => r.status === 'CERRADA').length}</span>
+            <span className="text-red-400">Expiradas: {optRecs.filter(r => r.status === 'EXPIRADA').length}</span>
+          </div>
+        )}
+      </section>
     </div>
   )
 }

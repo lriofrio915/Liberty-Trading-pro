@@ -4,10 +4,14 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { getEffectiveAccess } from '@/lib/access'
 import OpcionesClient from './OpcionesClient'
 
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
+
 export default async function OpcionesPage() {
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+
+  const isAdmin = user.email === ADMIN_EMAIL
 
   const dbUser = await prisma.user.findUnique({
     where: { authId: user.id },
@@ -15,7 +19,7 @@ export default async function OpcionesPage() {
   }).catch(() => null)
 
   const access = getEffectiveAccess({ plan: dbUser?.plan ?? 'FREE', trialEndsAt: dbUser?.trialEndsAt ?? null })
-  if (!access.canAccessClub) redirect('/dashboard/upgrade')
+  if (!isAdmin && !access.canAccessClub) redirect('/dashboard/upgrade')
 
-  return <OpcionesClient />
+  return <OpcionesClient isAdmin={isAdmin} />
 }
