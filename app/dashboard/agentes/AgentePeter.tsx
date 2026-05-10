@@ -13,7 +13,8 @@ type TickerStage = {
   step1: 'pass'
   step2: 'pending' | 'pass' | 'fail'
   step3: 'pending' | 'pass' | 'fail' | 'running'
-  step4: 'pending' | 'done' | 'fail'
+  momentum: 'pending' | 'pass' | 'fail' | 'running'
+  step5: 'pending' | 'done' | 'fail'
   error?: string
 }
 
@@ -41,21 +42,30 @@ function TickerBadge({ t }: { t: TickerStage }) {
     : t.step3 === 'fail' ? 'border-red-500/40 bg-red-500/10 text-red-400'
     : t.step3 === 'running' ? 'border-yellow-500/40 bg-yellow-500/10 text-yellow-400 animate-pulse'
     : 'border-[var(--border)] text-[var(--text-muted)]'
+  const momentumColor = t.momentum === 'pass' ? 'border-green-500/40 bg-green-500/10 text-green-400'
+    : t.momentum === 'fail' ? 'border-red-500/40 bg-red-500/10 text-red-400'
+    : t.momentum === 'running' ? 'border-yellow-500/40 bg-yellow-500/10 text-yellow-400 animate-pulse'
+    : 'border-[var(--border)] text-[var(--text-muted)]'
 
   return (
     <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
       <span className="font-mono font-bold text-xs" style={{ color: 'var(--gold)' }}>{t.ticker}</span>
       {t.step2 !== 'pending' && (
         <span className={`text-[9px] font-mono px-1 py-0.5 rounded border ${step2Color}`}>
-          {t.step2 === 'pass' ? `↑${t.forecastDirection}` : t.step2 === 'fail' ? '✗' : '…'}
+          {t.step2 === 'pass' ? `↑${t.forecastDirection}` : '✗'}
         </span>
       )}
       {t.step3 !== 'pending' && (
         <span className={`text-[9px] font-mono px-1 py-0.5 rounded border ${step3Color}`}>
-          {t.step3 === 'pass' ? 'COMPRAR' : t.step3 === 'fail' ? '✗' : t.step3 === 'running' ? '⟳' : '…'}
+          {t.step3 === 'pass' ? 'IA✓' : t.step3 === 'fail' ? 'IA✗' : '⟳'}
         </span>
       )}
-      {t.step4 === 'done' && (
+      {t.momentum !== 'pending' && (
+        <span className={`text-[9px] font-mono px-1 py-0.5 rounded border ${momentumColor}`}>
+          {t.momentum === 'pass' ? '📡✓' : t.momentum === 'fail' ? '📡✗' : '📡⟳'}
+        </span>
+      )}
+      {t.step5 === 'done' && (
         <span className="text-[9px] font-mono px-1 py-0.5 rounded border border-blue-500/40 bg-blue-500/10 text-blue-400">📝</span>
       )}
     </div>
@@ -67,7 +77,8 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
   const [step1Phase, setStep1Phase] = useState<Phase>('idle')
   const [step2Phase, setStep2Phase] = useState<Phase>('idle')
   const [step3Phase, setStep3Phase] = useState<Phase>('idle')
-  const [step4Phase, setStep4Phase] = useState<Phase>('idle')
+  const [step4Phase, setStep4Phase] = useState<Phase>('idle') // momentum
+  const [step5Phase, setStep5Phase] = useState<Phase>('idle') // informes
   const [tickers, setTickers]       = useState<TickerStage[]>([])
   const [activeTicker, setActiveTicker] = useState<string | null>(null)
   const [log, setLog]               = useState<string[]>([])
@@ -80,14 +91,16 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
 
   function resetAgent() {
     setPhase('idle')
-    setStep1Phase('idle'); setStep2Phase('idle'); setStep3Phase('idle'); setStep4Phase('idle')
+    setStep1Phase('idle'); setStep2Phase('idle'); setStep3Phase('idle')
+    setStep4Phase('idle'); setStep5Phase('idle')
     setTickers([]); setLog([]); setActiveTicker(null); setSummary(null)
   }
 
   function stopAgent() {
     abortRef.current?.abort()
     setPhase('idle')
-    setStep1Phase('idle'); setStep2Phase('idle'); setStep3Phase('idle'); setStep4Phase('idle')
+    setStep1Phase('idle'); setStep2Phase('idle'); setStep3Phase('idle')
+    setStep4Phase('idle'); setStep5Phase('idle')
     setActiveTicker(null)
     addLog('⛔ Agente detenido por el usuario')
   }
@@ -104,17 +117,18 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
       const lynchRes = await fetch('/api/screener/lynch', { signal })
       if (!lynchRes.ok) throw new Error(`Screener HTTP ${lynchRes.status}`)
       const lynchData = await lynchRes.json()
-      const sixSixRaw: Array<{ ticker: string; score: number; precioActual?: number }> = (lynchData.results ?? []).filter((r: { score: number }) => r.score === 6)
+      const sixSixRaw: Array<{ ticker: string; score: number }> = (lynchData.results ?? []).filter((r: { score: number }) => r.score === 6)
       const sixSix = sixSixRaw.map(r => r.ticker)
 
       if (sixSix.length === 0) {
-        addLog('⚠ Sin acciones con score 6/6 en el screener. Intenta actualizar el screener primero.')
-        setStep1Phase('done'); setPhase('done')
-        return
+        addLog('⚠ Sin acciones con score 6/6. Actualiza el screener primero.')
+        setStep1Phase('done'); setPhase('done'); return
       }
 
       addLog(`✓ ${sixSix.length} acciones con score 6/6: ${sixSix.join(', ')}`)
-      const initial: TickerStage[] = sixSix.map(t => ({ ticker: t, step1: 'pass', step2: 'pending', step3: 'pending', step4: 'pending' }))
+      const initial: TickerStage[] = sixSix.map(t => ({
+        ticker: t, step1: 'pass', step2: 'pending', step3: 'pending', momentum: 'pending', step5: 'pending',
+      }))
       setTickers(initial)
       setStep1Phase('done')
 
@@ -135,18 +149,17 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
           const direction = forecastPrice > lastPrice * 1.001 ? 'ALCISTA'
             : forecastPrice < lastPrice * 0.999 ? 'BAJISTA' : 'LATERAL'
           const pass = direction === 'ALCISTA'
-          addLog(`${pass ? '✓' : '✗'} ${ticker}: ${direction} (actual $${lastPrice.toFixed(2)} → objetivo $${forecastPrice.toFixed(2)})`)
+          addLog(`${pass ? '✓' : '✗'} ${ticker}: ${direction} ($${lastPrice.toFixed(2)} → $${forecastPrice.toFixed(2)})`)
           updateTicker(paso2Results, ticker, { lastPrice, forecastPrice, forecastDirection: direction, step2: pass ? 'pass' : 'fail' })
         } catch (e) {
           if (signal.aborted) break
           addLog(`⚠ ${ticker}: error forecast — ${(e as Error).message}`)
-          updateTicker(paso2Results, ticker, { step2: 'fail', error: 'forecast error' })
+          updateTicker(paso2Results, ticker, { step2: 'fail' })
         }
         setTickers([...paso2Results])
         await sleep(600)
       }
       setStep2Phase('done')
-
       if (signal.aborted) { setPhase('idle'); return }
 
       // ── PASO 3: Confirmación IA (Tauric) ─────────────────────
@@ -155,22 +168,18 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
       const paso3Results = [...paso2Results]
 
       if (paso2Pass.length === 0) {
-        addLog('⚠ Ningún ticker pasó el filtro de proyección alcista.')
-        setStep3Phase('done'); setStep4Phase('done'); setPhase('done')
-        setSummary({ created: 0, total: sixSix.length })
-        setActiveTicker(null)
-        return
+        addLog('⚠ Ningún ticker pasó proyección alcista.')
+        setStep3Phase('done'); setStep4Phase('done'); setStep5Phase('done')
+        setPhase('done'); setSummary({ created: 0, total: sixSix.length }); setActiveTicker(null); return
       }
 
       addLog(`📊 Confirmando ${paso2Pass.length} ticker(s) en CONFIRMACIÓN IA (moderado ~3-7 min c/u)...`)
-
       for (const t of paso2Pass) {
         if (signal.aborted) break
         setActiveTicker(t.ticker)
         addLog(`⟳ Analizando ${t.ticker}...`)
         updateTicker(paso3Results, t.ticker, { step3: 'running' })
         setTickers([...paso3Results])
-
         try {
           const today = new Date().toISOString().split('T')[0]
           const aRes = await fetch('/api/tauric/analyze', {
@@ -182,7 +191,7 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
           if (!aRes.ok) throw new Error(`Tauric HTTP ${aRes.status}`)
           const aData = await aRes.json()
           const runId: string = aData.run_id ?? aData.id ?? ''
-          if (!runId) throw new Error('Sin run_id en respuesta')
+          if (!runId) throw new Error('Sin run_id')
 
           let result: string | null = null
           for (let i = 0; i < 60; i++) {
@@ -191,42 +200,114 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
             const pRes = await fetch(`/api/tauric/runs/${runId}`, { signal })
             const pData = await pRes.json()
             if (pData.status === 'completed') { result = pData.result ?? pData.signal ?? ''; break }
-            if (pData.status === 'failed') throw new Error('Análisis falló en el servidor')
+            if (pData.status === 'failed') throw new Error('Run failed')
           }
-          if (!result) throw new Error('Timeout — sin resultado tras 10 min')
+          if (!result) throw new Error('Timeout análisis Tauric')
 
           const isBuy = /\b(BUY|COMPRAR|ALCISTA|BULLISH|OVERWEIGHT)\b/i.test(result)
-          addLog(`${isBuy ? '✓' : '✗'} ${t.ticker}: ${isBuy ? 'COMPRAR ✓' : 'NO COMPRAR'} — ${result.slice(0, 100)}`)
-          updateTicker(paso3Results, t.ticker, {
-            step3: isBuy ? 'pass' : 'fail',
-            tauricRecommendation: isBuy ? 'COMPRAR' : 'MANTENER',
-          })
+          addLog(`${isBuy ? '✓' : '✗'} ${t.ticker} Tauric: ${isBuy ? 'COMPRAR' : 'NO COMPRAR'}`)
+          updateTicker(paso3Results, t.ticker, { step3: isBuy ? 'pass' : 'fail', tauricRecommendation: isBuy ? 'COMPRAR' : 'MANTENER' })
         } catch (e) {
           if (signal.aborted) break
-          addLog(`⚠ ${t.ticker}: error confirmación — ${(e as Error).message}`)
-          updateTicker(paso3Results, t.ticker, { step3: 'fail', error: (e as Error).message })
+          addLog(`⚠ ${t.ticker}: error Tauric — ${(e as Error).message}`)
+          updateTicker(paso3Results, t.ticker, { step3: 'fail' })
         }
         setTickers([...paso3Results])
       }
       setStep3Phase('done')
-
       if (signal.aborted) { setPhase('idle'); return }
 
-      // ── PASO 4: Generar informes ──────────────────────────────
+      // ── PASO 4: Momentum Daily Scanner ───────────────────────
       setStep4Phase('running')
       const paso3Pass = paso3Results.filter(t => t.step3 === 'pass')
+      const paso4Results = [...paso3Results]
 
       if (paso3Pass.length === 0) {
-        addLog('⚠ Ningún ticker obtuvo confirmación COMPRAR.')
-        setStep4Phase('done'); setPhase('done')
-        setSummary({ created: 0, total: sixSix.length })
-        setActiveTicker(null)
-        return
+        addLog('⚠ Ningún ticker pasó confirmación Tauric.')
+        setStep4Phase('done'); setStep5Phase('done')
+        setPhase('done'); setSummary({ created: 0, total: sixSix.length }); setActiveTicker(null); return
       }
 
-      addLog(`📝 Generando ${paso3Pass.length} informe(s) en RECOMENDACIONES PETER LYNCH...`)
-
+      addLog(`📡 Verificando momentum Daily Scanner para ${paso3Pass.length} ticker(s)...`)
       for (const t of paso3Pass) {
+        if (signal.aborted) break
+        setActiveTicker(t.ticker)
+        addLog(`⟳ Daily Scanner: ${t.ticker}...`)
+        updateTicker(paso4Results, t.ticker, { momentum: 'running' })
+        setTickers([...paso4Results])
+        try {
+          const mRes = await fetch('/api/daily-signals/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stocks: [t.ticker] }),
+            signal,
+          })
+          const mData = await mRes.json()
+
+          // 409 duplicate_task: reutilizar existing_task_id
+          let taskId: string | null = null
+          if (mRes.status === 409 && mData.existing_task_id) {
+            taskId = mData.existing_task_id as string
+            addLog(`  ↪ ${t.ticker}: usando análisis existente`)
+          } else if (!mRes.ok) {
+            throw new Error(mData.error ?? `HTTP ${mRes.status}`)
+          } else {
+            type AT = { task_id: string }
+            const ids: string[] = mData?.accepted
+              ? (mData.accepted as AT[]).map((x: AT) => x.task_id).filter(Boolean)
+              : mData?.task_id ? [mData.task_id as string] : []
+            taskId = ids[0] ?? null
+          }
+          if (!taskId) throw new Error('Sin task_id para Daily Scanner')
+
+          // Poll hasta completado (max 40 × 15s = 10 min)
+          let dsSignal: string | null = null
+          for (let i = 0; i < 40; i++) {
+            if (signal.aborted) break
+            await sleep(15_000)
+            const pRes = await fetch(`/api/daily-signals/tasks?task_id=${taskId}`, { signal })
+            const pData = await pRes.json()
+            if (pData.status === 'completed' || pData.status === 'failed') {
+              const rRes = await fetch('/api/daily-signals/results', { signal })
+              const rData = await rRes.json()
+              const list = Array.isArray(rData) ? rData
+                : Array.isArray(rData?.items) ? rData.items
+                : Array.isArray(rData?.results) ? rData.results
+                : Array.isArray(rData?.data) ? rData.data : []
+              const found = list.find((s: { stock_code?: string; symbol?: string }) =>
+                (s.stock_code ?? s.symbol ?? '').toUpperCase() === t.ticker
+              )
+              if (found) dsSignal = found.operation_advice ?? found.recommendation ?? found.signal ?? ''
+              break
+            }
+          }
+          if (!dsSignal) throw new Error('Sin resultado de Daily Scanner')
+
+          const isMomentumBuy = /\b(BUY|COMPRAR|ALCISTA|BULLISH|STRONG_BUY|OVERWEIGHT|买入|增持)\b/i.test(dsSignal)
+          addLog(`${isMomentumBuy ? '✓' : '✗'} ${t.ticker} momentum: ${isMomentumBuy ? 'COMPRAR ✓' : 'NO COMPRAR'} — ${dsSignal.slice(0, 60)}`)
+          updateTicker(paso4Results, t.ticker, { momentum: isMomentumBuy ? 'pass' : 'fail' })
+        } catch (e) {
+          if (signal.aborted) break
+          addLog(`⚠ ${t.ticker}: error Daily Scanner — ${(e as Error).message}`)
+          updateTicker(paso4Results, t.ticker, { momentum: 'fail' })
+        }
+        setTickers([...paso4Results])
+      }
+      setStep4Phase('done')
+      if (signal.aborted) { setPhase('idle'); return }
+
+      // ── PASO 5: Generar informes ──────────────────────────────
+      setStep5Phase('running')
+      const paso4Pass = paso4Results.filter(t => t.momentum === 'pass')
+
+      if (paso4Pass.length === 0) {
+        addLog('⚠ Ningún ticker obtuvo confirmación de momentum.')
+        setStep5Phase('done'); setPhase('done')
+        setSummary({ created: 0, total: sixSix.length }); setActiveTicker(null); return
+      }
+
+      addLog(`📝 Generando ${paso4Pass.length} informe(s) en RECOMENDACIONES PETER LYNCH...`)
+      for (const t of paso4Pass) {
         if (signal.aborted) break
         setActiveTicker(t.ticker)
         try {
@@ -246,21 +327,21 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
             throw new Error(err.error ?? `HTTP ${iRes.status}`)
           }
           addLog(`✓ ${t.ticker}: informe creado — entrada $${t.lastPrice?.toFixed(2)}, objetivo $${t.forecastPrice?.toFixed(2)}`)
-          updateTicker(paso3Results, t.ticker, { step4: 'done' })
+          updateTicker(paso4Results, t.ticker, { step5: 'done' })
         } catch (e) {
           if (signal.aborted) break
           addLog(`⚠ ${t.ticker}: error creando informe — ${(e as Error).message}`)
-          updateTicker(paso3Results, t.ticker, { step4: 'fail' })
+          updateTicker(paso4Results, t.ticker, { step5: 'fail' })
         }
-        setTickers([...paso3Results])
+        setTickers([...paso4Results])
       }
 
-      setStep4Phase('done')
+      setStep5Phase('done')
       setPhase('done')
       setActiveTicker(null)
-      const created = paso3Results.filter(t => t.step4 === 'done').length
+      const created = paso4Results.filter(t => t.step5 === 'done').length
       setSummary({ created, total: sixSix.length })
-      addLog(`🎉 Agente Peter completado: ${created} nueva(s) recomendación(es) en PETER LYNCH.`)
+      addLog(`🎉 Agente Peter completado: ${created} recomendación(es) en PETER LYNCH.`)
 
     } catch (e) {
       if ((e as Error).name === 'AbortError') return
@@ -282,8 +363,8 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
               <span className="text-[9px] font-mono px-2 py-0.5 rounded-full border border-[var(--gold)]/40 text-[var(--gold)]">PETER LYNCH</span>
             </div>
             <p className="text-xs max-w-lg" style={{ color: 'var(--text-muted)' }}>
-              Filtra el universo de acciones con score 6/6 en INVESTIGACIÓN, verifica proyección alcista a 30 días,
-              confirma la señal de compra con IA y genera el informe de inversión automáticamente.
+              Pipeline de 5 filtros: INVESTIGACIÓN Lynch 6/6 → PROYECCIÓN alcista 30d →
+              CONFIRMACIÓN IA Tauric → MOMENTUM Daily Scanner → genera informe en PETER LYNCH.
             </p>
           </div>
           <div className="flex gap-2">
@@ -313,10 +394,11 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
       {/* Pipeline steps */}
       <div className="px-6 py-5 space-y-3" style={{ borderTop: '1px solid rgba(201,168,76,0.12)' }}>
         {[
-          { num: 1, label: 'INVESTIGACIÓN LYNCH', desc: 'Extrae acciones con score 6/6 del screener', phaseVal: step1Phase },
-          { num: 2, label: 'PROYECCIÓN 30 DÍAS',  desc: 'Verifica sesgo alcista en el forecast TimesFM',  phaseVal: step2Phase },
-          { num: 3, label: 'CONFIRMACIÓN IA',     desc: 'Análisis multi-agente Tauric (moderado)',        phaseVal: step3Phase },
-          { num: 4, label: 'GENERANDO INFORMES',  desc: 'Crea informe en RECOMENDACIONES PETER LYNCH',   phaseVal: step4Phase },
+          { num: 1, label: 'INVESTIGACIÓN LYNCH',   desc: 'Extrae acciones con score 6/6 del screener',        phaseVal: step1Phase },
+          { num: 2, label: 'PROYECCIÓN 30 DÍAS',    desc: 'Verifica sesgo alcista en el forecast TimesFM',     phaseVal: step2Phase },
+          { num: 3, label: 'CONFIRMACIÓN IA',       desc: 'Análisis multi-agente Tauric (moderado)',            phaseVal: step3Phase },
+          { num: 4, label: 'MOMENTUM DAILY SCANNER',desc: 'Confirma señal de compra con Daily Scanner IA',     phaseVal: step4Phase },
+          { num: 5, label: 'GENERANDO INFORMES',    desc: 'Crea informe en RECOMENDACIONES PETER LYNCH',       phaseVal: step5Phase },
         ].map(step => (
           <div key={step.num} className="rounded-xl border p-4" style={{
             borderColor: step.phaseVal === 'running' ? 'rgba(251,191,36,0.4)' : step.phaseVal === 'done' ? 'rgba(74,222,128,0.25)' : 'var(--border)',
@@ -331,21 +413,6 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
             </div>
             <p className="text-[10px] pl-8" style={{ color: 'var(--text-muted)' }}>{step.desc}</p>
 
-            {/* Tickers for steps 2, 3, 4 */}
-            {tickers.length > 0 && step.num >= 2 && (
-              <div className="mt-3 pl-8 flex flex-wrap gap-2">
-                {tickers.map(t => {
-                  const relevant = step.num === 2
-                    ? t.step2 !== 'pending'
-                    : step.num === 3
-                    ? (t.step2 === 'pass' && t.step3 !== 'pending')
-                    : t.step3 === 'pass'
-                  if (!relevant) return null
-                  return <TickerBadge key={t.ticker} t={t} />
-                })}
-              </div>
-            )}
-
             {/* Step 1: show 6/6 tickers */}
             {step.num === 1 && tickers.length > 0 && (
               <div className="mt-3 pl-8 flex flex-wrap gap-2">
@@ -354,6 +421,23 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
                     {t.ticker}
                   </span>
                 ))}
+              </div>
+            )}
+
+            {/* Steps 2-5: ticker badges */}
+            {tickers.length > 0 && step.num >= 2 && (
+              <div className="mt-3 pl-8 flex flex-wrap gap-2">
+                {tickers.map(t => {
+                  const relevant = step.num === 2
+                    ? t.step2 !== 'pending'
+                    : step.num === 3
+                    ? (t.step2 === 'pass' && t.step3 !== 'pending')
+                    : step.num === 4
+                    ? (t.step3 === 'pass' && t.momentum !== 'pending')
+                    : t.momentum === 'pass'
+                  if (!relevant) return null
+                  return <TickerBadge key={t.ticker} t={t} />
+                })}
               </div>
             )}
           </div>

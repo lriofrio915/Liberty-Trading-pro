@@ -243,12 +243,15 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
         body: JSON.stringify({ stocks: [sym] }),
       })
       const d = await r.json()
-      if (!r.ok) { setLookupError(d.error ?? `Error ${r.status}`); setLookupAnalyzing(false); return }
+      if (!r.ok && r.status !== 409) { setLookupError(d.error ?? `Error ${r.status}`); setLookupAnalyzing(false); return }
 
+      // 409 duplicate_task: reutilizar existing_task_id
       type AT = { task_id: string }
-      const taskIds: string[] = d?.accepted
-        ? (d.accepted as AT[]).map((t: AT) => t.task_id).filter(Boolean)
-        : d?.task_id ? [d.task_id as string] : []
+      const taskIds: string[] = r.status === 409 && d.existing_task_id
+        ? [d.existing_task_id as string]
+        : d?.accepted
+          ? (d.accepted as AT[]).map((t: AT) => t.task_id).filter(Boolean)
+          : d?.task_id ? [d.task_id as string] : []
 
       if (!taskIds.length) { setLookupError('Sin tareas generadas'); setLookupAnalyzing(false); return }
 
@@ -299,19 +302,21 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
         body: JSON.stringify({ stocks: stockList.split(/[\s,]+/).filter(Boolean) }),
       })
       const d = await r.json()
-      if (!r.ok) {
+      if (!r.ok && r.status !== 409) {
         setRunError(d.error ?? `Error ${r.status}`)
         stopTimer()
         setAnalyzing(false)
         return
       }
 
-      // Response: { accepted: [{task_id, stock_code, status}], ... }
-      // OR legacy: { task_id: "..." }
+      // 409 duplicate_task: reutilizar existing_task_id en lugar de fallar
+      // Response: { accepted: [{task_id, stock_code, status}], ... } OR { task_id: "..." }
       type AcceptedTask = { task_id: string; stock_code?: string }
-      const taskIds: string[] = d?.accepted
-        ? (d.accepted as AcceptedTask[]).map(t => t.task_id).filter(Boolean)
-        : d?.task_id ? [d.task_id as string] : []
+      const taskIds: string[] = r.status === 409 && d.existing_task_id
+        ? [d.existing_task_id as string]
+        : d?.accepted
+          ? (d.accepted as AcceptedTask[]).map(t => t.task_id).filter(Boolean)
+          : d?.task_id ? [d.task_id as string] : []
 
       console.debug('[DailyScanner] accepted tasks:', taskIds)
 
