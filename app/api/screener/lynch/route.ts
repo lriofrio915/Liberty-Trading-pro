@@ -5,16 +5,22 @@ import { fetchBatchFinancials } from '@/lib/yahoo-financials'
 import { getLynchScreenerTickers } from '@/lib/screener/sp500-nasdaq-tickers'
 import { applyPeterLynchFilter, type LynchResult } from '@/lib/screener/peter-lynch-filter'
 
+export const runtime = 'nodejs'
+export const maxDuration = 60
+
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 const CRON_SECRET = process.env.CRON_SECRET || ''
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const refresh = searchParams.get('refresh') === 'true'
-  const secret = req.headers.get('authorization')?.replace('Bearer ', '') || searchParams.get('secret') || ''
+
+  // Accept secret via Authorization: Bearer header OR legacy ?secret= param
+  const authHeader = req.headers.get('authorization') ?? req.headers.get('Authorization') ?? ''
+  const secret = authHeader.replace(/^Bearer\s+/i, '') || searchParams.get('secret') || ''
 
   // Cron path: valid secret bypasses Supabase auth entirely
-  const isCron = refresh && CRON_SECRET && secret === CRON_SECRET
+  const isCron = refresh && Boolean(CRON_SECRET) && secret === CRON_SECRET
 
   if (!isCron) {
     const supabase = await createSupabaseServerClient()

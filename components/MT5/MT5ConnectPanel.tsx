@@ -30,40 +30,8 @@ interface MT5ConnectPanelProps {
   onDisconnected: () => void
 }
 
-export default function MT5ConnectPanel({ account, metaInfo, onConnected, onDisconnected }: MT5ConnectPanelProps) {
-  const [form, setForm] = useState({
-    metaApiAccountId: '',
-    login: '',
-    broker: '',
-    server: '',
-    accountName: '',
-  })
-  const [loading, setLoading] = useState(false)
+export default function MT5ConnectPanel({ account, metaInfo, onDisconnected }: MT5ConnectPanelProps) {
   const [disconnecting, setDisconnecting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const handleConnect = async () => {
-    if (!form.metaApiAccountId || !form.login) {
-      setError('MetaAPI Account ID y Login son requeridos')
-      return
-    }
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/mt5', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Error al conectar')
-      onConnected()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al conectar cuenta MT5')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleDisconnect = async () => {
     setDisconnecting(true)
@@ -127,107 +95,16 @@ export default function MT5ConnectPanel({ account, metaInfo, onConnected, onDisc
   }
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-xl border p-5" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
-        <h3 className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
-          Conectar cuenta MetaTrader 5
-        </h3>
-        <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
-          Necesitas una cuenta en{' '}
-          <a href="https://metaapi.cloud" target="_blank" rel="noreferrer" className="text-yellow-400 hover:underline">
-            MetaAPI.cloud
-          </a>
-          {' '}y agregar tu cuenta MT5 allá. Luego pega el Account ID aquí.
-        </p>
-
-        <div className="space-y-3">
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>
-              MetaAPI Account ID *
-            </label>
-            <input
-              type="text"
-              value={form.metaApiAccountId}
-              onChange={e => setForm(f => ({ ...f, metaApiAccountId: e.target.value }))}
-              placeholder="ej: abc123def456..."
-              className="w-full px-3 py-2 rounded-lg text-sm font-mono"
-              style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>
-                Login MT5 *
-              </label>
-              <input
-                type="text"
-                value={form.login}
-                onChange={e => setForm(f => ({ ...f, login: e.target.value }))}
-                placeholder="ej: 123456"
-                className="w-full px-3 py-2 rounded-lg text-sm font-mono"
-                style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>
-                Broker
-              </label>
-              <input
-                type="text"
-                value={form.broker}
-                onChange={e => setForm(f => ({ ...f, broker: e.target.value }))}
-                placeholder="ej: ICMarkets"
-                className="w-full px-3 py-2 rounded-lg text-sm"
-                style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>
-                Servidor
-              </label>
-              <input
-                type="text"
-                value={form.server}
-                onChange={e => setForm(f => ({ ...f, server: e.target.value }))}
-                placeholder="ej: ICMarketsSC-Demo"
-                className="w-full px-3 py-2 rounded-lg text-sm font-mono"
-                style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>
-                Nombre descriptivo
-              </label>
-              <input
-                type="text"
-                value={form.accountName}
-                onChange={e => setForm(f => ({ ...f, accountName: e.target.value }))}
-                placeholder="ej: Mi cuenta demo"
-                className="w-full px-3 py-2 rounded-lg text-sm"
-                style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">
-              {error}
-            </div>
-          )}
-
-          <button
-            onClick={handleConnect}
-            disabled={loading}
-            className="w-full py-3 rounded-xl font-bold text-sm btn-gold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {loading ? 'Conectando...' : '🔗 Conectar cuenta MT5'}
-          </button>
-        </div>
+    <div className="rounded-xl border p-5 space-y-3" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+      <div className="flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-[var(--text-muted)]" />
+        <span className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
+          Sin cuenta MT5 conectada
+        </span>
       </div>
+      <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+        Usa el <strong className="text-[var(--text-secondary)]">EA Gratuito</strong> de arriba para conectar tu MetaTrader 5 sin necesidad de servicios de terceros. Descarga el archivo .mq5, instálalo en MT5 y activa el toggle de auto-trade.
+      </p>
     </div>
   )
 }
