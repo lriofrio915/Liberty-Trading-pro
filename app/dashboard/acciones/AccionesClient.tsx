@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import ResearchTab from './ResearchTab'
 import TauricResearchTab from './TauricResearchTab'
+import DailySignalsTab from './DailySignalsTab'
 
 const OportunidadesClient = dynamic(
   () => import('@/app/dashboard/oportunidades/OportunidadesClient'),
@@ -14,7 +15,7 @@ const OportunidadesClient = dynamic(
   isAdmin: boolean
 }>
 
-type Tab = 'recomendaciones' | 'research' | 'tauric'
+type Tab = 'recomendaciones' | 'research' | 'tauric' | 'signals'
 
 export default function AccionesClient({
   initialOpportunities,
@@ -162,6 +163,16 @@ export default function AccionesClient({
         >
           TAURIC RESEARCH
         </button>
+        <button
+          onClick={() => setTab('signals')}
+          className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border ${
+            tab === 'signals'
+              ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
+          }`}
+        >
+          DAILY SCANNER
+        </button>
       </div>
 
       {tab === 'recomendaciones' && (
@@ -169,6 +180,7 @@ export default function AccionesClient({
       )}
       {tab === 'research' && <ResearchTab />}
       {tab === 'tauric' && <TauricResearchTab />}
+      {tab === 'signals' && <DailySignalsTab />}
     </div>
   )
 }
