@@ -58,9 +58,9 @@ export default function DailySignalsTab() {
   const [serverStatus, setServerStatus] = useState<ServerStatus>('checking')
   const [showConfig, setShowConfig]     = useState(false)
 
-  const [botToken, setBotToken]   = useState('')
-  const [chatId, setChatId]       = useState('')
-  const [stockList, setStockList] = useState(DEFAULT_STOCKS)
+  const [botToken, setBotToken]   = useState(() => lsGet(LS_BOT_TOKEN))
+  const [chatId, setChatId]       = useState(() => lsGet(LS_CHAT_ID))
+  const [stockList, setStockList] = useState(() => lsGet(LS_STOCKS, DEFAULT_STOCKS))
   const [tgStatus, setTgStatus]   = useState<TelegramStatus>('unchecked')
   const [tgError, setTgError]     = useState<string | null>(null)
 
@@ -69,15 +69,12 @@ export default function DailySignalsTab() {
   const [signals, setSignals]       = useState<Signal[]>([])
   const [runError, setRunError]     = useState<string | null>(null)
   const [taskProgress, setTaskProgress] = useState<number | null>(null)
+  const [scanEmpty, setScanEmpty]   = useState(false)
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const pollRef  = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Load from localStorage on mount
   useEffect(() => {
-    setBotToken(lsGet(LS_BOT_TOKEN))
-    setChatId(lsGet(LS_CHAT_ID))
-    setStockList(lsGet(LS_STOCKS, DEFAULT_STOCKS))
     checkStatus()
     fetchResults()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,17 +96,22 @@ export default function DailySignalsTab() {
     }
   }
 
-  async function fetchResults() {
+  async function fetchResults(): Promise<Signal[]> {
     try {
       const r = await fetch('/api/daily-signals/results')
-      if (!r.ok) return
+      if (!r.ok) return []
       const d = await r.json()
+      console.debug('[DailyScanner] history raw:', d)
       const list: Signal[] = Array.isArray(d) ? d
         : Array.isArray(d?.items) ? d.items
         : Array.isArray(d?.results) ? d.results
         : Array.isArray(d?.data) ? d.data : []
       setSignals(list)
-    } catch {}
+      return list
+    } catch (e) {
+      console.debug('[DailyScanner] fetchResults error:', e)
+      return []
+    }
   }
 
   async function testTelegram() {
@@ -144,6 +146,7 @@ export default function DailySignalsTab() {
     setRunError(null)
     setElapsed(0)
     setTaskProgress(null)
+    setScanEmpty(false)
     timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000)
 
     try {
@@ -162,10 +165,19 @@ export default function DailySignalsTab() {
 
       if (d?.task_id) {
         const taskId: string = d.task_id
+        let attempts = 0
         pollRef.current = setInterval(async () => {
+          if (++attempts > 60) { // 60 × 15s = 15 min max
+            clearInterval(pollRef.current!)
+            stopTimer()
+            setAnalyzing(false)
+            setRunError('El escaneo tardó demasiado (>15 min). Intenta de nuevo.')
+            return
+          }
           try {
             const tr = await fetch(`/api/daily-signals/tasks?task_id=${taskId}`)
             const td = await tr.json() as TaskStatus
+            console.debug('[DailyScanner] task poll:', td)
             if (td.progress != null) setTaskProgress(td.progress)
             if (td.status === 'completed' || td.status === 'failed') {
               clearInterval(pollRef.current!)
@@ -173,13 +185,16 @@ export default function DailySignalsTab() {
               setAnalyzing(false)
               setTaskProgress(null)
               if (td.status === 'failed') {
-                setRunError('El escaneo falló en el servidor. Intenta de nuevo.')
+                setRunError('El escaneo falló en el servidor. Revisa los logs en https://fly.io/apps/daily-signals-liberty/monitoring')
               } else {
-                await fetchResults()
+                const list = await fetchResults()
+                if (list.length === 0) setScanEmpty(true)
               }
             }
-          } catch {}
-        }, 10_000)
+          } catch (e) {
+            console.debug('[DailyScanner] poll error:', e)
+          }
+        }, 15_000)
       } else {
         // Immediate results (no task_id)
         const list: Signal[] = Array.isArray(d) ? d
@@ -384,7 +399,7 @@ flyctl secrets set \\
               </svg>
               <div>
                 <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-                  {taskProgress != null ? `Escaneando... ${taskProgress}%` : 'Escaneando portafolio…'}
+                  {taskProgress != null ? `Procesando… ${taskProgress}%` : 'En cola — iniciando análisis…'}
                 </p>
                 <p className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>{elapsedStr} transcurrido</p>
               </div>
@@ -488,19 +503,43 @@ flyctl secrets set \\
       )}
 
       {/* Empty state */}
-      {signals.length === 0 && !analyzing && serverStatus === 'online' && (
+      {signals.length === 0 && !analyzing && serverStatus === 'online' && !scanEmpty && (
         <div className="text-center py-12 border border-dashed rounded-xl" style={{ borderColor: 'var(--border)' }}>
           <p className="text-sm font-mono" style={{ color: 'var(--text-muted)' }}>Sin señales — ejecuta el primer escaneo</p>
         </div>
       )}
 
+      {/* Scan completed but no results */}
+      {scanEmpty && !analyzing && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 space-y-2">
+          <p className="text-xs font-bold font-mono" style={{ color: 'var(--gold)' }}>ESCANEO COMPLETÓ SIN SEÑALES</p>
+          <p className="text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>
+            La tarea terminó pero el historial está vacío. Posibles causas:
+          </p>
+          <ul className="text-[11px] font-mono list-disc list-inside space-y-0.5" style={{ color: 'var(--text-muted)' }}>
+            <li>LLM no configurado — verifica OPENAI_API_KEY en Fly.io secrets</li>
+            <li>Fuente de datos de mercado no disponible para tickers US</li>
+            <li>El servidor necesita más tiempo — prueba con 1 sola acción primero</li>
+          </ul>
+          <a
+            href="https://fly.io/apps/daily-signals-liberty/monitoring"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] font-mono underline"
+            style={{ color: 'var(--gold)' }}
+          >
+            Ver logs en Fly.io →
+          </a>
+        </div>
+      )}
+
       {/* Telegram footer */}
       <div className="rounded-lg border px-4 py-3 flex items-center gap-2 text-[10px] font-mono"
-        style={{ borderColor: 'var(--border)', color: telegramReady && tgStatus === 'ok' ? '#4ade80' : 'var(--text-muted)' }}>
-        {telegramReady && tgStatus === 'ok' ? (
+        style={{ borderColor: 'var(--border)', color: telegramReady ? '#4ade80' : 'var(--text-muted)' }}>
+        {telegramReady ? (
           <>
             <span>📬</span>
-            <span>Telegram conectado — las señales se enviarán a tu canal al ejecutar el escaneo</span>
+            <span>Telegram configurado — las señales se enviarán a tu canal al ejecutar el escaneo</span>
           </>
         ) : (
           <>

@@ -132,7 +132,17 @@ export default function AccionesClient({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 flex-wrap">
+        <button
+          onClick={() => setTab('signals')}
+          className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border ${
+            tab === 'signals'
+              ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
+          }`}
+        >
+          DAILY SCANNER
+        </button>
         <button
           onClick={() => setTab('recomendaciones')}
           className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border ${
@@ -162,16 +172,6 @@ export default function AccionesClient({
           }`}
         >
           TAURIC RESEARCH
-        </button>
-        <button
-          onClick={() => setTab('signals')}
-          className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border ${
-            tab === 'signals'
-              ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
-              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
-          }`}
-        >
-          DAILY SCANNER
         </button>
       </div>
 
