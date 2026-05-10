@@ -90,6 +90,7 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
   const thinkStartRef = useRef<number | null>(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [video, setVideo] = useState<{ youtubeUrl: string; title: string | null }>({ youtubeUrl: '', title: null })
+  const [showGuide, setShowGuide] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [editUrl, setEditUrl] = useState('')
   const [editTitle, setEditTitle] = useState('')
@@ -334,13 +335,17 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
       let sid = await ensureSession()
       if (!sid) { setRunState('error'); return }
 
+      // Instrucción de idioma que acompaña cada mensaje para que el agente responda en español
+      const LANG_INSTRUCTION = 'INSTRUCCIÓN PERMANENTE: Responde SIEMPRE en español (castellano). Todos los análisis, explicaciones, recomendaciones y código comentado deben estar en español.\n\n'
+
       // Construir contexto de los últimos mensajes para recuperación si la sesión expira
-      const contextStr = lines.slice(-10).length > 0
+      const historyStr = lines.slice(-10).length > 0
         ? lines.slice(-10)
             .map(l => `[${l.role === 'user' ? 'USUARIO' : l.role === 'agent' ? 'AGENTE' : 'SISTEMA'}]: ${l.text}`)
             .join('\n')
-            .slice(0, 3000)
+            .slice(0, 2800)
         : ''
+      const contextStr = LANG_INSTRUCTION + historyStr
 
       try {
         const res = await fetch(
@@ -588,6 +593,107 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
             <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>Genera indicadores para TradingView (Pine Script), MetaTrader 5 (EA) y Ninja Trader 8 (NinjaScript).</p>
           </div>
         </div>
+      </div>
+
+      {/* Guía de uso */}
+      <div className="mb-5 rounded-xl border" style={{ borderColor: 'rgba(201,168,76,0.15)' }}>
+        <button
+          onClick={() => setShowGuide(v => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 text-left"
+        >
+          <span className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>
+            GUÍA DE USO — CÓMO SACAR PROVECHO AL LABORATORIO QUANT
+          </span>
+          <span className="text-[var(--text-muted)] text-xs font-mono">{showGuide ? '▲' : '▼'}</span>
+        </button>
+        {showGuide && (
+          <div className="px-4 pb-5 space-y-5 text-xs text-[var(--text-secondary)] leading-relaxed">
+
+            {/* CHAT */}
+            <div>
+              <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>MODO CHAT — AGENTE CONVERSACIONAL</p>
+              <p className="mb-2">Escribe libremente en español. El agente diseña estrategias, genera código y responde preguntas de trading algorítmico.</p>
+              <p className="font-semibold text-white mb-1">Ejemplos de uso:</p>
+              <ul className="space-y-1 ml-3 list-disc">
+                <li>«Diseña una estrategia de cruce EMA 9/21 sobre NQ a 1H con stop ATR»</li>
+                <li>«Genera un EA de MetaTrader 5 que opere breakouts de apertura»</li>
+                <li>«Explica el indicador RSI divergente con Pine Script de ejemplo»</li>
+                <li>«Backtest momentum top-10 US small-caps, rebalanceo mensual»</li>
+              </ul>
+              <p className="mt-2 text-[var(--text-muted)]">El historial persiste entre sesiones. Usa <span className="font-mono text-white">LIMPIAR CHAT</span> para empezar desde cero.</p>
+            </div>
+
+            {/* SWARM */}
+            <div>
+              <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>MODO SWARM — ANÁLISIS MULTI-AGENTE EN PARALELO</p>
+              <p className="mb-2">SWARM lanza un equipo de agentes especializados que trabajan simultáneamente y entregan un reporte consolidado. Tarda 2-8 minutos.</p>
+              <p className="font-semibold text-white mb-1">Pasos para ejecutar:</p>
+              <ol className="space-y-1 ml-3 list-decimal">
+                <li>Selecciona un <span className="font-mono text-white">PRESET</span> del menú desplegable</li>
+                <li>Lee la descripción del preset para entender qué analiza</li>
+                <li>Edita el JSON de <span className="font-mono text-white">VARIABLES</span> con valores reales (ej: <span className="font-mono">{'"commodity": "oro"'}</span>)</li>
+                <li>Haz click en <span className="font-mono text-white">EJECUTAR SWARM</span> y espera el reporte final</li>
+              </ol>
+              <p className="mt-2 text-yellow-400 font-mono text-[10px]">⚠ Las variables aparecen vacías por defecto — debes rellenarlas o el análisis será genérico.</p>
+            </div>
+
+            {/* PRESETS */}
+            <div>
+              <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>PRESETS DISPONIBLES</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {[
+                  { name: 'commodity_research_team', vars: 'commodity, horizon', desc: 'Análisis de materias primas: demanda/oferta, macro y técnico' },
+                  { name: 'macro_strategy_forum', vars: 'market, horizon', desc: 'Foro macro: perspectivas global, doméstica y política convergiendo en asignación de activos' },
+                  { name: 'geopolitical_war_room', vars: 'region, asset_class', desc: 'Impacto geopolítico en mercados: riesgos, rutas de escape y oportunidades' },
+                  { name: 'social_alpha_team', vars: 'ticker, timeframe', desc: 'Señales de redes sociales + sentimiento + flujo institucional' },
+                  { name: 'event_driven_ta', vars: 'ticker, event', desc: 'Análisis técnico multi-escuela con resonancia (Classic TA + Ichimoku + Elliott + SMC)' },
+                  { name: 'credit_research_team', vars: 'target, market', desc: 'Investigación de crédito: calidad crediticia + tasas + sector' },
+                ].map(p => (
+                  <div key={p.name} className="rounded-lg border border-[var(--border)] p-2.5">
+                    <p className="font-mono text-[10px] text-white mb-0.5">{p.name}</p>
+                    <p className="text-[10px] text-[var(--text-muted)] mb-1">{p.desc}</p>
+                    <p className="text-[10px]"><span style={{ color: 'var(--gold)' }}>vars:</span> <span className="font-mono">{p.vars}</span></p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* INTERPRETAR REPORTE */}
+            <div>
+              <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>CÓMO INTERPRETAR UN REPORTE SWARM</p>
+              <div className="space-y-2">
+                <div className="rounded-lg border border-[var(--border)] p-2.5">
+                  <p className="font-semibold text-white mb-1">Tabla de Escuelas (event_driven_ta)</p>
+                  <p>Cada fila es una escuela de análisis técnico votando independientemente. Score −5 (muy bajista) a +5 (muy alcista). El <span className="font-mono text-white">Weighted Average</span> es la señal consolidada.</p>
+                </div>
+                <div className="rounded-lg border border-[var(--border)] p-2.5">
+                  <p className="font-semibold text-white mb-1">Resonancia</p>
+                  <p><span className="text-green-400 font-mono">Strong</span> = 4-5 escuelas alineadas → señal confiable. <span className="text-yellow-400 font-mono">Medium</span> = 3/5. <span className="text-red-400 font-mono">Chaos</span> = desacuerdo total → mejor no operar.</p>
+                </div>
+                <div className="rounded-lg border border-[var(--border)] p-2.5">
+                  <p className="font-semibold text-white mb-1">Trade Plan</p>
+                  <p>Entry / Stop / Target son niveles técnicos consolidados de todas las escuelas. <span className="text-yellow-400">Úsalos como referencia, no como orden automática.</span> Valida con tu propio análisis antes de operar.</p>
+                </div>
+                <div className="rounded-lg border border-[var(--border)] p-2.5">
+                  <p className="font-semibold text-white mb-1">Signal Shelf Life</p>
+                  <p>Cada reporte tiene horizonte temporal (ej: 2-4 semanas) e <span className="font-mono text-white">Invalidation</span> — el nivel donde la señal queda anulada. Si el precio cierra por debajo del nivel de invalidación, la señal ya no es válida.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* CONSEJOS */}
+            <div>
+              <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>CONSEJOS AVANZADOS</p>
+              <ul className="space-y-1 ml-3 list-disc text-[var(--text-muted)]">
+                <li>Usa CHAT para explorar y refinar ideas, luego SWARM para análisis profundo antes de operar</li>
+                <li>El agente genera código Pine Script y MQL5 listo para copiar — pídele que lo adapte a tu setup</li>
+                <li>Después de un SWARM, cambia a CHAT y pídele que explique cualquier parte del reporte</li>
+                <li>Los reportes SWARM salen en inglés (limitación del backend) — pega el texto en el chat y pide traducción</li>
+              </ul>
+            </div>
+
+          </div>
+        )}
       </div>
 
       {presetsErr && (
