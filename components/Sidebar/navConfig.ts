@@ -32,6 +32,12 @@ export const navGroups: NavGroup[] = [
       { href: '/dashboard/vibe',            icon: '🧠', label: 'Laboratorio Quant',   requiresClub: true },
     ],
   },
+  {
+    label: 'Agentes IA',
+    items: [
+      { href: '/dashboard/agentes', icon: '🤖', label: 'Agentes', requiresClub: true },
+    ],
+  },
 ]
 
 // Flat list kept for bottom tabs

@@ -6,6 +6,11 @@ import ResearchTab from './ResearchTab'
 import TauricResearchTab from './TauricResearchTab'
 import DailySignalsTab from './DailySignalsTab'
 
+const ForecastTab = dynamic(
+  () => import('@/app/dashboard/flujo/ForecastTab'),
+  { ssr: false },
+) as React.ComponentType<Record<string, never>>
+
 const OportunidadesClient = dynamic(
   () => import('@/app/dashboard/oportunidades/OportunidadesClient'),
   { ssr: false },
@@ -15,7 +20,7 @@ const OportunidadesClient = dynamic(
   isAdmin: boolean
 }>
 
-type Tab = 'recomendaciones' | 'research' | 'tauric' | 'signals'
+type Tab = 'recomendaciones' | 'research' | 'tauric' | 'signals' | 'proyeccion'
 
 export default function AccionesClient({
   initialOpportunities,
@@ -168,7 +173,17 @@ export default function AccionesClient({
               : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
           }`}
         >
-          INVESTIGACION
+          INVESTIGACIÓN
+        </button>
+        <button
+          onClick={() => setTab('proyeccion')}
+          className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border ${
+            tab === 'proyeccion'
+              ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
+          }`}
+        >
+          PROYECCIÓN
         </button>
         <button
           onClick={() => setTab('tauric')}
@@ -178,7 +193,7 @@ export default function AccionesClient({
               : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
           }`}
         >
-          CONFIRMACION
+          CONFIRMACIÓN
         </button>
       </div>
 
@@ -186,6 +201,7 @@ export default function AccionesClient({
         <OportunidadesClient initialOpportunities={initialOpportunities} plan={plan} isAdmin={isAdmin} />
       )}
       {tab === 'research' && <ResearchTab />}
+      {tab === 'proyeccion' && <ForecastTab />}
       {tab === 'tauric' && <TauricResearchTab />}
       {tab === 'signals' && <DailySignalsTab isAdmin={isAdmin} defaultTickers={activeTickers} />}
     </div>

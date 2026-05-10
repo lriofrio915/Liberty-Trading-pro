@@ -80,7 +80,7 @@ export default function TauricResearchTab() {
   const [showDrop, setShowDrop]       = useState(false)
   const [searching, setSearching]     = useState(false)
   const [date, setDate]   = useState(() => new Date().toISOString().split('T')[0])
-  const depth = 'deep'
+  const depth = 'moderate'
 
   // Run state
   const [status, setStatus]   = useState<RunStatus>('idle')
