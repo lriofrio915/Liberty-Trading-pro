@@ -35,16 +35,12 @@ type RemoteMessage = {
   metadata?: { run_id?: string; status?: string } | null
 }
 
-/** Builds a JSON template from preset variable definitions */
+/** Builds a JSON template from preset variable definitions — empty values so user fills them in */
 function buildVarsTemplate(preset: Preset): string {
   if (!preset.variables?.length) return '{}'
   const obj: Record<string, string> = {}
   for (const v of preset.variables) {
-    // Use description as placeholder hint, stripped to first example
-    const hint = v.description
-      ? v.description.split(/[,/]/)[0].trim()
-      : v.name
-    obj[v.name] = hint
+    obj[v.name] = ''
   }
   return JSON.stringify(obj, null, 2)
 }
@@ -405,6 +401,57 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
     }
   }
 
+  function pollSwarmRun(runId: string) {
+    if (pollTimerRef.current) clearTimeout(pollTimerRef.current)
+    const deadline = Date.now() + POLL_TIMEOUT_MS
+
+    const tick = async () => {
+      if (Date.now() > deadline) {
+        setRunState('error')
+        setErrorMsg('SWARM superó el tiempo máximo de espera.')
+        return
+      }
+      try {
+        const res = await fetch(
+          `/api/trading/vibe/swarm/runs/${encodeURIComponent(runId)}`,
+          { cache: 'no-store' },
+        )
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        const status: string = data.status ?? ''
+
+        // Show task progress as system messages while running
+        if ((status === 'running' || status === 'pending') && Array.isArray(data.tasks)) {
+          const total: number = data.tasks.length
+          const done: number = (data.tasks as { status: string }[]).filter(t => t.status === 'completed').length
+          if (total > 0) {
+            // Update elapsed display only — no extra messages to avoid spam
+          }
+        }
+
+        if (status === 'completed') {
+          const report: string = data.final_report ?? '(sin reporte)'
+          appendLine('agent', report)
+          saveMessage('agent', report)
+          setRunState('done')
+          return
+        }
+        if (status === 'failed' || status === 'cancelled') {
+          setErrorMsg(`SWARM finalizado con estado: ${status}`)
+          setRunState('error')
+          return
+        }
+      } catch (err) {
+        setErrorMsg(err instanceof Error ? err.message : 'Polling SWARM falló')
+        setRunState('error')
+        return
+      }
+      pollTimerRef.current = setTimeout(tick, 5000)
+    }
+
+    pollTimerRef.current = setTimeout(tick, 3000)
+  }
+
   async function runSwarm() {
     setErrorMsg(null)
     if (!selectedPreset) {
@@ -432,8 +479,15 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
       return
     }
     const data = await res.json()
-    appendLine('system', `swarm run iniciado: ${JSON.stringify(data).slice(0, 200)}`)
-    setRunState('done')
+    const runId: string = data.id ?? ''
+    if (!runId) {
+      setErrorMsg('SWARM no devolvió ID de run')
+      setRunState('error')
+      return
+    }
+    appendLine('system', `swarm iniciado · run: ${runId} · agentes procesando…`)
+    setRunState('thinking')
+    pollSwarmRun(runId)
   }
 
   function newConversation() {
