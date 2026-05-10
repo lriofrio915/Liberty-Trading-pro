@@ -423,7 +423,7 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
     const res = await fetch('/api/trading/vibe/swarm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ preset: selectedPreset, vars: parsedVars }),
+      body: JSON.stringify({ preset_name: selectedPreset, user_vars: parsedVars }),
     })
     if (!res.ok) {
       const j = await res.json().catch(() => ({}))
