@@ -246,6 +246,7 @@ model Opportunity {
   direction      String                   // COMPRA | VENTA
   precioEntrada  Float
   precioObjetivo Float
+  precioVenta    Float?   // precio de venta real registrado — bloquea rendimiento al llenarse
   stopLoss       Float
   timeframe      String                   // CORTO | MEDIANO | LARGO
   riesgo         String                   // BAJO | MEDIO | ALTO

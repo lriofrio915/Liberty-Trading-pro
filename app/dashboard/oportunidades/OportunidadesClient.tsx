@@ -30,6 +30,7 @@ interface Opportunity {
   direction: string
   precioEntrada: number
   precioObjetivo: number
+  precioVenta: number | null
   stopLoss: number
   timeframe: string
   riesgo: string
@@ -199,6 +200,51 @@ function PriceCell({ value, onSave, isAdmin }: {
       onBlur={commit}
       onKeyDown={e => { if (e.key === 'Enter') { e.currentTarget.blur() } }}
       className="w-24 bg-transparent border border-[var(--border)] rounded px-2 py-1 text-sm font-mono text-[var(--text-primary)] focus:border-[var(--gold)] focus:outline-none disabled:opacity-40 transition-colors"
+    />
+  )
+}
+
+// ─── Nullable price cell (P.Venta — empty = null = unlock rendimiento) ────────
+function PriceCellNullable({ value, onSave, isAdmin }: {
+  value: number | null
+  onSave: (v: number | null) => void
+  isAdmin: boolean
+}) {
+  const [saving, setSaving] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  async function commit() {
+    const raw = inputRef.current?.value
+    if (raw === undefined) return
+    const newVal = raw.trim() === '' ? null : parseFloat(raw)
+    if (newVal !== null && isNaN(newVal)) return
+    if (newVal === value) return
+    setSaving(true)
+    await onSave(newVal)
+    setSaving(false)
+  }
+
+  if (!isAdmin) {
+    return (
+      <span className="font-mono text-sm" style={{ color: value ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+        {value ? fmtPrice(value) : '—'}
+      </span>
+    )
+  }
+
+  return (
+    <input
+      ref={inputRef}
+      type="number"
+      step="0.01"
+      min="0"
+      defaultValue={value ?? ''}
+      disabled={saving}
+      placeholder="0.00"
+      onBlur={commit}
+      onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur() }}
+      className="w-24 bg-transparent border border-[var(--border)] rounded px-2 py-1 text-sm font-mono text-[var(--text-primary)] focus:border-[var(--gold)] focus:outline-none disabled:opacity-40 transition-colors"
+      title="Ingresa el precio de venta real para bloquear el rendimiento"
     />
   )
 }
@@ -423,7 +469,7 @@ function OppTable({ opps, isAdmin, livePrices, onDelete, onStatusChange, onPrice
   livePrices: Record<string, number>
   onDelete: (id: string) => void
   onStatusChange: (id: string, status: string) => void
-  onPriceUpdate: (id: string, changes: Partial<{ precioEntrada: number; precioObjetivo: number }>) => Promise<void>
+  onPriceUpdate: (id: string, changes: Partial<{ precioEntrada: number; precioObjetivo: number; precioVenta: number | null }>) => Promise<void>
   onOpenModal: (opp: Opportunity) => void
 }) {
   return (
@@ -431,7 +477,7 @@ function OppTable({ opps, isAdmin, livePrices, onDelete, onStatusChange, onPrice
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="border-b border-[var(--border)]" style={{ background: 'var(--bg-secondary)' }}>
-            {['#', 'Ticker', 'Empresa', 'Fecha', 'P.Compra', 'P.Actual', 'P.Obj.', 'Rendim.', 'Estado', 'Acc.'].map(col => (
+            {['#', 'Ticker', 'Empresa', 'Fecha', 'P.Compra', 'P.Actual', 'P.Obj.', 'P.Venta', 'Rendim.', 'Estado', 'Acc.'].map(col => (
               <th
                 key={col}
                 className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest whitespace-nowrap"
@@ -445,9 +491,12 @@ function OppTable({ opps, isAdmin, livePrices, onDelete, onStatusChange, onPrice
         <tbody>
           {opps.map((opp, idx) => {
             const precioActual = livePrices[opp.ticker] ?? null
-            const rendimiento = (precioActual !== null && opp.precioEntrada > 0)
-              ? ((precioActual - opp.precioEntrada) / opp.precioEntrada) * 100
-              : null
+            const locked = opp.precioVenta != null && opp.precioVenta > 0
+            const rendimiento = locked
+              ? ((opp.precioVenta! - opp.precioEntrada) / opp.precioEntrada) * 100
+              : (precioActual !== null && opp.precioEntrada > 0)
+                ? ((precioActual - opp.precioEntrada) / opp.precioEntrada) * 100
+                : null
 
             return (
               <tr
@@ -506,12 +555,29 @@ function OppTable({ opps, isAdmin, livePrices, onDelete, onStatusChange, onPrice
                   />
                 </td>
 
+                {/* P.Venta — precio real de salida; al llenarse bloquea el rendimiento */}
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <PriceCellNullable
+                    value={opp.precioVenta ?? null}
+                    isAdmin={isAdmin}
+                    onSave={v => onPriceUpdate(opp.id, { precioVenta: v })}
+                  />
+                </td>
+
                 {/* Rendim. */}
                 <td className="px-4 py-3 whitespace-nowrap">
                   {rendimiento !== null ? (
-                    <span className={`font-mono text-sm font-semibold ${rendimiento >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {rendimiento >= 0 ? '+' : ''}{rendimiento.toFixed(2)}%
-                    </span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className={`font-mono text-sm font-semibold ${rendimiento >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {rendimiento >= 0 ? '+' : ''}{rendimiento.toFixed(2)}%
+                        {locked && <span className="ml-1 text-[10px]">🔒</span>}
+                      </span>
+                      {locked && (
+                        <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
+                          venta {fmtPrice(opp.precioVenta!)}
+                        </span>
+                      )}
+                    </div>
                   ) : (
                     <span style={{ color: 'var(--text-muted)' }}>—</span>
                   )}
@@ -867,7 +933,7 @@ export default function OportunidadesClient({
     ))
   }
 
-  const handlePriceUpdate = async (id: string, changes: Partial<{ precioEntrada: number; precioObjetivo: number }>) => {
+  const handlePriceUpdate = async (id: string, changes: Partial<{ precioEntrada: number; precioObjetivo: number; precioVenta: number | null }>) => {
     await fetch(`/api/picks/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },

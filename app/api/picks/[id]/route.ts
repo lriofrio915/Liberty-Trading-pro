@@ -118,7 +118,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     const body = await req.json()
-    const { status, active, title, description, precioObjetivo, stopLoss, precioEntrada } = body
+    const { status, active, title, description, precioObjetivo, stopLoss, precioEntrada, precioVenta } = body
 
     const updated = await prisma.opportunity.update({
       where: { id: (await params).id },
@@ -130,6 +130,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         ...(precioEntrada !== undefined && { precioEntrada: parseFloat(precioEntrada) }),
         ...(precioObjetivo !== undefined && { precioObjetivo: parseFloat(precioObjetivo) }),
         ...(stopLoss !== undefined && { stopLoss: parseFloat(stopLoss) }),
+        ...('precioVenta' in body && {
+          precioVenta: precioVenta === null || precioVenta === '' ? null : parseFloat(precioVenta),
+        }),
       },
     })
 
