@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
       stopLossPct  = 8,
       precioEntradaManual,
       precioObjetivoManual,
+      category     = 'OPERATOR',
     } = body
 
     if (!ticker) {
@@ -187,6 +188,7 @@ REGLAS ESTRICTAS:
         description: yf.descripcion.slice(0, 300),
         aiReport,
         minPlan,
+        category,
         active: true,
         status: 'COMPRAR',
       },

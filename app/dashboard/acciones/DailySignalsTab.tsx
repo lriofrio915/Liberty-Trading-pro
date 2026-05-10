@@ -298,6 +298,17 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
   const elapsedStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
   const telegramReady = botToken && chatId
 
+  function fmtEcuador(raw: string): string {
+    if (!raw) return ''
+    try {
+      return new Intl.DateTimeFormat('es-EC', {
+        timeZone: 'America/Guayaquil',
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      }).format(new Date(raw))
+    } catch { return raw }
+  }
+
   return (
     <div className="space-y-6 animate-fadeIn">
 
@@ -462,8 +473,8 @@ flyctl secrets set \\
         </div>
       )}
 
-      {/* Run control */}
-      <div className="card space-y-4">
+      {/* Run control — admin only */}
+      {isAdmin && !previewMode && <div className="card space-y-4">
         <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>EJECUTAR ESCANEO</p>
 
         {!analyzing ? (
@@ -515,7 +526,7 @@ flyctl secrets set \\
             <p className="text-xs text-red-400 font-mono">⚠ {runError}</p>
           </div>
         )}
-      </div>
+      </div>}
 
       {/* Signals grid — filtered to active tickers */}
       {(() => {
@@ -607,7 +618,7 @@ flyctl secrets set \\
                   {/* Timestamp */}
                   {ts && (
                     <p className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>
-                      {ts}
+                      {fmtEcuador(ts)}
                     </p>
                   )}
                 </div>

@@ -257,6 +257,7 @@ model Opportunity {
   status         String   @default("ACTIVA") // ACTIVA | OBJETIVO_ALCANZADO | STOP_ACTIVADO | CANCELADA
   active         Boolean  @default(true)
   minPlan        Plan     @default(CLUB)
+  category       String   @default("OPERATOR") // OPERATOR | PETER_LYNCH | SMALL_CAPS
 }
 
 model KnowledgeDoc {

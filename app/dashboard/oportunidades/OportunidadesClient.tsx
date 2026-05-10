@@ -40,6 +40,7 @@ interface Opportunity {
   status: string
   active: boolean
   minPlan: string
+  category: string
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -673,6 +674,7 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
   const [selected, setSelected]       = useState<Suggestion | null>(null)
   const [precioCompra, setPrecioCompra]   = useState('')
   const [precioObjetivo, setPrecioObjetivo] = useState('')
+  const [category, setCategory] = useState('OPERATOR')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wrapperRef  = useRef<HTMLDivElement>(null)
 
@@ -711,6 +713,7 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
   function reset() {
     setQuery(''); setSelected(null); setSuggestions([])
     setPrecioCompra(''); setPrecioObjetivo('')
+    setCategory('OPERATOR')
     setError(null); setOpen(false)
   }
 
@@ -720,7 +723,7 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
     if (!ticker) return
     setSaving(true); setError(null)
     try {
-      const body: Record<string, unknown> = { ticker }
+      const body: Record<string, unknown> = { ticker, category }
       if (precioCompra && parseFloat(precioCompra) > 0) body.precioEntradaManual = precioCompra
       if (precioObjetivo && parseFloat(precioObjetivo) > 0) body.precioObjetivoManual = precioObjetivo
       const res = await fetch('/api/picks', {
@@ -855,6 +858,23 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
             </div>
           </div>
 
+          {/* Tabla destino */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>
+              Agregar a tabla
+            </label>
+            <select
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+              disabled={saving}
+              className={inputCls}
+            >
+              <option value="OPERATOR">Recomendaciones del Operador</option>
+              <option value="PETER_LYNCH">Recomendaciones Peter Lynch</option>
+              <option value="SMALL_CAPS">Recomendaciones Small Caps</option>
+            </select>
+          </div>
+
           <div className="flex items-center gap-4">
             <button
               type="submit"
@@ -888,6 +908,7 @@ export default function OportunidadesClient({
   const [opportunities, setOpportunities] = useState<Opportunity[]>(initialOpportunities)
   const [previewMode, setPreviewMode] = useState(false)
   const [previewPlan, setPreviewPlan] = useState<'FREE' | 'CLUB' | 'PRO' | 'PORTFOLIO'>('CLUB')
+  const [categoryTab, setCategoryTab] = useState<'OPERATOR' | 'PETER_LYNCH' | 'SMALL_CAPS'>('OPERATOR')
   const [modalOpp, setModalOpp] = useState<Opportunity | null>(null)
   const [livePrices, setLivePrices] = useState<Record<string, number>>({})
 
@@ -966,9 +987,18 @@ export default function OportunidadesClient({
     return base  // usuario real
   })()
 
-  const trTotal   = trackRecordOpps.length
-  const trGanadas = trackRecordOpps.filter(o => o.precioVenta! > o.precioEntrada).length
-  const trRendPcts = trackRecordOpps.map(o =>
+  const categoryActiveOpps = activeOpps.filter(o => (o.category ?? 'OPERATOR') === categoryTab)
+  const categoryTrackOpps  = trackRecordOpps.filter(o => (o.category ?? 'OPERATOR') === categoryTab)
+
+  const CATEGORY_LABELS: Record<string, string> = {
+    OPERATOR:    'Recomendaciones del Operador',
+    PETER_LYNCH: 'Recomendaciones Peter Lynch',
+    SMALL_CAPS:  'Recomendaciones Small Caps',
+  }
+
+  const trTotal   = categoryTrackOpps.length
+  const trGanadas = categoryTrackOpps.filter(o => o.precioVenta! > o.precioEntrada).length
+  const trRendPcts = categoryTrackOpps.map(o =>
     ((o.precioVenta! - o.precioEntrada) / o.precioEntrada) * 100
   )
   const trAvgRend = trTotal > 0
@@ -1024,6 +1054,23 @@ export default function OportunidadesClient({
       {/* Admin form */}
       {effectiveAdmin && <AdminForm onCreated={handleCreated} />}
 
+      {/* Category tabs */}
+      <div className="flex gap-2 mb-5 flex-wrap">
+        {(['OPERATOR', 'PETER_LYNCH', 'SMALL_CAPS'] as const).map(cat => (
+          <button
+            key={cat}
+            onClick={() => setCategoryTab(cat)}
+            className={`px-3 py-1.5 text-[10px] font-mono tracking-widest rounded-lg border transition-colors ${
+              categoryTab === cat
+                ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+                : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--gold-dark)]'
+            }`}
+          >
+            {CATEGORY_LABELS[cat]}
+          </button>
+        ))}
+      </div>
+
       {/* Opportunities table */}
       {activeOpps.length === 0 ? (
         <div className="card text-center py-16">
@@ -1044,9 +1091,15 @@ export default function OportunidadesClient({
             </a>
           )}
         </div>
+      ) : categoryActiveOpps.length === 0 ? (
+        <div className="card text-center py-12">
+          <p className="text-sm font-mono" style={{ color: 'var(--text-muted)' }}>
+            Sin recomendaciones en &ldquo;{CATEGORY_LABELS[categoryTab]}&rdquo;
+          </p>
+        </div>
       ) : (
         <OppTable
-          opps={activeOpps}
+          opps={categoryActiveOpps}
           isAdmin={effectiveAdmin}
           livePrices={livePrices}
           onDelete={handleDelete}
@@ -1057,7 +1110,7 @@ export default function OportunidadesClient({
       )}
 
       {/* Track Record — recomendaciones cerradas con precio de venta documentado */}
-      {trackRecordOpps.length > 0 && (
+      {categoryTrackOpps.length > 0 && (
         <div className="mt-10">
           {/* Header con métricas */}
           <div className="flex items-end justify-between flex-wrap gap-4 mb-4">
@@ -1106,7 +1159,7 @@ export default function OportunidadesClient({
                 </tr>
               </thead>
               <tbody>
-                {trackRecordOpps.map((opp, idx) => {
+                {categoryTrackOpps.map((opp, idx) => {
                   const rend = ((opp.precioVenta! - opp.precioEntrada) / opp.precioEntrada) * 100
                   const ganada = rend >= 0
                   const statusLabel: Record<string, string> = {
