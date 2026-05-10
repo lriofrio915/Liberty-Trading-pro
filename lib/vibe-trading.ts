@@ -9,7 +9,7 @@
  *   docker compose up --build   # API en :8899
  */
 
-const RAW_BASE = process.env.VIBE_TRADING_BASE_URL || 'http://localhost:8899'
+const RAW_BASE = process.env.VIBE_TRADING_BASE_URL || 'https://vibe-trading-liberty.fly.dev'
 export const VIBE_BASE_URL = RAW_BASE.replace(/\/+$/, '')
 export const VIBE_API_KEY = process.env.VIBE_TRADING_API_KEY || ''
 
