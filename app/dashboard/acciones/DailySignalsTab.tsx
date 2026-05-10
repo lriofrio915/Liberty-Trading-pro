@@ -163,11 +163,19 @@ export default function DailySignalsTab() {
         return
       }
 
-      if (d?.task_id) {
-        const taskId: string = d.task_id
+      // Response: { accepted: [{task_id, stock_code, status}], ... }
+      // OR legacy: { task_id: "..." }
+      type AcceptedTask = { task_id: string; stock_code?: string }
+      const taskIds: string[] = d?.accepted
+        ? (d.accepted as AcceptedTask[]).map(t => t.task_id).filter(Boolean)
+        : d?.task_id ? [d.task_id as string] : []
+
+      console.debug('[DailyScanner] accepted tasks:', taskIds)
+
+      if (taskIds.length > 0) {
         let attempts = 0
         pollRef.current = setInterval(async () => {
-          if (++attempts > 60) { // 60 × 15s = 15 min max
+          if (++attempts > 60) {
             clearInterval(pollRef.current!)
             stopTimer()
             setAnalyzing(false)
@@ -175,17 +183,29 @@ export default function DailySignalsTab() {
             return
           }
           try {
-            const tr = await fetch(`/api/daily-signals/tasks?task_id=${taskId}`)
-            const td = await tr.json() as TaskStatus
-            console.debug('[DailyScanner] task poll:', td)
-            if (td.progress != null) setTaskProgress(td.progress)
-            if (td.status === 'completed' || td.status === 'failed') {
+            const results = await Promise.all(
+              taskIds.map(id =>
+                fetch(`/api/daily-signals/tasks?task_id=${id}`)
+                  .then(r => r.json() as Promise<TaskStatus>)
+                  .catch(() => ({ task_id: id, status: 'pending', progress: null } as TaskStatus))
+              )
+            )
+            console.debug('[DailyScanner] poll results:', results)
+
+            const doneCount = results.filter(t => t.status === 'completed' || t.status === 'failed').length
+            const avgProgress = Math.round(
+              results.reduce((s, t) => s + (t.progress ?? 0), 0) / results.length
+            )
+            setTaskProgress(avgProgress > 0 ? avgProgress : null)
+
+            if (doneCount === taskIds.length) {
               clearInterval(pollRef.current!)
               stopTimer()
               setAnalyzing(false)
               setTaskProgress(null)
-              if (td.status === 'failed') {
-                setRunError('El escaneo falló en el servidor. Revisa los logs en https://fly.io/apps/daily-signals-liberty/monitoring')
+              const allFailed = results.every(t => t.status === 'failed')
+              if (allFailed) {
+                setRunError('Todos los análisis fallaron. Revisa los logs del servidor.')
               } else {
                 const list = await fetchResults()
                 if (list.length === 0) setScanEmpty(true)
@@ -196,14 +216,12 @@ export default function DailySignalsTab() {
           }
         }, 15_000)
       } else {
-        // Immediate results (no task_id)
-        const list: Signal[] = Array.isArray(d) ? d
-          : Array.isArray(d?.items) ? d.items
-          : Array.isArray(d?.results) ? d.results
-          : Array.isArray(d?.data) ? d.data : []
-        if (list.length > 0) setSignals(list)
+        // No tasks queued (e.g. all duplicates)
+        const msg = typeof d?.message === 'string' ? d.message : ''
         stopTimer()
         setAnalyzing(false)
+        if (msg) setRunError(`Servidor: ${msg}`)
+        else setScanEmpty(true)
       }
     } catch (err) {
       setRunError(err instanceof Error ? err.message : 'Error desconocido')
@@ -399,7 +417,7 @@ flyctl secrets set \\
               </svg>
               <div>
                 <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-                  {taskProgress != null ? `Procesando… ${taskProgress}%` : 'En cola — iniciando análisis…'}
+                  {taskProgress != null && taskProgress > 0 ? `Procesando… ${taskProgress}%` : 'En cola — analizando acciones…'}
                 </p>
                 <p className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>{elapsedStr} transcurrido</p>
               </div>
