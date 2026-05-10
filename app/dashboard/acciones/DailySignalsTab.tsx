@@ -502,12 +502,19 @@ flyctl secrets set \\
         )}
       </div>
 
-      {/* Signals grid */}
-      {signals.length > 0 && (
+      {/* Signals grid — filtered to active tickers */}
+      {(() => {
+        const activeSymbols = new Set(
+          stockList.split(',').map(t => t.trim().toUpperCase()).filter(Boolean)
+        )
+        const filteredSignals = activeSymbols.size > 0
+          ? signals.filter(s => activeSymbols.has((s.stock_code ?? s.symbol ?? '').toUpperCase()))
+          : signals
+        return filteredSignals.length > 0 ? (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>
-              SEÑALES — {signals.length} ACCIONES
+              SEÑALES — {filteredSignals.length} ACCIONES
             </p>
             <button
               onClick={fetchResults}
@@ -519,7 +526,7 @@ flyctl secrets set \\
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {signals.map((s, i) => {
+            {filteredSignals.map((s, i) => {
               const symbol = s.stock_code ?? s.symbol ?? '—'
               const name   = s.stock_name ?? s.name
               const sig    = s.operation_advice ?? s.recommendation ?? s.signal ?? ''
@@ -585,7 +592,8 @@ flyctl secrets set \\
             })}
           </div>
         </div>
-      )}
+        ) : null
+      })()}
 
       {/* Empty state */}
       {signals.length === 0 && !analyzing && serverStatus === 'online' && !scanEmpty && (
