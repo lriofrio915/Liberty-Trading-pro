@@ -27,7 +27,14 @@ export default async function AccionesPage() {
 
     const all = await prisma.opportunity.findMany({
       orderBy: { publishedAt: 'desc' },
-      ...(isAdmin ? {} : { where: { active: true } }),
+      ...(isAdmin ? {} : {
+        where: {
+          OR: [
+            { active: true },
+            { precioVenta: { not: null } },  // cerradas con venta documentada → track record
+          ],
+        },
+      }),
     })
 
     opportunities = isAdmin
