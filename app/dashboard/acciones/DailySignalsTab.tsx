@@ -489,7 +489,7 @@ flyctl secrets set \\
               className="rounded-lg border p-3 font-mono text-xs"
               style={{ background: '#0d0d0d', borderColor: 'var(--border)', color: '#4ade80' }}
             >
-              <span className="animate-pulse">Analizando {lsGet(LS_STOCKS, DEFAULT_STOCKS).split(',').length} acciones con IA…</span>
+              <span className="animate-pulse">Analizando {stockList.split(',').filter(Boolean).length} acciones con IA…</span>
               {telegramReady && <p className="mt-1" style={{ color: 'var(--text-muted)' }}>Las señales se enviarán a Telegram al completar.</p>}
             </div>
           </div>
