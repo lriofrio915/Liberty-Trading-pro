@@ -52,6 +52,39 @@ const SUGGESTED = [
   'Genera indicador Pine Script: VWAP + bandas de desviación estándar.',
 ]
 
+/** Nombres en español para los presets SWARM */
+const PRESET_ES: Record<string, string> = {
+  commodity_research_team:      'Equipo de Materias Primas',
+  macro_strategy_forum:         'Foro de Estrategia Macro',
+  geopolitical_war_room:        'Sala de Crisis Geopolítica',
+  crypto_research_lab:          'Laboratorio Crypto',
+  crypto_trading_desk:          'Mesa de Trading Crypto',
+  social_alpha_team:            'Equipo de Alpha Social',
+  event_driven_task_force:      'Fuerza de Tarea Event-Driven',
+  technical_analysis_panel:     'Panel de Análisis Técnico',
+  credit_research_team:         'Equipo de Crédito',
+  equity_research_team:         'Equipo de Renta Variable',
+  investment_committee:         'Comité de Inversiones',
+  risk_committee:               'Comité de Riesgo',
+  sector_rotation_team:         'Equipo de Rotación Sectorial',
+  factor_research_committee:    'Comité de Factores Quant',
+  fundamental_research_team:    'Equipo de Análisis Fundamental',
+  global_allocation_committee:  'Comité de Asignación Global',
+  global_equities_desk:         'Mesa de Renta Variable Global',
+  macro_rates_fx_desk:          'Mesa Macro / Tasas / FX',
+  ml_quant_lab:                 'Laboratorio ML Quant',
+  quant_strategy_desk:          'Mesa de Estrategia Cuantitativa',
+  portfolio_review_board:       'Junta de Revisión de Portafolio',
+  pairs_research_lab:           'Laboratorio de Pares',
+  statistical_arbitrage_desk:   'Mesa de Arbitraje Estadístico',
+  sentiment_intelligence_team:  'Equipo de Inteligencia de Sentimiento',
+  derivatives_strategy_desk:    'Mesa de Derivados',
+  etf_allocation_desk:          'Mesa de Asignación ETF',
+  convertible_bond_team:        'Equipo de Bonos Convertibles',
+  earnings_research_desk:       'Mesa de Earnings',
+  fund_selection_panel:         'Panel de Selección de Fondos',
+}
+
 const POLL_INTERVAL_MS = 1500
 const POLL_TIMEOUT_MS = 480_000  // 8 min para tareas complejas
 const WARN_LONG_MS    = 120_000  // aviso visual al llegar a 2 min
@@ -435,9 +468,22 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
         }
 
         if (status === 'completed') {
-          const report: string = data.final_report ?? '(sin reporte)'
-          appendLine('agent', report)
-          saveMessage('agent', report)
+          const rawReport: string = data.final_report ?? '(sin reporte)'
+          appendLine('system', '· Traduciendo reporte al español…')
+          try {
+            const tr = await fetch('/api/trading/vibe/swarm/translate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: rawReport }),
+            })
+            const trData = tr.ok ? await tr.json() : null
+            const report: string = trData?.translated ?? rawReport
+            appendLine('agent', report)
+            saveMessage('agent', report)
+          } catch {
+            appendLine('agent', rawReport)
+            saveMessage('agent', rawReport)
+          }
           setRunState('done')
           return
         }
@@ -523,7 +569,7 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
             Laboratorio <span className="gradient-gold">Quant</span>
           </h1>
           <p className="text-[var(--text-secondary)] text-sm">
-            Tu laboratorio de estrategias algorítmicas · Backtesting · Indicadores para MT5 y Ninja Trader 8
+            Laboratorio de estrategias algorítmicas · Backtesting · Indicadores para MT5 y NinjaTrader 8
           </p>
         </div>
         <div className="flex gap-2">
@@ -710,7 +756,7 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
       {mode === 'swarm' && (
         <div className="card mb-4">
           <div className="label-mono text-xs mb-3 text-[var(--text-muted)]">
-            Configurar Swarm Run
+            Configurar Ejecución SWARM
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
@@ -726,16 +772,16 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
                 }}
                 className="mt-1 w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--gold)] font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)]"
               >
-                <option value="">— Selecciona —</option>
+                <option value="">— Selecciona un equipo —</option>
                 {presets.map((p, i) => {
                   const id = (p.id ?? p.preset ?? p.name ?? `preset_${i}`) as string
-                  const label = (p.name ?? p.id ?? p.preset ?? id) as string
+                  const label = PRESET_ES[id] ?? (p.title as string | undefined) ?? id
                   return <option key={id} value={id}>{label}</option>
                 })}
               </select>
               {presets.length === 0 && (
                 <p className="mt-2 text-[10px] text-[var(--text-muted)]">
-                  El backend no tiene swarm presets configurados. Usa el modo CHAT.
+                  Sin presets disponibles. Usa el modo CHAT.
                 </p>
               )}
               {/* Preset description */}
@@ -902,8 +948,8 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
       )}
 
       <p className="mt-6 text-[10px] font-mono text-[var(--text-muted)]">
-        Backend: <span className="text-[var(--text-secondary)]">Vibe-Trading (HKUDS) · FastAPI · DeepSeek</span> ·
-        Conectado vía proxy <span className="text-[var(--text-secondary)]">/api/trading/vibe/*</span>
+        Motor: <span className="text-[var(--text-secondary)]">Vibe-Trading · FastAPI · DeepSeek</span> ·
+        Proxy <span className="text-[var(--text-secondary)]">/api/trading/vibe/*</span>
       </p>
     </div>
   )
