@@ -34,8 +34,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No hay señales para guardar' }, { status: 400 })
   }
 
+  // Guard: skip symbols that already have a PENDIENTE signal (no duplicate open positions)
+  const simbolosList = signals.map((s: any) => String(s.simbolo ?? ''))
+  const pendientes = await prisma.cfdSignal.findMany({
+    where: { simbolo: { in: simbolosList }, resultado: 'PENDIENTE' },
+    select: { simbolo: true },
+  })
+  const blockedSet = new Set(pendientes.map(p => p.simbolo))
+  const toSave = signals.filter((s: any) => !blockedSet.has(String(s.simbolo ?? '')))
+  const skipped = simbolosList.filter(sym => blockedSet.has(sym))
+
+  if (toSave.length === 0) {
+    return NextResponse.json({
+      saved: 0,
+      skipped: skipped.length,
+      skippedSymbols: skipped,
+      reason: 'pending signal exists for all symbols',
+    }, { status: 200 })
+  }
+
   const created = await prisma.cfdSignal.createMany({
-    data: signals.map((s: any) => ({
+    data: toSave.map((s: any) => ({
       simbolo:       String(s.simbolo ?? ''),
       nombre:        String(s.nombre ?? ''),
       sector:        String(s.sector ?? ''),
@@ -53,11 +72,15 @@ export async function POST(req: NextRequest) {
     skipDuplicates: false,
   })
 
-  return NextResponse.json({ saved: created.count }, { status: 201 })
+  return NextResponse.json({
+    saved: created.count,
+    skipped: skipped.length,
+    skippedSymbols: skipped,
+  }, { status: 201 })
 }
 
-/** DELETE /api/cfds/signals — borrar todos los registros (solo admin) */
-export async function DELETE(_req: NextRequest) {
+/** DELETE /api/cfds/signals — borrar por IDs o todos (solo admin) */
+export async function DELETE(req: NextRequest) {
   const supabase = await createSupabaseServerClient()
   const { data: { session } } = await supabase.auth.getSession()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -65,6 +88,14 @@ export async function DELETE(_req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const { count } = await prisma.cfdSignal.deleteMany({})
+  const body = await req.json().catch(() => ({}))
+  const ids: string[] | undefined = Array.isArray(body.ids) && body.ids.length > 0
+    ? body.ids
+    : undefined
+
+  const { count } = ids
+    ? await prisma.cfdSignal.deleteMany({ where: { id: { in: ids } } })
+    : await prisma.cfdSignal.deleteMany({})
+
   return NextResponse.json({ deleted: count })
 }

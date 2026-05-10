@@ -1,0 +1,23 @@
+name: Cron — Monitor CfdSignal TP/SL (every 15min)
+
+on:
+  schedule:
+    - cron: '*/15 13-21 * * 1-5'  # every 15 min, 13:00-21:00 UTC = 8am-4pm ET Mon-Fri
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check signal TP/SL levels
+        run: |
+          HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --max-time 65 \
+            "${{ secrets.APP_URL }}/api/cron/monitor-signals")
+          echo "HTTP status: $HTTP"
+          cat /tmp/response.txt || true
+          if [ "$HTTP" != "200" ]; then
+            echo "Error: expected 200, got $HTTP"
+            exit 1
+          fi

@@ -5,6 +5,12 @@ import { prisma } from '@/lib/prisma'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
+
+async function checkAdmin(session: { user: { email?: string | null } } | null) {
+  return !!(ADMIN_EMAIL && session?.user?.email === ADMIN_EMAIL)
+}
+
 /** PATCH /api/cfds/signals/[id] — actualizar resultado de forward testing */
 export async function PATCH(
   req: NextRequest,
@@ -33,4 +39,19 @@ export async function PATCH(
   })
 
   return NextResponse.json(updated)
+}
+
+/** DELETE /api/cfds/signals/[id] — borrar señal individual (solo admin) */
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const supabase = await createSupabaseServerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await checkAdmin(session))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  const { id } = await params
+  await prisma.cfdSignal.delete({ where: { id } })
+  return NextResponse.json({ deleted: true })
 }

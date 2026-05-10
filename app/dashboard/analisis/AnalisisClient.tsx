@@ -796,6 +796,17 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
   }[]>([])
   const [loadingTodayScan, setLoadingTodayScan] = useState(false)
 
+  // History table state
+  const [refreshing, setRefreshing] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [adminViewMode, setAdminViewMode] = useState<'admin' | 'user'>('admin')
+  const [confirmModal, setConfirmModal] = useState<{
+    type: 'all' | 'selected' | 'single'
+    ids?: string[]
+    count: number
+    onConfirm: () => void
+  } | null>(null)
+
   const [video, setVideo] = useState<{ youtubeUrl: string; title: string | null }>({ youtubeUrl: '', title: null })
   const [editMode, setEditMode] = useState(false)
   const [editUrl, setEditUrl] = useState('')
@@ -909,13 +920,26 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
   }
 
   const loadSignalHistory = useCallback(async () => {
+    setRefreshing(true)
     try {
       const res = await fetch('/api/cfds/signals')
       if (res.ok) setSignalHistory(await res.json())
-    } catch {}
+      else setTradeSuccess('Error al cargar historial de señales')
+    } catch {
+      setTradeSuccess('Error de red al cargar historial')
+    } finally {
+      setRefreshing(false)
+    }
   }, [])
 
   useEffect(() => { loadSignalHistory() }, [loadSignalHistory])
+
+  // Auto-refresh every 30s when signals tab is active
+  useEffect(() => {
+    if (activeTab !== 'senales') return
+    const id = setInterval(loadSignalHistory, 30_000)
+    return () => clearInterval(id)
+  }, [activeTab, loadSignalHistory])
 
   useEffect(() => {
     if (activeTab === 'senales') {
@@ -1033,15 +1057,44 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
     }
   }
 
-  const handleClearSignals = async () => {
-    if (!confirm('¿Borrar TODOS los registros de señales? Esta acción no se puede deshacer.')) return
-    setClearingSignals(true)
-    try {
-      await fetch('/api/cfds/signals', { method: 'DELETE' })
-      await loadSignalHistory()
-    } catch {} finally {
-      setClearingSignals(false)
-    }
+  const handleClearSignals = () => {
+    setConfirmModal({
+      type: 'all',
+      count: signalHistory.length,
+      onConfirm: async () => {
+        setClearingSignals(true)
+        try {
+          await fetch('/api/cfds/signals', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+          setSelectedIds(new Set())
+          await loadSignalHistory()
+        } catch {} finally {
+          setClearingSignals(false)
+        }
+      },
+    })
+  }
+
+  const handleDeleteSelected = () => {
+    const ids = [...selectedIds]
+    setConfirmModal({
+      type: 'selected',
+      ids,
+      count: ids.length,
+      onConfirm: async () => {
+        setClearingSignals(true)
+        try {
+          await fetch('/api/cfds/signals', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids }),
+          })
+          setSelectedIds(new Set())
+          await loadSignalHistory()
+        } catch {} finally {
+          setClearingSignals(false)
+        }
+      },
+    })
   }
 
   const activosByRanking = result?.activos ? [...result.activos].sort((a, b) => b.confianza - a.confianza) : []
@@ -1231,27 +1284,57 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
 
           {/* Signal history */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                Historial de señales guardadas
-              </p>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
-                {isAdmin && signalHistory.length > 0 && (
+                <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                  Historial de señales guardadas
+                </p>
+                {/* Auto-refresh indicator */}
+                {refreshing && (
+                  <span className="label-mono text-[9px] text-[var(--gold)] animate-pulse">actualizando...</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Admin view toggle */}
+                {isAdmin && (
+                  <button
+                    onClick={() => setAdminViewMode(m => m === 'admin' ? 'user' : 'admin')}
+                    className="label-mono text-[10px] px-2.5 py-1 rounded-lg border transition-all"
+                    style={{ borderColor: adminViewMode === 'user' ? 'rgba(201,168,76,0.5)' : 'var(--border)', color: adminViewMode === 'user' ? 'var(--gold)' : 'var(--text-muted)' }}
+                    title={adminViewMode === 'admin' ? 'Ver como usuario' : 'Volver a vista admin'}
+                  >
+                    {adminViewMode === 'admin' ? '👁 Vista usuario' : '⚙ Vista admin'}
+                  </button>
+                )}
+                {/* Delete selected */}
+                {isAdmin && adminViewMode === 'admin' && selectedIds.size > 0 && (
+                  <button
+                    onClick={handleDeleteSelected}
+                    disabled={clearingSignals}
+                    className="label-mono text-[10px] px-2.5 py-1 rounded-lg border transition-all"
+                    style={{ borderColor: 'rgba(239,68,68,0.4)', color: 'rgb(239,68,68)' }}
+                  >
+                    Borrar seleccionados ({selectedIds.size})
+                  </button>
+                )}
+                {/* Delete all */}
+                {isAdmin && adminViewMode === 'admin' && signalHistory.length > 0 && (
                   <button
                     onClick={handleClearSignals}
                     disabled={clearingSignals}
-                    className="text-[10px] px-2.5 py-1 rounded-lg border transition-all"
-                    style={{ borderColor: 'rgba(239,68,68,0.4)', color: 'rgb(239,68,68)' }}
+                    className="label-mono text-[10px] px-2.5 py-1 rounded-lg border transition-all"
+                    style={{ borderColor: 'rgba(239,68,68,0.3)', color: 'rgba(239,68,68,0.7)' }}
                   >
                     {clearingSignals ? 'Borrando...' : 'Borrar todo'}
                   </button>
                 )}
                 <button
                   onClick={loadSignalHistory}
-                  className="text-[10px] px-2.5 py-1 rounded-lg border transition-all"
+                  disabled={refreshing}
+                  className="label-mono text-[10px] px-2.5 py-1 rounded-lg border transition-all disabled:opacity-50"
                   style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
                 >
-                  Actualizar
+                  {refreshing ? 'Actualizando...' : 'Actualizar'}
                 </button>
               </div>
             </div>
@@ -1290,11 +1373,21 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                   <table className="w-full text-[11px]" style={{ borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-hover)' }}>
+                        {isAdmin && adminViewMode === 'admin' && (
+                          <th className="px-3 py-2 w-8">
+                            <input
+                              type="checkbox"
+                              className="w-3 h-3 accent-[var(--gold)] cursor-pointer"
+                              checked={selectedIds.size === signalHistory.length && signalHistory.length > 0}
+                              onChange={e => setSelectedIds(e.target.checked ? new Set(signalHistory.map(s => s.id)) : new Set())}
+                            />
+                          </th>
+                        )}
                         {['Fecha', 'Activo', 'Dir', 'Entrada', 'SL', 'TP', 'Lotes', 'Conf', 'Resultado', 'PnL USD'].map(h => (
                           <th key={h} className="text-left px-3 py-2 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
                         ))}
-                        {isAdmin && <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Cierre</th>}
-                        {isAdmin && <th className="px-3 py-2" />}
+                        {isAdmin && adminViewMode === 'admin' && <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Cierre</th>}
+                        {isAdmin && adminViewMode === 'admin' && <th className="px-3 py-2" />}
                       </tr>
                     </thead>
                     <tbody>
@@ -1309,14 +1402,29 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                         const edit = rowEdits[sig.id]
                         const isDirty = !!edit
                         const currentResult = edit?.resultado ?? sig.resultado
+                        const showAdminCols = isAdmin && adminViewMode === 'admin'
                         return (
                           <tr
                             key={sig.id}
                             style={{
                               borderBottom: idx < signalHistory.length - 1 ? '1px solid var(--border)' : undefined,
-                              background: isDirty ? 'rgba(234,179,8,0.04)' : undefined,
+                              background: selectedIds.has(sig.id) ? 'rgba(201,168,76,0.04)' : isDirty ? 'rgba(234,179,8,0.04)' : undefined,
                             }}
                           >
+                            {showAdminCols && (
+                              <td className="px-3 py-2 w-8">
+                                <input
+                                  type="checkbox"
+                                  className="w-3 h-3 accent-[var(--gold)] cursor-pointer"
+                                  checked={selectedIds.has(sig.id)}
+                                  onChange={e => setSelectedIds(prev => {
+                                    const n = new Set(prev)
+                                    e.target.checked ? n.add(sig.id) : n.delete(sig.id)
+                                    return n
+                                  })}
+                                />
+                              </td>
+                            )}
                             <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
                               {new Date(sig.createdAt).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
                             </td>
@@ -1357,7 +1465,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                               )}
                             </td>
                             <td className="px-3 py-2 font-mono whitespace-nowrap" style={{ color: sig.pnlUsd != null ? (sig.pnlUsd >= 0 ? '#4ade80' : '#f87171') : 'var(--text-muted)' }}>
-                              {isAdmin ? (
+                              {showAdminCols ? (
                                 <input
                                   type="number"
                                   step="0.01"
@@ -1374,7 +1482,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                                 sig.pnlUsd != null ? `${sig.pnlUsd >= 0 ? '+' : ''}$${sig.pnlUsd.toFixed(2)}` : '—'
                               )}
                             </td>
-                            {isAdmin && (
+                            {showAdminCols && (
                               <td className="px-3 py-2 font-mono whitespace-nowrap">
                                 <input
                                   type="number"
@@ -1390,7 +1498,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                                 />
                               </td>
                             )}
-                            {isAdmin && (
+                            {showAdminCols && (
                               <td className="px-3 py-2 whitespace-nowrap">
                                 {isDirty ? (
                                   <button
@@ -1412,6 +1520,39 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Confirm Delete Modal ── */}
+      {confirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
+          <div className="w-full max-w-sm rounded-2xl border p-6 space-y-5" style={{ background: '#0d0d0d', borderColor: 'rgba(239,68,68,0.35)' }}>
+            <div className="flex items-center gap-3">
+              <span className="text-red-400 text-lg">⚠</span>
+              <span className="text-sm font-bold text-red-400">Confirmar eliminación</span>
+            </div>
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+              {confirmModal.type === 'all'
+                ? `¿Borrar TODAS las señales (${confirmModal.count} registros)? Esta acción no se puede deshacer.`
+                : `¿Borrar ${confirmModal.count} señal${confirmModal.count !== 1 ? 'es' : ''} seleccionada${confirmModal.count !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="label-mono text-xs px-4 py-2 rounded-lg border transition-colors hover:bg-white/5"
+                style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => { confirmModal.onConfirm(); setConfirmModal(null) }}
+                className="label-mono text-xs px-4 py-2 rounded-lg border font-bold transition-colors"
+                style={{ background: 'rgba(239,68,68,0.12)', borderColor: 'rgba(239,68,68,0.4)', color: 'rgb(239,68,68)' }}
+              >
+                Eliminar
+              </button>
+            </div>
           </div>
         </div>
       )}
