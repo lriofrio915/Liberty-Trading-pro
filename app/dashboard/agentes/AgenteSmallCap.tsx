@@ -6,15 +6,15 @@ type Phase = 'idle' | 'running' | 'done' | 'error'
 
 type TickerStage = {
   ticker: string
+  score?: number
+  marketCapM?: number
   lastPrice?: number
   forecastPrice?: number
   forecastDirection?: string
   tauricRecommendation?: string
   step1: 'pass'
   step2: 'pending' | 'pass' | 'fail'
-  // step3 = Daily Scanner momentum
   momentum: 'pending' | 'pass' | 'fail' | 'running'
-  // step4 = Tauric confirmation
   step3: 'pending' | 'pass' | 'fail' | 'running'
   step5: 'pending' | 'done' | 'fail'
   error?: string
@@ -52,6 +52,9 @@ function TickerBadge({ t }: { t: TickerStage }) {
   return (
     <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
       <span className="font-mono font-bold text-xs" style={{ color: 'var(--gold)' }}>{t.ticker}</span>
+      {t.score != null && (
+        <span className="text-[9px] font-mono opacity-60" style={{ color: 'var(--text-muted)' }}>{t.score}/6</span>
+      )}
       {t.step2 !== 'pending' && (
         <span className={`text-[9px] font-mono px-1 py-0.5 rounded border ${step2Color}`}>
           {t.step2 === 'pass' ? `↑${t.forecastDirection}` : '✗'}
@@ -74,9 +77,9 @@ function TickerBadge({ t }: { t: TickerStage }) {
   )
 }
 
-export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
+export default function AgenteSmallCap({ isAdmin }: { isAdmin: boolean }) {
   const [phase, setPhase]           = useState<Phase>('idle')
-  const [step1Phase, setStep1Phase] = useState<Phase>('idle') // Lynch
+  const [step1Phase, setStep1Phase] = useState<Phase>('idle') // Lynch Small-Cap
   const [step2Phase, setStep2Phase] = useState<Phase>('idle') // Proyección
   const [step3Phase, setStep3Phase] = useState<Phase>('idle') // Daily Scanner
   const [step4Phase, setStep4Phase] = useState<Phase>('idle') // Tauric
@@ -105,28 +108,36 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
     addLog('⛔ Agente detenido por el usuario')
   }
 
-  async function runAgentePeter() {
+  async function runAgenteSmallCap() {
     abortRef.current = new AbortController()
     const signal = abortRef.current.signal
     setPhase('running'); setLog([]); setTickers([]); setSummary(null)
 
     try {
-      // ── PASO 1: Lynch 6/6 ─────────────────────────────────────
+      // ── PASO 1: Lynch Small-Cap (score ≥ 5, marketCap < $2B) ─
       setStep1Phase('running')
-      addLog('🔍 Cargando screener INVESTIGACIÓN...')
+      addLog('🔍 Cargando screener INVESTIGACIÓN (filtro Small-Cap ≥5/6)...')
       const lynchRes = await fetch('/api/screener/lynch', { signal })
       if (!lynchRes.ok) throw new Error(`Screener HTTP ${lynchRes.status}`)
       const lynchData = await lynchRes.json()
-      const sixSixRaw: Array<{ ticker: string; score: number }> = (lynchData.results ?? []).filter((r: { score: number }) => r.score === 6)
-      const sixSix = sixSixRaw.map(r => r.ticker)
 
-      if (!sixSix.length) {
-        addLog('⚠ Sin acciones con score 6/6. Actualiza el screener primero.')
+      type LynchEntry = { ticker: string; score: number; marketCap: number }
+      const smallCapRaw: LynchEntry[] = (lynchData.results ?? []).filter(
+        (r: LynchEntry) => r.score >= 5 && r.marketCap < 2_000_000_000
+      )
+      const smallCapTickers = smallCapRaw.map(r => r.ticker)
+
+      if (!smallCapTickers.length) {
+        addLog('⚠ Sin Small-Cap con score ≥5/6. Actualiza el screener primero.')
         setStep1Phase('done'); setPhase('done'); return
       }
-      addLog(`✓ ${sixSix.length} acciones con score 6/6: ${sixSix.join(', ')}`)
-      const initial: TickerStage[] = sixSix.map(t => ({
-        ticker: t, step1: 'pass', step2: 'pending', momentum: 'pending', step3: 'pending', step5: 'pending',
+
+      addLog(`✓ ${smallCapTickers.length} Small-Cap (score ≥5/6, <$2B): ${smallCapTickers.join(', ')}`)
+      const initial: TickerStage[] = smallCapRaw.map(r => ({
+        ticker: r.ticker,
+        score: r.score,
+        marketCapM: Math.round(r.marketCap / 1_000_000),
+        step1: 'pass', step2: 'pending', momentum: 'pending', step3: 'pending', step5: 'pending',
       }))
       setTickers(initial)
       setStep1Phase('done')
@@ -135,11 +146,11 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
       setStep2Phase('running')
       addLog('📈 Verificando proyección 30 días...')
       const paso2Results: TickerStage[] = [...initial]
-      for (const ticker of sixSix) {
+      for (const entry of smallCapRaw) {
         if (signal.aborted) break
-        setActiveTicker(ticker)
+        setActiveTicker(entry.ticker)
         try {
-          const fRes = await fetch(`/api/forecast?symbol=${ticker}&horizon=30`, { signal })
+          const fRes = await fetch(`/api/forecast?symbol=${entry.ticker}&horizon=30`, { signal })
           if (!fRes.ok) throw new Error(`HTTP ${fRes.status}`)
           const fData = await fRes.json()
           const lastPrice: number = fData.last_price ?? 0
@@ -148,12 +159,12 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
           const direction = forecastPrice > lastPrice * 1.001 ? 'ALCISTA'
             : forecastPrice < lastPrice * 0.999 ? 'BAJISTA' : 'LATERAL'
           const pass = direction === 'ALCISTA'
-          addLog(`${pass ? '✓' : '✗'} ${ticker}: ${direction} ($${lastPrice.toFixed(2)} → $${forecastPrice.toFixed(2)})`)
-          updateTicker(paso2Results, ticker, { lastPrice, forecastPrice, forecastDirection: direction, step2: pass ? 'pass' : 'fail' })
+          addLog(`${pass ? '✓' : '✗'} ${entry.ticker}: ${direction} ($${lastPrice.toFixed(2)} → $${forecastPrice.toFixed(2)})`)
+          updateTicker(paso2Results, entry.ticker, { lastPrice, forecastPrice, forecastDirection: direction, step2: pass ? 'pass' : 'fail' })
         } catch (e) {
           if (signal.aborted) break
-          addLog(`⚠ ${ticker}: error forecast — ${(e as Error).message}`)
-          updateTicker(paso2Results, ticker, { step2: 'fail' })
+          addLog(`⚠ ${entry.ticker}: error forecast — ${(e as Error).message}`)
+          updateTicker(paso2Results, entry.ticker, { step2: 'fail' })
         }
         setTickers([...paso2Results])
         await sleep(600)
@@ -169,7 +180,7 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
       if (!paso2Pass.length) {
         addLog('⚠ Ningún ticker pasó proyección alcista.')
         setStep3Phase('done'); setStep4Phase('done'); setStep5Phase('done')
-        setPhase('done'); setSummary({ created: 0, total: sixSix.length }); setActiveTicker(null); return
+        setPhase('done'); setSummary({ created: 0, total: smallCapTickers.length }); setActiveTicker(null); return
       }
 
       addLog(`📡 Verificando momentum Daily Scanner para ${paso2Pass.length} ticker(s)...`)
@@ -245,10 +256,10 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
       if (!paso3Pass.length) {
         addLog('⚠ Ningún ticker pasó momentum Daily Scanner.')
         setStep4Phase('done'); setStep5Phase('done')
-        setPhase('done'); setSummary({ created: 0, total: sixSix.length }); setActiveTicker(null); return
+        setPhase('done'); setSummary({ created: 0, total: smallCapTickers.length }); setActiveTicker(null); return
       }
 
-      addLog(`🤖 Confirmando ${paso3Pass.length} ticker(s) en CONFIRMACIÓN IA (moderado ~3-7 min c/u)...`)
+      addLog(`🤖 Confirmando ${paso3Pass.length} ticker(s) en CONFIRMACIÓN IA (moderado)...`)
       for (const t of paso3Pass) {
         if (signal.aborted) break
         setActiveTicker(t.ticker)
@@ -292,17 +303,17 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
       setStep4Phase('done')
       if (signal.aborted) { setPhase('idle'); return }
 
-      // ── PASO 5: Generar informes ──────────────────────────────
+      // ── PASO 5: Generar informes en SMALL_CAPS ────────────────
       setStep5Phase('running')
       const paso4Pass = paso4Results.filter(t => t.step3 === 'pass')
 
       if (!paso4Pass.length) {
         addLog('⚠ Ningún ticker obtuvo confirmación Tauric.')
         setStep5Phase('done'); setPhase('done')
-        setSummary({ created: 0, total: sixSix.length }); setActiveTicker(null); return
+        setSummary({ created: 0, total: smallCapTickers.length }); setActiveTicker(null); return
       }
 
-      addLog(`📝 Generando ${paso4Pass.length} informe(s) en RECOMENDACIONES PETER LYNCH...`)
+      addLog(`📝 Generando ${paso4Pass.length} informe(s) en RECOMENDACIONES SMALL CAPS...`)
       for (const t of paso4Pass) {
         if (signal.aborted) break
         setActiveTicker(t.ticker)
@@ -314,7 +325,7 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
               ticker: t.ticker,
               precioEntradaManual: t.lastPrice ? String(t.lastPrice.toFixed(2)) : undefined,
               precioObjetivoManual: t.forecastPrice ? String(t.forecastPrice.toFixed(2)) : undefined,
-              category: 'PETER_LYNCH',
+              category: 'SMALL_CAPS',
             }),
             signal,
           })
@@ -322,7 +333,7 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
             const err = await iRes.json().catch(() => ({}))
             throw new Error(err.error ?? `HTTP ${iRes.status}`)
           }
-          addLog(`✓ ${t.ticker}: informe creado (entrada $${t.lastPrice?.toFixed(2)}, objetivo $${t.forecastPrice?.toFixed(2)})`)
+          addLog(`✓ ${t.ticker}: informe creado en SMALL CAPS (entrada $${t.lastPrice?.toFixed(2)}, objetivo $${t.forecastPrice?.toFixed(2)})`)
           updateTicker(paso4Results, t.ticker, { step5: 'done' })
         } catch (e) {
           if (signal.aborted) break
@@ -334,8 +345,8 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
 
       setStep5Phase('done'); setPhase('done'); setActiveTicker(null)
       const created = paso4Results.filter(t => t.step5 === 'done').length
-      setSummary({ created, total: sixSix.length })
-      addLog(`🎉 Agente Peter completado: ${created} recomendación(es) en PETER LYNCH.`)
+      setSummary({ created, total: smallCapTickers.length })
+      addLog(`🎉 Agente SmallCap completado: ${created} recomendación(es) en SMALL CAPS.`)
 
     } catch (e) {
       if ((e as Error).name === 'AbortError') return
@@ -346,21 +357,21 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(201,168,76,0.25)' }}>
-      <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.08) 0%, transparent 70%)' }}>
+      <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 70%)' }}>
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <span className="text-2xl">🤖</span>
-              <h2 className="text-xl font-black" style={{ color: 'var(--text-primary)' }}>Agente Peter</h2>
-              <span className="text-[9px] font-mono px-2 py-0.5 rounded-full border border-[var(--gold)]/40 text-[var(--gold)]">PETER LYNCH</span>
+              <span className="text-2xl">🔬</span>
+              <h2 className="text-xl font-black" style={{ color: 'var(--text-primary)' }}>Agente SmallCap</h2>
+              <span className="text-[9px] font-mono px-2 py-0.5 rounded-full border border-[var(--gold)]/40 text-[var(--gold)]">SMALL CAPS</span>
             </div>
             <p className="text-xs max-w-lg" style={{ color: 'var(--text-muted)' }}>
-              Lynch 6/6 → Proyección alcista 30d → Momentum Daily Scanner → Confirmación IA Tauric → PETER LYNCH.
+              Small-Cap (&lt;$2B) score Lynch ≥5/6 → Proyección alcista 30d → Momentum Daily Scanner → Confirmación IA Tauric → SMALL CAPS.
             </p>
           </div>
           <div className="flex gap-2">
             {phase === 'idle' || phase === 'done' || phase === 'error' ? (
-              <button onClick={phase === 'idle' ? runAgentePeter : resetAgent} disabled={!isAdmin}
+              <button onClick={phase === 'idle' ? runAgenteSmallCap : resetAgent} disabled={!isAdmin}
                 className="px-5 py-2.5 text-sm font-mono tracking-widest rounded-xl bg-[var(--gold)] text-black font-bold disabled:opacity-40 hover:opacity-90 transition-opacity">
                 {phase === 'idle' ? '▶ INICIAR AGENTE' : '↺ REINICIAR'}
               </button>
@@ -377,11 +388,11 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
 
       <div className="px-6 py-5 space-y-3" style={{ borderTop: '1px solid rgba(201,168,76,0.12)' }}>
         {[
-          { num: 1, label: 'INVESTIGACIÓN LYNCH',   desc: 'Score 6/6 — S&P 500, NASDAQ 100, Russell 2000, S&P 600', phaseVal: step1Phase },
-          { num: 2, label: 'PROYECCIÓN 30 DÍAS',    desc: 'Forecast alcista en modelo TimesFM (Google)',             phaseVal: step2Phase },
-          { num: 3, label: 'MOMENTUM DAILY SCANNER',desc: 'Señal de compra en Daily Scanner IA',                     phaseVal: step3Phase },
-          { num: 4, label: 'CONFIRMACIÓN IA',       desc: 'Análisis multi-agente Tauric (moderado, ~3-7 min)',       phaseVal: step4Phase },
-          { num: 5, label: 'GENERANDO INFORMES',    desc: 'Crea informe en RECOMENDACIONES PETER LYNCH',             phaseVal: step5Phase },
+          { num: 1, label: 'INVESTIGACIÓN SMALL-CAP', desc: 'Score ≥5/6 Y marketCap < $2B (Russell 2000, S&P 600)', phaseVal: step1Phase },
+          { num: 2, label: 'PROYECCIÓN 30 DÍAS',      desc: 'Forecast alcista en modelo TimesFM (Google)',          phaseVal: step2Phase },
+          { num: 3, label: 'MOMENTUM DAILY SCANNER',  desc: 'Señal de compra en Daily Scanner IA',                  phaseVal: step3Phase },
+          { num: 4, label: 'CONFIRMACIÓN IA',         desc: 'Análisis multi-agente Tauric (moderado, ~3-7 min)',    phaseVal: step4Phase },
+          { num: 5, label: 'GENERANDO INFORMES',      desc: 'Crea informe en RECOMENDACIONES SMALL CAPS',           phaseVal: step5Phase },
         ].map(step => (
           <div key={step.num} className="rounded-xl border p-4" style={{
             borderColor: step.phaseVal === 'running' ? 'rgba(251,191,36,0.4)' : step.phaseVal === 'done' ? 'rgba(74,222,128,0.25)' : 'var(--border)',
@@ -398,7 +409,9 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
             {step.num === 1 && tickers.length > 0 && (
               <div className="mt-3 pl-8 flex flex-wrap gap-2">
                 {tickers.map(t => (
-                  <span key={t.ticker} className="text-[10px] font-mono px-2 py-0.5 rounded border border-green-500/30 bg-green-500/10 text-green-400">{t.ticker}</span>
+                  <span key={t.ticker} className="text-[10px] font-mono px-2 py-0.5 rounded border border-green-500/30 bg-green-500/10 text-green-400">
+                    {t.ticker} {t.score}/6 {t.marketCapM != null ? `$${t.marketCapM}M` : ''}
+                  </span>
                 ))}
               </div>
             )}
@@ -423,7 +436,7 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
           <p className="text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--gold)' }}>RESULTADO FINAL</p>
           <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{summary.created} recomendación(es) de {summary.total} analizadas</p>
           {summary.created > 0 && (
-            <a href="/dashboard/acciones" className="text-[10px] font-mono underline mt-1 block" style={{ color: 'var(--gold)' }}>Ver en RECOMENDACIONES PETER LYNCH →</a>
+            <a href="/dashboard/acciones" className="text-[10px] font-mono underline mt-1 block" style={{ color: 'var(--gold)' }}>Ver en RECOMENDACIONES SMALL CAPS →</a>
           )}
         </div>
       )}
