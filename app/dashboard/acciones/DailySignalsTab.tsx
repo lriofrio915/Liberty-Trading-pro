@@ -65,6 +65,7 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
   const [chatId, setChatId]       = useState(() => lsGet(LS_CHAT_ID))
   const [stockList, setStockList] = useState(defaultTickers || '')
   const [tickersLoading, setTickersLoading] = useState(true)
+  const [tickerCategories, setTickerCategories] = useState<Record<string, string>>({})
   const [tgStatus, setTgStatus]   = useState<TelegramStatus>('unchecked')
   const [tgError, setTgError]     = useState<string | null>(null)
 
@@ -102,12 +103,18 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data?.opportunities) return
-        type Opp = { active: boolean; precioVenta: number | null; ticker: string }
-        const tickers = (data.opportunities as Opp[])
+        type Opp = { active: boolean; precioVenta: number | null; ticker: string; category: string }
+        const active = (data.opportunities as Opp[])
           .filter(o => o.active && (o.precioVenta == null || o.precioVenta === 0))
-          .map(o => o.ticker)
-          .filter(Boolean)
-        if (tickers.length > 0) setStockList(tickers.join(','))
+        const tickers = active.map(o => o.ticker).filter(Boolean)
+        const catMap: Record<string, string> = {}
+        for (const o of active) {
+          if (o.ticker) catMap[o.ticker.toUpperCase()] = o.category ?? 'OPERATOR'
+        }
+        if (tickers.length > 0) {
+          setStockList(tickers.join(','))
+          setTickerCategories(catMap)
+        }
       })
       .catch(() => {})
       .finally(() => setTickersLoading(false))
@@ -544,87 +551,81 @@ flyctl secrets set \\
           seenSyms.add(sym)
           return true
         })
+        // Agrupar por portafolio/categoría
+        const CATEGORY_LABELS: Record<string, string> = {
+          OPERATOR:    'Recomendaciones del Operador',
+          PETER_LYNCH: 'Recomendaciones Peter Lynch',
+          SMALL_CAPS:  'Recomendaciones Small Caps',
+        }
+        const CATEGORY_ORDER = ['OPERATOR', 'PETER_LYNCH', 'SMALL_CAPS']
+        const grouped: Record<string, Signal[]> = {}
+        for (const s of dedupedSignals) {
+          const sym = (s.stock_code ?? s.symbol ?? '').toUpperCase()
+          const cat = tickerCategories[sym] ?? 'OPERATOR'
+          if (!grouped[cat]) grouped[cat] = []
+          grouped[cat].push(s)
+        }
+        const activeCategories = CATEGORY_ORDER.filter(c => (grouped[c]?.length ?? 0) > 0)
+
+        const renderCard = (s: Signal, i: number) => {
+          const symbol   = s.stock_code ?? s.symbol ?? '—'
+          const name     = s.stock_name ?? s.name
+          const sig      = s.operation_advice ?? s.recommendation ?? s.signal ?? ''
+          const { label, color } = signalBadge(sig)
+          const scoreVal = s.sentiment_score ?? s.score
+          const summary  = s.summary ?? s.analysis ?? s.analysis_detail ?? ''
+          const ts       = s.date ?? s.created_at ?? s.timestamp ?? ''
+          return (
+            <div key={s.id ?? symbol ?? i} className="rounded-xl border p-4 space-y-2"
+              style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-base font-black font-mono" style={{ color: 'var(--text-primary)' }}>{symbol}</p>
+                  {name && <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{name}</p>}
+                </div>
+                <div className="flex flex-col items-end gap-0.5">
+                  <span className={`px-2 py-0.5 rounded-md border text-[10px] font-mono font-bold ${color}`}>{label}</span>
+                  {sig && <span className="text-[9px] font-mono opacity-50" style={{ color: 'var(--text-muted)' }}>{sig}</span>}
+                </div>
+              </div>
+              {scoreVal != null && (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--border)' }}>
+                    <div className="h-1.5 rounded-full transition-all"
+                      style={{ width: `${Math.min(scoreVal, 100)}%`, background: scoreVal >= 70 ? '#4ade80' : scoreVal >= 40 ? '#facc15' : '#f87171' }} />
+                  </div>
+                  <span className="text-[10px] font-mono flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{scoreVal}/100</span>
+                </div>
+              )}
+              {summary && <p className="text-[11px] leading-relaxed line-clamp-3" style={{ color: 'var(--text-secondary)' }}>{summary}</p>}
+              {ts && <p className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>{fmtEcuador(ts)}</p>}
+            </div>
+          )
+        }
+
         return dedupedSignals.length > 0 ? (
-        <div className="space-y-3">
+        <div className="space-y-8">
           <div className="flex items-center justify-between">
             <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>
               SEÑALES — {dedupedSignals.length} ACCIONES
             </p>
-            <button
-              onClick={fetchResults}
-              className="text-[9px] font-mono"
-              style={{ color: 'var(--text-muted)' }}
-            >
+            <button onClick={fetchResults} className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>
               ACTUALIZAR
             </button>
           </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {dedupedSignals.map((s, i) => {
-              const symbol = s.stock_code ?? s.symbol ?? '—'
-              const name   = s.stock_name ?? s.name
-              const sig    = s.operation_advice ?? s.recommendation ?? s.signal ?? ''
-              const { label, color } = signalBadge(sig)
-              const scoreVal = s.sentiment_score ?? s.score
-              const summary = s.summary ?? s.analysis ?? s.analysis_detail ?? ''
-              const ts = s.date ?? s.created_at ?? s.timestamp ?? ''
-              return (
-                <div
-                  key={s.id ?? symbol ?? i}
-                  className="rounded-xl border p-4 space-y-2"
-                  style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}
-                >
-                  {/* Signal badge + ticker */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-base font-black font-mono" style={{ color: 'var(--text-primary)' }}>
-                        {symbol}
-                      </p>
-                      {name && <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{name}</p>}
-                    </div>
-                    <div className="flex flex-col items-end gap-0.5">
-                      <span className={`px-2 py-0.5 rounded-md border text-[10px] font-mono font-bold ${color}`}>
-                        {label}
-                      </span>
-                      {sig && <span className="text-[9px] font-mono opacity-50" style={{ color: 'var(--text-muted)' }}>{sig}</span>}
-                    </div>
-                  </div>
-
-                  {/* Score */}
-                  {scoreVal != null && (
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--border)' }}>
-                        <div
-                          className="h-1.5 rounded-full transition-all"
-                          style={{
-                            width: `${Math.min(scoreVal, 100)}%`,
-                            background: scoreVal >= 70 ? '#4ade80' : scoreVal >= 40 ? '#facc15' : '#f87171',
-                          }}
-                        />
-                      </div>
-                      <span className="text-[10px] font-mono flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
-                        {scoreVal}/100
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Summary */}
-                  {summary && (
-                    <p className="text-[11px] leading-relaxed line-clamp-3" style={{ color: 'var(--text-secondary)' }}>
-                      {summary}
-                    </p>
-                  )}
-
-                  {/* Timestamp */}
-                  {ts && (
-                    <p className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>
-                      {fmtEcuador(ts)}
-                    </p>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+          {activeCategories.map(cat => (
+            <div key={cat} className="space-y-3">
+              <div className="flex items-center gap-3">
+                <p className="text-[10px] font-mono tracking-widest whitespace-nowrap" style={{ color: 'var(--gold)' }}>
+                  {CATEGORY_LABELS[cat]} — {grouped[cat].length}
+                </p>
+                <div className="flex-1 h-px" style={{ background: 'rgba(201,168,76,0.2)' }} />
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {grouped[cat].map((s, i) => renderCard(s, i))}
+              </div>
+            </div>
+          ))}
         </div>
         ) : null
       })()}
