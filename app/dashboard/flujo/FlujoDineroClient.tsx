@@ -1,7 +1,15 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import type { FlujoDineroResponse, FlujoDineroAsset, FlujoConclusion } from '@/app/api/flujo/route'
+
+interface TickerSuggestion {
+  symbol: string
+  name: string
+  type: string
+  exchange: string
+  sector: string
+}
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -354,7 +362,14 @@ export default function FlujoDineroClient({ hasAccess }: { hasAccess: boolean })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<ViewTab>('mapa')
-  const [autoRefresh, setAutoRefresh] = useState(false)
+
+  // Ticker search
+  const [tickerQuery, setTickerQuery] = useState('')
+  const [suggestions, setSuggestions] = useState<TickerSuggestion[]>([])
+  const [searchAsset, setSearchAsset] = useState<FlujoDineroAsset | null>(null)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchError, setSearchError] = useState<string | null>(null)
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -375,11 +390,45 @@ export default function FlujoDineroClient({ hasAccess }: { hasAccess: boolean })
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  useEffect(() => {
-    if (!autoRefresh) return
-    const id = setInterval(fetchData, 5 * 60 * 1000)
-    return () => clearInterval(id)
-  }, [autoRefresh, fetchData])
+  function handleSearchInput(val: string) {
+    setTickerQuery(val)
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    if (!val.trim()) { setSuggestions([]); return }
+    searchDebounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/flujo/search?q=${encodeURIComponent(val)}`)
+        if (res.ok) setSuggestions(((await res.json()) as { suggestions: TickerSuggestion[] }).suggestions ?? [])
+      } catch { /* silencioso */ }
+    }, 300)
+  }
+
+  async function loadTicker(s: TickerSuggestion) {
+    setSuggestions([])
+    setTickerQuery(`${s.symbol} — ${s.name}`)
+    setSearchLoading(true)
+    setSearchError(null)
+    setSearchAsset(null)
+    try {
+      const res = await fetch(
+        `/api/flujo/ticker?symbol=${encodeURIComponent(s.symbol)}&name=${encodeURIComponent(s.name)}&sector=${encodeURIComponent(s.sector)}`,
+        { signal: AbortSignal.timeout(20000) },
+      )
+      const d = await res.json()
+      if (!res.ok) { setSearchError(d.error ?? `Error ${res.status}`); return }
+      setSearchAsset(d as FlujoDineroAsset)
+    } catch (err) {
+      setSearchError(err instanceof Error ? err.message : 'Error cargando datos')
+    } finally {
+      setSearchLoading(false)
+    }
+  }
+
+  function clearSearch() {
+    setTickerQuery('')
+    setSuggestions([])
+    setSearchAsset(null)
+    setSearchError(null)
+  }
 
   if (!hasAccess) {
     return (
@@ -413,42 +462,128 @@ export default function FlujoDineroClient({ hasAccess }: { hasAccess: boolean })
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-black gradient-gold mb-1">Flujo del Dinero</h1>
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             FAROS v7.0 — TAI-ACF · Rastreo de capital con física de fluidos financieros
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            onClick={() => setAutoRefresh(v => !v)}
-            className={`text-[10px] font-mono px-2.5 py-1.5 rounded-lg border transition-all ${
-              autoRefresh
-                ? 'border-green-500/40 bg-green-500/10 text-green-400'
-                : 'text-[var(--text-muted)] hover:bg-white/5'
-            }`}
-            style={!autoRefresh ? { borderColor: 'var(--border)' } : {}}
-          >
-            {autoRefresh ? 'AUTO ON' : 'AUTO OFF'}
-          </button>
-          <button
-            onClick={fetchData}
-            disabled={loading}
-            className="text-xs font-bold px-4 py-2 rounded-xl border transition-all btn-gold disabled:opacity-50"
-          >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Cargando...
-              </span>
-            ) : 'Actualizar'}
-          </button>
-        </div>
+        <button
+          onClick={fetchData}
+          disabled={loading}
+          className="text-xs font-bold px-4 py-2 rounded-xl border transition-all btn-gold disabled:opacity-50 flex-shrink-0"
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Cargando...
+            </span>
+          ) : 'Actualizar'}
+        </button>
       </div>
+
+      {/* Buscador de tickers */}
+      <div className="relative">
+        <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 focus-within:border-[var(--gold-dark)]" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-muted)' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            value={tickerQuery}
+            onChange={e => handleSearchInput(e.target.value)}
+            onKeyDown={e => e.key === 'Escape' && setSuggestions([])}
+            placeholder="Buscar ticker o empresa (ej: AMZN, Amazon, BTC...)"
+            className="flex-1 bg-transparent text-sm focus:outline-none font-mono"
+            style={{ color: 'var(--text-secondary)' }}
+          />
+          {tickerQuery && (
+            <button onClick={clearSearch} className="text-[var(--text-muted)] hover:text-white text-lg leading-none flex-shrink-0">×</button>
+          )}
+        </div>
+        {/* Autocomplete dropdown */}
+        {suggestions.length > 0 && (
+          <div
+            className="absolute top-full left-0 right-0 mt-1 rounded-xl border z-30 overflow-hidden shadow-xl"
+            style={{ background: '#1c1917', borderColor: 'var(--border)' }}
+          >
+            {suggestions.map(s => (
+              <button
+                key={s.symbol}
+                onClick={() => loadTicker(s)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-left transition-colors border-b last:border-b-0"
+                style={{ borderColor: 'rgba(255,255,255,0.05)' }}
+              >
+                <span className="font-mono font-bold text-sm w-16 flex-shrink-0" style={{ color: 'var(--gold)' }}>{s.symbol}</span>
+                <span className="text-sm flex-1 truncate" style={{ color: 'var(--text-secondary)' }}>{s.name}</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-lg border font-mono flex-shrink-0" style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
+                  {s.sector}
+                </span>
+                {s.exchange && (
+                  <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{s.exchange}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Search result */}
+      {(searchLoading || searchError || searchAsset) && (
+        <div className="rounded-xl border p-4" style={{ background: 'var(--bg-card)', borderColor: 'rgba(201,168,76,0.25)' }}>
+          {searchLoading && (
+            <div className="flex items-center gap-3 py-4">
+              <svg className="animate-spin h-5 w-5" style={{ color: 'var(--gold)' }} viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Calculando métricas FAROS…</span>
+            </div>
+          )}
+          {searchError && (
+            <p className="text-sm text-red-400">⚠️ {searchError}</p>
+          )}
+          {searchAsset && !searchLoading && (
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>
+                  ANÁLISIS FAROS — {searchAsset.nombre}
+                </p>
+                <button onClick={clearSearch} className="text-[10px] font-mono text-[var(--text-muted)] hover:text-white">CERRAR ×</button>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="max-w-xs">
+                  <HeatCell asset={searchAsset} />
+                </div>
+                <div className="space-y-2 text-xs">
+                  {[
+                    { label: 'Z-Score Termodinámico', value: `${searchAsset.zScore.toFixed(2)} — ${searchAsset.thermodynamicState}` },
+                    { label: 'Reynolds%', value: `${searchAsset.reynoldsPercentile.toFixed(0)}%`, color: searchAsset.reynoldsPercentile > 75 ? '#f87171' : searchAsset.reynoldsPercentile > 50 ? '#facc15' : '#4ade80' },
+                    { label: 'αflow (Autenticidad)', value: searchAsset.alphaFlow.toFixed(2), color: searchAsset.alphaFlow > 0.6 ? '#4ade80' : searchAsset.alphaFlow < 0.35 ? '#f87171' : '#facc15' },
+                    { label: 'Ψ Score (Gobernanza)', value: `${(searchAsset.psiScore * 100).toFixed(0)}%`, color: searchAsset.psiScore > 0.6 ? '#4ade80' : searchAsset.psiScore > 0.4 ? '#facc15' : '#f87171' },
+                    { label: 'MFI (14d)', value: searchAsset.mfi.toFixed(0) },
+                    { label: 'Flujo Neto 5d', value: `${searchAsset.netMoneyFlowPct >= 0 ? '+' : ''}${searchAsset.netMoneyFlowPct.toFixed(1)}%` },
+                    { label: 'Régimen', value: REGIME_LABELS[searchAsset.marketRegime] ?? searchAsset.marketRegime },
+                  ].map(row => (
+                    <div key={row.label} className="flex justify-between items-center py-1.5 border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>{row.label}</span>
+                      <span className="font-mono font-bold" style={{ color: (row.color as string | undefined) ?? 'var(--text-secondary)' }}>{row.value}</span>
+                    </div>
+                  ))}
+                  <div className={`mt-3 rounded-lg px-3 py-2 text-[10px] leading-relaxed ${CONCLUSION_CONFIG[searchAsset.conclusion].bg} ${CONCLUSION_CONFIG[searchAsset.conclusion].color} border ${CONCLUSION_CONFIG[searchAsset.conclusion].border}`}>
+                    <span className="font-bold">{CONCLUSION_CONFIG[searchAsset.conclusion].label}: </span>
+                    {CONCLUSION_CONFIG[searchAsset.conclusion].accion}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Hero stats */}
       {data && (
@@ -650,7 +785,6 @@ export default function FlujoDineroClient({ hasAccess }: { hasAccess: boolean })
             Datos calculados:{' '}
             {new Date(data.timestamp).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' })}
             {' '}· Fuente: Yahoo Finance (OHLCV 30d) · FAROS v7.0 TAI-ACF
-            {autoRefresh && ' · Auto-refresh cada 5 min'}
           </p>
         </>
       )}

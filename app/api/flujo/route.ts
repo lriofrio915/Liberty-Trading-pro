@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { fetchAllPrices, type PriceItem, type OHLCVData } from '@/lib/analisis-engine'
+import { fetchAllPrices, type OHLCVData } from '@/lib/analisis-engine'
 import { computeFarosMetrics, type FarosMetrics } from '@/lib/faros-metrics'
 
 export const runtime = 'nodejs'
@@ -26,7 +26,7 @@ const ASSET_META: Record<string, { nombre: string; sector: string; priceSymbol: 
 
 // ── Money flow calculation (5-day net buy/sell volume) ────────────────────────
 
-function calcNetMoneyFlow(ohlcv: OHLCVData, days = 5): number {
+export function calcNetMoneyFlow(ohlcv: OHLCVData, days = 5): number {
   const n = Math.min(days, ohlcv.closes.length)
   const start = ohlcv.closes.length - n
   let buyVol = 0
@@ -43,7 +43,7 @@ function calcNetMoneyFlow(ohlcv: OHLCVData, days = 5): number {
 }
 
 // Money Flow Index (MFI) style — more precise than raw buy/sell volume
-function calcMFI(ohlcv: OHLCVData, days = 14): number {
+export function calcMFI(ohlcv: OHLCVData, days = 14): number {
   const n = Math.min(days, ohlcv.closes.length - 1)
   const start = ohlcv.closes.length - n
   let posFlow = 0
@@ -72,7 +72,7 @@ export type FlujoConclusion =
   | 'DISTRIBUCION_FUERTE'
   | 'KILL_SWITCH'
 
-function getConclusion(m: FarosMetrics, mfi: number): FlujoConclusion {
+export function getConclusion(m: FarosMetrics, mfi: number): FlujoConclusion {
   if (m.killSwitch) return 'KILL_SWITCH'
   const { psiScore, alphaFlow, marketRegime, reynoldsPercentile } = m
   if (reynoldsPercentile > 80) return psiScore > 0.5 ? 'ACUMULACION_MODERADA' : 'KILL_SWITCH'
