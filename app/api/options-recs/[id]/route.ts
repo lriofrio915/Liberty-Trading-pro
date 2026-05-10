@@ -11,15 +11,16 @@ async function requireAdmin(req: NextRequest) {
   return user
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await requireAdmin(req)
   if (!user) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
+  const { id } = await params
   const body = await req.json()
   const { status, precioSalida, active } = body
 
   const updated = await prisma.optionRecommendation.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       ...(status !== undefined && { status }),
       ...(precioSalida !== undefined && { precioSalida }),
@@ -29,10 +30,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ recommendation: updated })
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await requireAdmin(req)
   if (!user) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  await prisma.optionRecommendation.delete({ where: { id: params.id } })
+  const { id } = await params
+  await prisma.optionRecommendation.delete({ where: { id } })
   return NextResponse.json({ ok: true })
 }
