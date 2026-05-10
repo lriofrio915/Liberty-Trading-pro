@@ -29,7 +29,6 @@ export const navGroups: NavGroup[] = [
       { href: '/dashboard/acciones',        icon: '💼', label: 'Acciones',            requiresClub: true },
       { href: '/dashboard/opciones',        icon: '⌁', label: 'Opciones',            requiresClub: true },
       { href: '/dashboard/analisis',        icon: '📊', label: 'CFDs',                requiresClub: true },
-      { href: '/dashboard/portafolio-scan', icon: '📈', label: 'Portafolio Scan',     requiresClub: true },
       { href: '/dashboard/vibe',            icon: '🧠', label: 'Laboratorio Quant',   requiresClub: true },
     ],
   },
