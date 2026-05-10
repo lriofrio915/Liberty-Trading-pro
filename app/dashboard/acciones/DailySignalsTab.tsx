@@ -63,7 +63,8 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
 
   const [botToken, setBotToken]   = useState(() => lsGet(LS_BOT_TOKEN))
   const [chatId, setChatId]       = useState(() => lsGet(LS_CHAT_ID))
-  const [stockList, setStockList] = useState(defaultTickers || 'AAPL,NVDA,TSLA,MSFT,AMZN')
+  const [stockList, setStockList] = useState(defaultTickers || '')
+  const [tickersLoading, setTickersLoading] = useState(true)
   const [tgStatus, setTgStatus]   = useState<TelegramStatus>('unchecked')
   const [tgError, setTgError]     = useState<string | null>(null)
 
@@ -109,6 +110,7 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
         if (tickers.length > 0) setStockList(tickers.join(','))
       })
       .catch(() => {})
+      .finally(() => setTickersLoading(false))
   }, [])
 
   async function checkStatus() {
@@ -454,11 +456,11 @@ flyctl secrets set \\
         {!analyzing ? (
           <div className="space-y-3">
             <button
-              disabled={serverStatus !== 'online'}
+              disabled={serverStatus !== 'online' || tickersLoading}
               onClick={runAnalysis}
               className="w-full py-3 text-sm font-mono tracking-widest rounded-xl bg-[var(--gold)] text-black font-bold disabled:opacity-40 hover:opacity-90 transition-opacity"
             >
-              EJECUTAR ESCANEO →
+              {tickersLoading ? 'CARGANDO TICKERS…' : 'EJECUTAR ESCANEO →'}
             </button>
             {serverStatus !== 'online' && (
               <p className="text-[10px] font-mono text-center" style={{ color: 'var(--text-muted)' }}>
