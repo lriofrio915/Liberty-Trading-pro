@@ -11,6 +11,10 @@ type Signal = {
   stock_name?: string
   symbol?: string
   name?: string
+  // daily_stock_analysis native fields
+  operation_advice?: string   // 买入/卖出/持有/增持/减持
+  sentiment_score?: number    // 0-100
+  // generic fallbacks
   signal?: string
   recommendation?: string
   score?: number
@@ -36,13 +40,14 @@ const DEFAULT_STOCKS = 'AAPL,NVDA,TSLA,MSFT,AMZN'
 
 function signalBadge(sig?: string): { label: string; color: string } {
   const up = (sig ?? '').toUpperCase()
-  if (up.includes('BUY') || up.includes('COMPRAR') || up.includes('ALCISTA') || up.includes('BULLISH') || up.includes('STRONG_BUY'))
+  // Chinese signals: 买入=buy, 卖出=sell, 持有=hold, 增持=accumulate, 减持=reduce
+  if (up.includes('买入') || up.includes('BUY') || up.includes('COMPRAR') || up.includes('ALCISTA') || up.includes('BULLISH') || up.includes('STRONG_BUY') || up.includes('OVERWEIGHT'))
     return { label: 'COMPRAR', color: 'bg-green-500/20 border-green-500/40 text-green-400' }
-  if (up.includes('SELL') || up.includes('VENDER') || up.includes('BAJISTA') || up.includes('BEARISH') || up.includes('STRONG_SELL'))
+  if (up.includes('卖出') || up.includes('SELL') || up.includes('VENDER') || up.includes('BAJISTA') || up.includes('BEARISH') || up.includes('STRONG_SELL'))
     return { label: 'VENDER', color: 'bg-red-500/20 border-red-500/40 text-red-400' }
-  if (up.includes('UNDERWEIGHT') || up.includes('REDUCE'))
+  if (up.includes('减持') || up.includes('UNDERWEIGHT') || up.includes('REDUCE'))
     return { label: 'REDUCIR', color: 'bg-orange-500/20 border-orange-500/40 text-orange-400' }
-  if (up.includes('OVERWEIGHT') || up.includes('ACCUMULATE'))
+  if (up.includes('增持') || up.includes('ACCUMULATE'))
     return { label: 'ACUMULAR', color: 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' }
   return { label: 'MANTENER', color: 'bg-yellow-500/15 border-yellow-500/30 text-yellow-400' }
 }
@@ -459,8 +464,9 @@ flyctl secrets set \\
             {signals.map((s, i) => {
               const symbol = s.stock_code ?? s.symbol ?? '—'
               const name   = s.stock_name ?? s.name
-              const sig    = s.recommendation ?? s.signal ?? ''
+              const sig    = s.operation_advice ?? s.recommendation ?? s.signal ?? ''
               const { label, color } = signalBadge(sig)
+              const scoreVal = s.sentiment_score ?? s.score
               const summary = s.summary ?? s.analysis ?? s.analysis_detail ?? ''
               const ts = s.date ?? s.created_at ?? s.timestamp ?? ''
               return (
@@ -477,25 +483,28 @@ flyctl secrets set \\
                       </p>
                       {name && <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{name}</p>}
                     </div>
-                    <span className={`px-2 py-0.5 rounded-md border text-[10px] font-mono font-bold flex-shrink-0 ${color}`}>
-                      {label}
-                    </span>
+                    <div className="flex flex-col items-end gap-0.5">
+                      <span className={`px-2 py-0.5 rounded-md border text-[10px] font-mono font-bold ${color}`}>
+                        {label}
+                      </span>
+                      {sig && <span className="text-[9px] font-mono opacity-50" style={{ color: 'var(--text-muted)' }}>{sig}</span>}
+                    </div>
                   </div>
 
                   {/* Score */}
-                  {s.score != null && (
+                  {scoreVal != null && (
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--border)' }}>
                         <div
                           className="h-1.5 rounded-full transition-all"
                           style={{
-                            width: `${Math.min(s.score, 100)}%`,
-                            background: s.score >= 70 ? '#4ade80' : s.score >= 40 ? '#facc15' : '#f87171',
+                            width: `${Math.min(scoreVal, 100)}%`,
+                            background: scoreVal >= 70 ? '#4ade80' : scoreVal >= 40 ? '#facc15' : '#f87171',
                           }}
                         />
                       </div>
                       <span className="text-[10px] font-mono flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
-                        {s.score}/100
+                        {scoreVal}/100
                       </span>
                     </div>
                   )}
