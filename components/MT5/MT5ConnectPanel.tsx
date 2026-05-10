@@ -4,7 +4,6 @@ import { useState } from 'react'
 
 interface MT5Account {
   id: string
-  metaApiAccountId: string
   accountName: string | null
   broker: string | null
   login: string
@@ -13,24 +12,13 @@ interface MT5Account {
   lastSyncAt: string | null
 }
 
-interface MetaInfo {
-  balance?: number
-  equity?: number
-  margin?: number
-  freeMargin?: number
-  currency?: string
-  server?: string
-  platform?: string
-}
-
 interface MT5ConnectPanelProps {
   account: MT5Account | null
-  metaInfo: MetaInfo | null
   onConnected: () => void
   onDisconnected: () => void
 }
 
-export default function MT5ConnectPanel({ account, metaInfo, onDisconnected }: MT5ConnectPanelProps) {
+export default function MT5ConnectPanel({ account, onDisconnected }: MT5ConnectPanelProps) {
   const [disconnecting, setDisconnecting] = useState(false)
 
   const handleDisconnect = async () => {
@@ -74,22 +62,6 @@ export default function MT5ConnectPanel({ account, metaInfo, onDisconnected }: M
           </div>
         </div>
 
-        {/* Account metrics from MetaAPI */}
-        {metaInfo && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { label: 'Balance', value: metaInfo.balance != null ? `${metaInfo.currency ?? '$'} ${metaInfo.balance?.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '—' },
-              { label: 'Equity', value: metaInfo.equity != null ? `${metaInfo.currency ?? '$'} ${metaInfo.equity?.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '—' },
-              { label: 'Margen libre', value: metaInfo.freeMargin != null ? `${metaInfo.currency ?? '$'} ${metaInfo.freeMargin?.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '—' },
-              { label: 'Plataforma', value: metaInfo.platform ?? 'MT5' },
-            ].map(m => (
-              <div key={m.label} className="card p-3 text-center">
-                <div className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>{m.label}</div>
-                <div className="text-sm font-mono font-bold" style={{ color: 'var(--text-primary)' }}>{m.value}</div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     )
   }

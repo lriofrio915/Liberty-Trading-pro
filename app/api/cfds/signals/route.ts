@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { prisma } from '@/lib/prisma'
 
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
+
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
@@ -52,4 +54,17 @@ export async function POST(req: NextRequest) {
   })
 
   return NextResponse.json({ saved: created.count }, { status: 201 })
+}
+
+/** DELETE /api/cfds/signals — borrar todos los registros (solo admin) */
+export async function DELETE(_req: NextRequest) {
+  const supabase = await createSupabaseServerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!ADMIN_EMAIL || session.user.email !== ADMIN_EMAIL) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  const { count } = await prisma.cfdSignal.deleteMany({})
+  return NextResponse.json({ deleted: count })
 }
