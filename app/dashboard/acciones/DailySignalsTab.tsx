@@ -142,16 +142,29 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
     }
   }
 
-  async function sendTelegramSpanish(list: Signal[]) {
+  async function sendTelegramSpanish(list: Signal[], activeStockList: string) {
     const tok = botTokRef.current
     const cid = chatIdRef.current
     if (!tok || !cid || list.length === 0) return
     setSendingTg(true)
+    // Filter by active tickers + dedup (newest-first → first seen = most recent)
+    const activeSet = new Set(
+      activeStockList.split(',').map(t => t.trim().toUpperCase()).filter(Boolean)
+    )
+    const seen = new Set<string>()
+    const deduped = list.filter(s => {
+      const sym = (s.stock_code ?? s.symbol ?? '').toUpperCase()
+      if (!sym || (activeSet.size > 0 && !activeSet.has(sym))) return false
+      if (seen.has(sym)) return false
+      seen.add(sym)
+      return true
+    })
+    if (deduped.length === 0) { setSendingTg(false); return }
     try {
       await fetch('/api/daily-signals/telegram/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ signals: list, bot_token: tok, chat_id: cid }),
+        body: JSON.stringify({ signals: deduped, bot_token: tok, chat_id: cid }),
       })
     } catch { /* silent — Telegram send is best-effort */ }
     finally { setSendingTg(false) }
@@ -253,7 +266,7 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
                 if (list.length === 0) {
                   setScanEmpty(true)
                 } else {
-                  sendTelegramSpanish(list)
+                  sendTelegramSpanish(list, stockList)
                 }
               }
             }
@@ -512,11 +525,19 @@ flyctl secrets set \\
         const filteredSignals = activeSymbols.size > 0
           ? signals.filter(s => activeSymbols.has((s.stock_code ?? s.symbol ?? '').toUpperCase()))
           : signals
-        return filteredSignals.length > 0 ? (
+        // Dedup: keep only most recent entry per ticker (API returns newest-first)
+        const seenSyms = new Set<string>()
+        const dedupedSignals = filteredSignals.filter(s => {
+          const sym = (s.stock_code ?? s.symbol ?? '').toUpperCase()
+          if (!sym || seenSyms.has(sym)) return false
+          seenSyms.add(sym)
+          return true
+        })
+        return dedupedSignals.length > 0 ? (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>
-              SEÑALES — {filteredSignals.length} ACCIONES
+              SEÑALES — {dedupedSignals.length} ACCIONES
             </p>
             <button
               onClick={fetchResults}
@@ -528,7 +549,7 @@ flyctl secrets set \\
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filteredSignals.map((s, i) => {
+            {dedupedSignals.map((s, i) => {
               const symbol = s.stock_code ?? s.symbol ?? '—'
               const name   = s.stock_name ?? s.name
               const sig    = s.operation_advice ?? s.recommendation ?? s.signal ?? ''
