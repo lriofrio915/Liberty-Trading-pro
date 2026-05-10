@@ -10,22 +10,87 @@ type SSEEvent =
   | { type: 'error'; message: string }
 
 const DEPTH_OPTIONS = [
-  { value: 'shallow',  label: 'Superficial',  time: '1-3 min',  desc: '1 analista por categoría' },
-  { value: 'moderate', label: 'Moderado',      time: '3-7 min',  desc: '3 analistas por categoría' },
-  { value: 'deep',     label: 'Profundo',      time: '10-20 min',desc: 'Todos los analistas (máx. precisión)' },
+  { value: 'shallow',  label: 'Superficial',  time: '1-3 min',  desc: '1 analista por categoría', estSecs: 180  },
+  { value: 'moderate', label: 'Moderado',      time: '3-7 min',  desc: '3 analistas por categoría', estSecs: 420 },
+  { value: 'deep',     label: 'Profundo',      time: '10-20 min',desc: 'Todos los analistas (máx. precisión)', estSecs: 900 },
 ]
 
-const MAX_POLL_ATTEMPTS = 240 // 20 min at 5s intervals
+const AGENTS = [
+  { key: 'fundamental', label: 'Análisis Fundamental', icon: '📊' },
+  { key: 'tecnico',     label: 'Análisis Técnico',     icon: '📈' },
+  { key: 'sentimiento', label: 'Sentimiento',           icon: '🧠' },
+  { key: 'noticias',    label: 'Noticias',              icon: '📰' },
+  { key: 'bullbear',    label: 'Bull/Bear Researcher',  icon: '⚡' },
+  { key: 'research',    label: 'Research Manager',      icon: '🔍' },
+  { key: 'trader',      label: 'Trader',                icon: '💹' },
+  { key: 'portfolio',   label: 'Portfolio Manager',     icon: '🎯' },
+  { key: 'risk',        label: 'Risk Manager',          icon: '🛡️' },
+  { key: 'decision',    label: 'Decisión Final',        icon: '⚖️' },
+]
+
+const MAX_POLL_ATTEMPTS = 240
 
 function decisionBadge(result: string): { label: string; color: string } {
   const up = result.toUpperCase()
-  if (up.includes('BUY') || up.includes('COMPRAR') || up.includes('ALCISTA')) {
+  if (up.includes('BUY') || up.includes('COMPRAR') || up.includes('ALCISTA') || up.includes('BULLISH')) {
     return { label: 'COMPRAR', color: 'bg-green-500/20 border-green-500/40 text-green-400' }
   }
-  if (up.includes('SELL') || up.includes('VENDER') || up.includes('BAJISTA')) {
+  if (up.includes('SELL') || up.includes('VENDER') || up.includes('BAJISTA') || up.includes('BEARISH')) {
     return { label: 'VENDER', color: 'bg-red-500/20 border-red-500/40 text-red-400' }
   }
+  if (up.includes('UNDERWEIGHT')) {
+    return { label: 'REDUCIR', color: 'bg-orange-500/20 border-orange-500/40 text-orange-400' }
+  }
+  if (up.includes('OVERWEIGHT')) {
+    return { label: 'AUMENTAR', color: 'bg-green-500/20 border-green-500/40 text-green-400' }
+  }
   return { label: 'MANTENER', color: 'bg-yellow-500/15 border-yellow-500/30 text-yellow-400' }
+}
+
+function agentStep(elapsed: number, estSecs: number): number {
+  // returns index of last completed agent (-1 = none yet)
+  if (elapsed <= 0) return -1
+  const perAgent = estSecs / AGENTS.length
+  return Math.min(Math.floor(elapsed / perAgent), AGENTS.length - 1)
+}
+
+type AgentState = 'idle' | 'active' | 'done'
+
+function AgentTimeline({ elapsed, estSecs, running, done }: {
+  elapsed: number
+  estSecs: number
+  running: boolean
+  done: boolean
+}) {
+  const current = done ? AGENTS.length : agentStep(elapsed, estSecs)
+
+  return (
+    <div className="space-y-1">
+      {AGENTS.map((a, i) => {
+        let state: AgentState = 'idle'
+        if (done || i < current) state = 'done'
+        else if (running && i === current) state = 'active'
+
+        return (
+          <div
+            key={a.key}
+            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-[11px] font-mono transition-all duration-500
+              ${state === 'done'   ? 'border-[var(--gold)]/30 bg-[var(--gold)]/5 text-[var(--gold)]' : ''}
+              ${state === 'active' ? 'border-[var(--gold)]/60 bg-[var(--gold)]/10 text-[var(--gold)]' : ''}
+              ${state === 'idle'   ? 'border-[var(--border)] text-[var(--text-muted)]' : ''}
+            `}
+          >
+            {state === 'done'   && <span className="text-[10px] text-green-400 flex-shrink-0">✓</span>}
+            {state === 'active' && <span className="flex-shrink-0 w-2 h-2 rounded-full bg-[var(--gold)] animate-pulse" />}
+            {state === 'idle'   && <span className="flex-shrink-0 w-2 h-2 rounded-full bg-[var(--border)]" />}
+            <span className={state === 'active' ? 'font-bold' : ''}>{a.label}</span>
+            {state === 'active' && <span className="ml-auto text-[9px] opacity-60 animate-pulse">procesando…</span>}
+            {state === 'done' && i === AGENTS.length - 1 && <span className="ml-auto text-[9px] text-green-400">lista</span>}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 export default function TauricResearchTab() {
@@ -38,11 +103,11 @@ export default function TauricResearchTab() {
   const [elapsed, setElapsed] = useState(0)
   const [error, setError]     = useState<string | null>(null)
 
-  const evtRef     = useRef<EventSource | null>(null)
-  const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null)
-  const pollRef    = useRef<ReturnType<typeof setInterval> | null>(null)
-  const statusRef  = useRef<RunStatus>('idle')
-  const runIdRef   = useRef<string | null>(null)
+  const evtRef    = useRef<EventSource | null>(null)
+  const timerRef  = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollRef   = useRef<ReturnType<typeof setInterval> | null>(null)
+  const statusRef = useRef<RunStatus>('idle')
+  const runIdRef  = useRef<string | null>(null)
   const logsEndRef = useRef<HTMLDivElement | null>(null)
 
   function updateStatus(s: RunStatus) {
@@ -79,12 +144,7 @@ export default function TauricResearchTab() {
       try {
         const r = await fetch(`/api/tauric/runs/${encodeURIComponent(runId)}`)
         if (!r.ok) return
-        const d = await r.json() as {
-          status?: string
-          logs?: string[]
-          result?: string
-          output?: string
-        }
+        const d = await r.json() as { status?: string; logs?: string[]; result?: string; output?: string }
         if (Array.isArray(d.logs) && d.logs.length > 0) setLogs(d.logs)
         const done = d.status === 'completed' || d.status === 'failed'
         if (done) {
@@ -95,9 +155,7 @@ export default function TauricResearchTab() {
           updateStatus(d.status === 'completed' ? 'completed' : 'failed')
           if (d.status === 'failed') setError(res ?? 'Análisis fallido')
         }
-      } catch {
-        // silent — retry next interval
-      }
+      } catch { /* silent retry */ }
     }, 5000)
   }
 
@@ -151,7 +209,6 @@ export default function TauricResearchTab() {
       es.onerror = () => {
         es.close()
         if (statusRef.current === 'completed' || statusRef.current === 'failed') return
-        // SSE dropped — fall back to polling if we have a run ID
         const rid = runIdRef.current
         if (rid) {
           startPolling(rid)
@@ -184,6 +241,12 @@ export default function TauricResearchTab() {
   const secs = elapsed % 60
   const elapsedStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
 
+  const depthOpt = DEPTH_OPTIONS.find(d => d.value === depth) ?? DEPTH_OPTIONS[0]
+
+  // Separate the final decision label from body (result may be just a word or full text)
+  const resultIsShort = result && result.trim().split(/\s+/).length <= 5
+  const resultBody = resultIsShort ? null : result
+
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
@@ -191,18 +254,10 @@ export default function TauricResearchTab() {
         <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>
           TAURIC RESEARCH — MULTI-AGENT LLM TRADING FRAMEWORK
         </p>
-        <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           Análisis bursátil profundo con 10 agentes especializados trabajando en paralelo.
           Cada agente aporta una perspectiva distinta; el Portfolio Manager sintetiza la decisión final.
         </p>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[10px]">
-          {['Análisis Fundamental', 'Análisis Técnico', 'Sentimiento', 'Noticias', 'Bull/Bear Researcher', 'Research Manager', 'Trader', 'Portfolio Manager', 'Risk Manager', 'Decisión Final'].map((a, i) => (
-            <div key={a} className={`px-2 py-1.5 rounded-lg border font-mono ${i === 9 ? 'border-[var(--gold)]/40 text-[var(--gold)]' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
-              style={{ background: i === 9 ? 'rgba(201,168,76,0.08)' : 'var(--bg-card)' }}>
-              {a}
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* Form */}
@@ -265,6 +320,7 @@ export default function TauricResearchTab() {
       {/* Running / Reconnecting */}
       {busy && (
         <div className="card space-y-4">
+          {/* Header row */}
           <div className="flex items-center gap-3">
             <svg className="animate-spin h-5 w-5 flex-shrink-0" style={{ color: 'var(--gold)' }} viewBox="0 0 24 24" fill="none">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -288,14 +344,33 @@ export default function TauricResearchTab() {
             </div>
           )}
 
-          <div
-            className="rounded-lg border p-3 font-mono text-xs overflow-y-auto space-y-1"
-            style={{ background: '#0d0d0d', borderColor: 'var(--border)', maxHeight: '200px', color: '#4ade80' }}
-          >
-            {logs.length === 0 && <span style={{ color: 'var(--text-muted)' }}>Iniciando…</span>}
-            {logs.map((l, i) => <div key={i}>{l}</div>)}
-            <div ref={logsEndRef} />
+          {/* Two-column: agent timeline + log console */}
+          <div className="grid sm:grid-cols-2 gap-3">
+            {/* Agent stepper */}
+            <div>
+              <p className="text-[9px] font-mono tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>AGENTES</p>
+              <AgentTimeline
+                elapsed={elapsed}
+                estSecs={depthOpt.estSecs}
+                running={status === 'running' || status === 'reconnecting'}
+                done={false}
+              />
+            </div>
+
+            {/* Log console */}
+            <div>
+              <p className="text-[9px] font-mono tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>ACTIVIDAD</p>
+              <div
+                className="rounded-lg border p-3 font-mono text-xs overflow-y-auto space-y-1"
+                style={{ background: '#0d0d0d', borderColor: 'var(--border)', height: '228px', color: '#4ade80' }}
+              >
+                {logs.length === 0 && <span style={{ color: 'var(--text-muted)' }}>Iniciando…</span>}
+                {logs.map((l, i) => <div key={i}>{l}</div>)}
+                <div ref={logsEndRef} />
+              </div>
+            </div>
           </div>
+
           <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
             Los análisis profundos pueden tardar hasta 20 minutos. Mantén esta pestaña abierta.
           </p>
@@ -305,22 +380,50 @@ export default function TauricResearchTab() {
       {/* Result */}
       {status === 'completed' && result && (
         <div className="space-y-4">
+          {/* Decision badge */}
           {(() => {
             const { label, color } = decisionBadge(result)
             return (
               <div className={`rounded-xl border p-5 ${color}`}>
                 <p className="text-[10px] font-mono tracking-widest mb-2 opacity-70">DECISIÓN FINAL — {ticker.trim().toUpperCase()}</p>
                 <p className="text-3xl font-black font-mono">{label}</p>
-                <p className="text-[10px] mt-1 opacity-60">{date} · {depth} · {elapsedStr}</p>
+                <p className="text-[11px] font-mono mt-1 opacity-80">{result.trim()}</p>
+                <p className="text-[10px] mt-2 opacity-50">{date} · {depth} · {elapsedStr}</p>
               </div>
             )
           })()}
+
+          {/* Agent completion summary */}
           <div className="card">
-            <p className="text-[10px] font-mono tracking-widest mb-3" style={{ color: 'var(--gold)' }}>ANÁLISIS COMPLETO</p>
-            <pre className="text-xs leading-relaxed whitespace-pre-wrap break-words" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono, monospace)' }}>
-              {result}
-            </pre>
+            <p className="text-[10px] font-mono tracking-widest mb-3" style={{ color: 'var(--gold)' }}>AGENTES COMPLETADOS</p>
+            <AgentTimeline elapsed={elapsed} estSecs={depthOpt.estSecs} running={false} done={true} />
           </div>
+
+          {/* Full analysis text if backend returned rich text */}
+          {resultBody && (
+            <div className="card">
+              <p className="text-[10px] font-mono tracking-widest mb-3" style={{ color: 'var(--gold)' }}>ANÁLISIS COMPLETO</p>
+              <pre className="text-xs leading-relaxed whitespace-pre-wrap break-words" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono, monospace)' }}>
+                {resultBody}
+              </pre>
+            </div>
+          )}
+
+          {/* Activity log from run */}
+          {logs.length > 0 && (
+            <div className="card">
+              <p className="text-[10px] font-mono tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>REGISTRO DE ACTIVIDAD</p>
+              <div className="space-y-1 font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>
+                {logs.map((l, i) => (
+                  <div key={i} className="flex gap-2">
+                    <span style={{ color: 'var(--text-muted)' }}>{String(i + 1).padStart(2, '0')}</span>
+                    <span>{l}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <button
             onClick={reset}
             className="px-5 py-2.5 text-xs font-mono tracking-widest rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--gold-dark)]"
