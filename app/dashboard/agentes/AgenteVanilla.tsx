@@ -173,7 +173,17 @@ export default function AgenteVanilla({ isAdmin }: { isAdmin: boolean }) {
 
       // ── PASO 3: Confirmación IA (Tauric) — valida dirección ───
       setStep3Phase('running')
-      const paso2Pass = paso2Results.filter(t => t.step2 === 'alcista' || t.step2 === 'bajista')
+      const TAURIC_MAX = 8
+      const paso2PassAll = paso2Results.filter(t => t.step2 === 'alcista' || t.step2 === 'bajista')
+      const paso2Pass = paso2PassAll
+        .sort((a, b) => {
+          const aChg = Math.abs(((a.forecastPrice ?? 0) - (a.lastPrice ?? 1)) / (a.lastPrice ?? 1))
+          const bChg = Math.abs(((b.forecastPrice ?? 0) - (b.lastPrice ?? 1)) / (b.lastPrice ?? 1))
+          return bChg - aChg
+        })
+        .slice(0, TAURIC_MAX)
+      if (paso2PassAll.length > TAURIC_MAX)
+        addLog(`📊 ${paso2PassAll.length} tickers con dirección → analizando top ${TAURIC_MAX} por mayor cambio forecast`)
       const paso3Results = [...paso2Results]
 
       if (!paso2Pass.length) {

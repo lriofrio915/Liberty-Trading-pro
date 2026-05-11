@@ -235,8 +235,11 @@ export default function AgenteSmallCap({ isAdmin }: { isAdmin: boolean }) {
           }
           if (!dsSignal) throw new Error('Sin resultado Daily Scanner')
 
-          const isMomentumBuy = /\b(BUY|COMPRAR|ALCISTA|BULLISH|STRONG_BUY|OVERWEIGHT|买入|增持)\b/i.test(dsSignal)
-          addLog(`${isMomentumBuy ? '✓' : '✗'} ${t.ticker} momentum: ${isMomentumBuy ? 'COMPRAR' : 'NO COMPRAR'}`)
+          // Small caps: Daily Scanner tiene cobertura limitada — devuelve MANTENER para tickers oscuros.
+          // Lógica invertida: pasar si NO hay señal bajista explícita (MANTENER = OK)
+          const isMomentumBearish = /\b(SELL|VENDER|BAJISTA|BEARISH|UNDERWEIGHT|REDUCIR|卖出|减持)\b/i.test(dsSignal)
+          const isMomentumBuy = !isMomentumBearish
+          addLog(`${isMomentumBuy ? '✓' : '✗'} ${t.ticker} momentum: ${isMomentumBuy ? 'PASA (no bajista)' : 'BAJISTA — skip'} [${dsSignal.slice(0, 40)}]`)
           updateTicker(paso3Results, t.ticker, { momentum: isMomentumBuy ? 'pass' : 'fail' })
         } catch (e) {
           if (signal.aborted) break
