@@ -9,8 +9,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
-import MT5ConnectPanel from '@/components/MT5/MT5ConnectPanel'
-import MT5TradeModal from '@/components/MT5/MT5TradeModal'
+import BrokerExecuteDropdown from '@/app/dashboard/brokers/components/BrokerExecuteDropdown'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -88,7 +87,7 @@ interface TradeModalState {
 }
 
 type RiskProfile = 'conservador' | 'moderado' | 'agresivo'
-type ActiveTab = 'analisis' | 'mt5' | 'senales'
+type ActiveTab = 'analisis' | 'senales'
 
 // ── CFD Signal types ────────────────────────────────────────────────────────────
 
@@ -428,12 +427,10 @@ function FarosAnnotation({ fa }: { fa: FarosAssetItem }) {
   )
 }
 
-// ── AssetCard (with optional MT5 trade button + FAROS annotation) ──────────────
+// ── AssetCard (with BrokerExecuteDropdown + FAROS annotation) ──────────────
 
-function AssetCard({ asset, mt5Connected, onTrade, farosActivos }: {
+function AssetCard({ asset, farosActivos }: {
   asset: AssetAnalysis
-  mt5Connected: boolean
-  onTrade?: (symbol: string, direction: 'BUY' | 'SELL') => void
   farosActivos?: FarosAssetItem[]
 }) {
   const s = SESGO_STYLES[asset.sesgo] ?? SESGO_STYLES.NEUTRAL
@@ -490,17 +487,13 @@ function AssetCard({ asset, mt5Connected, onTrade, farosActivos }: {
           </span>
         </div>
 
-        {mt5Connected && tradeDirection && onTrade && (
-          <button
-            onClick={() => onTrade(asset.simbolo, tradeDirection)}
-            className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all hover:scale-105 ${
-              tradeDirection === 'BUY'
-                ? 'bg-green-500/15 text-green-400 border-green-500/30 hover:bg-green-500/25'
-                : 'bg-red-500/15 text-red-400 border-red-500/30 hover:bg-red-500/25'
-            }`}
-          >
-            {tradeDirection === 'BUY' ? '▲ Abrir LONG' : '▼ Abrir SHORT'}
-          </button>
+        {tradeDirection && (
+          <BrokerExecuteDropdown signal={{
+            ticker: asset.simbolo,
+            direction: tradeDirection,
+            source: 'cfd_signal',
+            signalData: { simbolo: asset.simbolo, sesgo: asset.sesgo, confianza: asset.confianza, precio: asset.precio },
+          }} />
         )}
       </div>
 
@@ -744,13 +737,21 @@ function SignalCard({ signal, onCopy }: { signal: CfdSignalCalc; onCopy: (text: 
             <span className="font-bold text-yellow-400">${signal.riesgoUsd}</span>
           </span>
         </div>
-        <button
-          onClick={() => onCopy(formatSignalText(signal))}
-          className="text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all hover:scale-105"
-          style={{ background: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-        >
-          Copiar
-        </button>
+        <div className="flex items-center gap-2">
+          <BrokerExecuteDropdown signal={{
+            ticker: signal.simbolo,
+            direction: signal.sesgo as 'COMPRA' | 'VENTA',
+            source: 'cfd_signal',
+            signalData: { simbolo: signal.simbolo, sesgo: signal.sesgo, precioEntrada: signal.precioEntrada, stopLoss: signal.stopLoss, takeProfit: signal.takeProfit, lotaje: signal.lotaje },
+          }} />
+          <button
+            onClick={() => onCopy(formatSignalText(signal))}
+            className="text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all hover:scale-105"
+            style={{ background: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+          >
+            Copiar
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -766,11 +767,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
   const [agentStep, setAgentStep] = useState(0)
   const [activeTab, setActiveTab] = useState<ActiveTab>('analisis')
 
-  // MT5 state
-  const [mt5Account, setMt5Account] = useState<MT5AccountData | null>(null)
-  const [mt5Positions, setMt5Positions] = useState<MT5Position[]>([])
-  const [mt5PositionsLoading, setMt5PositionsLoading] = useState(false)
-  const [tradeModal, setTradeModal] = useState<TradeModalState | null>(null)
   const [tradeSuccess, setTradeSuccess] = useState<string | null>(null)
 
   // Signals state
@@ -826,42 +822,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { runAnalysis() }, [])
 
-  const fetchMt5Account = useCallback(async () => {
-    try {
-      const res = await fetch('/api/mt5')
-      if (res.ok) {
-        const data = await res.json()
-        setMt5Account(data.connected ? data.account : null)
-      }
-    } catch {
-      // silently fail — MT5 is optional
-    }
-  }, [])
 
-  const fetchPositions = useCallback(async () => {
-    setMt5PositionsLoading(true)
-    try {
-      const res = await fetch('/api/mt5/positions')
-      if (res.ok) {
-        const data = await res.json()
-        setMt5Positions(data.positions ?? [])
-      }
-    } catch {
-      setMt5Positions([])
-    } finally {
-      setMt5PositionsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchMt5Account()
-  }, [fetchMt5Account])
-
-  useEffect(() => {
-    if (activeTab === 'mt5' && mt5Account) {
-      fetchPositions()
-    }
-  }, [activeTab, mt5Account, fetchPositions])
 
   const runAnalysis = async () => {
     setLoading(true)
@@ -906,17 +867,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleTrade = (symbol: string, direction: 'BUY' | 'SELL') => {
-    setTradeModal({ symbol, direction })
-  }
-
-  const handleTradeSuccess = (trade: unknown) => {
-    setTradeModal(null)
-    const t = trade as { symbol?: string; type?: string } | null
-    setTradeSuccess(`Operación ${t?.type === 'BUY' ? 'LONG' : 'SHORT'} en ${t?.symbol ?? ''} ejecutada en MT5`)
-    setTimeout(() => setTradeSuccess(null), 5000)
   }
 
   const loadSignalHistory = useCallback(async () => {
@@ -1155,7 +1105,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
         {[
           { id: 'analisis' as ActiveTab, label: '🔍 Análisis de Mercado' },
           { id: 'senales' as ActiveTab, label: `📋 Señales CFD${todayOps.length > 0 ? ` (${todayOps.length})` : ''}` },
-          { id: 'mt5' as ActiveTab, label: `🤖 Trading MT5${mt5Account ? ' ✓' : ''}` },
         ].map(tab => (
           <button
             key={tab.id}
@@ -1564,77 +1513,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
         </div>
       )}
 
-      {/* ── MT5 Tab ── */}
-      {activeTab === 'mt5' && (
-        <div className="space-y-5">
-
-          {/* EA Auto-Trade section */}
-          <div className="rounded-xl border p-5 space-y-4" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="label-mono text-[10px] text-[var(--gold)] mb-1">MT5 AUTO-TRADE — EA GRATUITO</div>
-                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                  Instala el EA en tu MT5 y ejecuta señales automáticamente a las 09:05am ET. El EA sondea este servidor cada 60 segundos.
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <a
-                href="/api/mt5/download-ea"
-                className="flex items-center gap-2 rounded-lg border px-4 py-3 transition-colors hover:border-[var(--gold-dark)]"
-                style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
-              >
-                <span className="text-[var(--gold)]">↓</span>
-                <span>Descargar LibertyAutoTrade.mq5</span>
-              </a>
-              <div className="rounded-lg border px-4 py-3" style={{ borderColor: 'var(--border)' }}>
-                <div className="label-mono text-[10px] mb-1" style={{ color: 'var(--text-muted)' }}>App URL para el EA</div>
-                <code className="text-[11px]" style={{ color: 'var(--gold)' }}>{typeof window !== 'undefined' ? window.location.origin : ''}</code>
-              </div>
-            </div>
-            <div className="text-[10px] leading-relaxed space-y-1" style={{ color: 'var(--text-muted)' }}>
-              <p><strong className="text-[var(--text-secondary)]">Instalación:</strong> Copia LibertyAutoTrade.mq5 a MQL5/Experts/ en tu MT5 → compila → arrastra al gráfico → ingresa App URL y tu secreto EA → activa el toggle de abajo.</p>
-              <p><strong className="text-[var(--text-secondary)]">Parámetros:</strong> Volume: 0.01 lots · SL: 0.5% · TP: 1.0% · Señales con confianza ≥70%.</p>
-            </div>
-          </div>
-
-          <MT5ConnectPanel
-            account={mt5Account}
-            onConnected={() => { fetchMt5Account(); fetchPositions() }}
-            onDisconnected={() => { setMt5Account(null); setMt5Positions([]) }}
-          />
-
-          {mt5Account && (
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                  Posiciones abiertas
-                </p>
-                <button
-                  onClick={fetchPositions}
-                  className="text-xs px-2 py-1 rounded-lg border transition-colors"
-                  style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-                >
-                  Actualizar
-                </button>
-              </div>
-              <MT5PositionsList positions={mt5Positions} loading={mt5PositionsLoading} />
-            </div>
-          )}
-
-          {!mt5Account && (
-            <div className="rounded-xl border p-4 text-xs" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-              <p className="font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>¿Cómo conectar tu cuenta MT5 mediante EA?</p>
-              <ol className="list-decimal pl-4 space-y-1 leading-relaxed">
-                <li>Descarga <strong className="text-[var(--text-secondary)]">LibertyAutoTrade.mq5</strong> desde el botón de arriba</li>
-                <li>Cópialo a la carpeta <code className="font-mono">MQL5/Experts/</code> en tu MetaTrader 5 y compílalo</li>
-                <li>Arrastra el EA al gráfico — ingresa el <strong className="text-[var(--text-secondary)]">App URL</strong> y tu <strong className="text-[var(--text-secondary)]">secreto EA</strong> en los parámetros del EA</li>
-                <li>Activa el toggle de Auto-Trade — el EA sondea el servidor cada 60 s y ejecuta señales con confianza ≥70% automáticamente</li>
-              </ol>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* ── Analysis Tab ── */}
       {activeTab === 'analisis' && (
@@ -1648,12 +1526,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
               <span style={{ color: 'var(--text-muted)' }}>Máximo potencial — análisis se ejecuta automáticamente al entrar</span>
             </div>
 
-            {mt5Account && (
-              <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
-                <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-                MT5 conectado — {mt5Account.accountName ?? `MT5 #${mt5Account.login}`}. Los activos con sesgo tendrán botón de ejecución.
-              </div>
-            )}
 
             <button
               onClick={runAnalysis}
@@ -1808,8 +1680,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                         <AssetCard
                           key={`${asset.simbolo}-${i}`}
                           asset={asset}
-                          mt5Connected={!!mt5Account}
-                          onTrade={handleTrade}
                           farosActivos={(result as any).faros?.activos_faros}
                         />
                       ))}
@@ -1834,15 +1704,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
         </div>
       )}
 
-      {/* ── Trade Modal ── */}
-      {tradeModal && (
-        <MT5TradeModal
-          symbol={tradeModal.symbol}
-          direction={tradeModal.direction}
-          onClose={() => setTradeModal(null)}
-          onSuccess={handleTradeSuccess}
-        />
-      )}
     </div>
   )
 }

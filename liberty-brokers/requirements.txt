@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+httpx
+ib_insync
+asyncpg
+cryptography
+pydantic
+python-dotenv
+slowapi

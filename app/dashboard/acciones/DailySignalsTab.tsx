@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import BrokerExecuteDropdown from '@/app/dashboard/brokers/components/BrokerExecuteDropdown'
 
 type ServerStatus = 'checking' | 'online' | 'offline'
 type TelegramStatus = 'unchecked' | 'testing' | 'ok' | 'error'
@@ -775,6 +776,16 @@ flyctl secrets set \\
               )}
               {summary && <p className="text-[11px] leading-relaxed line-clamp-3" style={{ color: 'var(--text-secondary)' }}>{summary}</p>}
               {ts && <p className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>{fmtEcuador(ts)}</p>}
+              {(label === 'COMPRAR' || label === 'VENDER') && (
+                <div className="flex justify-end pt-1">
+                  <BrokerExecuteDropdown signal={{
+                    ticker: symbol,
+                    direction: label === 'COMPRAR' ? 'BUY' : 'SELL',
+                    source: 'daily_signal',
+                    signalData: { symbol, name, signal: sig, score: scoreVal },
+                  }} />
+                </div>
+              )}
             </div>
           )
         }

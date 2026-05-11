@@ -55,7 +55,7 @@ model User {
   postComments   PostComment[]
   postShares     PostShare[]
   certificates   Certificate[]
-  mt5Account        MT5Account?
+  brokerConnections BrokerConnection[]
   notifications         Notification[]
   notificationsActed    Notification[] @relation("NotifActor")
   vibeMessages          VibeMessage[]
@@ -387,47 +387,57 @@ model VideoSemana {
   creadoEn    DateTime @default(now())
 }
 
-// ─── MT5 TRADING AUTOMÁTICO ───────────────────────────────────────────────────
+// ─── BROKER CONNECTIONS ───────────────────────────────────────────────────────
 
-model MT5Account {
-  id               String   @id @default(cuid())
-  userId           String   @unique
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  metaApiAccountId String               // ID de cuenta en MetaAPI.cloud
-  accountName      String?              // nombre descriptivo del usuario
-  broker           String?              // nombre del broker
-  login            String               // número de login MT5 (solo display)
-  server           String?              // servidor MT5 del broker
-  isConnected      Boolean  @default(false)
-  lastSyncAt       DateTime?
-  autoTradeEnabled Boolean  @default(false)  // toggle para auto-ejecutar señales vía EA
-  mt5EaSecret      String?  @unique          // secreto que el EA usa para autenticarse
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+model BrokerConnection {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brokerType       String    // "mt5" | "ibkr"
+  // MT5 direct bridge (DevRico003/mt5-rest-api via cloudflared tunnel)
+  mt5TunnelUrl     String?
+  mt5AuthToken     String?   // stored encrypted via Fernet AES-256 in Python service
+  mt5AccountNumber String?
+  // IBKR (ib_insync via TWS or IB Gateway)
+  ibkrHost         String?
+  ibkrPort         Int?
+  ibkrClientId     Int       @default(1)
+  ibkrAccountId    String?
+  // State
+  isActive         Boolean   @default(false)
+  lastConnectedAt  DateTime?
+  lastStatus       String    @default("disconnected")
+  maxOrderValueUsd Float     @default(1000)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  trades       MT5Trade[]
-  signalQueue  SignalQueue[]
+  trades      BrokerTrade[]
+  signalQueue SignalQueue[]
+
+  @@unique([userId, brokerType])
 }
 
-model MT5Trade {
-  id               String      @id @default(cuid())
-  mt5AccountId     String
-  mt5Account       MT5Account  @relation(fields: [mt5AccountId], references: [id], onDelete: Cascade)
-  symbol           String
-  type             String      // BUY | SELL
-  volume           Float
-  entryPrice       Float?
-  sl               Float?
-  tp               Float?
-  comment          String?     // ej: "Liberty AI — COMPRA BTC 87%"
-  metaApiOrderId   String?     // ID de orden en MetaAPI
-  status           String      @default("PENDING") // PENDING | OPEN | CLOSED | FAILED
-  errorMessage     String?
-  openedAt         DateTime?
-  closedAt         DateTime?
-  pnl              Float?
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+model BrokerTrade {
+  id                 String           @id @default(cuid())
+  userId             String
+  brokerConnectionId String
+  brokerConnection   BrokerConnection @relation(fields: [brokerConnectionId], references: [id], onDelete: Cascade)
+  brokerType         String
+  symbol             String
+  side               String           // BUY | SELL
+  volume             Float?
+  quantity           Int?
+  orderType          String           @default("market")
+  price              Float?
+  brokerTicket       String?
+  status             String           @default("pending") // pending|filled|rejected|cancelled
+  filledPrice        Float?
+  errorMessage       String?
+  signalSource       String?          // "cfd_signal" | "scan_opportunity" | "tauric" | "manual"
+  signalData         Json?
+  executedAt         DateTime         @default(now())
+
+  @@index([userId, executedAt])
 }
 
 // ─── NOTIFICACIONES ───────────────────────────────────────────────────────────
@@ -555,15 +565,14 @@ model ScanOpportunity {
   signalQueue SignalQueue[]
 }
 
-// ─── MT5 AUTO-TRADE (EA POLLING) ────────────────────────────────────────────
+// ─── AUTO-TRADE SIGNAL QUEUE ─────────────────────────────────────────────────
 
 // Cola de señales generadas por el market-scan 09:00am.
-// El MQL5 EA instalado en MT5 del usuario sondea GET /api/mt5/pending-signals
-// y ejecuta OrderSend() por cada señal PENDING.
+// Liberty pushes orders via POST /api/brokers/mt5/order for each PENDING signal.
 model SignalQueue {
-  id            String      @id @default(cuid())
-  mt5AccountId  String
-  mt5Account    MT5Account  @relation(fields: [mt5AccountId], references: [id], onDelete: Cascade)
+  id                 String            @id @default(cuid())
+  brokerConnectionId String?
+  brokerConnection   BrokerConnection? @relation(fields: [brokerConnectionId], references: [id], onDelete: Cascade)
   scanOpId      String?     // link a ScanOpportunity de donde vino la señal
   scanOp        ScanOpportunity? @relation(fields: [scanOpId], references: [id])
 
@@ -584,6 +593,6 @@ model SignalQueue {
 
   createdAt     DateTime    @default(now())
 
-  @@index([mt5AccountId, status])
+  @@index([brokerConnectionId, status])
   @@index([createdAt])
 }

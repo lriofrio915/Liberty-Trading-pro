@@ -1,4 +1,5 @@
 'use client'
+import BrokerExecuteDropdown from '@/app/dashboard/brokers/components/BrokerExecuteDropdown'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 
@@ -453,7 +454,17 @@ export default function TauricResearchTab() {
             return (
               <div className={`rounded-xl border p-5 ${color}`}>
                 <p className="text-[10px] font-mono tracking-widest mb-2 opacity-70">DECISIÓN FINAL — {ticker}</p>
-                <p className="text-3xl font-black font-mono">{label}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-3xl font-black font-mono">{label}</p>
+                  {(label === 'COMPRAR' || label === 'REDUCIR / VENDER') && ticker && (
+                    <BrokerExecuteDropdown signal={{
+                      ticker,
+                      direction: label === 'COMPRAR' ? 'BUY' : 'SELL',
+                      source: 'tauric',
+                      signalData: { ticker, label, depth, date },
+                    }} />
+                  )}
+                </div>
                 <p className="text-[11px] font-mono mt-1 opacity-80">{result.trim()}</p>
                 <p className="text-[10px] mt-2 opacity-50">{date} · {depth} · {elapsedStr}</p>
               </div>

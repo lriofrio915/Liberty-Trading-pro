@@ -82,7 +82,6 @@ export default function AgenteVanilla({ isAdmin }: { isAdmin: boolean }) {
   const [phase, setPhase]           = useState<Phase>('idle')
   const [step1Phase, setStep1Phase] = useState<Phase>('idle')
   const [step2Phase, setStep2Phase] = useState<Phase>('idle')
-  const [step3Phase, setStep3Phase] = useState<Phase>('idle')
   const [step4Phase, setStep4Phase] = useState<Phase>('idle')
   const [step5Phase, setStep5Phase] = useState<Phase>('idle')
   const [tickers, setTickers]       = useState<TickerStage[]>([])
@@ -95,7 +94,7 @@ export default function AgenteVanilla({ isAdmin }: { isAdmin: boolean }) {
 
   function resetAgent() {
     setPhase('idle')
-    setStep1Phase('idle'); setStep2Phase('idle'); setStep3Phase('idle')
+    setStep1Phase('idle'); setStep2Phase('idle')
     setStep4Phase('idle'); setStep5Phase('idle')
     setTickers([]); setLog([]); setActiveTicker(null); setSummary(null)
   }
@@ -103,7 +102,7 @@ export default function AgenteVanilla({ isAdmin }: { isAdmin: boolean }) {
   function stopAgent() {
     abortRef.current?.abort()
     setPhase('idle')
-    setStep1Phase('idle'); setStep2Phase('idle'); setStep3Phase('idle')
+    setStep1Phase('idle'); setStep2Phase('idle')
     setStep4Phase('idle'); setStep5Phase('idle')
     setActiveTicker(null)
     addLog('⛔ Agente detenido por el usuario')
@@ -171,87 +170,13 @@ export default function AgenteVanilla({ isAdmin }: { isAdmin: boolean }) {
       setStep2Phase('done')
       if (signal.aborted) { setPhase('idle'); return }
 
-      // ── PASO 3: Confirmación IA (Tauric) — valida dirección ───
-      setStep3Phase('running')
-      const TAURIC_MAX = 8
-      const paso2PassAll = paso2Results.filter(t => t.step2 === 'alcista' || t.step2 === 'bajista')
-      const paso2Pass = paso2PassAll
-        .sort((a, b) => {
-          const aChg = Math.abs(((a.forecastPrice ?? 0) - (a.lastPrice ?? 1)) / (a.lastPrice ?? 1))
-          const bChg = Math.abs(((b.forecastPrice ?? 0) - (b.lastPrice ?? 1)) / (b.lastPrice ?? 1))
-          return bChg - aChg
-        })
-        .slice(0, TAURIC_MAX)
-      if (paso2PassAll.length > TAURIC_MAX)
-        addLog(`📊 ${paso2PassAll.length} tickers con dirección → analizando top ${TAURIC_MAX} por mayor cambio forecast`)
-      const paso3Results = [...paso2Results]
-
-      if (!paso2Pass.length) {
-        addLog('⚠ Ningún ticker con dirección clara (todo LATERAL).')
-        setStep3Phase('done'); setStep4Phase('done'); setStep5Phase('done')
-        setPhase('done'); setSummary({ created: 0, total: sixSix.length }); setActiveTicker(null); return
-      }
-
-      addLog(`🤖 Confirmando dirección con Tauric para ${paso2Pass.length} ticker(s)...`)
-      for (const t of paso2Pass) {
-        if (signal.aborted) break
-        setActiveTicker(t.ticker)
-        addLog(`⟳ Tauric: ${t.ticker} (esperado: ${t.step2 === 'alcista' ? 'COMPRAR' : 'VENDER'})...`)
-        updateTicker(paso3Results, t.ticker, { step3: 'running' })
-        setTickers([...paso3Results])
-        try {
-          const today = new Date().toISOString().split('T')[0]
-          const aRes = await fetch('/api/tauric/analyze', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ticker: t.ticker, date: today, depth: 'moderate' }),
-            signal,
-          })
-          if (!aRes.ok) throw new Error(`Tauric HTTP ${aRes.status}`)
-          const aData = await aRes.json()
-          const runId: string = aData.run_id ?? aData.id ?? ''
-          if (!runId) throw new Error('Sin run_id')
-
-          let result: string | null = null
-          for (let i = 0; i < 60; i++) {
-            if (signal.aborted) break
-            await sleep(10_000)
-            const pRes = await fetch(`/api/tauric/runs/${runId}`, { signal })
-            const pData = await pRes.json()
-            if (pData.status === 'completed') { result = pData.result ?? pData.signal ?? ''; break }
-            if (pData.status === 'failed') throw new Error('Run failed')
-          }
-          if (!result) throw new Error('Timeout Tauric')
-
-          const isBullish = /\b(BUY|COMPRAR|ALCISTA|BULLISH|OVERWEIGHT)\b/i.test(result)
-          const isBearish = /\b(SELL|VENDER|BAJISTA|BEARISH|UNDERWEIGHT|REDUCIR)\b/i.test(result)
-          const tauricDir = isBullish ? 'COMPRAR' : isBearish ? 'VENDER' : 'MANTENER'
-
-          // Verificar que dirección coincide
-          const match = (t.step2 === 'alcista' && isBullish) || (t.step2 === 'bajista' && isBearish)
-          addLog(`${match ? '✓' : '✗'} ${t.ticker} Tauric: ${tauricDir} — ${match ? 'dirección confirmada' : 'MISMATCH → skip'}`)
-          updateTicker(paso3Results, t.ticker, {
-            step3: match ? 'pass' : 'fail',
-            tauricDirection: tauricDir,
-            directionMatch: match,
-          })
-        } catch (e) {
-          if (signal.aborted) break
-          addLog(`⚠ ${t.ticker}: error Tauric — ${(e as Error).message}`)
-          updateTicker(paso3Results, t.ticker, { step3: 'fail' })
-        }
-        setTickers([...paso3Results])
-      }
-      setStep3Phase('done')
-      if (signal.aborted) { setPhase('idle'); return }
-
-      // ── PASO 4: Análisis de opciones ─────────────────────────
+      // ── PASO 3: Análisis de opciones (directo desde proyección) ──
       setStep4Phase('running')
-      const paso3Pass = paso3Results.filter(t => t.step3 === 'pass')
-      const paso4Results = [...paso3Results]
+      const paso3Pass = paso2Results.filter(t => t.step2 === 'alcista' || t.step2 === 'bajista')
+      const paso4Results = [...paso2Results]
 
       if (!paso3Pass.length) {
-        addLog('⚠ Ningún ticker confirmado por Tauric.')
+        addLog('⚠ Ningún ticker con dirección clara (todo LATERAL).')
         setStep4Phase('done'); setStep5Phase('done')
         setPhase('done'); setSummary({ created: 0, total: sixSix.length }); setActiveTicker(null); return
       }
@@ -407,7 +332,7 @@ export default function AgenteVanilla({ isAdmin }: { isAdmin: boolean }) {
               <span className="text-[9px] font-mono px-2 py-0.5 rounded-full border border-[var(--gold)]/40 text-[var(--gold)]">OPCIONES</span>
             </div>
             <p className="text-xs max-w-lg" style={{ color: 'var(--text-muted)' }}>
-              Lynch 6/6 → Proyección (ALCISTA→CALL/PUT venta | BAJISTA→PUT/CALL venta) → Confirmación IA dirección → Contrato IDEAL DTE ≥ 30 → Track record opciones.
+              Lynch 6/6 → Proyección (ALCISTA→CALL/PUT venta | BAJISTA→PUT/CALL venta) → Contrato IDEAL DTE ≥ 30 → Track record opciones.
             </p>
           </div>
           <div className="flex gap-2">
@@ -429,11 +354,10 @@ export default function AgenteVanilla({ isAdmin }: { isAdmin: boolean }) {
 
       <div className="px-6 py-5 space-y-3" style={{ borderTop: '1px solid rgba(201,168,76,0.12)' }}>
         {[
-          { num: 1, label: 'INVESTIGACIÓN LYNCH',    desc: 'Score 6/6 — universo completo de acciones',               phaseVal: step1Phase },
-          { num: 2, label: 'PROYECCIÓN 30 DÍAS',     desc: 'ALCISTA → busca CALL/PUT venta | BAJISTA → busca PUT/CALL venta', phaseVal: step2Phase },
-          { num: 3, label: 'CONFIRMACIÓN IA (Tauric)', desc: 'Valida que dirección Tauric coincida con proyección',   phaseVal: step3Phase },
-          { num: 4, label: 'ANÁLISIS DE OPCIONES',   desc: 'Busca contrato IDEAL con DTE ≥ 30 días en la dirección confirmada', phaseVal: step4Phase },
-          { num: 5, label: 'REGISTRAR RECOMENDACIÓN',desc: 'Guarda en track record de opciones para seguimiento',     phaseVal: step5Phase },
+          { num: 1, label: 'INVESTIGACIÓN LYNCH',    desc: 'Score 6/6 — universo completo de acciones',                         phaseVal: step1Phase },
+          { num: 2, label: 'PROYECCIÓN 30 DÍAS',     desc: 'ALCISTA → busca CALL/PUT venta | BAJISTA → busca PUT/CALL venta',   phaseVal: step2Phase },
+          { num: 3, label: 'ANÁLISIS DE OPCIONES',   desc: 'Busca contrato IDEAL con DTE ≥ 30 días en la dirección de la proyección', phaseVal: step4Phase },
+          { num: 4, label: 'REGISTRAR RECOMENDACIÓN',desc: 'Guarda en track record de opciones para seguimiento',                phaseVal: step5Phase },
         ].map(step => (
           <div key={step.num} className="rounded-xl border p-4" style={{
             borderColor: step.phaseVal === 'running' ? 'rgba(251,191,36,0.4)' : step.phaseVal === 'done' ? 'rgba(74,222,128,0.25)' : 'var(--border)',
