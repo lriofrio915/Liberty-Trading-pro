@@ -7,15 +7,22 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/** GET /api/cfds/signals — últimas 50 señales guardadas */
-export async function GET(_req: NextRequest) {
+/** GET /api/cfds/signals?sector=Futuros — señales guardadas, filtradas por sector */
+export async function GET(req: NextRequest) {
   const supabase = await createSupabaseServerClient()
   const { data: { session } } = await supabase.auth.getSession()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const sector = new URL(req.url).searchParams.get('sector') ?? null
+  const isAdmin = session.user.email === ADMIN_EMAIL
+
   const signals = await prisma.cfdSignal.findMany({
     orderBy: { createdAt: 'desc' },
-    take: 50,
+    take: 100,
+    where: {
+      ...(isAdmin ? {} : { active: true }),
+      ...(sector ? { sector } : {}),
+    },
   })
 
   return NextResponse.json(signals)

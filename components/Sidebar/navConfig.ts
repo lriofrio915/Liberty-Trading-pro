@@ -28,7 +28,6 @@ export const navGroups: NavGroup[] = [
       { href: '/dashboard/futuros',         icon: '📈', label: 'Futuros',             requiresClub: true },
       { href: '/dashboard/acciones',        icon: '💼', label: 'Acciones',            requiresClub: true },
       { href: '/dashboard/analisis',        icon: '📊', label: 'CFDs',                requiresClub: true },
-      { href: '/dashboard/brokers',         icon: '🔌', label: 'Brokers',              requiresClub: true },
       { href: '/dashboard/vibe',            icon: '🧠', label: 'Laboratorio Quant',   requiresClub: true },
     ],
   },
@@ -36,6 +35,14 @@ export const navGroups: NavGroup[] = [
     label: 'Agentes IA',
     items: [
       { href: '/dashboard/agentes', icon: '🤖', label: 'Agentes', requiresClub: true },
+    ],
+  },
+  {
+    label: 'Configuración',
+    items: [
+      { href: '/dashboard/profile',      icon: '👤', label: 'Mi Perfil',    requiresClub: false },
+      { href: '/dashboard/brokers',      icon: '🔌', label: 'Brokers',      requiresClub: true  },
+      { href: '/dashboard/conocimiento', icon: '📚', label: 'Conocimiento', requiresClub: false },
     ],
   },
 ]
