@@ -502,6 +502,110 @@ function AssetCard({ asset, farosActivos }: {
   )
 }
 
+// ── SectorTable ────────────────────────────────────────────────────────────────
+
+const SECTOR_TITLES: Record<string, string> = {
+  Crypto:     'RECOMENDACIONES CRYPTO',
+  Acciones:   'RECOMENDACIONES ACCIONES',
+  'Índices':  'RECOMENDACIONES ÍNDICES',
+  Divisas:    'RECOMENDACIONES DIVISAS',
+  Materiales: 'RECOMENDACIONES MATERIALES',
+}
+
+function SectorTable({ sector, activos }: { sector: string; activos: AssetAnalysis[] }) {
+  const title = SECTOR_TITLES[sector] ?? `RECOMENDACIONES ${sector.toUpperCase()}`
+  const signals = activos.filter(a => a.sesgo !== 'NEUTRAL' && a.confianza >= 70)
+  const sorted = [...activos].sort((a, b) => b.confianza - a.confianza)
+  const fmtP = (n: number) =>
+    n >= 10000 ? n.toLocaleString('en-US', { minimumFractionDigits: 0 })
+    : n >= 100  ? n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : n.toFixed(5)
+
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-2.5" style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid var(--border)' }}>
+        <span className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>{title}</span>
+        {signals.length > 0 && (
+          <span className="text-[9px] font-mono px-2 py-0.5 rounded-full border border-[var(--gold)]/30 text-[var(--gold)]">
+            {signals.length} señal{signals.length !== 1 ? 'es' : ''}
+          </span>
+        )}
+      </div>
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-[10px] font-mono">
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)' }}>
+              {['Símbolo', 'Nombre', 'Dir', 'Conf', 'Entrada', 'Stop Loss', 'Take Profit', 'Razón'].map(h => (
+                <th key={h} className="px-3 py-1.5 text-left whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map(asset => {
+              const isSignal = asset.sesgo !== 'NEUTRAL' && asset.confianza >= 70
+              const isCompra = asset.sesgo === 'COMPRA'
+              const isVenta  = asset.sesgo === 'VENTA'
+              // Compute estimated SL/TP
+              const SL_PCT: Record<string, number> = { Crypto: 0.02, Acciones: 0.02, 'Índices': 0.005, Divisas: 0.003, Materiales: 0.01 }
+              const slPct = SL_PCT[asset.sector] ?? 0.01
+              const slDist = asset.precio * slPct
+              const tpDist = slDist * 2
+              const sl = isCompra ? asset.precio - slDist : asset.precio + slDist
+              const tp = isCompra ? asset.precio + tpDist : asset.precio - tpDist
+
+              return (
+                <tr
+                  key={asset.simbolo}
+                  className="border-b border-[var(--border)] transition-colors hover:bg-white/5"
+                  style={{
+                    opacity: !isSignal ? 0.45 : 1,
+                    borderLeft: isSignal ? `3px solid ${isCompra ? 'rgba(34,197,94,0.5)' : 'rgba(239,68,68,0.5)'}` : undefined,
+                  }}
+                >
+                  <td className="px-3 py-2 font-bold whitespace-nowrap" style={{ color: isSignal ? 'var(--gold)' : 'var(--text-muted)' }}>
+                    {asset.simbolo}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-[10px]" style={{ color: 'var(--text-secondary)', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {asset.nombre}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    {asset.sesgo !== 'NEUTRAL' ? (
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${isCompra ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}`}>
+                        {asset.sesgo}
+                      </span>
+                    ) : (
+                      <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: asset.confianza >= 80 ? 'var(--gold)' : asset.confianza >= 70 ? 'var(--text-secondary)' : 'var(--text-muted)' }}>
+                    {asset.confianza}%
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>
+                    {isSignal ? fmtP(asset.precio) : '—'}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-red-400">
+                    {isSignal ? fmtP(sl) : '—'}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-green-400">
+                    {isSignal ? fmtP(tp) : '—'}
+                  </td>
+                  <td className="px-3 py-2" style={{ color: 'var(--text-muted)', maxWidth: '200px' }}>
+                    <span title={asset.razon}>
+                      {asset.razon.length > 65 ? asset.razon.slice(0, 65) + '…' : asset.razon}
+                    </span>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 // ── AgentRow ───────────────────────────────────────────────────────────────────
 
 function AgentRow({ agent, step, index }: { agent: (typeof AGENTS)[0]; step: number; index: number }) {
@@ -855,6 +959,16 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
 
       const data: AnalysisResult = await res.json()
       setResult(data)
+
+      // Auto-save recommendations (admin): auto-close expired signals + save new ones
+      if (isAdmin) {
+        const candidates: CfdSignalCalc[] = data.activos
+          .filter(a => a.confianza >= 70 && a.sesgo !== 'NEUTRAL')
+          .map(a => calcSignal(a, riskProfile))
+        if (candidates.length > 0) {
+          handleSaveSignals(candidates, data.activos)
+        }
+      }
     } catch (err) {
       clearInterval(stepInterval)
       const msg =
@@ -910,16 +1024,55 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
     setTimeout(() => setCopiedSignal(null), 2500)
   }
 
-  const handleSaveSignals = async (signals: CfdSignalCalc[]) => {
+  const handleSaveSignals = async (signals: CfdSignalCalc[], analysisActivos?: AssetAnalysis[]) => {
     setSavingSignals(true)
     setSavedCount(null)
     setSkippedSignals(null)
 
-    // Build map of existing PENDIENTE signals by symbol
+    // ── Step 1: Auto-close PENDIENTE signals that hit TP or SL ──
+    const activos = analysisActivos ?? result?.activos ?? []
+    const priceMap: Record<string, number> = {}
+    for (const a of activos) priceMap[a.simbolo] = a.precio
+
+    const pendingSignals = signalHistory.filter(s => s.resultado === 'PENDIENTE')
+    for (const sig of pendingSignals) {
+      const currentPrice = priceMap[sig.simbolo]
+      if (currentPrice == null || currentPrice <= 0) continue
+      const isCompra = sig.sesgo === 'COMPRA'
+      const hitTP = isCompra ? currentPrice >= sig.takeProfit : currentPrice <= sig.takeProfit
+      const hitSL = isCompra ? currentPrice <= sig.stopLoss  : currentPrice >= sig.stopLoss
+      if (!hitTP && !hitSL) continue
+      const resultado = hitTP ? 'GANADA' : 'PERDIDA'
+      const slDist = Math.abs(sig.precioEntrada - sig.stopLoss)
+      const pnlUsd = isCompra
+        ? ((currentPrice - sig.precioEntrada) / slDist) * 10
+        : ((sig.precioEntrada - currentPrice) / slDist) * 10
+      try {
+        await fetch(`/api/cfds/signals/${sig.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resultado, closedPrice: currentPrice, pnlUsd: parseFloat(pnlUsd.toFixed(2)) }),
+        })
+      } catch {}
+    }
+    if (pendingSignals.length > 0) await loadSignalHistory()
+
+    // ── Step 2: Build map of still-PENDIENTE signals (after auto-close) ──
+    // Fetch fresh list to know which are still blocked
+    let freshHistory = signalHistory
+    try {
+      const fr = await fetch('/api/cfds/signals')
+      if (fr.ok) {
+        const json = await fr.json()
+        freshHistory = json.recommendations ?? json ?? signalHistory
+        setSignalHistory(freshHistory)
+      }
+    } catch {}
+
     const pendingMap = new Map(
-      signalHistory
-        .filter(s => s.resultado === 'PENDIENTE')
-        .map(s => [s.simbolo, s]),
+      freshHistory
+        .filter((s: CfdSignalRecord) => s.resultado === 'PENDIENTE')
+        .map((s: CfdSignalRecord) => [s.simbolo, s]),
     )
 
     const toSave: CfdSignalCalc[] = []
@@ -934,7 +1087,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
         const dirChanged = existing.sesgo !== sig.sesgo
         const confDiff = Math.abs(sig.confianza - existing.confianza)
         if (dirChanged || confDiff >= 10) {
-          // Significant change — save new signal and report
           updated.push(
             dirChanged
               ? `${sig.simbolo} (dirección: ${existing.sesgo}→${sig.sesgo})`
@@ -1605,87 +1757,11 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
 
               {(result as any).faros && <FarosPanel faros={(result as any).faros} />}
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                {result.estrategia?.distribucion && result.estrategia.distribucion.length > 0 && (
-                  <div className="card p-5">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>
-                      Distribución de Portafolio
-                    </p>
-                    <p className="text-xs mb-4" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>
-                      Perfil {riskProfile}
-                    </p>
-                    <ResponsiveContainer width="100%" height={240}>
-                      <PieChart>
-                        <Pie
-                          data={result.estrategia.distribucion}
-                          dataKey="porcentaje"
-                          nameKey="sector"
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={95}
-                          paddingAngle={3}
-                          strokeWidth={0}
-                        >
-                          {result.estrategia.distribucion.map((entry, index) => (
-                            <Cell key={index} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<PortfolioTooltip />} />
-                        <Legend formatter={(value) => <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{value}</span>} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-
-                <div className="card p-5">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
-                    Rankings por Confianza
-                  </p>
-                  <div className="space-y-3">
-                    {activosByRanking.slice(0, 10).map((asset, i) => {
-                      const s = SESGO_STYLES[asset.sesgo] ?? SESGO_STYLES.NEUTRAL
-                      return (
-                        <div key={`${asset.simbolo}-${i}`} className="flex items-center gap-2.5">
-                          <span className="text-xs font-mono w-4 text-right flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{i + 1}</span>
-                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg flex-shrink-0 w-14 text-center ${s.bg} ${s.text} border ${s.border}`}>
-                            {asset.simbolo.length > 6 ? asset.simbolo.slice(0, 6) : asset.simbolo}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between text-xs mb-1">
-                              <span className={`text-[11px] ${s.text}`}>{s.label}</span>
-                              <span className="text-[11px] font-mono" style={{ color: 'var(--text-muted)' }}>{asset.confianza}%</span>
-                            </div>
-                            <div className="h-1 rounded-full" style={{ background: 'var(--border)' }}>
-                              <div className={`h-1 rounded-full transition-all duration-700 ${s.bar}`} style={{ width: `${asset.confianza}%` }} />
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-
+              {/* ── Sector recommendation tables (replaces asset cards) ── */}
               {SECTOR_ORDER.map(sector => {
                 const sectorActivos = result.activos.filter(a => a.sector === sector)
                 if (sectorActivos.length === 0) return null
-                return (
-                  <div key={sector}>
-                    <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
-                      {sector}
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {sectorActivos.map((asset, i) => (
-                        <AssetCard
-                          key={`${asset.simbolo}-${i}`}
-                          asset={asset}
-                          farosActivos={(result as any).faros?.activos_faros}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )
+                return <SectorTable key={sector} sector={sector} activos={sectorActivos} />
               })}
 
               {/* ── Recomendaciones CFD — Save + Track Record ── */}

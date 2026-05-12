@@ -90,37 +90,67 @@ export async function fetchAllPrices(): Promise<PriceItem[]> {
     fetchYahoo('ETH-USD',  'Ethereum'),
     fetchYahoo('BNB-USD',  'BNB'),
     fetchYahoo('XRP-USD',  'XRP'),
-    // 7 Magnificas
-    fetchYahoo('AAPL',     'Apple'),
-    fetchYahoo('MSFT',     'Microsoft'),
-    fetchYahoo('AMZN',     'Amazon'),
-    fetchYahoo('NVDA',     'Nvidia'),
-    fetchYahoo('META',     'Meta'),
-    fetchYahoo('GOOGL',    'Alphabet'),
-    fetchYahoo('TSLA',     'Tesla'),
+    fetchYahoo('SOL-USD',  'Solana'),
+    fetchYahoo('ADA-USD',  'Cardano'),
+    fetchYahoo('AVAX-USD', 'Avalanche'),
+    fetchYahoo('DOGE-USD', 'Dogecoin'),
+    // Acciones — S&P 500 top picks (expanded universe)
+    fetchYahoo('AAPL',  'Apple'),
+    fetchYahoo('MSFT',  'Microsoft'),
+    fetchYahoo('AMZN',  'Amazon'),
+    fetchYahoo('NVDA',  'Nvidia'),
+    fetchYahoo('META',  'Meta'),
+    fetchYahoo('GOOGL', 'Alphabet'),
+    fetchYahoo('TSLA',  'Tesla'),
+    fetchYahoo('AMD',   'AMD'),
+    fetchYahoo('AVGO',  'Broadcom'),
+    fetchYahoo('ORCL',  'Oracle'),
+    fetchYahoo('CRM',   'Salesforce'),
+    fetchYahoo('JPM',   'JPMorgan'),
+    fetchYahoo('V',     'Visa'),
+    fetchYahoo('MA',    'Mastercard'),
+    fetchYahoo('BAC',   'Bank of America'),
+    fetchYahoo('JNJ',   'Johnson & Johnson'),
+    fetchYahoo('LLY',   'Eli Lilly'),
+    fetchYahoo('UNH',   'UnitedHealth'),
+    fetchYahoo('ABBV',  'AbbVie'),
+    fetchYahoo('WMT',   'Walmart'),
+    fetchYahoo('HD',    'Home Depot'),
+    fetchYahoo('XOM',   'ExxonMobil'),
+    fetchYahoo('CVX',   'Chevron'),
+    fetchYahoo('NFLX',  'Netflix'),
     // Índices
-    fetchYahoo('NQ=F',     'NQ Futures'),
-    fetchYahoo('^GSPC',    'S&P 500'),
-    fetchYahoo('^RUT',     'Russell 2000'),
-    fetchYahoo('^DJI',     'Dow Jones'),
-    fetchYahoo('%5EVIX',   'VIX'),
+    fetchYahoo('NQ=F',   'NQ Futures'),
+    fetchYahoo('^GSPC',  'S&P 500'),
+    fetchYahoo('^RUT',   'Russell 2000'),
+    fetchYahoo('^DJI',   'Dow Jones'),
+    fetchYahoo('%5EVIX', 'VIX'),
     // Divisas
     fetchDXY(),
     fetchYahoo('EURUSD=X', 'EUR/USD'),
     fetchYahoo('USDJPY=X', 'USD/JPY'),
     fetchYahoo('USDCAD=X', 'USD/CAD'),
     fetchYahoo('GBPUSD=X', 'GBP/USD'),
+    fetchYahoo('AUDUSD=X', 'AUD/USD'),
+    fetchYahoo('NZDUSD=X', 'NZD/USD'),
+    fetchYahoo('USDCHF=X', 'USD/CHF'),
     // Materias primas
-    fetchYahoo('GC=F',     'Oro'),
-    fetchYahoo('CL=F',     'Petróleo WTI'),
-    fetchYahoo('SI=F',     'Plata'),
+    fetchYahoo('GC=F', 'Oro'),
+    fetchYahoo('CL=F', 'Petróleo WTI'),
+    fetchYahoo('SI=F', 'Plata'),
+    fetchYahoo('HG=F', 'Cobre'),
+    fetchYahoo('NG=F', 'Gas Natural'),
   ])
   const items = results.flatMap(r => (r.status === 'fulfilled' && r.value ? [r.value] : []))
   return items.map(item => {
-    if (item.symbol === 'BTC-USD') return { ...item, symbol: 'BTC' }
-    if (item.symbol === 'ETH-USD') return { ...item, symbol: 'ETH' }
-    if (item.symbol === 'BNB-USD') return { ...item, symbol: 'BNB' }
-    if (item.symbol === 'XRP-USD') return { ...item, symbol: 'XRP' }
+    if (item.symbol === 'BTC-USD')  return { ...item, symbol: 'BTC' }
+    if (item.symbol === 'ETH-USD')  return { ...item, symbol: 'ETH' }
+    if (item.symbol === 'BNB-USD')  return { ...item, symbol: 'BNB' }
+    if (item.symbol === 'XRP-USD')  return { ...item, symbol: 'XRP' }
+    if (item.symbol === 'SOL-USD')  return { ...item, symbol: 'SOL' }
+    if (item.symbol === 'ADA-USD')  return { ...item, symbol: 'ADA' }
+    if (item.symbol === 'AVAX-USD') return { ...item, symbol: 'AVAX' }
+    if (item.symbol === 'DOGE-USD') return { ...item, symbol: 'DOGE' }
     return item
   })
 }
@@ -138,14 +168,14 @@ export function extractJSON(text: string): string {
   return text
 }
 
-export async function runAgent(systemPrompt: string, userMessage: string): Promise<string> {
+export async function runAgent(systemPrompt: string, userMessage: string, maxTokens = 3500): Promise<string> {
   const { callAI } = await import('@/lib/ai-providers')
   const result = await callAI({
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userMessage },
     ],
-    maxTokens: 1100,
+    maxTokens,
     temperature: 0.2,
     httpReferer: 'https://liberty-trading.pro',
     signal: AbortSignal.timeout(50000),
@@ -213,19 +243,19 @@ export function buildAgents(pricesCtx: string, riskProfile: string, today: strin
   return [
     {
       name: 'crypto' as const,
-      system: `Eres un agente analista especializado en criptomonedas. Analiza BTC, ETH, BNB y XRP.
+      system: `Eres un agente analista especializado en criptomonedas. Analiza BTC, ETH, BNB, XRP, SOL, ADA, AVAX y DOGE.
 RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
 {"activos":[{"simbolo":"BTC","nombre":"Bitcoin","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":75,"razon":"momentum alcista sólido","riesgo":"alto","sector":"Crypto"}]}
-Reglas: "sesgo" solo: COMPRA, VENTA o NEUTRAL. "confianza" entero 55-92. "riesgo" solo: bajo, medio, alto. "sector" siempre "Crypto". Incluye exactamente BTC, ETH, BNB, XRP.`,
-      user: `${base}\n\n${riskNote}\n\nAnaliza BTC, ETH, BNB y XRP con los precios en tiempo real proporcionados.`,
+Reglas: "sesgo" solo: COMPRA, VENTA o NEUTRAL. "confianza" entero 55-92. "riesgo" solo: bajo, medio, alto. "sector" siempre "Crypto". Incluye exactamente los 8 activos: BTC, ETH, BNB, XRP, SOL, ADA, AVAX, DOGE.`,
+      user: `${base}\n\n${riskNote}\n\nAnaliza BTC, ETH, BNB, XRP, SOL, ADA, AVAX y DOGE con los precios en tiempo real proporcionados.`,
     },
     {
       name: 'acciones' as const,
-      system: `Eres un agente analista de acciones tecnológicas. Analiza las 7 Magnificas: Apple (AAPL), Microsoft (MSFT), Amazon (AMZN), Nvidia (NVDA), Meta (META), Alphabet (GOOGL) y Tesla (TSLA).
+      system: `Eres un agente analista de acciones del S&P 500 y Nasdaq. Analiza este universo de 25 acciones top: AAPL, MSFT, AMZN, NVDA, META, GOOGL, TSLA, AMD, AVGO, ORCL, CRM, JPM, V, MA, BAC, JNJ, LLY, UNH, ABBV, WMT, HD, XOM, CVX, NFLX.
 RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
-{"activos":[{"simbolo":"AAPL","nombre":"Apple","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":72,"razon":"momentum alcista con soporte en medias móviles","riesgo":"medio","sector":"Acciones"}]}
-Reglas: "sesgo" solo: COMPRA, VENTA o NEUTRAL. "confianza" entero 55-92. "riesgo" solo: bajo, medio, alto. "sector" siempre "Acciones". Incluye exactamente los 7 activos: AAPL, MSFT, AMZN, NVDA, META, GOOGL, TSLA.`,
-      user: `${base}\n\n${riskNote}\n\nAnaliza las 7 Magnificas (AAPL, MSFT, AMZN, NVDA, META, GOOGL, TSLA) con los precios en tiempo real proporcionados.`,
+{"activos":[{"simbolo":"AAPL","nombre":"Apple","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":72,"razon":"momentum alcista","riesgo":"medio","sector":"Acciones"},{"simbolo":"NVDA","nombre":"Nvidia","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":80,"razon":"IA y semiconductores","riesgo":"alto","sector":"Acciones"}]}
+Reglas: "sesgo" solo: COMPRA, VENTA o NEUTRAL. "confianza" entero 55-92. "riesgo" solo: bajo, medio, alto. "sector" siempre "Acciones". Incluye exactamente los 25 activos. Sé selectivo: no todo puede ser COMPRA. Evalúa cada acción según su momentum y fundamentos.`,
+      user: `${base}\n\n${riskNote}\n\nAnaliza este universo expandido de 25 acciones (AAPL, MSFT, AMZN, NVDA, META, GOOGL, TSLA, AMD, AVGO, ORCL, CRM, JPM, V, MA, BAC, JNJ, LLY, UNH, ABBV, WMT, HD, XOM, CVX, NFLX) con los precios en tiempo real proporcionados. Sé selectivo — solo recomienda COMPRA o VENTA cuando hay señales claras.`,
     },
     {
       name: 'indices' as const,
@@ -239,21 +269,21 @@ Russell 2000: indicador de apetito de riesgo. COMPRA = risk-on, VENTA = risk-off
     },
     {
       name: 'divisas' as const,
-      system: `Eres un agente analista de divisas (forex). Analiza DXY, EUR/USD, USD/JPY, USD/CAD y GBP/USD.
+      system: `Eres un agente analista de divisas (forex). Analiza DXY, EUR/USD, USD/JPY, USD/CAD, GBP/USD, AUD/USD, NZD/USD y USD/CHF.
 RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
 {"activos":[{"simbolo":"DXY","nombre":"Índice Dólar (DXY)","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":68,"razon":"dólar fortalecido por datos macro","riesgo":"bajo","sector":"Divisas"}]}
-DXY COMPRA = dólar fuerte. EUR/USD COMPRA = euro sube vs dólar. GBP/USD COMPRA = libra sube vs dólar. USD/JPY COMPRA = dólar sube vs yen. USD/CAD COMPRA = dólar sube vs CAD.
-"sector" siempre "Divisas". Incluye exactamente los 5 activos: DXY, EUR/USD, USD/JPY, USD/CAD, GBP/USD.`,
-      user: `${base}\n\n${riskNote}\n\nAnaliza DXY, EUR/USD, USD/JPY, USD/CAD y GBP/USD con los datos proporcionados.`,
+DXY COMPRA = dólar fuerte. EUR/USD COMPRA = euro sube. GBP/USD COMPRA = libra sube. USD/JPY COMPRA = dólar sube vs yen. USD/CAD COMPRA = dólar sube vs CAD. AUD/USD COMPRA = aussie sube. NZD/USD COMPRA = kiwi sube. USD/CHF COMPRA = dólar sube vs franco suizo.
+"sector" siempre "Divisas". Incluye exactamente los 8 activos: DXY, EUR/USD, USD/JPY, USD/CAD, GBP/USD, AUD/USD, NZD/USD, USD/CHF.`,
+      user: `${base}\n\n${riskNote}\n\nAnaliza DXY, EUR/USD, USD/JPY, USD/CAD, GBP/USD, AUD/USD, NZD/USD y USD/CHF con los datos proporcionados.`,
     },
     {
       name: 'materiales' as const,
-      system: `Eres un agente analista de commodities. Analiza Oro, Petróleo WTI y Plata.
+      system: `Eres un agente analista de commodities. Analiza Oro, Petróleo WTI, Plata, Cobre y Gas Natural.
 RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown.
-Los campos "simbolo" DEBEN ser exactamente "ORO" para el oro, "WTI" para el petróleo y "PLATA" para la plata:
-{"activos":[{"simbolo":"ORO","nombre":"Oro","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":72,"razon":"activo refugio con demanda sostenida","riesgo":"bajo","sector":"Materiales"},{"simbolo":"WTI","nombre":"Petróleo WTI","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":60,"razon":"oferta y demanda equilibradas","riesgo":"medio","sector":"Materiales"},{"simbolo":"PLATA","nombre":"Plata","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":65,"razon":"demanda industrial y refugio secundario","riesgo":"medio","sector":"Materiales"}]}
-Oro es refugio seguro. Plata tiene componente industrial + refugio. Petróleo refleja demanda global y geopolítica. NUNCA uses GC=F, CL=F ni SI=F como simbolo.`,
-      user: `${base}\n\n${riskNote}\n\nAnaliza Oro, Petróleo WTI y Plata con los datos proporcionados.`,
+Los campos "simbolo" DEBEN ser exactamente: "ORO" para oro, "WTI" para petróleo, "PLATA" para plata, "COBRE" para cobre, "GAS" para gas natural:
+{"activos":[{"simbolo":"ORO","nombre":"Oro","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":72,"razon":"activo refugio con demanda sostenida","riesgo":"bajo","sector":"Materiales"},{"simbolo":"WTI","nombre":"Petróleo WTI","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":60,"razon":"oferta y demanda equilibradas","riesgo":"medio","sector":"Materiales"},{"simbolo":"PLATA","nombre":"Plata","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":65,"razon":"demanda industrial y refugio","riesgo":"medio","sector":"Materiales"},{"simbolo":"COBRE","nombre":"Cobre","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":58,"razon":"sensible al ciclo económico global","riesgo":"medio","sector":"Materiales"},{"simbolo":"GAS","nombre":"Gas Natural","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":55,"razon":"estacionalidad y clima","riesgo":"alto","sector":"Materiales"}]}
+NUNCA uses GC=F, CL=F, SI=F, HG=F ni NG=F como simbolo. Usa exactamente: ORO, WTI, PLATA, COBRE, GAS.`,
+      user: `${base}\n\n${riskNote}\n\nAnaliza Oro, Petróleo WTI, Plata, Cobre y Gas Natural con los datos proporcionados.`,
     },
     {
       name: 'estrategia' as const,
@@ -280,7 +310,11 @@ export const PRICE_LOOKUP: Record<string, string> = {
   ETH: 'ETH', ETHEREUM: 'ETH', ETHER: 'ETH',
   BNB: 'BNB', 'BINANCE COIN': 'BNB',
   XRP: 'XRP', RIPPLE: 'XRP',
-  // 7 Magnificas
+  SOL: 'SOL', SOLANA: 'SOL',
+  ADA: 'ADA', CARDANO: 'ADA',
+  AVAX: 'AVAX', AVALANCHE: 'AVAX',
+  DOGE: 'DOGE', DOGECOIN: 'DOGE',
+  // Acciones — Magnificent 7 + expanded
   AAPL: 'AAPL', APPLE: 'AAPL',
   MSFT: 'MSFT', MICROSOFT: 'MSFT',
   AMZN: 'AMZN', AMAZON: 'AMZN',
@@ -288,6 +322,23 @@ export const PRICE_LOOKUP: Record<string, string> = {
   META: 'META', FACEBOOK: 'META',
   GOOGL: 'GOOGL', ALPHABET: 'GOOGL', GOOGLE: 'GOOGL',
   TSLA: 'TSLA', TESLA: 'TSLA',
+  AMD: 'AMD',
+  AVGO: 'AVGO', BROADCOM: 'AVGO',
+  ORCL: 'ORCL', ORACLE: 'ORCL',
+  CRM: 'CRM', SALESFORCE: 'CRM',
+  JPM: 'JPM', JPMORGAN: 'JPM',
+  V: 'V', VISA: 'V',
+  MA: 'MA', MASTERCARD: 'MA',
+  BAC: 'BAC', 'BANK OF AMERICA': 'BAC',
+  JNJ: 'JNJ',
+  LLY: 'LLY', 'ELI LILLY': 'LLY',
+  UNH: 'UNH', UNITEDHEALTH: 'UNH',
+  ABBV: 'ABBV', ABBVIE: 'ABBV',
+  WMT: 'WMT', WALMART: 'WMT',
+  HD: 'HD', 'HOME DEPOT': 'HD',
+  XOM: 'XOM', EXXON: 'XOM', EXXONMOBIL: 'XOM',
+  CVX: 'CVX', CHEVRON: 'CVX',
+  NFLX: 'NFLX', NETFLIX: 'NFLX',
   // Índices
   NQ: 'NQ=F', 'NQ=F': 'NQ=F', 'NQ FUTURES': 'NQ=F', NASDAQ: 'NQ=F', 'NASDAQ 100': 'NQ=F',
   VIX: '%5EVIX', '%5EVIX': '%5EVIX', 'ÍNDICE VIX': '%5EVIX',
@@ -300,10 +351,15 @@ export const PRICE_LOOKUP: Record<string, string> = {
   'USD/JPY': 'USDJPY=X', USDJPY: 'USDJPY=X', 'USDJPY=X': 'USDJPY=X',
   'USD/CAD': 'USDCAD=X', USDCAD: 'USDCAD=X', 'USDCAD=X': 'USDCAD=X',
   'GBP/USD': 'GBPUSD=X', GBPUSD: 'GBPUSD=X', 'GBPUSD=X': 'GBPUSD=X',
+  'AUD/USD': 'AUDUSD=X', AUDUSD: 'AUDUSD=X', 'AUDUSD=X': 'AUDUSD=X',
+  'NZD/USD': 'NZDUSD=X', NZDUSD: 'NZDUSD=X', 'NZDUSD=X': 'NZDUSD=X',
+  'USD/CHF': 'USDCHF=X', USDCHF: 'USDCHF=X', 'USDCHF=X': 'USDCHF=X',
   // Materiales
   'GC=F': 'GC=F', ORO: 'GC=F', GOLD: 'GC=F', 'GOLD FUTURES': 'GC=F',
   'CL=F': 'CL=F', WTI: 'CL=F', 'PETRÓLEO': 'CL=F', PETROLEO: 'CL=F', OIL: 'CL=F', 'PETRÓLEO WTI': 'CL=F', 'PETROLEO WTI': 'CL=F',
   'SI=F': 'SI=F', PLATA: 'SI=F', SILVER: 'SI=F', 'SILVER FUTURES': 'SI=F',
+  'HG=F': 'HG=F', COBRE: 'HG=F', COPPER: 'HG=F',
+  'NG=F': 'NG=F', GAS: 'NG=F', 'GAS NATURAL': 'NG=F', 'NATURAL GAS': 'NG=F',
 }
 
 export function matchPrice(asset: AssetAnalysis, prices: PriceItem[]): PriceItem | undefined {
