@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -18,8 +18,6 @@ interface IndexAsset {
 interface ScanSignal {
   stock_code?: string
   symbol?: string
-  stock_name?: string
-  name?: string
   operation_advice?: string
   recommendation?: string
   signal?: string
@@ -59,18 +57,17 @@ interface TrackRec {
   createdAt: string
 }
 
-// Index ETF mapping: scanner ticker → futures symbol
-const ETF_MAP: Record<string, string> = {
-  QQQ: 'NQ',
-  SPY: 'SP500',
-  IWM: 'RUSSELL',
-}
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const ETF_MAP: Record<string, string> = { QQQ: 'NQ', SPY: 'SP500', IWM: 'RUSSELL' }
 
 const INDEX_NAMES: Record<string, string> = {
   NQ:      'Micro Nasdaq (MNQ)',
   SP500:   'Micro S&P 500 (MES)',
   RUSSELL: 'Micro Russell (M2K)',
 }
+
+const SL_PCT = 0.005
 
 function normalizeBias(signal: string): 'COMPRA' | 'VENTA' | 'NEUTRAL' {
   const u = signal.toUpperCase()
@@ -79,33 +76,66 @@ function normalizeBias(signal: string): 'COMPRA' | 'VENTA' | 'NEUTRAL' {
   return 'NEUTRAL'
 }
 
-const SL_PCT = 0.005 // 0.5% for indices
-
 function computeLevels(sesgo: 'COMPRA' | 'VENTA', entry: number) {
   const slDist = entry * SL_PCT
   const tpDist = slDist * 2
-  const sl = sesgo === 'COMPRA' ? entry - slDist : entry + slDist
-  const tp = sesgo === 'COMPRA' ? entry + tpDist : entry - tpDist
-  const lotaje = 1 // 1 micro contract default
-  return { sl, tp, lotaje }
+  return {
+    sl:     parseFloat((sesgo === 'COMPRA' ? entry - slDist : entry + slDist).toFixed(2)),
+    tp:     parseFloat((sesgo === 'COMPRA' ? entry + tpDist : entry - tpDist).toFixed(2)),
+    lotaje: 1,
+  }
+}
+
+function isUSMarketOpen(): boolean {
+  const now = new Date()
+  const etOffset = -4 * 60 // EDT (approximate)
+  const etNow = new Date(now.getTime() + etOffset * 60000)
+  const h = etNow.getUTCHours()
+  const m = etNow.getUTCMinutes()
+  const mins = h * 60 + m
+  const day = etNow.getUTCDay()
+  if (day === 0 || day === 6) return false
+  return mins >= 9 * 60 + 30 && mins < 16 * 60
+}
+
+function marketCloseCountdown(): string {
+  const now = new Date()
+  const etOffset = -4 * 60
+  const etNow = new Date(now.getTime() + etOffset * 60000)
+  const close = new Date(etNow)
+  close.setUTCHours(16, 0, 0, 0)
+  if (etNow >= close) return 'Mercado cerrado'
+  const diff = close.getTime() - etNow.getTime()
+  const h = Math.floor(diff / 3600000)
+  const m = Math.floor((diff % 3600000) / 60000)
+  return `${h}h ${m}m al cierre`
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
-  const [phase1, setPhase1]     = useState<'idle' | 'running' | 'done' | 'error'>('idle')
-  const [phase2, setPhase2]     = useState<'idle' | 'running' | 'done' | 'error'>('idle')
-  const [scanBias, setScanBias] = useState<Record<string, { sesgo: 'COMPRA'|'VENTA'|'NEUTRAL'; conf: number }>>({})
-  const [idxBias, setIdxBias]   = useState<IndexAsset[]>([])
+  const [phase1, setPhase1]       = useState<'idle'|'running'|'done'|'error'>('idle')
+  const [phase2, setPhase2]       = useState<'idle'|'running'|'done'|'error'>('idle')
+  const [scanBias, setScanBias]   = useState<Record<string, { sesgo: 'COMPRA'|'VENTA'|'NEUTRAL'; conf: number }>>({})
+  const [idxBias, setIdxBias]     = useState<IndexAsset[]>([])
   const [confirmed, setConfirmed] = useState<FuturesSignal[]>([])
-  const [saving, setSaving]     = useState(false)
   const [savedCount, setSavedCount] = useState<number | null>(null)
   const [trackRecs, setTrackRecs] = useState<TrackRec[]>([])
-  const [rowEdits, setRowEdits] = useState<Record<string, { resultado: string; pnlUsd: string; closedPrice: string }>>({})
+  const [rowEdits, setRowEdits]   = useState<Record<string, { resultado: string; pnlUsd: string; closedPrice: string }>>({})
   const [updatingId, setUpdatingId] = useState<string | null>(null)
-  const [log, setLog] = useState<string[]>([])
+  const [log, setLog]             = useState<string[]>([])
+  const [lastPriceCheck, setLastPriceCheck] = useState<Date | null>(null)
+  const [priceChecking, setPriceChecking]   = useState(false)
+  const [countdown, setCountdown] = useState(marketCloseCountdown())
+  const priceMapRef = useRef<Record<string, number>>({})
 
   const addLog = (msg: string) => setLog(prev => [...prev, msg])
+
+  // Countdown ticker
+  useEffect(() => {
+    const id = setInterval(() => setCountdown(marketCloseCountdown()), 30000)
+    return () => clearInterval(id)
+  }, [])
 
   const loadTrackRecs = useCallback(async () => {
     try {
@@ -119,135 +149,96 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
 
   useEffect(() => { loadTrackRecs() }, [loadTrackRecs])
 
-  const runAnalysis = async () => {
-    setPhase1('running')
-    setPhase2('idle')
-    setScanBias({})
-    setIdxBias([])
-    setConfirmed([])
-    setSavedCount(null)
-    setLog([])
+  // ── Auto TP/SL price check ─────────────────────────────────────────────────
 
+  const checkPriceLevels = useCallback(async (pm: Record<string, number>) => {
+    setPriceChecking(true)
     try {
-      // ── Phase 1: Daily Scanner for QQQ, SPY, IWM ──
-      addLog('📡 Iniciando Daily Scanner para QQQ, SPY, IWM...')
-      const scanRes = await fetch('/api/daily-signals/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stocks: ['QQQ', 'SPY', 'IWM'] }),
-      })
-      if (!scanRes.ok) throw new Error('Daily Scanner no disponible')
-
-      // Poll for results
-      let scanDone = false
-      for (let i = 0; i < 12 && !scanDone; i++) {
-        await new Promise(r => setTimeout(r, 8000))
-        addLog(`⟳ Consultando resultados... (${i + 1}/12)`)
-        const resRes = await fetch('/api/daily-signals/results')
-        if (resRes.ok) {
-          const data = await resRes.json()
-          const signals: ScanSignal[] = Array.isArray(data) ? data : data.results ?? []
-          const etfSignals = signals.filter(s => {
-            const sym = (s.stock_code ?? s.symbol ?? '').toUpperCase()
-            return Object.keys(ETF_MAP).includes(sym)
-          })
-          if (etfSignals.length > 0) {
-            const biasMap: Record<string, { sesgo: 'COMPRA'|'VENTA'|'NEUTRAL'; conf: number }> = {}
-            for (const s of etfSignals) {
-              const sym = (s.stock_code ?? s.symbol ?? '').toUpperCase()
-              const sigStr = s.operation_advice ?? s.recommendation ?? s.signal ?? ''
-              biasMap[ETF_MAP[sym]] = {
-                sesgo: normalizeBias(sigStr),
-                conf: s.sentiment_score ?? s.score ?? 65,
-              }
-            }
-            setScanBias(biasMap)
-            addLog(`✓ Daily Scanner: ${etfSignals.length} señales recibidas`)
-            scanDone = true
-          }
-        }
-      }
-      if (!scanDone) {
-        addLog('⚠ Daily Scanner timeout — continuando con Analizador de Índices')
-      }
-      setPhase1('done')
-
-      // ── Phase 2: Indices Analyzer ──
-      setPhase2('running')
-      addLog('🔍 Iniciando Analizador de Índices...')
-      const idxRes = await fetch('/api/futures/analyze', { method: 'POST' })
-      if (!idxRes.ok) throw new Error('Analizador de Índices falló')
-      const idxData = await idxRes.json()
-      setIdxBias(idxData.activos ?? [])
-      addLog(`✓ Analizador: ${idxData.activos?.length ?? 0} índices analizados`)
-      setPhase2('done')
-
-      // ── Compute confirmed signals ──
-      const confirmedSignals: FuturesSignal[] = []
-      for (const idx of (idxData.activos ?? []) as IndexAsset[]) {
-        if (idx.simbolo === 'VIX' || idx.sesgo === 'NEUTRAL') continue
-        const scanEntry = (prev: typeof scanBias) => prev[idx.simbolo]
-        // Re-read scanBias from closure for each index
-        const etfBias = Object.keys(ETF_MAP).find(k => ETF_MAP[k] === idx.simbolo)
-        // Will be set after state settles — compute from local var
-        const scanSesgo = scanDone
-          ? (Object.fromEntries(Object.entries(ETF_MAP).map(([k, v]) => [v, k]))[idx.simbolo] ?? null)
-          : null
-
-        // We compute confirmed after both are done — use idx alone when scanner unavailable
-        if (idx.confianza >= 65) {
-          const { sl, tp, lotaje } = computeLevels(idx.sesgo, idx.precio)
-          confirmedSignals.push({
-            simbolo: idx.simbolo,
-            nombre: INDEX_NAMES[idx.simbolo] ?? idx.nombre,
-            sesgo: idx.sesgo,
-            confianza: idx.confianza,
-            precioEntrada: idx.precio,
-            stopLoss: parseFloat(sl.toFixed(2)),
-            takeProfit: parseFloat(tp.toFixed(2)),
-            lotaje,
-            razon: idx.razon,
-            sector: 'Futuros',
-            riskProfile: 'moderado',
-            riesgoUsd: 10,
-            rrRatio: 2.0,
-          })
-        }
-      }
-
-      // Cross-check with scanner if available
-      if (scanDone && Object.keys(scanBias).length > 0) {
-        // Update confirmed: keep only those where scanner agrees (or scanner not available for that index)
-        const finalSignals = confirmedSignals.filter(sig => {
-          // Use the updated scanBias captured above (not state yet, need local var)
-          return true // will be reconciled below
+      const pending = trackRecs.filter(r => r.resultado === 'PENDIENTE')
+      let changed = false
+      for (const sig of pending) {
+        const currentPrice = pm[sig.simbolo]
+        if (!currentPrice || currentPrice <= 0) continue
+        const isCompra = sig.sesgo === 'COMPRA'
+        const hitTP = isCompra ? currentPrice >= sig.takeProfit : currentPrice <= sig.takeProfit
+        const hitSL = isCompra ? currentPrice <= sig.stopLoss  : currentPrice >= sig.stopLoss
+        if (!hitTP && !hitSL) continue
+        const resultado = hitTP ? 'GANADA' : 'PERDIDA'
+        const slDist = Math.abs(sig.precioEntrada - sig.stopLoss)
+        const rawPnl = slDist > 0
+          ? (isCompra
+              ? ((currentPrice - sig.precioEntrada) / slDist) * 10
+              : ((sig.precioEntrada - currentPrice) / slDist) * 10)
+          : 0
+        await fetch(`/api/cfds/signals/${sig.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resultado, closedPrice: currentPrice, pnlUsd: parseFloat(rawPnl.toFixed(2)) }),
         })
-        setConfirmed(confirmedSignals)
-      } else {
-        setConfirmed(confirmedSignals)
+        changed = true
       }
-
-      if (confirmedSignals.length > 0) {
-        addLog(`🎯 ${confirmedSignals.length} señal(es) generada(s)`)
-      } else {
-        addLog('⚠ Sin señales confirmadas. Mercado sin dirección clara.')
-      }
-    } catch (e) {
-      addLog(`❌ Error: ${(e as Error).message}`)
-      setPhase1(p => p === 'idle' ? 'error' : p)
-      setPhase2(p => p === 'idle' ? 'error' : 'error')
+      if (changed) await loadTrackRecs()
+      setLastPriceCheck(new Date())
+    } catch {} finally {
+      setPriceChecking(false)
     }
+  }, [trackRecs, loadTrackRecs])
+
+  // Auto-interval price check every 60s during market hours
+  useEffect(() => {
+    const tick = async () => {
+      if (!isUSMarketOpen()) return
+      if (Object.keys(priceMapRef.current).length === 0) return
+      await checkPriceLevels(priceMapRef.current)
+    }
+    const id = setInterval(tick, 60000)
+    return () => clearInterval(id)
+  }, [checkPriceLevels])
+
+  // Manual refresh
+  const handlePriceRefresh = async () => {
+    setPriceChecking(true)
+    try {
+      const res = await fetch('/api/futures/analyze', { method: 'POST' })
+      if (!res.ok) return
+      const data = await res.json()
+      const pm: Record<string, number> = {}
+      for (const a of (data.activos ?? []) as IndexAsset[]) {
+        if (a.precio > 0) pm[a.simbolo] = a.precio
+      }
+      priceMapRef.current = pm
+      await checkPriceLevels(pm)
+    } catch {} finally { setPriceChecking(false) }
   }
 
-  // Reconcile confirmed signals with scan bias after state updates
+  // ── Auto-save ──────────────────────────────────────────────────────────────
+
+  const autoSaveSignals = useCallback(async (sigs: FuturesSignal[]) => {
+    if (sigs.length === 0) return
+    try {
+      const res = await fetch('/api/cfds/signals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ signals: sigs }),
+      })
+      if (res.ok) {
+        const d = await res.json()
+        if (d.saved > 0) setSavedCount(d.saved)
+        await loadTrackRecs()
+      }
+    } catch {}
+  }, [loadTrackRecs])
+
+  // Reconcile confirmed signals + auto-save + check levels
   useEffect(() => {
     if (phase2 !== 'done' || idxBias.length === 0) return
     const final: FuturesSignal[] = []
+    const pm: Record<string, number> = {}
+
     for (const idx of idxBias) {
-      if (idx.simbolo === 'VIX' || idx.sesgo === 'NEUTRAL') continue
-      if (idx.confianza < 65) continue
+      if (idx.precio > 0) pm[idx.simbolo] = idx.precio
+      if (idx.simbolo === 'VIX' || idx.sesgo === 'NEUTRAL' || idx.confianza < 65) continue
       const scanEntry = scanBias[idx.simbolo]
-      // If scanner ran but disagrees → skip. If scanner didn't find this index → include anyway
       if (scanEntry && scanEntry.sesgo !== 'NEUTRAL' && scanEntry.sesgo !== idx.sesgo) continue
       const { sl, tp, lotaje } = computeLevels(idx.sesgo, idx.precio)
       final.push({
@@ -256,8 +247,8 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
         sesgo: idx.sesgo,
         confianza: Math.max(idx.confianza, scanEntry?.conf ?? 0),
         precioEntrada: idx.precio,
-        stopLoss: parseFloat(sl.toFixed(2)),
-        takeProfit: parseFloat(tp.toFixed(2)),
+        stopLoss: sl,
+        takeProfit: tp,
         lotaje,
         razon: idx.razon,
         sector: 'Futuros',
@@ -266,25 +257,76 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
         rrRatio: 2.0,
       })
     }
-    setConfirmed(final)
-  }, [phase2, idxBias, scanBias])
 
-  const saveSignals = async () => {
-    if (confirmed.length === 0) return
-    setSaving(true)
+    priceMapRef.current = pm
+    setConfirmed(final)
+
+    // Auto-save and check price levels
+    if (final.length > 0) autoSaveSignals(final)
+    if (Object.keys(pm).length > 0) checkPriceLevels(pm)
+  }, [phase2, idxBias, scanBias, autoSaveSignals, checkPriceLevels])
+
+  // ── Main analysis runner ───────────────────────────────────────────────────
+
+  const runAnalysis = async () => {
+    setPhase1('running'); setPhase2('idle')
+    setScanBias({}); setIdxBias([]); setConfirmed([]); setSavedCount(null); setLog([])
+
     try {
-      const res = await fetch('/api/cfds/signals', {
+      addLog('📡 Iniciando Daily Scanner para QQQ, SPY, IWM...')
+      let scanDone = false
+
+      const scanRes = await fetch('/api/daily-signals/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ signals: confirmed }),
+        body: JSON.stringify({ stocks: ['QQQ', 'SPY', 'IWM'] }),
       })
-      if (res.ok) {
-        const d = await res.json()
-        setSavedCount(d.saved ?? confirmed.length)
-        await loadTrackRecs()
+
+      if (scanRes.ok) {
+        for (let i = 0; i < 12 && !scanDone; i++) {
+          await new Promise(r => setTimeout(r, 8000))
+          addLog(`⟳ Consultando resultados... (${i + 1}/12)`)
+          const rr = await fetch('/api/daily-signals/results')
+          if (rr.ok) {
+            const data = await rr.json()
+            const signals: ScanSignal[] = Array.isArray(data) ? data : data.results ?? []
+            const etfSignals = signals.filter(s => {
+              const sym = (s.stock_code ?? s.symbol ?? '').toUpperCase()
+              return Object.keys(ETF_MAP).includes(sym)
+            })
+            if (etfSignals.length > 0) {
+              const bm: Record<string, { sesgo: 'COMPRA'|'VENTA'|'NEUTRAL'; conf: number }> = {}
+              for (const s of etfSignals) {
+                const sym = (s.stock_code ?? s.symbol ?? '').toUpperCase()
+                const sig = s.operation_advice ?? s.recommendation ?? s.signal ?? ''
+                bm[ETF_MAP[sym]] = { sesgo: normalizeBias(sig), conf: s.sentiment_score ?? s.score ?? 65 }
+              }
+              setScanBias(bm)
+              addLog(`✓ Daily Scanner: ${etfSignals.length} señales`)
+              scanDone = true
+            }
+          }
+        }
       }
-    } catch {} finally { setSaving(false) }
+      if (!scanDone) addLog('⚠ Daily Scanner timeout — continuando sin ETF filter')
+      setPhase1('done')
+
+      setPhase2('running')
+      addLog('🔍 Iniciando Analizador de Índices (9:45 AM ET, 15min)...')
+      const idxRes = await fetch('/api/futures/analyze', { method: 'POST' })
+      if (!idxRes.ok) throw new Error('Analizador de Índices falló')
+      const idxData = await idxRes.json()
+      setIdxBias(idxData.activos ?? [])
+      addLog(`✓ Analizador: ${(idxData.activos ?? []).filter((a: IndexAsset) => a.simbolo !== 'VIX').length} índices`)
+      setPhase2('done')
+    } catch (e) {
+      addLog(`❌ Error: ${(e as Error).message}`)
+      setPhase1(p => p === 'idle' ? 'error' : 'done')
+      setPhase2('error')
+    }
   }
+
+  // ── Row editing ────────────────────────────────────────────────────────────
 
   const handleSaveRow = async (id: string) => {
     const edit = rowEdits[id]
@@ -301,8 +343,7 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
         }),
       })
       setTrackRecs(prev => prev.map(r => r.id === id ? {
-        ...r,
-        resultado: edit.resultado,
+        ...r, resultado: edit.resultado,
         pnlUsd: edit.pnlUsd ? parseFloat(edit.pnlUsd) : r.pnlUsd,
         closedPrice: edit.closedPrice ? parseFloat(edit.closedPrice) : r.closedPrice,
       } : r))
@@ -310,7 +351,9 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
     } catch {} finally { setUpdatingId(null) }
   }
 
-  const fmt = (n: number, d = 2) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  const fmt = (n: number, d = 0) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })
 
   const phaseBadge = (p: 'idle'|'running'|'done'|'error') => {
     if (p === 'idle')    return <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-[var(--border)]" style={{ color: 'var(--text-muted)' }}>EN ESPERA</span>
@@ -323,44 +366,60 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
   const cerradas = trackRecs.filter(r => r.resultado !== 'PENDIENTE').length
   const totalPnl = trackRecs.reduce((s, r) => s + (r.pnlUsd ?? 0), 0)
   const winRate  = cerradas > 0 ? Math.round((ganadas / cerradas) * 100) : null
+  const isRunning = phase1 === 'running' || phase2 === 'running'
 
   return (
-    <div className="space-y-6">
-      {/* Strategy header */}
-      <div className="rounded-xl border p-5" style={{ borderColor: 'rgba(201,168,76,0.2)', background: 'linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 70%)' }}>
-        <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>ESTRATEGIA DUAL-FILTER — MICRO FUTUROS</p>
-        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          Filtro 1: Daily Scanner analiza ETFs (QQQ, SPY, IWM) · Filtro 2: Analizador de Índices (NQ, SP500, RUSSELL) ·
-          Si ambos coinciden en dirección → señal CONFIRMADA con SL/TP automático.
-        </p>
-        <div className="mt-4 flex gap-3">
+    <div className="space-y-5">
+      {/* Strategy info header */}
+      <div className="rounded-xl border p-4" style={{ borderColor: 'rgba(201,168,76,0.2)', background: 'linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 70%)' }}>
+        <div className="flex items-start justify-between gap-4 flex-wrap mb-3">
+          <div>
+            <p className="text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--gold)' }}>ESTRATEGIA DUAL-FILTER — MICRO FUTUROS INTRADÍA</p>
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              Daily Scanner ETFs → Analizador de Índices IA → Señal CONFIRMADA con SL/TP automático.
+              1 entrada máxima por índice por día. Señales auto-guardadas.
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5 text-right text-[10px] font-mono flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
+            <span>📅 Temporalidad: <strong style={{ color: 'var(--gold)' }}>15 min</strong></span>
+            <span>⏰ Análisis: <strong style={{ color: 'var(--gold)' }}>9:45 AM ET</strong></span>
+            <span>🔔 {countdown}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
           <button
             onClick={runAnalysis}
-            disabled={phase1 === 'running' || phase2 === 'running'}
-            className="px-5 py-2.5 rounded-xl text-sm font-mono tracking-widest font-bold transition-all disabled:opacity-50"
+            disabled={isRunning}
+            className="px-5 py-2 rounded-xl text-xs font-mono tracking-widest font-bold transition-all disabled:opacity-50"
             style={{ background: 'var(--gold-dark)', color: '#000' }}
           >
-            {(phase1 === 'running' || phase2 === 'running') ? '⟳ ANALIZANDO...' : '▶ INICIAR ANÁLISIS'}
+            {isRunning ? '⟳ ANALIZANDO...' : '▶ INICIAR ANÁLISIS'}
           </button>
-          {confirmed.length > 0 && isAdmin && (
-            <button
-              onClick={saveSignals}
-              disabled={saving}
-              className="px-4 py-2 rounded-xl text-xs font-mono border transition-all disabled:opacity-50"
-              style={{ borderColor: 'rgba(201,168,76,0.5)', color: 'var(--gold)', background: 'rgba(201,168,76,0.06)' }}
-            >
-              {saving ? '⏳ Guardando...' : `💾 Guardar ${confirmed.length} señal${confirmed.length !== 1 ? 'es' : ''}`}
-            </button>
+          <button
+            onClick={handlePriceRefresh}
+            disabled={priceChecking}
+            className="px-4 py-2 rounded-xl text-xs font-mono border transition-all disabled:opacity-50"
+            style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+          >
+            {priceChecking ? '⟳ Verificando...' : '🔄 Actualizar precios'}
+          </button>
+          {lastPriceCheck && (
+            <span className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>
+              Última verificación: {lastPriceCheck.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })}
+            </span>
           )}
-          {savedCount !== null && <span className="text-[10px] font-mono text-green-400 self-center">✓ {savedCount} guardadas</span>}
+          {savedCount !== null && (
+            <span className="text-[10px] font-mono text-green-400">✓ {savedCount} auto-guardadas</span>
+          )}
         </div>
       </div>
 
       {/* Phase steps */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[
-          { num: 1, label: 'DAILY SCANNER ETFs', desc: 'Analiza QQQ (NQ), SPY (SP500), IWM (Russell) con IA', phase: phase1 },
-          { num: 2, label: 'ANALIZADOR DE ÍNDICES', desc: 'Sesgo técnico NQ, SP500, RUSSELL con IA especializada', phase: phase2 },
+          { num: 1, label: 'DAILY SCANNER ETFs', desc: 'QQQ (NQ) · SPY (SP500) · IWM (Russell)', phase: phase1 },
+          { num: 2, label: 'ANALIZADOR DE ÍNDICES IA', desc: 'NQ · SP500 · RUSSELL · VIX — temporalidad 15min', phase: phase2 },
         ].map(step => (
           <div key={step.num} className="rounded-xl border p-4" style={{
             borderColor: step.phase === 'running' ? 'rgba(251,191,36,0.4)' : step.phase === 'done' ? 'rgba(74,222,128,0.25)' : 'var(--border)',
@@ -374,23 +433,19 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
               {phaseBadge(step.phase)}
             </div>
             <p className="text-[10px] pl-4" style={{ color: 'var(--text-muted)' }}>{step.desc}</p>
-
-            {/* Phase 1 results */}
             {step.num === 1 && Object.keys(scanBias).length > 0 && (
-              <div className="mt-3 pl-4 flex flex-wrap gap-2">
+              <div className="mt-2 pl-4 flex flex-wrap gap-1.5">
                 {Object.entries(scanBias).map(([sym, b]) => (
-                  <span key={sym} className={`text-[9px] font-mono px-2 py-0.5 rounded border ${b.sesgo === 'COMPRA' ? 'border-green-500/40 bg-green-500/10 text-green-400' : b.sesgo === 'VENTA' ? 'border-red-500/40 bg-red-500/10 text-red-400' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>
-                    {sym} {b.sesgo} {b.conf}%
+                  <span key={sym} className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${b.sesgo === 'COMPRA' ? 'border-green-500/40 bg-green-500/10 text-green-400' : b.sesgo === 'VENTA' ? 'border-red-500/40 bg-red-500/10 text-red-400' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>
+                    {sym} {b.sesgo}
                   </span>
                 ))}
               </div>
             )}
-
-            {/* Phase 2 results */}
             {step.num === 2 && idxBias.filter(a => a.simbolo !== 'VIX').length > 0 && (
-              <div className="mt-3 pl-4 flex flex-wrap gap-2">
+              <div className="mt-2 pl-4 flex flex-wrap gap-1.5">
                 {idxBias.filter(a => a.simbolo !== 'VIX').map(a => (
-                  <span key={a.simbolo} className={`text-[9px] font-mono px-2 py-0.5 rounded border ${a.sesgo === 'COMPRA' ? 'border-green-500/40 bg-green-500/10 text-green-400' : a.sesgo === 'VENTA' ? 'border-red-500/40 bg-red-500/10 text-red-400' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>
+                  <span key={a.simbolo} className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${a.sesgo === 'COMPRA' ? 'border-green-500/40 bg-green-500/10 text-green-400' : a.sesgo === 'VENTA' ? 'border-red-500/40 bg-red-500/10 text-red-400' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>
                     {a.simbolo} {a.sesgo} {a.confianza}%
                   </span>
                 ))}
@@ -403,27 +458,27 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
       {/* Log */}
       {log.length > 0 && (
         <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-          <div className="px-4 py-2" style={{ background: 'rgba(0,0,0,0.3)' }}>
-            <p className="text-[9px] font-mono tracking-widest" style={{ color: 'var(--text-muted)' }}>LOG DE ANÁLISIS</p>
+          <div className="px-4 py-1.5" style={{ background: 'rgba(0,0,0,0.3)' }}>
+            <p className="text-[9px] font-mono tracking-widest" style={{ color: 'var(--text-muted)' }}>LOG</p>
           </div>
-          <div className="p-3 space-y-0.5 max-h-32 overflow-y-auto font-mono text-[10px]" style={{ background: '#0a0a0a', color: '#4ade80' }}>
+          <div className="p-3 space-y-0.5 max-h-24 overflow-y-auto font-mono text-[10px]" style={{ background: '#0a0a0a', color: '#4ade80' }}>
             {log.map((l, i) => <p key={i}>{l}</p>)}
           </div>
         </div>
       )}
 
-      {/* Confirmed signals */}
+      {/* Confirmed signals (current session) */}
       {confirmed.length > 0 && (
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(201,168,76,0.3)' }}>
-          <div className="flex items-center justify-between px-4 py-2.5" style={{ background: 'rgba(201,168,76,0.08)', borderBottom: '1px solid rgba(201,168,76,0.2)' }}>
-            <span className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>SEÑALES CONFIRMADAS</span>
-            <span className="text-[9px] font-mono px-2 py-0.5 rounded-full border border-green-500/40 text-green-400">{confirmed.length} señal{confirmed.length !== 1 ? 'es' : ''}</span>
+          <div className="flex items-center justify-between px-4 py-2" style={{ background: 'rgba(201,168,76,0.08)', borderBottom: '1px solid rgba(201,168,76,0.2)' }}>
+            <span className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>SEÑALES DEL ANÁLISIS</span>
+            <span className="text-[9px] font-mono px-2 py-0.5 rounded-full border border-green-500/40 text-green-400">✓ Auto-guardadas</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-[10px] font-mono">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.3)' }}>
-                  {['Índice', 'Dirección', 'Conf', 'Entrada', 'Stop Loss', 'Take Profit', 'RR', 'Razón'].map(h => (
+                  {['Índice', 'Dir', 'Conf', 'Entrada', 'Stop Loss', 'Take Profit', 'Razón'].map(h => (
                     <th key={h} className="px-3 py-2 text-left whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
                   ))}
                 </tr>
@@ -439,13 +494,10 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
                       </span>
                     </td>
                     <td className="px-3 py-2" style={{ color: sig.confianza >= 75 ? 'var(--gold)' : 'var(--text-secondary)' }}>{sig.confianza}%</td>
-                    <td className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>{fmt(sig.precioEntrada, 0)}</td>
-                    <td className="px-3 py-2 text-red-400">{fmt(sig.stopLoss, 0)}</td>
-                    <td className="px-3 py-2 text-green-400">{fmt(sig.takeProfit, 0)}</td>
-                    <td className="px-3 py-2" style={{ color: 'var(--text-muted)' }}>1:2</td>
-                    <td className="px-3 py-2" style={{ color: 'var(--text-muted)', maxWidth: 180 }}>
-                      <span title={sig.razon}>{sig.razon}</span>
-                    </td>
+                    <td className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>{fmt(sig.precioEntrada)}</td>
+                    <td className="px-3 py-2 text-red-400">{fmt(sig.stopLoss)}</td>
+                    <td className="px-3 py-2 text-green-400">{fmt(sig.takeProfit)}</td>
+                    <td className="px-3 py-2" style={{ color: 'var(--text-muted)' }}>{sig.razon}</td>
                   </tr>
                 ))}
               </tbody>
@@ -458,23 +510,23 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-3">
-            <p className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>TRACK RECORD — FUTUROS</p>
+            <p className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>TRACK RECORD — FUTUROS INTRADÍA</p>
             {trackRecs.length > 0 && (
-              <div className="flex items-center gap-3 text-[9px] font-mono">
+              <div className="flex gap-3 text-[9px] font-mono">
                 <span style={{ color: 'var(--text-muted)' }}>{trackRecs.length} ops</span>
                 {winRate !== null && <span className={winRate >= 50 ? 'text-green-400' : 'text-red-400'}>{winRate}% WR</span>}
-                <span className={totalPnl >= 0 ? 'text-green-400' : 'text-red-400'}>{totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(0)} USD</span>
+                <span className={totalPnl >= 0 ? 'text-green-400' : 'text-red-400'}>{totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(0)}</span>
               </div>
             )}
           </div>
-          <button onClick={loadTrackRecs} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-            Actualizar
+          <button onClick={loadTrackRecs} className="label-mono text-[9px] px-2 py-1 rounded border" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+            ↺
           </button>
         </div>
 
         {trackRecs.length === 0 ? (
           <div className="rounded-xl border p-6 text-center text-[10px] font-mono" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-            Sin señales guardadas. Corre un análisis y guarda las señales confirmadas.
+            Sin señales. Corre el análisis a las 9:45 AM ET.
           </div>
         ) : (
           <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
@@ -482,7 +534,7 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
               <table className="w-full text-[10px] font-mono">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.3)' }}>
-                    {['Fecha', 'Índice', 'Dir', 'Entrada', 'SL', 'TP', 'Conf', 'Resultado', 'P&L USD', ...(isAdmin ? ['Acc.'] : [])].map(h => (
+                    {['Fecha', 'Índice', 'Dir', 'Entrada', 'SL', 'TP', 'Resultado', 'P&L', ...(isAdmin ? ['Acc.'] : [])].map(h => (
                       <th key={h} className="px-3 py-2 text-left whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
                     ))}
                   </tr>
@@ -491,7 +543,6 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
                   {trackRecs.map(rec => {
                     const isClosed = rec.resultado !== 'PENDIENTE'
                     const edit = rowEdits[rec.id]
-                    const isDirty = !!edit
                     return (
                       <tr key={rec.id} className="border-b border-[var(--border)]"
                         style={{
@@ -508,18 +559,15 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
                             {rec.sesgo}
                           </span>
                         </td>
-                        <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>{fmt(rec.precioEntrada, 0)}</td>
-                        <td className="px-3 py-2 whitespace-nowrap text-red-400">{fmt(rec.stopLoss, 0)}</td>
-                        <td className="px-3 py-2 whitespace-nowrap text-green-400">{fmt(rec.takeProfit, 0)}</td>
-                        <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{rec.confianza}%</td>
+                        <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>{fmt(rec.precioEntrada)}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-red-400">{fmt(rec.stopLoss)}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-green-400">{fmt(rec.takeProfit)}</td>
                         <td className="px-3 py-2 whitespace-nowrap">
                           {isAdmin ? (
-                            <select
-                              value={edit?.resultado ?? rec.resultado}
+                            <select value={edit?.resultado ?? rec.resultado}
                               onChange={e => setRowEdits(prev => ({ ...prev, [rec.id]: { resultado: e.target.value, pnlUsd: String(edit?.pnlUsd ?? rec.pnlUsd ?? ''), closedPrice: String(edit?.closedPrice ?? rec.closedPrice ?? '') } }))}
                               className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5"
-                              style={{ color: rec.resultado === 'GANADA' ? '#4ade80' : rec.resultado === 'PERDIDA' ? '#f87171' : rec.resultado === 'BREAKEVEN' ? '#facc15' : 'var(--text-muted)' }}
-                            >
+                              style={{ color: rec.resultado === 'GANADA' ? '#4ade80' : rec.resultado === 'PERDIDA' ? '#f87171' : rec.resultado === 'BREAKEVEN' ? '#facc15' : 'var(--text-muted)' }}>
                               {['PENDIENTE','GANADA','PERDIDA','BREAKEVEN'].map(r => <option key={r} value={r}>{r}</option>)}
                             </select>
                           ) : (
@@ -531,22 +579,20 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap">
                           {isAdmin ? (
-                            <input
-                              type="number" step="0.01" placeholder="0.00"
+                            <input type="number" step="0.01" placeholder="0.00"
                               value={edit?.pnlUsd ?? (rec.pnlUsd != null ? String(rec.pnlUsd) : '')}
                               onChange={e => setRowEdits(prev => ({ ...prev, [rec.id]: { resultado: edit?.resultado ?? rec.resultado, pnlUsd: e.target.value, closedPrice: String(edit?.closedPrice ?? rec.closedPrice ?? '') } }))}
                               className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5 w-16"
-                              style={{ color: 'var(--text-secondary)' }}
-                            />
+                              style={{ color: 'var(--text-secondary)' }} />
                           ) : (
                             <span className={rec.pnlUsd != null ? (rec.pnlUsd >= 0 ? 'text-green-400' : 'text-red-400') : ''} style={rec.pnlUsd == null ? { color: 'var(--text-muted)' } : {}}>
-                              {rec.pnlUsd != null ? `${rec.pnlUsd >= 0 ? '+' : ''}$${fmt(rec.pnlUsd)}` : '—'}
+                              {rec.pnlUsd != null ? `${rec.pnlUsd >= 0 ? '+' : ''}$${Math.abs(rec.pnlUsd).toFixed(2)}` : '—'}
                             </span>
                           )}
                         </td>
                         {isAdmin && (
                           <td className="px-3 py-2 whitespace-nowrap">
-                            {isDirty && (
+                            {!!edit && (
                               <button onClick={() => handleSaveRow(rec.id)} disabled={updatingId === rec.id}
                                 className="text-[9px] px-1.5 py-0.5 rounded border font-semibold"
                                 style={{ borderColor: 'rgba(234,179,8,0.5)', color: 'rgb(234,179,8)' }}>

@@ -41,14 +41,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No hay señales para guardar' }, { status: 400 })
   }
 
-  // Guard: skip symbols that already have a PENDIENTE signal (no duplicate open positions)
+  // Guard 1: skip Futuros symbols already generated TODAY (max 1 per index per day)
+  const today = new Date()
+  today.setUTCHours(0, 0, 0, 0)
+  const hasFuturos = signals.some((s: any) => String(s.sector ?? '') === 'Futuros')
+  let todaySet = new Set<string>()
+  if (hasFuturos) {
+    const todaySignals = await prisma.cfdSignal.findMany({
+      where: { sector: 'Futuros', createdAt: { gte: today } },
+      select: { simbolo: true },
+    })
+    todaySet = new Set(todaySignals.map(s => s.simbolo))
+  }
+
+  // Guard 2: skip symbols that already have a PENDIENTE signal (no duplicate open positions)
   const simbolosList = signals.map((s: any) => String(s.simbolo ?? ''))
   const pendientes = await prisma.cfdSignal.findMany({
     where: { simbolo: { in: simbolosList }, resultado: 'PENDIENTE' },
     select: { simbolo: true },
   })
   const blockedSet = new Set(pendientes.map(p => p.simbolo))
-  const toSave = signals.filter((s: any) => !blockedSet.has(String(s.simbolo ?? '')))
+  const toSave = signals.filter((s: any) => {
+    const sym = String(s.simbolo ?? '')
+    if (String(s.sector ?? '') === 'Futuros' && todaySet.has(sym)) return false
+    return !blockedSet.has(sym)
+  })
   const skipped = simbolosList.filter(sym => blockedSet.has(sym))
 
   if (toSave.length === 0) {
