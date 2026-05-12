@@ -287,6 +287,10 @@ model OptionRecommendation {
   status          String   @default("ACTIVA") // 'ACTIVA' | 'CERRADA' | 'EXPIRADA'
   precioSalida    Float?
   active          Boolean  @default(true)
+  resultado       String?  // 'GANADA' | 'PERDIDA' | 'BREAKEVEN'
+  pnlPct          Float?   // % sobre prima pagada
+  pnlUsd          Float?   // P&L en dólares
+  closedAt        DateTime? // fecha de cierre real
 }
 
 model KnowledgeDoc {

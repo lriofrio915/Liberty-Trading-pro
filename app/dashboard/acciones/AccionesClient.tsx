@@ -20,7 +20,12 @@ const OportunidadesClient = dynamic(
   isAdmin: boolean
 }>
 
-type Tab = 'recomendaciones' | 'research' | 'tauric' | 'signals' | 'proyeccion'
+const OpcionesClient = dynamic(
+  () => import('@/app/dashboard/opciones/OpcionesClient'),
+  { ssr: false },
+) as React.ComponentType<{ isAdmin?: boolean }>
+
+type Tab = 'recomendaciones' | 'research' | 'tauric' | 'signals' | 'proyeccion' | 'opciones'
 
 export default function AccionesClient({
   initialOpportunities,
@@ -195,6 +200,16 @@ export default function AccionesClient({
         >
           CONFIRMACIÓN
         </button>
+        <button
+          onClick={() => setTab('opciones')}
+          className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border ${
+            tab === 'opciones'
+              ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
+          }`}
+        >
+          OPCIONES
+        </button>
       </div>
 
       {tab === 'recomendaciones' && (
@@ -204,6 +219,7 @@ export default function AccionesClient({
       {tab === 'proyeccion' && <ForecastTab />}
       {tab === 'tauric' && <TauricResearchTab />}
       {tab === 'signals' && <DailySignalsTab isAdmin={isAdmin} defaultTickers={activeTickers} />}
+      {tab === 'opciones' && <OpcionesClient isAdmin={isAdmin} />}
     </div>
   )
 }

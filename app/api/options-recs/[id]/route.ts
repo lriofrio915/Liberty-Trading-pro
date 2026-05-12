@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const { id } = await params
   const body = await req.json()
-  const { status, precioSalida, active } = body
+  const { status, precioSalida, active, resultado, pnlPct, pnlUsd, closedAt } = body
 
   const updated = await prisma.optionRecommendation.update({
     where: { id },
@@ -25,6 +25,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(status !== undefined && { status }),
       ...(precioSalida !== undefined && { precioSalida }),
       ...(active !== undefined && { active }),
+      ...(resultado !== undefined && { resultado }),
+      ...(pnlPct !== undefined && { pnlPct }),
+      ...(pnlUsd !== undefined && { pnlUsd }),
+      ...(closedAt !== undefined && { closedAt: closedAt ? new Date(closedAt) : null }),
     },
   })
   return NextResponse.json({ recommendation: updated })

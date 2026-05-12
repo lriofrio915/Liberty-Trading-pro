@@ -88,6 +88,7 @@ export default function AgenteSmallCap({ isAdmin }: { isAdmin: boolean }) {
   const [activeTicker, setActiveTicker] = useState<string | null>(null)
   const [log, setLog]               = useState<string[]>([])
   const [summary, setSummary]       = useState<{ created: number; total: number } | null>(null)
+  const [stepsOpen, setStepsOpen]   = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
   function addLog(msg: string) { setLog(prev => [...prev, msg]) }
@@ -97,6 +98,7 @@ export default function AgenteSmallCap({ isAdmin }: { isAdmin: boolean }) {
     setStep1Phase('idle'); setStep2Phase('idle'); setStep3Phase('idle')
     setStep4Phase('idle'); setStep5Phase('idle')
     setTickers([]); setLog([]); setActiveTicker(null); setSummary(null)
+    setStepsOpen(false)
   }
 
   function stopAgent() {
@@ -109,6 +111,7 @@ export default function AgenteSmallCap({ isAdmin }: { isAdmin: boolean }) {
   }
 
   async function runAgenteSmallCap() {
+    setStepsOpen(true)
     abortRef.current = new AbortController()
     const signal = abortRef.current.signal
     setPhase('running'); setLog([]); setTickers([]); setSummary(null)
@@ -316,7 +319,7 @@ export default function AgenteSmallCap({ isAdmin }: { isAdmin: boolean }) {
         setSummary({ created: 0, total: smallCapTickers.length }); setActiveTicker(null); return
       }
 
-      addLog(`📝 Generando ${paso4Pass.length} informe(s) en RECOMENDACIONES SMALL CAPS...`)
+      addLog(`📝 Generando ${paso4Pass.length} informe(s) en RECOMENDACIONES AGENTE SMALL...`)
       for (const t of paso4Pass) {
         if (signal.aborted) break
         setActiveTicker(t.ticker)
@@ -349,7 +352,7 @@ export default function AgenteSmallCap({ isAdmin }: { isAdmin: boolean }) {
       setStep5Phase('done'); setPhase('done'); setActiveTicker(null)
       const created = paso4Results.filter(t => t.step5 === 'done').length
       setSummary({ created, total: smallCapTickers.length })
-      addLog(`🎉 Agente SmallCap completado: ${created} recomendación(es) en SMALL CAPS.`)
+      addLog(`🎉 Agente Small completado: ${created} recomendación(es) en SMALL CAPS.`)
 
     } catch (e) {
       if ((e as Error).name === 'AbortError') return
@@ -365,7 +368,14 @@ export default function AgenteSmallCap({ isAdmin }: { isAdmin: boolean }) {
           <div>
             <div className="flex items-center gap-3 mb-1">
               <span className="text-2xl">🔬</span>
-              <h2 className="text-xl font-black" style={{ color: 'var(--text-primary)' }}>Agente SmallCap</h2>
+              <h2
+                className="text-xl font-black cursor-pointer hover:opacity-80 transition-opacity select-none"
+                style={{ color: 'var(--text-primary)' }}
+                onClick={() => setStepsOpen(o => !o)}
+                title={stepsOpen ? 'Ocultar pasos' : 'Ver pasos'}
+              >
+                Agente Small {stepsOpen ? '▲' : '▼'}
+              </h2>
               <span className="text-[9px] font-mono px-2 py-0.5 rounded-full border border-[var(--gold)]/40 text-[var(--gold)]">SMALL CAPS</span>
             </div>
             <p className="text-xs max-w-lg" style={{ color: 'var(--text-muted)' }}>
@@ -374,7 +384,7 @@ export default function AgenteSmallCap({ isAdmin }: { isAdmin: boolean }) {
           </div>
           <div className="flex gap-2">
             {phase === 'idle' || phase === 'done' || phase === 'error' ? (
-              <button onClick={phase === 'idle' ? runAgenteSmallCap : resetAgent} disabled={!isAdmin}
+              <button onClick={phase === 'idle' ? () => { setStepsOpen(true); runAgenteSmallCap() } : resetAgent} disabled={!isAdmin}
                 className="px-5 py-2.5 text-sm font-mono tracking-widest rounded-xl bg-[var(--gold)] text-black font-bold disabled:opacity-40 hover:opacity-90 transition-opacity">
                 {phase === 'idle' ? '▶ INICIAR AGENTE' : '↺ REINICIAR'}
               </button>
@@ -389,13 +399,13 @@ export default function AgenteSmallCap({ isAdmin }: { isAdmin: boolean }) {
         {!isAdmin && <p className="text-[10px] font-mono mt-2 text-amber-400">Solo el administrador puede ejecutar agentes.</p>}
       </div>
 
-      <div className="px-6 py-5 space-y-3" style={{ borderTop: '1px solid rgba(201,168,76,0.12)' }}>
+      {stepsOpen && <div className="px-6 py-5 space-y-3" style={{ borderTop: '1px solid rgba(201,168,76,0.12)' }}>
         {[
           { num: 1, label: 'INVESTIGACIÓN SMALL-CAP', desc: 'Score ≥5/6 Y marketCap < $2B (Russell 2000, S&P 600)', phaseVal: step1Phase },
           { num: 2, label: 'PROYECCIÓN 30 DÍAS',      desc: 'Forecast alcista en modelo TimesFM (Google)',          phaseVal: step2Phase },
           { num: 3, label: 'MOMENTUM DAILY SCANNER',  desc: 'Señal de compra en Daily Scanner IA',                  phaseVal: step3Phase },
           { num: 4, label: 'CONFIRMACIÓN IA',         desc: 'Análisis multi-agente Tauric (moderado, ~3-7 min)',    phaseVal: step4Phase },
-          { num: 5, label: 'GENERANDO INFORMES',      desc: 'Crea informe en RECOMENDACIONES SMALL CAPS',           phaseVal: step5Phase },
+          { num: 5, label: 'GENERANDO INFORMES',      desc: 'Crea informe en RECOMENDACIONES AGENTE SMALL',         phaseVal: step5Phase },
         ].map(step => (
           <div key={step.num} className="rounded-xl border p-4" style={{
             borderColor: step.phaseVal === 'running' ? 'rgba(251,191,36,0.4)' : step.phaseVal === 'done' ? 'rgba(74,222,128,0.25)' : 'var(--border)',
@@ -432,14 +442,14 @@ export default function AgenteSmallCap({ isAdmin }: { isAdmin: boolean }) {
             )}
           </div>
         ))}
-      </div>
+      </div>}
 
       {summary && (
         <div className="mx-6 mb-5 p-4 rounded-xl border" style={{ borderColor: 'rgba(201,168,76,0.3)', background: 'rgba(201,168,76,0.05)' }}>
           <p className="text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--gold)' }}>RESULTADO FINAL</p>
           <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{summary.created} recomendación(es) de {summary.total} analizadas</p>
           {summary.created > 0 && (
-            <a href="/dashboard/acciones" className="text-[10px] font-mono underline mt-1 block" style={{ color: 'var(--gold)' }}>Ver en RECOMENDACIONES SMALL CAPS →</a>
+            <a href="/dashboard/acciones" className="text-[10px] font-mono underline mt-1 block" style={{ color: 'var(--gold)' }}>Ver en RECOMENDACIONES AGENTE SMALL →</a>
           )}
         </div>
       )}

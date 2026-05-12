@@ -173,9 +173,30 @@ REGLAS ESTRICTAS:
       console.error('[picks] AI report generation failed:', aiErr)
     }
 
-    const opportunity = await prisma.opportunity.create({
+    const existing = await prisma.opportunity.findFirst({
+      where: { ticker: yf.ticker, category, active: true },
+    })
+
+    let opportunity
+    if (existing) {
+      opportunity = await prisma.opportunity.update({
+        where: { id: existing.id },
+        data: {
+          title: yf.empresa,
+          precioEntrada,
+          precioObjetivo,
+          stopLoss,
+          direction,
+          aiReport,
+          publishedAt: new Date(),
+        },
+      })
+      return NextResponse.json({ opportunity, updated: true }, { status: 200 })
+    }
+
+    opportunity = await prisma.opportunity.create({
       data: {
-        title: `${yf.ticker} — ${direction} · ${yf.empresa}`,
+        title: yf.empresa,
         ticker: yf.ticker,
         instrumento: 'ACCION',
         tipo: 'ACCION',

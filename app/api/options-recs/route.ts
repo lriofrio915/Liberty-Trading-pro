@@ -37,6 +37,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'ticker, direction y contractSymbol son requeridos' }, { status: 400 })
   }
 
+  const existing = await prisma.optionRecommendation.findFirst({
+    where: { ticker, contractSymbol, status: 'ACTIVA' },
+  })
+  if (existing) {
+    return NextResponse.json({ recommendation: existing, skipped: true }, { status: 200 })
+  }
+
   const rec = await prisma.optionRecommendation.create({
     data: {
       ticker, company, direction, strategy, action,

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import type { FlujoDineroResponse, FlujoDineroAsset, FlujoConclusion } from '@/app/api/flujo/route'
-import ForecastTab from './ForecastTab'
 
 interface TickerSuggestion {
   symbol: string
@@ -357,14 +356,12 @@ function DetailTable({ assets }: { assets: FlujoDineroAsset[] }) {
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 type ViewTab = 'mapa' | 'teoria' | 'tabla'
-type OuterTab = 'faros' | 'forecast'
 
 export default function FlujoDineroClient({ hasAccess }: { hasAccess: boolean }) {
   const [data, setData] = useState<FlujoDineroResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<ViewTab>('mapa')
-  const [outerTab, setOuterTab] = useState<OuterTab>('faros')
 
   // Ticker search
   const [tickerQuery, setTickerQuery] = useState('')
@@ -469,60 +466,28 @@ export default function FlujoDineroClient({ hasAccess }: { hasAccess: boolean })
         <div>
           <h1 className="text-2xl font-black gradient-gold mb-1">Flujo del Dinero</h1>
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            {outerTab === 'faros'
-              ? 'FAROS v7.0 — TAI-ACF · Rastreo de capital con física de fluidos financieros'
-              : 'FORECAST IA — TimesFM · Pronóstico numérico de precio (Google Research)'}
+            FAROS v7.0 — TAI-ACF · Rastreo de capital con física de fluidos financieros
           </p>
         </div>
-        {outerTab === 'faros' && (
-          <button
-            onClick={fetchData}
-            disabled={loading}
-            className="text-xs font-bold px-4 py-2 rounded-xl border transition-all btn-gold disabled:opacity-50 flex-shrink-0"
-          >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Cargando...
-              </span>
-            ) : 'Actualizar'}
-          </button>
-        )}
-      </div>
-
-      {/* Outer tab switcher */}
-      <div className="flex gap-2 flex-wrap">
         <button
-          onClick={() => setOuterTab('faros')}
-          className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border transition-all ${
-            outerTab === 'faros'
-              ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
-              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
-          }`}
+          onClick={fetchData}
+          disabled={loading}
+          className="text-xs font-bold px-4 py-2 rounded-xl border transition-all btn-gold disabled:opacity-50 flex-shrink-0"
         >
-          FAROS
-        </button>
-        <button
-          onClick={() => setOuterTab('forecast')}
-          className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border transition-all ${
-            outerTab === 'forecast'
-              ? 'text-black border-sky-400'
-              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
-          }`}
-          style={outerTab === 'forecast' ? { background: 'rgb(56,189,248)' } : {}}
-        >
-          FORECAST IA
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Cargando...
+            </span>
+          ) : 'Actualizar'}
         </button>
       </div>
-
-      {/* Forecast tab */}
-      {outerTab === 'forecast' && <ForecastTab />}
 
       {/* FAROS content */}
-      {outerTab === 'faros' && <>
+      {<>
       {/* Buscador de tickers */}
       <div className="relative">
         <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5 focus-within:border-[var(--gold-dark)]" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>

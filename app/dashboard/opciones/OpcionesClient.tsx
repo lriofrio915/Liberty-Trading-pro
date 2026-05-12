@@ -110,6 +110,7 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
     bid: number | null; ask: number | null; mid: number | null; delta: number | null
     breakeven: number | null; maxLossHint: string | null; maxProfitHint: string | null
     publishedAt: string; status: string; precioSalida: number | null; active: boolean
+    resultado: string | null; pnlPct: number | null; pnlUsd: number | null; closedAt: string | null
   }
   const [optRecs, setOptRecs] = useState<OptRec[]>([])
   const [optRecsLoading, setOptRecsLoading] = useState(false)
@@ -436,7 +437,7 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
             <table className="w-full text-xs border-collapse">
               <thead>
                 <tr className="border-b border-[var(--border)]" style={{ background: 'rgba(201,168,76,0.05)' }}>
-                  {['Fecha','Ticker','Acción','Contrato','Strike','Exp.','DTE','Subyacente','Bid/Ask','Delta','Score','Estado','Acc.'].map(col => (
+                  {['Fecha','Ticker','Acción','Contrato','Strike','Exp.','DTE','Subyacente','Bid/Ask','Delta','Score','Estado','Resultado','P&L %','P&L $','Acc.'].map(col => (
                     <th key={col} className="px-3 py-2 text-left text-[9px] font-semibold uppercase tracking-widest whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{col}</th>
                   ))}
                 </tr>
@@ -491,6 +492,86 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
                           </select>
                         ) : (
                           <span className={`text-[9px] font-mono ${statusColor}`}>{rec.status}</span>
+                        )}
+                      </td>
+                      {/* Resultado inline edit */}
+                      <td className="px-3 py-2">
+                        {isAdmin ? (
+                          <select
+                            value={rec.resultado ?? ''}
+                            onChange={async e => {
+                              const val = e.target.value || null
+                              await fetch(`/api/options-recs/${rec.id}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ resultado: val }),
+                              })
+                              setOptRecs(prev => prev.map(r => r.id === rec.id ? { ...r, resultado: val } : r))
+                            }}
+                            className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5"
+                            style={{ color: rec.resultado === 'GANADA' ? '#4ade80' : rec.resultado === 'PERDIDA' ? '#f87171' : 'var(--text-muted)' }}
+                          >
+                            <option value="">—</option>
+                            <option value="GANADA">GANADA</option>
+                            <option value="PERDIDA">PERDIDA</option>
+                            <option value="BREAKEVEN">BREAKEVEN</option>
+                          </select>
+                        ) : (
+                          <span className={`text-[9px] font-mono ${rec.resultado === 'GANADA' ? 'text-green-400' : rec.resultado === 'PERDIDA' ? 'text-red-400' : ''}`}>
+                            {rec.resultado ?? '—'}
+                          </span>
+                        )}
+                      </td>
+                      {/* P&L % inline */}
+                      <td className="px-3 py-2">
+                        {isAdmin ? (
+                          <input
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            defaultValue={rec.pnlPct ?? ''}
+                            className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5 w-16"
+                            style={{ color: 'var(--text-secondary)' }}
+                            onBlur={async e => {
+                              const val = e.target.value ? parseFloat(e.target.value) : null
+                              await fetch(`/api/options-recs/${rec.id}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ pnlPct: val }),
+                              })
+                              setOptRecs(prev => prev.map(r => r.id === rec.id ? { ...r, pnlPct: val } : r))
+                            }}
+                          />
+                        ) : (
+                          <span className={`text-[9px] font-mono ${(rec.pnlPct ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {rec.pnlPct != null ? `${rec.pnlPct.toFixed(1)}%` : '—'}
+                          </span>
+                        )}
+                      </td>
+                      {/* P&L $ inline */}
+                      <td className="px-3 py-2">
+                        {isAdmin ? (
+                          <input
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            defaultValue={rec.pnlUsd ?? ''}
+                            className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5 w-16"
+                            style={{ color: 'var(--text-secondary)' }}
+                            onBlur={async e => {
+                              const val = e.target.value ? parseFloat(e.target.value) : null
+                              await fetch(`/api/options-recs/${rec.id}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ pnlUsd: val }),
+                              })
+                              setOptRecs(prev => prev.map(r => r.id === rec.id ? { ...r, pnlUsd: val } : r))
+                            }}
+                          />
+                        ) : (
+                          <span className={`text-[9px] font-mono ${(rec.pnlUsd ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {rec.pnlUsd != null ? `$${rec.pnlUsd.toFixed(2)}` : '—'}
+                          </span>
                         )}
                       </td>
                       <td className="px-3 py-2">

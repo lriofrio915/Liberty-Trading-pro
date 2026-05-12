@@ -129,13 +129,13 @@ function ForecastChart({ data }: { data: ForecastData }) {
 
         {/* Forecast line */}
         <path d={linePath([hist[hist.length - 1], ...fcast], hist.length - 1)}
-          fill="none" stroke="rgb(56,189,248)" strokeWidth="2" strokeDasharray="6 3" />
+          fill="none" stroke="var(--gold)" strokeWidth="2" strokeDasharray="6 3" />
 
         {/* X axis labels */}
         {xLabels.map(({ i, label }) => (
           <text key={i} x={xOf(i)} y={H - PAD.bottom + 14}
             textAnchor="middle" fontSize="10" fill="rgba(255,255,255,0.35)" fontFamily="monospace"
-            className={i >= hist.length ? 'fill-sky-400/60' : ''}>
+            className={i >= hist.length ? 'fill-[var(--gold)]/60' : ''}>
             {label}
           </text>
         ))}
@@ -146,7 +146,7 @@ function ForecastChart({ data }: { data: ForecastData }) {
 
         {/* Forecast end dot */}
         <circle cx={xOf(totalPoints - 1)} cy={yOf(fcast[fcast.length - 1])}
-          r={4} fill="rgb(56,189,248)" />
+          r={4} fill="var(--gold)" />
       </svg>
 
       {/* Legend */}
@@ -156,7 +156,7 @@ function ForecastChart({ data }: { data: ForecastData }) {
           <span>Histórico</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-6 h-0.5 bg-sky-400 opacity-80" style={{ backgroundImage: 'repeating-linear-gradient(to right, rgb(56,189,248) 0, rgb(56,189,248) 6px, transparent 6px, transparent 9px)' }} />
+          <div className="w-6 h-0.5 bg-[var(--gold)] opacity-80" style={{ backgroundImage: 'repeating-linear-gradient(to right, var(--gold) 0, var(--gold) 6px, transparent 6px, transparent 9px)' }} />
           <span>Pronóstico (media)</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -261,7 +261,7 @@ export default function ForecastTab() {
       <div className="rounded-xl border p-5" style={{ background: 'linear-gradient(135deg, rgba(56,189,248,0.05) 0%, transparent 70%)', borderColor: 'rgba(56,189,248,0.2)' }}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'rgb(56,189,248)' }}>
+            <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>
               FORECAST IA — TIMESFM (GOOGLE RESEARCH)
             </p>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
@@ -289,7 +289,7 @@ export default function ForecastTab() {
 
       {/* Form */}
       <div className="card space-y-4">
-        <p className="text-[10px] font-mono tracking-widest" style={{ color: 'rgb(56,189,248)' }}>CONFIGURAR PRONÓSTICO</p>
+        <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>CONFIGURAR PRONÓSTICO</p>
 
         <div className="grid sm:grid-cols-2 gap-4">
           {/* Ticker autocomplete */}
@@ -307,17 +307,17 @@ export default function ForecastTab() {
                 placeholder="Busca empresa o ticker (ej. Apple, AAPL)…"
                 autoComplete="off"
                 className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-sm px-3 py-2 rounded-lg focus:outline-none font-mono pr-7"
-                style={{ color: ticker ? 'rgb(56,189,248)' : 'var(--text-secondary)', borderColor: ticker ? 'rgba(56,189,248,0.4)' : undefined }}
+                style={{ color: ticker ? 'var(--gold)' : 'var(--text-secondary)', borderColor: ticker ? 'rgba(201,168,76,0.4)' : undefined }}
               />
-              {ticker && <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-sky-400">✓</span>}
+              {ticker && <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px]" style={{ color: 'var(--gold)' }}>✓</span>}
 
               {showDrop && suggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 rounded-lg border overflow-hidden shadow-xl"
                   style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
                   {suggestions.map((s, i) => (
                     <button key={s.symbol} onMouseDown={e => { e.preventDefault(); select(s) }}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-sky-500/5 transition-colors ${i > 0 ? 'border-t border-[var(--border)]' : ''}`}>
-                      <span className="font-mono text-xs font-bold flex-shrink-0 w-14" style={{ color: 'rgb(56,189,248)' }}>{s.symbol}</span>
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-white/5 transition-colors ${i > 0 ? 'border-t border-[var(--border)]' : ''}`}>
+                      <span className="font-mono text-xs font-bold flex-shrink-0 w-14" style={{ color: 'var(--gold)' }}>{s.symbol}</span>
                       <span className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{s.name}</span>
                       <span className="ml-auto text-[10px] flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{s.exchange}</span>
                     </button>
@@ -333,7 +333,7 @@ export default function ForecastTab() {
             <div className="grid grid-cols-3 gap-2">
               {HORIZONS.map(h => (
                 <button key={h.value} onClick={() => setHorizon(h.value)}
-                  className={`py-2 text-xs font-mono rounded-lg border transition-all ${horizon === h.value ? 'text-sky-400 border-sky-400/50 bg-sky-500/10' : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-sky-400/30'}`}>
+                  className={`py-2 text-xs font-mono rounded-lg border transition-all ${horizon === h.value ? 'text-black border-[var(--gold)] bg-[var(--gold)]' : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--gold-dark)]'}`}>
                   {h.label}
                 </button>
               ))}
@@ -345,7 +345,7 @@ export default function ForecastTab() {
           disabled={!ticker || loading}
           onClick={generate}
           className="w-full py-3 text-sm font-mono tracking-widest rounded-xl font-bold disabled:opacity-40 transition-opacity hover:opacity-90"
-          style={{ background: 'rgb(56,189,248)', color: '#000' }}
+          style={{ background: 'var(--gold)', color: '#000' }}
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
@@ -400,7 +400,7 @@ export default function ForecastTab() {
           {/* Chart */}
           <div className="card">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-[10px] font-mono tracking-widest" style={{ color: 'rgb(56,189,248)' }}>
+              <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>
                 GRÁFICO — {result.symbol} · {HISTORY_DISPLAY}d histórico + {result.horizon}d pronóstico
               </p>
               <p className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>TimesFM-200M</p>

@@ -870,8 +870,8 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
               className={inputCls}
             >
               <option value="OPERATOR">Recomendaciones del Operador</option>
-              <option value="PETER_LYNCH">Recomendaciones Peter Lynch</option>
-              <option value="SMALL_CAPS">Recomendaciones Small Caps</option>
+              <option value="PETER_LYNCH">Recomendaciones Agente Peter</option>
+              <option value="SMALL_CAPS">Recomendaciones Agente Small</option>
             </select>
           </div>
 
@@ -992,8 +992,8 @@ export default function OportunidadesClient({
 
   const CATEGORY_LABELS: Record<string, string> = {
     OPERATOR:    'Recomendaciones del Operador',
-    PETER_LYNCH: 'Recomendaciones Peter Lynch',
-    SMALL_CAPS:  'Recomendaciones Small Caps',
+    PETER_LYNCH: 'Recomendaciones Agente Peter',
+    SMALL_CAPS:  'Recomendaciones Agente Small',
   }
 
   const trTotal   = categoryTrackOpps.length
