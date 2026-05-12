@@ -120,8 +120,8 @@ export async function fetchAllPrices(): Promise<PriceItem[]> {
     () => fetchYahoo('XOM',   'ExxonMobil'),
     // Índices
     () => fetchYahoo('NQ=F',   'NQ Futures'),
-    () => fetchYahoo('^GSPC',  'S&P 500'),
-    () => fetchYahoo('^RUT',   'Russell 2000'),
+    () => fetchYahoo('ES=F',   'S&P 500 Futures'),
+    () => fetchYahoo('RTY=F',  'Russell 2000 Futures'),
     () => fetchYahoo('^DJI',   'Dow Jones'),
     () => fetchYahoo('%5EVIX', 'VIX'),
     // Divisas
@@ -286,7 +286,7 @@ RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
 Para VIX: COMPRA = miedo elevado (>25), VENTA = complacencia extrema (<13), NEUTRAL = rango normal.
 Russell 2000: indicador de apetito de riesgo. COMPRA = risk-on, VENTA = risk-off.
 "sector" siempre "Índices". Incluye exactamente: NQ, SP500, RUSSELL, DOW, VIX.`,
-      user: `${pickCtx(['NQ=F','^GSPC','^RUT','^DJI','%5EVIX'])}\n\n${riskNote}\n\nAnaliza Nasdaq, S&P 500, Russell 2000, Dow Jones y VIX con los datos proporcionados.`,
+      user: `${pickCtx(['NQ=F','ES=F','RTY=F','^DJI','%5EVIX'])}\n\n${riskNote}\n\nAnaliza Nasdaq, S&P 500, Russell 2000, Dow Jones y VIX con los datos proporcionados.`,
     },
     {
       name: 'divisas' as const,
@@ -363,8 +363,8 @@ export const PRICE_LOOKUP: Record<string, string> = {
   // Índices
   NQ: 'NQ=F', 'NQ=F': 'NQ=F', 'NQ FUTURES': 'NQ=F', NASDAQ: 'NQ=F', 'NASDAQ 100': 'NQ=F',
   VIX: '%5EVIX', '%5EVIX': '%5EVIX', 'ÍNDICE VIX': '%5EVIX',
-  SP500: '^GSPC', '^GSPC': '^GSPC', 'S&P 500': '^GSPC', 'S&P500': '^GSPC', SPX: '^GSPC',
-  RUSSELL: '^RUT', 'RUSSELL 2000': '^RUT', '^RUT': '^RUT', RUT: '^RUT', RUSSELL2000: '^RUT',
+  SP500: 'ES=F', 'ES=F': 'ES=F', 'S&P 500': 'ES=F', 'S&P500': 'ES=F', SPX: 'ES=F', '^GSPC': 'ES=F',
+  RUSSELL: 'RTY=F', 'RUSSELL 2000': 'RTY=F', 'RTY=F': 'RTY=F', '^RUT': 'RTY=F', RUT: 'RTY=F', RUSSELL2000: 'RTY=F',
   DOW: '^DJI', '^DJI': '^DJI', 'DOW JONES': '^DJI', DJIA: '^DJI', 'DOW JONES INDUSTRIAL': '^DJI',
   // Divisas
   DXY: 'DX=F', 'DX=F': 'DX=F', 'DOLLAR INDEX': 'DX=F', 'ÍNDICE DÓLAR': 'DX=F', 'DOLAR INDEX': 'DX=F',
