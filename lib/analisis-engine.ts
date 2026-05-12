@@ -230,8 +230,18 @@ export async function fetchYahooOHLCV(symbol: string, label: string): Promise<OH
 
 // ── Agent definitions ──────────────────────────────────────────────────────────
 
-export function buildAgents(pricesCtx: string, riskProfile: string, today: string) {
-  const base = `Fecha: ${today}. Perfil de riesgo del usuario: ${riskProfile}. Datos de mercado en tiempo real:\n${pricesCtx}`
+export function buildAgents(pricesCtx: string, riskProfile: string, today: string, prices: PriceItem[] = []) {
+  // Build per-sector price contexts to keep each agent focused
+  const pickCtx = (symbols: string[]) => {
+    const symSet = new Set(symbols.map(s => s.toUpperCase()))
+    const lines = pricesCtx.split('\n').filter(line => {
+      const match = line.match(/\(([^)]+)\)/)
+      return match ? symSet.has(match[1].toUpperCase()) : false
+    })
+    return `Fecha: ${today}. Perfil de riesgo: ${riskProfile}. Precios en tiempo real:\n${lines.join('\n')}`
+  }
+
+  const allCtx = `Fecha: ${today}. Perfil de riesgo: ${riskProfile}. Datos de mercado:\n${pricesCtx}`
 
   const riskNote =
     riskProfile === 'conservador'
@@ -247,15 +257,15 @@ export function buildAgents(pricesCtx: string, riskProfile: string, today: strin
 RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
 {"activos":[{"simbolo":"BTC","nombre":"Bitcoin","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":75,"razon":"momentum alcista sólido","riesgo":"alto","sector":"Crypto"}]}
 Reglas: "sesgo" solo: COMPRA, VENTA o NEUTRAL. "confianza" entero 55-92. "riesgo" solo: bajo, medio, alto. "sector" siempre "Crypto". Incluye exactamente los 8 activos: BTC, ETH, BNB, XRP, SOL, ADA, AVAX, DOGE.`,
-      user: `${base}\n\n${riskNote}\n\nAnaliza BTC, ETH, BNB, XRP, SOL, ADA, AVAX y DOGE con los precios en tiempo real proporcionados.`,
+      user: `${pickCtx(['BTC','ETH','BNB','XRP','SOL','ADA','AVAX','DOGE'])}\n\n${riskNote}\n\nAnaliza BTC, ETH, BNB, XRP, SOL, ADA, AVAX y DOGE con los precios en tiempo real proporcionados.`,
     },
     {
       name: 'acciones' as const,
-      system: `Eres un agente analista de acciones del S&P 500 y Nasdaq. Analiza este universo de 25 acciones top: AAPL, MSFT, AMZN, NVDA, META, GOOGL, TSLA, AMD, AVGO, ORCL, CRM, JPM, V, MA, BAC, JNJ, LLY, UNH, ABBV, WMT, HD, XOM, CVX, NFLX.
+      system: `Eres un agente analista de acciones del S&P 500 y Nasdaq. Analiza estas 18 acciones: AAPL, MSFT, AMZN, NVDA, META, GOOGL, TSLA, AMD, JPM, V, JNJ, LLY, WMT, HD, XOM, ORCL, BAC, NFLX.
 RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
-{"activos":[{"simbolo":"AAPL","nombre":"Apple","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":72,"razon":"momentum alcista","riesgo":"medio","sector":"Acciones"},{"simbolo":"NVDA","nombre":"Nvidia","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":80,"razon":"IA y semiconductores","riesgo":"alto","sector":"Acciones"}]}
-Reglas: "sesgo" solo: COMPRA, VENTA o NEUTRAL. "confianza" entero 55-92. "riesgo" solo: bajo, medio, alto. "sector" siempre "Acciones". Incluye exactamente los 25 activos. Sé selectivo: no todo puede ser COMPRA. Evalúa cada acción según su momentum y fundamentos.`,
-      user: `${base}\n\n${riskNote}\n\nAnaliza este universo expandido de 25 acciones (AAPL, MSFT, AMZN, NVDA, META, GOOGL, TSLA, AMD, AVGO, ORCL, CRM, JPM, V, MA, BAC, JNJ, LLY, UNH, ABBV, WMT, HD, XOM, CVX, NFLX) con los precios en tiempo real proporcionados. Sé selectivo — solo recomienda COMPRA o VENTA cuando hay señales claras.`,
+{"activos":[{"simbolo":"AAPL","nombre":"Apple","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":72,"razon":"momentum alcista","riesgo":"medio","sector":"Acciones"},{"simbolo":"NVDA","nombre":"Nvidia","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":80,"razon":"IA impulsa demanda","riesgo":"alto","sector":"Acciones"}]}
+Reglas: "sesgo" solo: COMPRA, VENTA o NEUTRAL. "confianza" entero 55-92. "riesgo" solo: bajo, medio, alto. "sector" siempre "Acciones". Incluye los 18 activos. Sé selectivo — no todo puede ser COMPRA.`,
+      user: `${pickCtx(['AAPL','MSFT','AMZN','NVDA','META','GOOGL','TSLA','AMD','JPM','V','JNJ','LLY','WMT','HD','XOM','ORCL','BAC','NFLX'])}\n\n${riskNote}\n\nAnaliza las 18 acciones (AAPL, MSFT, AMZN, NVDA, META, GOOGL, TSLA, AMD, JPM, V, JNJ, LLY, WMT, HD, XOM, ORCL, BAC, NFLX) con los precios en tiempo real.`,
     },
     {
       name: 'indices' as const,
@@ -265,7 +275,7 @@ RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
 Para VIX: COMPRA = miedo elevado (>25), VENTA = complacencia extrema (<13), NEUTRAL = rango normal.
 Russell 2000: indicador de apetito de riesgo. COMPRA = risk-on, VENTA = risk-off.
 "sector" siempre "Índices". Incluye exactamente: NQ, SP500, RUSSELL, DOW, VIX.`,
-      user: `${base}\n\n${riskNote}\n\nAnaliza Nasdaq (NQ Futures), S&P 500, Russell 2000, Dow Jones y VIX con los datos proporcionados.`,
+      user: `${pickCtx(['NQ=F','^GSPC','^RUT','^DJI','%5EVIX'])}\n\n${riskNote}\n\nAnaliza Nasdaq, S&P 500, Russell 2000, Dow Jones y VIX con los datos proporcionados.`,
     },
     {
       name: 'divisas' as const,
@@ -274,7 +284,7 @@ RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
 {"activos":[{"simbolo":"DXY","nombre":"Índice Dólar (DXY)","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":68,"razon":"dólar fortalecido por datos macro","riesgo":"bajo","sector":"Divisas"}]}
 DXY COMPRA = dólar fuerte. EUR/USD COMPRA = euro sube. GBP/USD COMPRA = libra sube. USD/JPY COMPRA = dólar sube vs yen. USD/CAD COMPRA = dólar sube vs CAD. AUD/USD COMPRA = aussie sube. NZD/USD COMPRA = kiwi sube. USD/CHF COMPRA = dólar sube vs franco suizo.
 "sector" siempre "Divisas". Incluye exactamente los 8 activos: DXY, EUR/USD, USD/JPY, USD/CAD, GBP/USD, AUD/USD, NZD/USD, USD/CHF.`,
-      user: `${base}\n\n${riskNote}\n\nAnaliza DXY, EUR/USD, USD/JPY, USD/CAD, GBP/USD, AUD/USD, NZD/USD y USD/CHF con los datos proporcionados.`,
+      user: `${pickCtx(['DX=F','EURUSD=X','USDJPY=X','USDCAD=X','GBPUSD=X','AUDUSD=X','NZDUSD=X','USDCHF=X'])}\n\n${riskNote}\n\nAnaliza DXY, EUR/USD, USD/JPY, USD/CAD, GBP/USD, AUD/USD, NZD/USD y USD/CHF.`,
     },
     {
       name: 'materiales' as const,
@@ -283,7 +293,7 @@ RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown.
 Los campos "simbolo" DEBEN ser exactamente: "ORO" para oro, "WTI" para petróleo, "PLATA" para plata, "COBRE" para cobre, "GAS" para gas natural:
 {"activos":[{"simbolo":"ORO","nombre":"Oro","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":72,"razon":"activo refugio con demanda sostenida","riesgo":"bajo","sector":"Materiales"},{"simbolo":"WTI","nombre":"Petróleo WTI","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":60,"razon":"oferta y demanda equilibradas","riesgo":"medio","sector":"Materiales"},{"simbolo":"PLATA","nombre":"Plata","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":65,"razon":"demanda industrial y refugio","riesgo":"medio","sector":"Materiales"},{"simbolo":"COBRE","nombre":"Cobre","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":58,"razon":"sensible al ciclo económico global","riesgo":"medio","sector":"Materiales"},{"simbolo":"GAS","nombre":"Gas Natural","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":55,"razon":"estacionalidad y clima","riesgo":"alto","sector":"Materiales"}]}
 NUNCA uses GC=F, CL=F, SI=F, HG=F ni NG=F como simbolo. Usa exactamente: ORO, WTI, PLATA, COBRE, GAS.`,
-      user: `${base}\n\n${riskNote}\n\nAnaliza Oro, Petróleo WTI, Plata, Cobre y Gas Natural con los datos proporcionados.`,
+      user: `${pickCtx(['GC=F','CL=F','SI=F','HG=F','NG=F'])}\n\n${riskNote}\n\nAnaliza Oro, Petróleo WTI, Plata, Cobre y Gas Natural con los datos proporcionados.`,
     },
     {
       name: 'estrategia' as const,
@@ -291,7 +301,7 @@ NUNCA uses GC=F, CL=F, SI=F, HG=F ni NG=F como simbolo. Usa exactamente: ORO, WT
 RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
 {"sesgo_general":"ALCISTA","resumen":"Los mercados muestran fortaleza con el dólar consolidando y el oro como refugio.","distribucion":[{"sector":"Crypto","porcentaje":15,"color":"#F7931A"},{"sector":"Acciones","porcentaje":30,"color":"#00D4AA"},{"sector":"Índices","porcentaje":20,"color":"#8B5CF6"},{"sector":"Divisas","porcentaje":20,"color":"#2196F3"},{"sector":"Materiales","porcentaje":15,"color":"#C9A84C"}],"oportunidad_destacada":"Descripción de la mejor oportunidad del día.","alerta_riesgo":"Principal riesgo a vigilar hoy."}
 "sesgo_general" solo: ALCISTA, BAJISTA o NEUTRAL. Sectores disponibles: Crypto, Acciones, Índices, Divisas, Materiales. Los porcentajes DEBEN sumar 100.`,
-      user: `${base}\n\n${riskNote === 'Prioriza estabilidad. Usa NEUTRAL si hay duda. Evita activos de alta volatilidad.'
+      user: `${allCtx}\n\n${riskNote === 'Prioriza estabilidad. Usa NEUTRAL si hay duda. Evita activos de alta volatilidad.'
         ? 'Perfil CONSERVADOR: Materiales (25%), Divisas (30%), Índices (20%), Acciones (15%), Crypto (10%).'
         : riskNote.includes('mayor retorno')
         ? 'Perfil AGRESIVO: Crypto (25%), Acciones (35%), Índices (20%), Divisas (10%), Materiales (10%).'
@@ -395,7 +405,7 @@ export async function runFullAnalysis(riskProfile: string = 'moderado'): Promise
     )
     .join('\n')
 
-  const agents = buildAgents(pricesCtx, riskProfile, today)
+  const agents = buildAgents(pricesCtx, riskProfile, today, prices)
 
   // Run all 6 MAIA agents in parallel
   const rawResults = await Promise.allSettled(agents.map(a => runAgent(a.system, a.user)))

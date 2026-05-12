@@ -119,7 +119,7 @@ interface CfdSignalRecord extends CfdSignalCalc {
 
 const AGENTS = [
   { key: 'crypto',     label: 'Crypto',     icon: '₿',  desc: 'BTC, ETH, BNB, XRP' },
-  { key: 'acciones',   label: 'Acciones',   icon: '📈', desc: '7 Magnificas' },
+  { key: 'acciones',   label: 'Acciones',   icon: '📈', desc: 'S&P 500 top picks' },
   { key: 'indices',    label: 'Índices',    icon: '📊', desc: 'Nasdaq, SP500, Russell, Dow, VIX' },
   { key: 'divisas',    label: 'Divisas',    icon: '💱', desc: 'DXY, EUR/USD, JPY, CAD, GBP' },
   { key: 'materiales', label: 'Materias',   icon: '🏗️', desc: 'Oro, Petróleo, Plata' },
