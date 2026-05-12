@@ -1104,7 +1104,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
       <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         {[
           { id: 'analisis' as ActiveTab, label: '🔍 Análisis de Mercado' },
-          { id: 'senales' as ActiveTab, label: `📋 Señales CFD${todayOps.length > 0 ? ` (${todayOps.length})` : ''}` },
+          { id: 'senales' as ActiveTab, label: `📊 Escaneo Diario${todayOps.length > 0 ? ` (${todayOps.length})` : ''}` },
         ].map(tab => (
           <button
             key={tab.id}
@@ -1231,8 +1231,8 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
           </div>
           )}
 
-          {/* Signal history */}
-          <div className="space-y-3">
+          {/* Signal history moved to Análisis de Mercado tab */}
+          {false && <div className="space-y-3">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
                 <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
@@ -1469,7 +1469,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                 </div>
               </div>
             )}
-          </div>
+          </div>}
         </div>
       )}
 
@@ -1687,6 +1687,175 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                   </div>
                 )
               })}
+
+              {/* ── Recomendaciones CFD — Save + Track Record ── */}
+              {(allCandidates.length > 0 || signalHistory.length > 0) && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>RECOMENDACIONES CFD</p>
+                      {signalHistory.length > 0 && (() => {
+                        const ganadas = signalHistory.filter(s => s.resultado === 'GANADA').length
+                        const cerradas = signalHistory.filter(s => s.resultado !== 'PENDIENTE').length
+                        const totalPnl = signalHistory.reduce((sum, s) => sum + (s.pnlUsd ?? 0), 0)
+                        const wr = cerradas > 0 ? Math.round((ganadas / cerradas) * 100) : null
+                        return (
+                          <div className="flex items-center gap-3 text-[9px] font-mono flex-wrap">
+                            <span style={{ color: 'var(--text-muted)' }}>{signalHistory.length} ops</span>
+                            {wr !== null && <span className={wr >= 50 ? 'text-green-400' : 'text-red-400'}>{wr}% WR</span>}
+                            <span className={totalPnl >= 0 ? 'text-green-400' : 'text-red-400'}>{totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(0)} USD</span>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isAdmin && allCandidates.length > 0 && (
+                        <button
+                          onClick={() => handleSaveSignals(allCandidates)}
+                          disabled={savingSignals}
+                          className="label-mono text-[10px] px-3 py-1.5 rounded-lg border transition-all disabled:opacity-50"
+                          style={{ borderColor: 'rgba(201,168,76,0.5)', color: 'var(--gold)', background: 'rgba(201,168,76,0.06)' }}
+                        >
+                          {savingSignals ? '⏳ Guardando...' : `💾 Guardar ${allCandidates.length} señal${allCandidates.length !== 1 ? 'es' : ''}`}
+                        </button>
+                      )}
+                      {savedCount !== null && (
+                        <span className="text-[9px] font-mono text-green-400">✓ {savedCount} guardadas</span>
+                      )}
+                      {skippedSignals && skippedSignals.skipped.length > 0 && (
+                        <span className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>↷ {skippedSignals.skipped.length} sin cambios</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {signalHistory.length === 0 ? (
+                    <div className="rounded-xl border p-4 text-center text-[10px] font-mono" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+                      Sin recomendaciones CFD guardadas. Corre un análisis y haz clic en Guardar.
+                    </div>
+                  ) : (
+                    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-[10px] font-mono">
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.3)' }}>
+                              {['Fecha', 'Par', 'Dir', 'Entrada', 'SL', 'TP', 'Lotes', 'Conf', 'Resultado', 'P&L USD', ...(isAdmin && adminViewMode === 'admin' ? ['Acc.'] : [])].map(h => (
+                                <th key={h} className="px-2.5 py-2 text-left whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {signalHistory.map(sig => {
+                              const isDirty = rowEdits[sig.id] !== undefined
+                              const edit = rowEdits[sig.id]
+                              const isClosed = sig.resultado !== 'PENDIENTE'
+                              return (
+                                <tr
+                                  key={sig.id}
+                                  className="border-b border-[var(--border)]"
+                                  style={{
+                                    opacity: isClosed ? 0.6 : 1,
+                                    filter: isClosed ? 'saturate(0.5)' : undefined,
+                                  }}
+                                >
+                                  <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
+                                    {new Date(sig.createdAt).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', timeZone: 'America/Guayaquil' })}
+                                  </td>
+                                  <td className="px-2.5 py-2 font-bold whitespace-nowrap" style={{ color: 'var(--gold)' }}>{sig.simbolo}</td>
+                                  <td className="px-2.5 py-2 whitespace-nowrap">
+                                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${sig.sesgo === 'COMPRA' ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}`}>
+                                      {sig.sesgo}
+                                    </span>
+                                  </td>
+                                  <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>{sig.precioEntrada.toFixed(sig.precioEntrada > 100 ? 2 : 5)}</td>
+                                  <td className="px-2.5 py-2 whitespace-nowrap text-red-400">{sig.stopLoss.toFixed(sig.stopLoss > 100 ? 2 : 5)}</td>
+                                  <td className="px-2.5 py-2 whitespace-nowrap text-green-400">{sig.takeProfit.toFixed(sig.takeProfit > 100 ? 2 : 5)}</td>
+                                  <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{sig.lotaje}</td>
+                                  <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: sig.confianza >= 80 ? 'var(--gold)' : 'var(--text-secondary)' }}>{sig.confianza}%</td>
+                                  <td className="px-2.5 py-2 whitespace-nowrap">
+                                    {isAdmin && adminViewMode === 'admin' ? (
+                                      <select
+                                        value={edit?.resultado ?? sig.resultado}
+                                        onChange={e => setRowEdits(prev => ({ ...prev, [sig.id]: { resultado: e.target.value, pnlUsd: String(edit?.pnlUsd ?? sig.pnlUsd ?? ''), closedPrice: String(edit?.closedPrice ?? sig.closedPrice ?? '') } }))}
+                                        className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5"
+                                        style={{ color: sig.resultado === 'GANADA' ? '#4ade80' : sig.resultado === 'PERDIDA' ? '#f87171' : sig.resultado === 'BREAKEVEN' ? '#facc15' : 'var(--text-muted)' }}
+                                      >
+                                        {['PENDIENTE','GANADA','PERDIDA','BREAKEVEN'].map(r => <option key={r} value={r}>{r}</option>)}
+                                      </select>
+                                    ) : (
+                                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${sig.resultado === 'GANADA' ? 'text-green-400' : sig.resultado === 'PERDIDA' ? 'text-red-400' : sig.resultado === 'BREAKEVEN' ? 'text-yellow-400' : ''}`} style={sig.resultado === 'PENDIENTE' ? { color: 'var(--text-muted)' } : {}}>
+                                        {sig.resultado}
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-2.5 py-2 whitespace-nowrap">
+                                    {isAdmin && adminViewMode === 'admin' ? (
+                                      <input
+                                        type="number"
+                                        step="0.01"
+                                        className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5 w-14"
+                                        value={edit?.pnlUsd ?? (sig.pnlUsd != null ? String(sig.pnlUsd) : '')}
+                                        placeholder="0.00"
+                                        onChange={e => setRowEdits(prev => ({ ...prev, [sig.id]: { resultado: edit?.resultado ?? sig.resultado, pnlUsd: e.target.value, closedPrice: String(edit?.closedPrice ?? sig.closedPrice ?? '') } }))}
+                                        style={{ color: 'var(--text-secondary)' }}
+                                      />
+                                    ) : (
+                                      <span className={sig.pnlUsd != null ? (sig.pnlUsd >= 0 ? 'text-green-400' : 'text-red-400') : ''} style={sig.pnlUsd == null ? { color: 'var(--text-muted)' } : {}}>
+                                        {sig.pnlUsd != null ? `${sig.pnlUsd >= 0 ? '+' : ''}$${sig.pnlUsd.toFixed(2)}` : '—'}
+                                      </span>
+                                    )}
+                                  </td>
+                                  {isAdmin && adminViewMode === 'admin' && (
+                                    <td className="px-2.5 py-2 whitespace-nowrap">
+                                      {isDirty && (
+                                        <button
+                                          onClick={() => handleSaveRow(sig.id)}
+                                          disabled={updatingResultado === sig.id}
+                                          className="text-[9px] px-1.5 py-0.5 rounded border font-semibold"
+                                          style={{ borderColor: 'rgba(234,179,8,0.5)', color: 'rgb(234,179,8)' }}
+                                        >
+                                          {updatingResultado === sig.id ? '...' : 'Guardar'}
+                                        </button>
+                                      )}
+                                    </td>
+                                  )}
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {isAdmin && signalHistory.length > 0 && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={() => setAdminViewMode(m => m === 'admin' ? 'user' : 'admin')}
+                        className="label-mono text-[9px] px-2 py-1 rounded-lg border"
+                        style={{ borderColor: adminViewMode !== 'admin' ? 'rgba(201,168,76,0.5)' : 'var(--border)', color: adminViewMode !== 'admin' ? 'var(--gold)' : 'var(--text-muted)' }}
+                      >
+                        {adminViewMode === 'admin' ? '👁 Vista usuario' : '⚙ Vista admin'}
+                      </button>
+                      {selectedIds.size > 0 && (
+                        <button onClick={handleDeleteSelected} disabled={clearingSignals} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'rgba(239,68,68,0.4)', color: 'rgb(239,68,68)' }}>
+                          Borrar sel. ({selectedIds.size})
+                        </button>
+                      )}
+                      <button onClick={handleClearSignals} disabled={clearingSignals} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'rgba(239,68,68,0.3)', color: 'rgba(239,68,68,0.7)' }}>
+                        {clearingSignals ? 'Borrando...' : 'Borrar todo'}
+                      </button>
+                      <button onClick={loadSignalHistory} disabled={refreshing} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+                        {refreshing ? '...' : 'Actualizar'}
+                      </button>
+                    </div>
+                  )}
+                  {!isAdmin && signalHistory.length > 0 && (
+                    <button onClick={() => setAdminViewMode(m => m === 'admin' ? 'user' : 'admin')} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+                      {adminViewMode === 'admin' ? '👁 Vista usuario' : '⚙ Vista admin'}
+                    </button>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-3">
                 <p className="text-xs text-center" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>

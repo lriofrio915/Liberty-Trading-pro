@@ -503,13 +503,20 @@ function OppTable({ opps, isAdmin, livePrices, onDelete, onStatusChange, onPrice
               <tr
                 key={opp.id}
                 className="border-b border-[var(--border)] transition-colors"
-                style={{ opacity: !opp.active && isAdmin ? 0.6 : 1 }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                style={{
+                  opacity: locked ? 0.58 : (!opp.active && isAdmin ? 0.6 : 1),
+                  background: locked ? 'rgba(255,255,255,0.01)' : undefined,
+                  filter: locked ? 'saturate(0.45)' : undefined,
+                }}
+                onMouseEnter={e => { if (!locked) e.currentTarget.style.background = 'var(--bg-hover)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = locked ? 'rgba(255,255,255,0.01)' : 'transparent' }}
               >
                 {/* # */}
-                <td className="px-4 py-3 whitespace-nowrap text-center">
-                  <span className="font-mono text-sm font-bold" style={{ color: 'var(--text-muted)' }}>{idx + 1}</span>
+                <td className="px-4 py-3 whitespace-nowrap text-center" style={locked ? { borderLeft: '3px solid rgba(255,255,255,0.12)' } : {}}>
+                  {locked
+                    ? <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>🔒</span>
+                    : <span className="font-mono text-sm font-bold" style={{ color: 'var(--text-muted)' }}>{idx + 1}</span>
+                  }
                 </td>
 
                 {/* Ticker */}
