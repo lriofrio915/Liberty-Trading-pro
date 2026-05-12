@@ -86,29 +86,26 @@ function computeLevels(sesgo: 'COMPRA' | 'VENTA', entry: number) {
   }
 }
 
-function isUSMarketOpen(): boolean {
-  const now = new Date()
-  const etOffset = -4 * 60 // EDT (approximate)
-  const etNow = new Date(now.getTime() + etOffset * 60000)
-  const h = etNow.getUTCHours()
-  const m = etNow.getUTCMinutes()
-  const mins = h * 60 + m
-  const day = etNow.getUTCDay()
+function getETMinutes(): { mins: number; day: number } {
+  const etOffset = -4 * 60 // EDT
+  const etNow = new Date(new Date().getTime() + etOffset * 60000)
+  return { mins: etNow.getUTCHours() * 60 + etNow.getUTCMinutes(), day: etNow.getUTCDay() }
+}
+
+// 3:43–3:48 PM ET window — forced EOD close 15 min before market close
+function isEODCloseWindow(): boolean {
+  const { mins, day } = getETMinutes()
   if (day === 0 || day === 6) return false
-  return mins >= 9 * 60 + 30 && mins < 16 * 60
+  return mins >= 15 * 60 + 43 && mins <= 15 * 60 + 48
 }
 
 function marketCloseCountdown(): string {
-  const now = new Date()
-  const etOffset = -4 * 60
-  const etNow = new Date(now.getTime() + etOffset * 60000)
-  const close = new Date(etNow)
-  close.setUTCHours(16, 0, 0, 0)
-  if (etNow >= close) return 'Mercado cerrado'
-  const diff = close.getTime() - etNow.getTime()
-  const h = Math.floor(diff / 3600000)
-  const m = Math.floor((diff % 3600000) / 60000)
-  return `${h}h ${m}m al cierre`
+  const { mins, day } = getETMinutes()
+  if (day === 0 || day === 6) return 'Fin de semana'
+  const eodMins = 15 * 60 + 45 // 3:45 PM ET
+  if (mins >= eodMins) return 'Cierre EOD pasado'
+  const diff = eodMins - mins
+  return `${Math.floor(diff / 60)}h ${diff % 60}m al cierre EOD`
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -151,7 +148,7 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
 
   // ── Auto TP/SL price check ─────────────────────────────────────────────────
 
-  const checkPriceLevels = useCallback(async (pm: Record<string, number>) => {
+  const checkPriceLevels = useCallback(async (pm: Record<string, number>, forceEOD = false) => {
     setPriceChecking(true)
     try {
       const pending = trackRecs.filter(r => r.resultado === 'PENDIENTE')
@@ -160,11 +157,24 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
         const currentPrice = pm[sig.simbolo]
         if (!currentPrice || currentPrice <= 0) continue
         const isCompra = sig.sesgo === 'COMPRA'
-        const hitTP = isCompra ? currentPrice >= sig.takeProfit : currentPrice <= sig.takeProfit
-        const hitSL = isCompra ? currentPrice <= sig.stopLoss  : currentPrice >= sig.stopLoss
-        if (!hitTP && !hitSL) continue
-        const resultado = hitTP ? 'GANADA' : 'PERDIDA'
         const slDist = Math.abs(sig.precioEntrada - sig.stopLoss)
+
+        let resultado: string
+        if (forceEOD) {
+          // Force-close at current price (EOD 3:45 PM ET)
+          const priceDiff = isCompra
+            ? currentPrice - sig.precioEntrada
+            : sig.precioEntrada - currentPrice
+          if (priceDiff > slDist * 0.05) resultado = 'GANADA'
+          else if (priceDiff < -slDist * 0.05) resultado = 'PERDIDA'
+          else resultado = 'BREAKEVEN'
+        } else {
+          const hitTP = isCompra ? currentPrice >= sig.takeProfit : currentPrice <= sig.takeProfit
+          const hitSL = isCompra ? currentPrice <= sig.stopLoss  : currentPrice >= sig.stopLoss
+          if (!hitTP && !hitSL) continue
+          resultado = hitTP ? 'GANADA' : 'PERDIDA'
+        }
+
         const rawPnl = slDist > 0
           ? (isCompra
               ? ((currentPrice - sig.precioEntrada) / slDist) * 10
@@ -184,12 +194,24 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
     }
   }, [trackRecs, loadTrackRecs])
 
-  // Auto-interval price check every 60s during market hours
+  // EOD auto-close: check every 60s for the 3:43-3:48 PM ET window, then force-close
+  const eodTriggeredRef = useRef(false)
   useEffect(() => {
     const tick = async () => {
-      if (!isUSMarketOpen()) return
-      if (Object.keys(priceMapRef.current).length === 0) return
-      await checkPriceLevels(priceMapRef.current)
+      if (!isEODCloseWindow()) { eodTriggeredRef.current = false; return }
+      if (eodTriggeredRef.current) return  // only once per day
+      eodTriggeredRef.current = true
+      try {
+        const res = await fetch('/api/futures/analyze', { method: 'POST' })
+        if (!res.ok) return
+        const data = await res.json()
+        const pm: Record<string, number> = {}
+        for (const a of (data.activos ?? []) as IndexAsset[]) {
+          if (a.precio > 0) pm[a.simbolo] = a.precio
+        }
+        priceMapRef.current = pm
+        await checkPriceLevels(pm, true)  // forceEOD = true
+      } catch {}
     }
     const id = setInterval(tick, 60000)
     return () => clearInterval(id)
@@ -383,7 +405,8 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
           <div className="flex flex-col gap-1.5 text-right text-[10px] font-mono flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
             <span>📅 Temporalidad: <strong style={{ color: 'var(--gold)' }}>15 min</strong></span>
             <span>⏰ Análisis: <strong style={{ color: 'var(--gold)' }}>9:45 AM ET</strong></span>
-            <span>🔔 {countdown}</span>
+            <span>🔔 Cierre EOD: <strong style={{ color: 'var(--gold)' }}>3:45 PM ET</strong></span>
+            <span style={{ color: 'var(--text-muted)' }}>{countdown}</span>
           </div>
         </div>
 
