@@ -76,11 +76,12 @@ export default function AccionesClient({
   }
 
   type ActiveOpp = { ticker: string; precioVenta: number | null; active: boolean }
-  const activeTickers = (initialOpportunities as ActiveOpp[])
-    .filter(o => o.active && (o.precioVenta == null || o.precioVenta === 0))
-    .map(o => o.ticker)
-    .filter(Boolean)
-    .join(',')
+  const activeTickers = [...new Set(
+    (initialOpportunities as ActiveOpp[])
+      .filter(o => o.active && (o.precioVenta == null || o.precioVenta === 0))
+      .map(o => o.ticker)
+      .filter(Boolean),
+  )].join(',')
 
   return (
     <div className="animate-fadeIn">

@@ -120,7 +120,7 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
         type Opp = { active: boolean; precioVenta: number | null; ticker: string; category: string }
         const active = (data.opportunities as Opp[])
           .filter(o => o.active && (o.precioVenta == null || o.precioVenta === 0))
-        const tickers = active.map(o => o.ticker).filter(Boolean)
+        const tickers = [...new Set(active.map(o => o.ticker).filter(Boolean))]
         const catMap: Record<string, string> = {}
         for (const o of active) {
           if (o.ticker) catMap[o.ticker.toUpperCase()] = o.category ?? 'OPERATOR'
@@ -731,8 +731,8 @@ flyctl secrets set \\
         // Agrupar por portafolio/categoría
         const CATEGORY_LABELS: Record<string, string> = {
           OPERATOR:    'Recomendaciones del Operador',
-          PETER_LYNCH: 'Recomendaciones Peter Lynch',
-          SMALL_CAPS:  'Recomendaciones Small Caps',
+          PETER_LYNCH: 'Recomendaciones Agente Peter',
+          SMALL_CAPS:  'Recomendaciones Agente Small',
         }
         const CATEGORY_ORDER = ['OPERATOR', 'PETER_LYNCH', 'SMALL_CAPS']
         const grouped: Record<string, Signal[]> = {}
@@ -796,9 +796,6 @@ flyctl secrets set \\
             <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>
               SEÑALES — {dedupedSignals.length} ACCIONES
             </p>
-            <button onClick={fetchResults} className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>
-              ACTUALIZAR
-            </button>
           </div>
           {activeCategories.map(cat => (
             <div key={cat} className="space-y-3">
