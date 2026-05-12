@@ -1759,7 +1759,8 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
 
               {/* ── Sector recommendation tables (replaces asset cards) ── */}
               {SECTOR_ORDER.map(sector => {
-                const sectorActivos = result.activos.filter(a => a.sector === sector)
+                const sl = sector.toLowerCase()
+                const sectorActivos = result.activos.filter(a => a.sector?.toLowerCase() === sl)
                 if (sectorActivos.length === 0) return null
                 return <SectorTable key={sector} sector={sector} activos={sectorActivos} />
               })}

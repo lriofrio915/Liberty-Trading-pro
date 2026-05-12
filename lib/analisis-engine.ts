@@ -83,65 +83,63 @@ async function fetchDXY(): Promise<PriceItem | null> {
   return null
 }
 
+async function fetchBatch(fns: (() => Promise<PriceItem | null>)[]): Promise<PriceItem[]> {
+  const out: PriceItem[] = []
+  for (let i = 0; i < fns.length; i += 18) {
+    const batch = fns.slice(i, i + 18)
+    const settled = await Promise.allSettled(batch.map(f => f()))
+    out.push(...settled.flatMap(r => r.status === 'fulfilled' && r.value ? [r.value] : []))
+    if (i + 18 < fns.length) await new Promise(r => setTimeout(r, 150))
+  }
+  return out
+}
+
 export async function fetchAllPrices(): Promise<PriceItem[]> {
-  const results = await Promise.allSettled([
+  const items = await fetchBatch([
     // Crypto
-    fetchYahoo('BTC-USD',  'Bitcoin'),
-    fetchYahoo('ETH-USD',  'Ethereum'),
-    fetchYahoo('BNB-USD',  'BNB'),
-    fetchYahoo('XRP-USD',  'XRP'),
-    fetchYahoo('SOL-USD',  'Solana'),
-    fetchYahoo('ADA-USD',  'Cardano'),
-    fetchYahoo('AVAX-USD', 'Avalanche'),
-    fetchYahoo('DOGE-USD', 'Dogecoin'),
-    // Acciones — S&P 500 top picks (expanded universe)
-    fetchYahoo('AAPL',  'Apple'),
-    fetchYahoo('MSFT',  'Microsoft'),
-    fetchYahoo('AMZN',  'Amazon'),
-    fetchYahoo('NVDA',  'Nvidia'),
-    fetchYahoo('META',  'Meta'),
-    fetchYahoo('GOOGL', 'Alphabet'),
-    fetchYahoo('TSLA',  'Tesla'),
-    fetchYahoo('AMD',   'AMD'),
-    fetchYahoo('AVGO',  'Broadcom'),
-    fetchYahoo('ORCL',  'Oracle'),
-    fetchYahoo('CRM',   'Salesforce'),
-    fetchYahoo('JPM',   'JPMorgan'),
-    fetchYahoo('V',     'Visa'),
-    fetchYahoo('MA',    'Mastercard'),
-    fetchYahoo('BAC',   'Bank of America'),
-    fetchYahoo('JNJ',   'Johnson & Johnson'),
-    fetchYahoo('LLY',   'Eli Lilly'),
-    fetchYahoo('UNH',   'UnitedHealth'),
-    fetchYahoo('ABBV',  'AbbVie'),
-    fetchYahoo('WMT',   'Walmart'),
-    fetchYahoo('HD',    'Home Depot'),
-    fetchYahoo('XOM',   'ExxonMobil'),
-    fetchYahoo('CVX',   'Chevron'),
-    fetchYahoo('NFLX',  'Netflix'),
+    () => fetchYahoo('BTC-USD',  'Bitcoin'),
+    () => fetchYahoo('ETH-USD',  'Ethereum'),
+    () => fetchYahoo('BNB-USD',  'BNB'),
+    () => fetchYahoo('XRP-USD',  'XRP'),
+    () => fetchYahoo('SOL-USD',  'Solana'),
+    () => fetchYahoo('ADA-USD',  'Cardano'),
+    () => fetchYahoo('AVAX-USD', 'Avalanche'),
+    () => fetchYahoo('DOGE-USD', 'Dogecoin'),
+    // Acciones — 12 stocks (reliable subset, compact JSON output)
+    () => fetchYahoo('AAPL',  'Apple'),
+    () => fetchYahoo('MSFT',  'Microsoft'),
+    () => fetchYahoo('AMZN',  'Amazon'),
+    () => fetchYahoo('NVDA',  'Nvidia'),
+    () => fetchYahoo('META',  'Meta'),
+    () => fetchYahoo('GOOGL', 'Alphabet'),
+    () => fetchYahoo('TSLA',  'Tesla'),
+    () => fetchYahoo('AMD',   'AMD'),
+    () => fetchYahoo('JPM',   'JPMorgan'),
+    () => fetchYahoo('V',     'Visa'),
+    () => fetchYahoo('NFLX',  'Netflix'),
+    () => fetchYahoo('XOM',   'ExxonMobil'),
     // Índices
-    fetchYahoo('NQ=F',   'NQ Futures'),
-    fetchYahoo('^GSPC',  'S&P 500'),
-    fetchYahoo('^RUT',   'Russell 2000'),
-    fetchYahoo('^DJI',   'Dow Jones'),
-    fetchYahoo('%5EVIX', 'VIX'),
+    () => fetchYahoo('NQ=F',   'NQ Futures'),
+    () => fetchYahoo('^GSPC',  'S&P 500'),
+    () => fetchYahoo('^RUT',   'Russell 2000'),
+    () => fetchYahoo('^DJI',   'Dow Jones'),
+    () => fetchYahoo('%5EVIX', 'VIX'),
     // Divisas
-    fetchDXY(),
-    fetchYahoo('EURUSD=X', 'EUR/USD'),
-    fetchYahoo('USDJPY=X', 'USD/JPY'),
-    fetchYahoo('USDCAD=X', 'USD/CAD'),
-    fetchYahoo('GBPUSD=X', 'GBP/USD'),
-    fetchYahoo('AUDUSD=X', 'AUD/USD'),
-    fetchYahoo('NZDUSD=X', 'NZD/USD'),
-    fetchYahoo('USDCHF=X', 'USD/CHF'),
+    () => fetchDXY(),
+    () => fetchYahoo('EURUSD=X', 'EUR/USD'),
+    () => fetchYahoo('USDJPY=X', 'USD/JPY'),
+    () => fetchYahoo('USDCAD=X', 'USD/CAD'),
+    () => fetchYahoo('GBPUSD=X', 'GBP/USD'),
+    () => fetchYahoo('AUDUSD=X', 'AUD/USD'),
+    () => fetchYahoo('NZDUSD=X', 'NZD/USD'),
+    () => fetchYahoo('USDCHF=X', 'USD/CHF'),
     // Materias primas
-    fetchYahoo('GC=F', 'Oro'),
-    fetchYahoo('CL=F', 'Petróleo WTI'),
-    fetchYahoo('SI=F', 'Plata'),
-    fetchYahoo('HG=F', 'Cobre'),
-    fetchYahoo('NG=F', 'Gas Natural'),
+    () => fetchYahoo('GC=F', 'Oro'),
+    () => fetchYahoo('CL=F', 'Petróleo WTI'),
+    () => fetchYahoo('SI=F', 'Plata'),
+    () => fetchYahoo('HG=F', 'Cobre'),
+    () => fetchYahoo('NG=F', 'Gas Natural'),
   ])
-  const items = results.flatMap(r => (r.status === 'fulfilled' && r.value ? [r.value] : []))
   return items.map(item => {
     if (item.symbol === 'BTC-USD')  return { ...item, symbol: 'BTC' }
     if (item.symbol === 'ETH-USD')  return { ...item, symbol: 'ETH' }
@@ -166,6 +164,19 @@ export function extractJSON(text: string): string {
   const end = text.lastIndexOf('}')
   if (start !== -1 && end !== -1) return text.slice(start, end + 1)
   return text
+}
+
+export function repairJSON(text: string): string {
+  const json = extractJSON(text)
+  try { JSON.parse(json); return json } catch {}
+  // Common failure: truncated array — find last complete object and close
+  const lastBrace = json.lastIndexOf('}')
+  if (lastBrace === -1) return json
+  const candidate = json.slice(0, lastBrace + 1)
+  for (const suffix of [']}', ']}}',' ]}', ' ]}}']) {
+    try { JSON.parse(candidate + suffix); return candidate + suffix } catch {}
+  }
+  return json
 }
 
 export async function runAgent(systemPrompt: string, userMessage: string, maxTokens = 3500): Promise<string> {
@@ -256,16 +267,16 @@ export function buildAgents(pricesCtx: string, riskProfile: string, today: strin
       system: `Eres un agente analista especializado en criptomonedas. Analiza BTC, ETH, BNB, XRP, SOL, ADA, AVAX y DOGE.
 RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
 {"activos":[{"simbolo":"BTC","nombre":"Bitcoin","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":75,"razon":"momentum alcista sólido","riesgo":"alto","sector":"Crypto"}]}
-Reglas: "sesgo" solo: COMPRA, VENTA o NEUTRAL. "confianza" entero 55-92. "riesgo" solo: bajo, medio, alto. "sector" siempre "Crypto". Incluye exactamente los 8 activos: BTC, ETH, BNB, XRP, SOL, ADA, AVAX, DOGE.`,
+Reglas: "sesgo" solo COMPRA, VENTA o NEUTRAL. "confianza" entero 55-92. "riesgo" solo bajo, medio o alto. "sector" siempre "Crypto". "razon" máximo 8 palabras. Incluye exactamente los 8 activos: BTC, ETH, BNB, XRP, SOL, ADA, AVAX, DOGE.`,
       user: `${pickCtx(['BTC','ETH','BNB','XRP','SOL','ADA','AVAX','DOGE'])}\n\n${riskNote}\n\nAnaliza BTC, ETH, BNB, XRP, SOL, ADA, AVAX y DOGE con los precios en tiempo real proporcionados.`,
     },
     {
       name: 'acciones' as const,
-      system: `Eres un agente analista de acciones del S&P 500 y Nasdaq. Analiza estas 18 acciones: AAPL, MSFT, AMZN, NVDA, META, GOOGL, TSLA, AMD, JPM, V, JNJ, LLY, WMT, HD, XOM, ORCL, BAC, NFLX.
+      system: `Eres un agente analista de acciones. Analiza exactamente estas 12 acciones: AAPL, MSFT, AMZN, NVDA, META, GOOGL, TSLA, AMD, JPM, V, NFLX, XOM.
 RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
-{"activos":[{"simbolo":"AAPL","nombre":"Apple","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":72,"razon":"momentum alcista","riesgo":"medio","sector":"Acciones"},{"simbolo":"NVDA","nombre":"Nvidia","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":80,"razon":"IA impulsa demanda","riesgo":"alto","sector":"Acciones"}]}
-Reglas: "sesgo" solo: COMPRA, VENTA o NEUTRAL. "confianza" entero 55-92. "riesgo" solo: bajo, medio, alto. "sector" siempre "Acciones". Incluye los 18 activos. Sé selectivo — no todo puede ser COMPRA.`,
-      user: `${pickCtx(['AAPL','MSFT','AMZN','NVDA','META','GOOGL','TSLA','AMD','JPM','V','JNJ','LLY','WMT','HD','XOM','ORCL','BAC','NFLX'])}\n\n${riskNote}\n\nAnaliza las 18 acciones (AAPL, MSFT, AMZN, NVDA, META, GOOGL, TSLA, AMD, JPM, V, JNJ, LLY, WMT, HD, XOM, ORCL, BAC, NFLX) con los precios en tiempo real.`,
+{"activos":[{"simbolo":"AAPL","nombre":"Apple","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":72,"razon":"momentum alcista sólido","riesgo":"medio","sector":"Acciones"},{"simbolo":"NVDA","nombre":"Nvidia","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":80,"razon":"IA impulsa demanda GPU","riesgo":"alto","sector":"Acciones"}]}
+Reglas ESTRICTAS: "sesgo" solo COMPRA, VENTA o NEUTRAL. "confianza" entero 55-92. "riesgo" solo bajo, medio o alto. "sector" SIEMPRE "Acciones". "razon" máximo 8 palabras. Incluye EXACTAMENTE los 12 activos. Sé selectivo.`,
+      user: `${pickCtx(['AAPL','MSFT','AMZN','NVDA','META','GOOGL','TSLA','AMD','JPM','V','NFLX','XOM'])}\n\n${riskNote}\n\nAnaliza las 12 acciones: AAPL, MSFT, AMZN, NVDA, META, GOOGL, TSLA, AMD, JPM, V, NFLX, XOM.`,
     },
     {
       name: 'indices' as const,
@@ -283,7 +294,7 @@ Russell 2000: indicador de apetito de riesgo. COMPRA = risk-on, VENTA = risk-off
 RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
 {"activos":[{"simbolo":"DXY","nombre":"Índice Dólar (DXY)","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":68,"razon":"dólar fortalecido por datos macro","riesgo":"bajo","sector":"Divisas"}]}
 DXY COMPRA = dólar fuerte. EUR/USD COMPRA = euro sube. GBP/USD COMPRA = libra sube. USD/JPY COMPRA = dólar sube vs yen. USD/CAD COMPRA = dólar sube vs CAD. AUD/USD COMPRA = aussie sube. NZD/USD COMPRA = kiwi sube. USD/CHF COMPRA = dólar sube vs franco suizo.
-"sector" siempre "Divisas". Incluye exactamente los 8 activos: DXY, EUR/USD, USD/JPY, USD/CAD, GBP/USD, AUD/USD, NZD/USD, USD/CHF.`,
+"sector" siempre "Divisas". "razon" máximo 8 palabras. Incluye exactamente los 8 activos: DXY, EUR/USD, USD/JPY, USD/CAD, GBP/USD, AUD/USD, NZD/USD, USD/CHF.`,
       user: `${pickCtx(['DX=F','EURUSD=X','USDJPY=X','USDCAD=X','GBPUSD=X','AUDUSD=X','NZDUSD=X','USDCHF=X'])}\n\n${riskNote}\n\nAnaliza DXY, EUR/USD, USD/JPY, USD/CAD, GBP/USD, AUD/USD, NZD/USD y USD/CHF.`,
     },
     {
@@ -292,7 +303,7 @@ DXY COMPRA = dólar fuerte. EUR/USD COMPRA = euro sube. GBP/USD COMPRA = libra s
 RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown.
 Los campos "simbolo" DEBEN ser exactamente: "ORO" para oro, "WTI" para petróleo, "PLATA" para plata, "COBRE" para cobre, "GAS" para gas natural:
 {"activos":[{"simbolo":"ORO","nombre":"Oro","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":72,"razon":"activo refugio con demanda sostenida","riesgo":"bajo","sector":"Materiales"},{"simbolo":"WTI","nombre":"Petróleo WTI","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":60,"razon":"oferta y demanda equilibradas","riesgo":"medio","sector":"Materiales"},{"simbolo":"PLATA","nombre":"Plata","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":65,"razon":"demanda industrial y refugio","riesgo":"medio","sector":"Materiales"},{"simbolo":"COBRE","nombre":"Cobre","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":58,"razon":"sensible al ciclo económico global","riesgo":"medio","sector":"Materiales"},{"simbolo":"GAS","nombre":"Gas Natural","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":55,"razon":"estacionalidad y clima","riesgo":"alto","sector":"Materiales"}]}
-NUNCA uses GC=F, CL=F, SI=F, HG=F ni NG=F como simbolo. Usa exactamente: ORO, WTI, PLATA, COBRE, GAS.`,
+NUNCA uses GC=F, CL=F, SI=F, HG=F ni NG=F como simbolo. Usa exactamente: ORO, WTI, PLATA, COBRE, GAS. "razon" máximo 8 palabras.`,
       user: `${pickCtx(['GC=F','CL=F','SI=F','HG=F','NG=F'])}\n\n${riskNote}\n\nAnaliza Oro, Petróleo WTI, Plata, Cobre y Gas Natural con los datos proporcionados.`,
     },
     {
@@ -419,7 +430,7 @@ export async function runFullAnalysis(riskProfile: string = 'moderado'): Promise
       return
     }
     try {
-      const json = extractJSON(result.value)
+      const json = repairJSON(result.value)
       const data = JSON.parse(json)
       if (agents[i].name === 'estrategia') {
         estrategia = data as EstrategiaResult
