@@ -87,9 +87,26 @@ function computeLevels(sesgo: 'COMPRA' | 'VENTA', entry: number) {
 }
 
 function getETMinutes(): { mins: number; day: number } {
-  const etOffset = -4 * 60 // EDT
-  const etNow = new Date(new Date().getTime() + etOffset * 60000)
-  return { mins: etNow.getUTCHours() * 60 + etNow.getUTCMinutes(), day: etNow.getUTCDay() }
+  const now = new Date()
+  // Use Intl to get the correct America/New_York time (handles EDT/EST switch automatically)
+  const etParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    hour: 'numeric', minute: 'numeric', hour12: false,
+    weekday: 'narrow',
+  }).formatToParts(now)
+  const hour   = parseInt(etParts.find(p => p.type === 'hour')?.value   ?? '0', 10)
+  const minute = parseInt(etParts.find(p => p.type === 'minute')?.value ?? '0', 10)
+  const weekday = etParts.find(p => p.type === 'weekday')?.value ?? ''
+  // weekday narrow: M=Mon, T=Tue, W=Wed, T=Thu, F=Fri, S=Sat, S=Sun
+  const dayMap: Record<string, number> = { S: -1, M: 1, T: 2, W: 3, F: 5 }
+  // Safer: use a full date part to get the day-of-week number
+  const etDateStr = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    weekday: 'long',
+  }).format(now)
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+  const day = dayNames.indexOf(etDateStr)
+  return { mins: hour * 60 + minute, day }
 }
 
 // 3:43–3:48 PM ET window — forced EOD close 15 min before market close
