@@ -56,6 +56,7 @@ interface OptionsAnalyzeResult {
       analystConsensus: string
       beta: number | null
     }
+    expirations: string[]
     selectedExpirations: string[]
     fetchedAt: string
   }
@@ -91,6 +92,7 @@ interface TickerSuggestion {
 export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean }) {
   const [ticker, setTicker] = useState('')
   const [activeStrategy, setActiveStrategy] = useState<StrategyKind>('sell-put')
+  const [filterExp, setFilterExp] = useState<string>('all')
   const [data, setData] = useState<OptionsAnalyzeResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -163,6 +165,10 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
   }, [])
 
   const activePicks = useMemo(() => data?.strategies?.[activeStrategy] ?? [], [activeStrategy, data])
+  const filteredPicks = useMemo(
+    () => filterExp === 'all' ? activePicks : activePicks.filter(p => p.contract.expiration === filterExp),
+    [activePicks, filterExp]
+  )
 
   const analyze = async (event?: FormEvent, tickerOverride?: string) => {
     event?.preventDefault()
@@ -175,6 +181,7 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'No se pudo analizar el ticker')
       setData(json)
+      setFilterExp('all')
       if (json.recommendation?.strategy) setActiveStrategy(json.recommendation.strategy)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al analizar opciones')
@@ -358,6 +365,33 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
               ))}
             </div>
 
+            {data.underlying.selectedExpirations.length > 1 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                <button
+                  onClick={() => setFilterExp('all')}
+                  className={`text-[10px] font-mono px-3 py-1 rounded-full border transition-colors ${
+                    filterExp === 'all'
+                      ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+                      : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--gold-dark)]'
+                  }`}
+                >
+                  Todas
+                </button>
+                {data.underlying.selectedExpirations.map(exp => (
+                  <button key={exp}
+                    onClick={() => setFilterExp(exp)}
+                    className={`text-[10px] font-mono px-3 py-1 rounded-full border transition-colors ${
+                      filterExp === exp
+                        ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+                        : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--gold-dark)]'
+                    }`}
+                  >
+                    {exp}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="card p-0 overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
@@ -368,7 +402,7 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
                   </tr>
                 </thead>
                 <tbody>
-                  {activePicks.map((pick) => (
+                  {filteredPicks.map((pick) => (
                     <tr key={`${pick.strategy}-${pick.contract.symbol}`} className="border-b border-[var(--border)]/60 hover:bg-white/[0.03]">
                       <td className="p-3"><ScoreMini score={pick.score} label={pick.label} /></td>
                       <td className="p-3 font-mono text-[var(--text-secondary)]">{pick.contract.symbol}</td>
@@ -385,9 +419,9 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
                   ))}
                 </tbody>
               </table>
-              {!activePicks.length && (
+              {!filteredPicks.length && (
                 <div className="text-center py-10 text-xs" style={{ color: 'var(--text-muted)' }}>
-                  No hay contratos útiles para esta estrategia.
+                  {filterExp === 'all' ? 'No hay contratos útiles para esta estrategia.' : `Sin contratos para ${filterExp} en esta estrategia.`}
                 </div>
               )}
             </div>
@@ -425,7 +459,26 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
             <p className="text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--gold)' }}>RECOMENDACIONES DE OPCIONES</p>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Track record de contratos recomendados por el Agente Vanilla</p>
           </div>
-          {optRecsLoading && <span className="text-[9px] font-mono animate-pulse" style={{ color: 'var(--text-muted)' }}>cargando…</span>}
+          <div className="flex items-center gap-2">
+            {optRecsLoading && <span className="text-[9px] font-mono animate-pulse" style={{ color: 'var(--text-muted)' }}>cargando…</span>}
+            {isAdmin && (
+              <button
+                onClick={async () => {
+                  if (!confirm('¿Eliminar duplicados activos? Se conserva solo la recomendación más reciente por ticker+estrategia.')) return
+                  const res = await fetch('/api/options-recs/cleanup', { method: 'DELETE' })
+                  const json = await res.json()
+                  if (res.ok) {
+                    const d = await fetch('/api/options-recs').then(r => r.json())
+                    if (d?.recommendations) setOptRecs(d.recommendations)
+                    alert(`${json.deleted} duplicado(s) eliminado(s)`)
+                  }
+                }}
+                className="text-[9px] font-mono px-2 py-1 rounded border border-yellow-500/40 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-colors"
+              >
+                Limpiar duplicados
+              </button>
+            )}
+          </div>
         </div>
 
         {optRecs.length === 0 && !optRecsLoading ? (
