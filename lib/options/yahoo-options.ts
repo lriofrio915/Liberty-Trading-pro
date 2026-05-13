@@ -140,9 +140,9 @@ async function fetchYahooOptions(ticker: string, expirationUnix?: number): Promi
 function chooseExpirations(expirations: string[]): string[] {
   const preferred = expirations.filter((date) => {
     const dte = daysToExpiration(date)
-    return dte >= 21 && dte <= 75
+    return dte >= 21 && dte <= 180
   })
-  return (preferred.length ? preferred : expirations).slice(0, 4)
+  return (preferred.length ? preferred : expirations).slice(0, 6)
 }
 
 function enrichContracts(raw: RawYahooOption[], type: OptionType, expiration: string, spot: number): EnrichedOptionContract[] {

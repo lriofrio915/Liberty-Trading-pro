@@ -37,14 +37,6 @@ export const navGroups: NavGroup[] = [
       { href: '/dashboard/agentes', icon: '🤖', label: 'Agentes', requiresClub: true },
     ],
   },
-  {
-    label: 'Configuración',
-    items: [
-      { href: '/dashboard/profile',      icon: '👤', label: 'Mi Perfil',    requiresClub: false },
-      { href: '/dashboard/brokers',      icon: '🔌', label: 'Brokers',      requiresClub: true  },
-      { href: '/dashboard/conocimiento', icon: '📚', label: 'Conocimiento', requiresClub: false },
-    ],
-  },
 ]
 
 // Flat list kept for bottom tabs

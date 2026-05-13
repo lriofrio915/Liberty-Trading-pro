@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   }
 
   const existing = await prisma.optionRecommendation.findFirst({
-    where: { ticker, contractSymbol, status: 'ACTIVA' },
+    where: { ticker, strategy, status: 'ACTIVA' },
   })
   if (existing) {
     return NextResponse.json({ recommendation: existing, skipped: true }, { status: 200 })
