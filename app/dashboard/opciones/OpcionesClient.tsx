@@ -3,6 +3,9 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 type StrategyKind = 'sell-put' | 'covered-call' | 'buy-call' | 'buy-put'
+type MainTab = "opciones" | "cfds" | "futuros"
+type SubTab = "analisis" | "calculadora" | "estrategias"
+type ToolTab = "bs" | "greeks" | "iv" | "fv"
 
 interface Contract {
   symbol: string
@@ -93,6 +96,9 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
   const [ticker, setTicker] = useState('')
   const [activeStrategy, setActiveStrategy] = useState<StrategyKind>('sell-put')
   const [filterExp, setFilterExp] = useState<string>('all')
+  const [activeMainTab, setActiveMainTab] = useState<MainTab>('opciones')
+  const [activeSubTab, setActiveSubTab] = useState<SubTab>('analisis')
+  const [activeToolTab, setActiveToolTab] = useState<ToolTab>('bs')
   const [data, setData] = useState<OptionsAnalyzeResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -193,18 +199,93 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
   return (
     <div className="animate-fadeIn">
       <div className="mb-7">
-        <p className="text-[10px] font-mono tracking-[0.25em] uppercase mb-2" style={{ color: 'var(--gold)' }}>
-          Cadena de opciones + fair value
-        </p>
-        <h1 className="text-3xl font-black mb-2">
-          <span className="gradient-gold">Opciones</span>
-        </h1>
-        <p className="text-sm max-w-3xl leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+        <h1 className="text-3xl font-black gradient-gold mb-2">Opciones</h1>
+        <p className="text-sm text-[var(--text-secondary)] max-w-3xl">
           Analiza calls y puts con prima estimada, griegas, liquidez, soportes/resistencias y una recomendación directa para vender prima o comprar dirección.
         </p>
       </div>
 
-      <form onSubmit={analyze} className="card p-5 mb-6">
+      {/* Premium Horizontal Toolbar */}
+      <div className="mb-6">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3">
+          <div className="grid grid-cols-3 gap-3">
+            
+            {/* Left Zone: Market Selector */}
+            <div className="flex gap-1">
+              {[
+                { id: "opciones" as MainTab, label: "Opciones", icon: "⚡" },
+                { id: "cfds" as MainTab, label: "CFDs", icon: "🎯" },
+                { id: "futuros" as MainTab, label: "Futuros", icon: "🚀" },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveMainTab(tab.id)}
+                  className={`px-3 py-2 text-xs font-mono tracking-widest rounded-lg border transition-all flex items-center gap-2 min-w-0 flex-1 justify-center ${
+                    activeMainTab === tab.id
+                      ? "bg-[var(--gold)] text-black border-[var(--gold)] shadow-sm"
+                      : "bg-[var(--bg-secondary)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--gold-dark)] hover:bg-white/5"
+                  }`}
+                >
+                  <span className="text-[10px]">{tab.icon}</span>
+                  <span className="truncate">{tab.label}</span>
+                </button>
+              ))}
+            </div>
+            
+            {/* Center Zone: Analysis Mode */}
+            <div className="flex gap-1">
+              {[
+                { id: "analisis" as SubTab, label: "Automático", icon: "🤖" },
+                { id: "calculadora" as SubTab, label: "Manual", icon: "🧮" },
+                { id: "estrategias" as SubTab, label: "IA", icon: "⚔️" },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveSubTab(tab.id)}
+                  className={`px-3 py-2 text-xs font-mono tracking-widest rounded-lg border transition-all flex items-center gap-2 min-w-0 flex-1 justify-center ${
+                    activeSubTab === tab.id
+                      ? "bg-[var(--gold)]/20 border-[var(--gold)]/50 text-[var(--gold)] shadow-sm"
+                      : "bg-[var(--bg-secondary)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--gold-dark)] hover:bg-white/5"
+                  }`}
+                >
+                  <span className="text-[10px]">{tab.icon}</span>
+                  <span className="truncate">{tab.label}</span>
+                </button>
+              ))}
+            </div>
+            
+            {/* Right Zone: Tools */}
+            <div className="flex gap-1">
+              {[
+                { id: "bs" as ToolTab, label: "BS", icon: "📊", tooltip: "Black-Scholes" },
+                { id: "greeks" as ToolTab, label: "Greeks", icon: "📈", tooltip: "Griegas" },
+                { id: "iv" as ToolTab, label: "IV", icon: "📉", tooltip: "Volatilidad Implícita" },
+                { id: "fv" as ToolTab, label: "FV", icon: "💰", tooltip: "Fair Value" },
+              ].map(tool => (
+                <button
+                  key={tool.id}
+                  onClick={() => setActiveToolTab(tool.id)}
+                  className={`px-2 py-2 text-xs font-mono tracking-widest rounded-lg border transition-all flex items-center gap-1 min-w-0 flex-1 justify-center group relative ${
+                    activeToolTab === tool.id
+                      ? "bg-[var(--gold)]/20 border-[var(--gold)]/50 text-[var(--gold)] shadow-sm"
+                      : "bg-[var(--bg-secondary)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--gold-dark)] hover:bg-white/5"
+                  }`}
+                  title={tool.tooltip}
+                >
+                  <span className="text-[10px]">{tool.icon}</span>
+                  <span className="truncate">{tool.label}</span>
+                  <div className="absolute bottom-full mb-2 hidden group-hover:block bg-black/90 text-white text-[10px] px-2 py-1 rounded pointer-events-none whitespace-nowrap z-50">
+                    {tool.tooltip}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search Section */}
+      <form onSubmit={analyze} className="card p-4 mb-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-end">
           <div className="relative">
             <label className="block text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>
