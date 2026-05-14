@@ -1,12 +1,18 @@
-# Graph Report - .  (2026-05-14)
+# Graph Report - liberty-trading-new  (2026-05-14)
 
 ## Corpus Check
-- Large corpus: 286 files · ~180,171 words. Semantic extraction will be expensive (many Claude tokens). Consider running on a subfolder, or use --no-semantic to run AST-only.
+- 286 files · ~182,399 words
+- Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1379 nodes · 2155 edges · 115 communities (87 shown, 28 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 37 edges (avg confidence: 0.77)
+- 1394 nodes · 2146 edges · 141 communities (93 shown, 48 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 33 edges (avg confidence: 0.77)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `746e5c02`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - [[_COMMUNITY_Options Pricing Engine|Options Pricing Engine]]
@@ -106,6 +112,29 @@
 - [[_COMMUNITY_Vibe Api Swarm Route|Vibe Api Swarm Route]]
 - [[_COMMUNITY_Audit Xlsx Cve Vuln|Audit Xlsx Cve Vuln]]
 - [[_COMMUNITY_Vibe Api Messages Route|Vibe Api Messages Route]]
+- [[_COMMUNITY_Community 115|Community 115]]
+- [[_COMMUNITY_Community 116|Community 116]]
+- [[_COMMUNITY_Community 117|Community 117]]
+- [[_COMMUNITY_Community 118|Community 118]]
+- [[_COMMUNITY_Community 119|Community 119]]
+- [[_COMMUNITY_Community 120|Community 120]]
+- [[_COMMUNITY_Community 121|Community 121]]
+- [[_COMMUNITY_Community 125|Community 125]]
+- [[_COMMUNITY_Community 126|Community 126]]
+- [[_COMMUNITY_Community 127|Community 127]]
+- [[_COMMUNITY_Community 128|Community 128]]
+- [[_COMMUNITY_Community 129|Community 129]]
+- [[_COMMUNITY_Community 130|Community 130]]
+- [[_COMMUNITY_Community 131|Community 131]]
+- [[_COMMUNITY_Community 132|Community 132]]
+- [[_COMMUNITY_Community 133|Community 133]]
+- [[_COMMUNITY_Community 134|Community 134]]
+- [[_COMMUNITY_Community 135|Community 135]]
+- [[_COMMUNITY_Community 136|Community 136]]
+- [[_COMMUNITY_Community 137|Community 137]]
+- [[_COMMUNITY_Community 138|Community 138]]
+- [[_COMMUNITY_Community 139|Community 139]]
+- [[_COMMUNITY_Community 140|Community 140]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `createSupabaseServerClient()` - 111 edges
@@ -113,15 +142,13 @@
 3. `fetchBrokers()` - 26 edges
 4. `callAI()` - 19 edges
 5. `DELETE()` - 18 edges
-6. `Liberty Trading Pro` - 18 edges
+6. `Liberty Trading Pro — Contexto del Proyecto` - 15 edges
 7. `IBKRService` - 13 edges
 8. `vibeJSON()` - 12 edges
 9. `notifyNexus()` - 11 edges
 10. `computeFarosMetrics()` - 11 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `v0.1.1.0: Copiloto IA Feature (ex Vibe Agent)` --semantically_similar_to--> `AlgoLab Module (Backtesting + MQL5)`  [INFERRED] [semantically similar]
-  CHANGELOG.md → CLAUDE.md
 - `slowapi Rate Limiting` --semantically_similar_to--> `MEDIUM: In-Memory Rate Limiting Ineffective on Vercel`  [INFERRED] [semantically similar]
   liberty-brokers/requirements.txt → AUDIT_REPORT.md
 - `Coberturas Responsive Grid xl:grid-cols-[1fr_400px]` --semantically_similar_to--> `Design System Audit (Cormorant/Syne/Gold Palette)`  [INFERRED] [semantically similar]
@@ -130,17 +157,19 @@
   app/dashboard/vibe/README.md → liberty-brokers/README.md
 - `Fly.io/Railway Deployment for Vibe-Trading Backend` --semantically_similar_to--> `Fly.io Deployment for liberty-brokers`  [INFERRED] [semantically similar]
   app/dashboard/vibe/README.md → liberty-brokers/README.md
+- `POST()` --calls--> `repairJSON()`  [INFERRED]
+  app/api/tauric/analyze/route.ts → lib/analisis-engine.ts
 
 ## Hyperedges (group relationships)
 - **Missing Auth on Critical API Endpoints (register, upload, analisis, vinces-wa)** — audit_payment_bypass_vuln, audit_upload_noauth_vuln, audit_analisis_noauth_vuln, audit_vinces_wa_noauth_vuln [EXTRACTED 0.95]
 - **External AI Cost Attack Surface (OpenRouter + Groq unprotected)** — audit_vinces_wa_noauth_vuln, audit_analisis_noauth_vuln, claude_openrouter_ai, claude_groq_ai [INFERRED 0.85]
 - **Python FastAPI Microservices on Fly.io (Vibe-Trading + liberty-brokers)** — vibe_hkuds_backend, liberty_brokers_fastapi, vibe_fly_deploy_recommendation, liberty_brokers_fly_deploy [INFERRED 0.75]
 
-## Communities (115 total, 28 thin omitted)
+## Communities (141 total, 48 thin omitted)
 
 ### Community 0 - "Options Pricing Engine"
 Cohesion: 0.06
-Nodes (55): GET(), baseContract, call, contract, put, result, analyzeOptionsTicker(), cache (+47 more)
+Nodes (55): baseContract, call, contract, put, result, analyzeOptionsTicker(), cache, getFundamentalBias() (+47 more)
 
 ### Community 1 - "API Routes & Signals"
 Cohesion: 0.05
@@ -148,55 +177,51 @@ Nodes (52): CONCLUSION_CONFIG, fmtPrice(), HeatCell(), mfColor(), mfTextColor(),
 
 ### Community 2 - "Liberty Brokers (MT5/IBKR)"
 Cohesion: 0.06
-Nodes (46): POST(), sanitize(), GET(), POST(), AICallOptions, AICallResult, callAI(), callAIWithSystem() (+38 more)
+Nodes (47): POST(), sanitize(), GET(), POST(), AICallOptions, AICallResult, callAI(), callAIWithSystem() (+39 more)
 
 ### Community 3 - "Auth & Dashboard Layout"
 Cohesion: 0.06
 Nodes (31): BaseModel, _get_ibkr(), ibkr_account(), ibkr_cancel_order(), ibkr_order(), ibkr_positions(), ibkr_quote(), ibkr_status() (+23 more)
 
 ### Community 4 - "Track Record Module"
-Cohesion: 0.07
-Nodes (36): POST(), FLIP_THRESHOLD, GET(), nowET(), YAHOO_MAP, GET(), AnalysisResult, AssetAnalysis (+28 more)
+Cohesion: 0.09
+Nodes (28): FLIP_THRESHOLD, GET(), nowET(), YAHOO_MAP, GET(), AnalysisResult, AssetAnalysis, buildAgents() (+20 more)
 
 ### Community 5 - "MAIA Analysis Client"
-Cohesion: 0.05
-Nodes (51): HIGH: Admin Check via Email String (No RBAC), HIGH: /api/analisis Without Auth (OpenRouter Abuse), MEDIUM: CRON_SECRET Exposed in URL Query Param, DOMPurify Sanitization Fix for LLM Output, MEDIUM: In-Memory Rate Limiting Ineffective on Vercel, CRITICAL: Payment Bypass /api/auth/register, MEDIUM: WhatsApp pushName Prompt Injection, Liberty Trading Pro Audit Report (+43 more)
+Cohesion: 0.12
+Nodes (17): MEDIUM: In-Memory Rate Limiting Ineffective on Vercel, Upstash Redis Rate Limiting Recommendation, Fernet Encryption (cryptography package), Liberty Brokers FastAPI Service, Fly.io Deployment for liberty-brokers, IBKR Integration (ib_insync + TWS/Gateway), LIBERTY_INTERNAL_TOKEN Header Auth, MT5 EA Bridge (DevRico003 REST API via cloudflared) (+9 more)
 
 ### Community 6 - "Landing Pages & Marketing"
-Cohesion: 0.05
-Nodes (13): createSupabaseBrowserClient(), Notif, CATEGORIES, Certificate, PLAN_LABELS, PLAN_INFO, Status, BOTTOM_TABS (+5 more)
+Cohesion: 0.06
+Nodes (12): createSupabaseBrowserClient(), Notif, CATEGORIES, Certificate, PLAN_LABELS, PLAN_INFO, Status, BOTTOM_TABS (+4 more)
 
 ### Community 7 - "Trading Vibe / Tauric"
 Cohesion: 0.04
 Nodes (33): [confirmDeleteId, setConfirmDeleteId], [copied, setCopied], [deleting, setDeleting], [editingSession, setEditingSession], [expandedRow, setExpandedRow], [fechaFin, setFechaFin], [fechaInicio, setFechaInicio], fileRef (+25 more)
 
 ### Community 8 - "Market Data & Picks"
-Cohesion: 0.09
-Nodes (27): GET(), authHeaders(), TAURIC_BASE_URL, TauricError, tauricJSON(), tauricSSEProxy(), authHeaders(), RunRef (+19 more)
+Cohesion: 0.17
+Nodes (18): authHeaders(), RunRef, Session, SwarmPreset, VIBE_BASE_URL, vibeJSON(), vibeSSEProxy(), fail() (+10 more)
 
 ### Community 9 - "Auth & CRUD APIs"
 Cohesion: 0.05
 Nodes (28): ActiveTab, AGENTS, AnalysisResult, AssetAnalysis, AssetCard(), CfdSignalCalc, CfdSignalRecord, DistribucionItem (+20 more)
 
 ### Community 10 - "Agent Monitor UI"
-Cohesion: 0.08
-Nodes (30): POST(), buildDataBlock(), extractCookies(), fetchBatchFinancials(), fetchLivePrices(), fetchTickerFinancials(), fmt(), fmtB() (+22 more)
-
-### Community 11 - "Admin APIs"
-Cohesion: 0.05
-Nodes (4): TIPOS_VALIDOS, checkAdmin(), createSupabaseServerClient(), ALLOWED_MIME_TYPES
+Cohesion: 0.09
+Nodes (29): POST(), buildDataBlock(), extractCookies(), fetchBatchFinancials(), fetchLivePrices(), fetchTickerFinancials(), fmt(), fmtB() (+21 more)
 
 ### Community 12 - "IBKR Broker Integration"
-Cohesion: 0.09
-Nodes (22): AcademiaPage(), CATEGORIAS, AccionesPage(), PLAN_ORDER, AgentesPage(), AnalisisPage(), metadata, ComunidadPage() (+14 more)
+Cohesion: 0.13
+Nodes (16): AgentesPage(), AnalisisPage(), metadata, GET(), ComunidadPage(), AccessLevel, EffectiveAccess, getEffectiveAccess() (+8 more)
 
 ### Community 13 - "Market Cron & Futures"
 Cohesion: 0.06
 Nodes (11): CATEGORY_LABELS, Decision, MonitorResult, OpenOpp, Phase, Phase, TickerStage, Phase (+3 more)
 
 ### Community 14 - "News & Prices Feed"
-Cohesion: 0.08
-Nodes (7): POST(), metadata, createNotification(), createMock, globalForPrisma, POST(), POST()
+Cohesion: 0.31
+Nodes (5): POST(), createNotification(), createMock, POST(), POST()
 
 ### Community 15 - "Options Analysis Page"
 Cohesion: 0.17
@@ -219,8 +244,8 @@ Cohesion: 0.14
 Nodes (13): ACTIVE_STATUSES, fmtPrice(), Opportunity, parseReport(), PriceCell(), PriceCellNullable(), printReport(), ReportJSON (+5 more)
 
 ### Community 20 - "App Api Academia Id Route Ts"
-Cohesion: 0.22
-Nodes (8): assertAdmin(), DELETE(), isAdmin(), normalizePnl(), PATCH(), PUT(), requireAdmin(), resolveDbUser()
+Cohesion: 0.13
+Nodes (11): assertAdmin(), checkAdmin(), DELETE(), GET(), isAdmin(), normalizePnl(), PATCH(), PUT() (+3 more)
 
 ### Community 21 - "App Dashboard Comunidad Comuni"
 Cohesion: 0.16
@@ -235,8 +260,8 @@ Cohesion: 0.15
 Nodes (8): cormorant, dmMono, metadata, syne, Lang, LanguageContext, LanguageContextType, LanguageProvider()
 
 ### Community 24 - "App Dashboard Brokers Brokersc"
-Cohesion: 0.15
-Nodes (5): BrokerConn, Tab, metadata, BrokerConn, BrokerConn
+Cohesion: 0.2
+Nodes (4): BrokerConn, Tab, BrokerConn, BrokerConn
 
 ### Community 25 - "App Dashboard Futuros Futuross"
 Cohesion: 0.19
@@ -322,13 +347,17 @@ Nodes (6): fmt(), ForecastData, ForecastTab(), HORIZONS, pct(), Suggestion
 Cohesion: 0.43
 Nodes (6): getNYDayBoundaries(), getNYHourMinute(), isInNYWindow(), isNYWeekend(), { hour, minute }, { todayStart, todayEnd }
 
+### Community 47 - "Academia Academiaclient Academ"
+Cohesion: 0.2
+Nodes (4): FormState, Leccion, AcademiaPage(), CATEGORIAS
+
 ### Community 48 - "App Dashboard Conocimiento Con"
-Cohesion: 0.29
-Nodes (5): Doc, DocFull, EMPTY, FILE_ICONS, FILE_TYPES
+Cohesion: 0.22
+Nodes (6): Doc, DocFull, EMPTY, FILE_ICONS, FILE_TYPES, ConocimientoPage()
 
 ### Community 49 - "App Dashboard Futuros Futurosc"
-Cohesion: 0.29
-Nodes (5): DashboardClient, FuturosSesgoTab, Plan, Session, Tab
+Cohesion: 0.22
+Nodes (6): FuturosSesgoTab, MiCuentaTab, Plan, Session, Tab, FuturosPage()
 
 ### Community 50 - "App Api Leads Capture Route Ts"
 Cohesion: 0.43
@@ -343,8 +372,8 @@ Cohesion: 0.43
 Nodes (6): formatSemana(), FormState, getYouTubeId(), thisMonday(), VideoSemana, VideoSemanaWidget()
 
 ### Community 54 - "App Dashboard Retiros Retirosc"
-Cohesion: 0.33
-Nodes (3): Plan, Retiro, SessionSummary
+Cohesion: 0.25
+Nodes (4): RetirosPage(), Plan, Retiro, SessionSummary
 
 ### Community 55 - "Components Navbar Navbar Tsx"
 Cohesion: 0.4
@@ -414,25 +443,37 @@ Nodes (3): findUser(), OgImage(), size
 Cohesion: 0.5
 Nodes (4): app/api/trading/vibe/sessions/[id]/stream/route.ts, app/api/trading/vibe/swarm/runs/[id]/stream/route.ts, app/dashboard/vibe/VibeClient.tsx, SSE Streaming for Vibe Agent Events
 
+### Community 115 - "Community 115"
+Cohesion: 0.17
+Nodes (12): POST(), authHeaders(), DAILY_SIGNALS_BASE_URL, DailySignalsError, dailySignalsJSON(), authHeaders(), TAURIC_BASE_URL, TauricError (+4 more)
+
+### Community 116 - "Community 116"
+Cohesion: 0.09
+Nodes (21): AlgoLab — Módulo Crítico, APIs Notables, code:block1 (FREE < CLUB < PRO < PORTFOLIO), code:block2 (DATABASE_URL, DIRECT_URL          # Prisma/Supabase), code:bash (npx prisma studio          # UI para ver la base de datos), Comandos Útiles, Cron Jobs (GitHub Actions), Decisiones de Arquitectura (+13 more)
+
+### Community 117 - "Community 117"
+Cohesion: 0.24
+Nodes (8): Benchmark, BenchmarkPoint, fmtMoney(), fmtPct(), Metricas, MiCuentaTab(), Plan, Session
+
 ## Knowledge Gaps
-- **410 isolated node(s):** `config`, `config`, `nextConfig`, `eslintConfig`, `config` (+405 more)
+- **436 isolated node(s):** `Qué es esto`, `Stack`, `Módulos del Dashboard`, `code:block1 (FREE < CLUB < PRO < PORTFOLIO)`, `Cron Jobs (GitHub Actions)` (+431 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **28 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **48 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `createSupabaseServerClient()` connect `Admin APIs` to `API Routes & Signals`, `Liberty Brokers (MT5/IBKR)`, `Track Record Module`, `Landing Pages & Marketing`, `Market Data & Picks`, `Agent Monitor UI`, `IBKR Broker Integration`, `News & Prices Feed`, `Options Analysis Page`, `App Api Academia Id Route Ts`, `App Dashboard Brokers Brokersc`, `App Maestria Futuros Page Tsx`, `App Api Forecast Route Ts`, `App Api Sessions Import Route `, `App Dashboard Track Record Pag`, `App Page Landingpage`, `App Api Trading Vibe History R`, `App Api Leads Route Ts`, `Academia Route Get`, `App Api Cfds Signals Route Ts`, `App Api Academia Progreso Rout`, `App Api Reportes Route Ts`, `App Api Retiros Route Ts`, `App Api Section Video Route Ts`, `App Api Certificates Route Ts`, `Alumnos Route Checkadmin`?**
-  _High betweenness centrality (0.175) - this node is a cross-community bridge._
-- **Why does `getEffectiveAccess()` connect `IBKR Broker Integration` to `Options Pricing Engine`, `Lib Access Test Expiredtrial`, `App Dashboard Track Record Pag`?**
-  _High betweenness centrality (0.015) - this node is a cross-community bridge._
+- **Why does `createSupabaseServerClient()` connect `Admin APIs` to `API Routes & Signals`, `Liberty Brokers (MT5/IBKR)`, `Track Record Module`, `Market Data & Picks`, `Agent Monitor UI`, `IBKR Broker Integration`, `News & Prices Feed`, `Options Analysis Page`, `App Api Academia Id Route Ts`, `App Maestria Futuros Page Tsx`, `App Api Forecast Route Ts`, `Academia Academiaclient Academ`, `App Dashboard Conocimiento Con`, `App Dashboard Futuros Futurosc`, `App Dashboard Retiros Retirosc`, `App Api Sessions Import Route `, `App Dashboard Track Record Pag`, `App Page Landingpage`, `App Api Trading Vibe History R`, `App Api Leads Route Ts`, `Academia Route Get`, `App Api Cfds Signals Route Ts`, `App Api Academia Progreso Rout`, `App Api Reportes Route Ts`, `App Api Retiros Route Ts`, `App Api Section Video Route Ts`, `App Api Certificates Route Ts`, `Alumnos Route Checkadmin`, `Community 115`, `Community 118`, `Community 119`, `Community 120`, `Community 121`, `Community 122`, `Community 123`, `Community 124`, `Community 125`, `Community 126`, `Community 127`?**
+  _High betweenness centrality (0.181) - this node is a cross-community bridge._
+- **Why does `getEffectiveAccess()` connect `IBKR Broker Integration` to `Academia Academiaclient Academ`, `App Dashboard Conocimiento Con`, `App Dashboard Futuros Futurosc`, `App Dashboard Retiros Retirosc`, `Community 121`, `Lib Access Test Expiredtrial`, `App Dashboard Track Record Pag`?**
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+- **Why does `fetchTickerFinancials()` connect `Agent Monitor UI` to `Options Pricing Engine`, `App Api Academia Id Route Ts`?**
+  _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **Are the 3 inferred relationships involving `fetchBrokers()` (e.g. with `POST()` and `GET()`) actually correct?**
   _`fetchBrokers()` has 3 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `config`, `config`, `nextConfig` to the rest of the system?**
-  _410 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `Qué es esto`, `Stack`, `Módulos del Dashboard` to the rest of the system?**
+  _436 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Options Pricing Engine` be split into smaller, more focused modules?**
   _Cohesion score 0.06 - nodes in this community are weakly interconnected._
 - **Should `API Routes & Signals` be split into smaller, more focused modules?**
   _Cohesion score 0.05 - nodes in this community are weakly interconnected._
-- **Should `Liberty Brokers (MT5/IBKR)` be split into smaller, more focused modules?**
-  _Cohesion score 0.06 - nodes in this community are weakly interconnected._

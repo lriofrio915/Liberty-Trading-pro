@@ -1059,6 +1059,10 @@
     "mtime": 1777779937.2857335,
     "hash": "189616b03c89c441c1b41741ecbaf50e"
   },
+  "/var/www/liberty-trading-new/app/dashboard/futuros/MiCuentaTab.tsx": {
+    "mtime": 1778795260.6808906,
+    "hash": "50d51e32ab85f59b6b7e782a8f67cd75"
+  },
   "/var/www/liberty-trading-new/app/dashboard/futuros/FuturosSesgoTab.tsx": {
     "mtime": 1778567292.978286,
     "hash": "1e4d7137aa21485273f34a01e22f7ef1"
@@ -1068,8 +1072,8 @@
     "hash": "cb9ff623d5871db3ccedf78e4f1e852f"
   },
   "/var/www/liberty-trading-new/app/dashboard/futuros/FuturosClient.tsx": {
-    "mtime": 1778725428.9227166,
-    "hash": "f5eb6498a2db2a45f0345e33731f91fe"
+    "mtime": 1778795269.8987405,
+    "hash": "31c5988f91b19a57486f8525b1c76304"
   },
   "/var/www/liberty-trading-new/app/dashboard/planes/PlanesClient.tsx": {
     "mtime": 1776096840.746797,

@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo, useRef, useCallback } from 'react'
 import Image from 'next/image'
-import * as XLSX from 'xlsx'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -128,36 +127,9 @@ export default function TrackRecordClient({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  // ── Export CSV ───────────────────────────────────────────────────────────────
+  // ── Export CSV (sesiones + métricas) ─────────────────────────────────────────
 
   function exportCSV() {
-    const headers = ['fecha', 'instrumento', 'direccion', 'resultado', 'pnl_neto', 'pnl_bruto', 'comisiones', 'contratos', 'entry_price', 'exit_price', 'siguio_plan', 'sentimiento', 'notas']
-    const rows = filtered.map(s => [
-      new Date(s.date).toLocaleDateString('en-CA', { timeZone: 'America/Guayaquil' }),
-      s.instrumento,
-      s.direccion,
-      s.resultado,
-      s.pnlNeto,
-      s.pnlBruto,
-      s.comisiones,
-      s.contratos,
-      s.entryPrice ?? '',
-      s.exitPrice ?? '',
-      s.siguioPlan,
-      s.sentimiento ?? '',
-      s.notas ?? '',
-    ])
-    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `track-record-${new Date().toLocaleDateString('en-CA')}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  function exportXLSX() {
     const wins = filtered.filter(s => s.resultado === 'WIN')
     const losses = filtered.filter(s => s.resultado === 'LOSS')
     const totalPnl = filtered.reduce((acc, s) => acc + s.pnlNeto, 0)
@@ -173,9 +145,10 @@ export default function TrackRecordClient({
     const worstTrade = pnls.length ? Math.min(...pnls) : 0
     const dates = filtered.map(s => new Date(s.date).toLocaleDateString('en-CA', { timeZone: TZ })).sort()
     const periodo = dates.length ? `${dates[0]} → ${dates[dates.length - 1]}` : '—'
+    const fmt = (n: number) => parseFloat(n.toFixed(2))
+    const q = (v: unknown) => `"${String(v).replace(/"/g, '""')}"`
 
-    // Sheet 1: raw sessions
-    const sesHeaders = ['Fecha', 'Instrumento', 'Dirección', 'Resultado', 'PnL Neto', 'PnL Bruto', 'Comisiones', 'Contratos', 'Entry', 'Exit', 'Siguió Plan', 'Sentimiento', 'Notas']
+    const sesHeaders = ['fecha', 'instrumento', 'direccion', 'resultado', 'pnl_neto', 'pnl_bruto', 'comisiones', 'contratos', 'entry_price', 'exit_price', 'siguio_plan', 'sentimiento', 'notas']
     const sesRows = filtered.map(s => [
       new Date(s.date).toLocaleDateString('en-CA', { timeZone: TZ }),
       s.instrumento, s.direccion, s.resultado,
@@ -184,12 +157,9 @@ export default function TrackRecordClient({
       s.siguioPlan ? 'Sí' : 'No',
       s.sentimiento ?? '', s.notas ?? '',
     ])
-    const ws1 = XLSX.utils.aoa_to_sheet([sesHeaders, ...sesRows])
-    ws1['!cols'] = [10, 14, 12, 12, 12, 12, 12, 11, 10, 10, 13, 14, 30].map(w => ({ wch: w }))
+    const sessionsCsv = [sesHeaders, ...sesRows].map(r => r.map(q).join(',')).join('\n')
 
-    // Sheet 2: metrics summary
-    const fmt = (n: number) => parseFloat(n.toFixed(2))
-    const metricsData = [
+    const metricsRows: (string | number)[][] = [
       ['MÉTRICAS DEL TRACK RECORD', ''],
       ['Período', periodo],
       ['', ''],
@@ -210,13 +180,15 @@ export default function TrackRecordClient({
       ['R:R Promedio', fmt(rrProm)],
       ['Profit Factor', profitFactor === Infinity ? '∞' : fmt(profitFactor)],
     ]
-    const ws2 = XLSX.utils.aoa_to_sheet(metricsData)
-    ws2['!cols'] = [{ wch: 22 }, { wch: 20 }]
+    const metricsCsv = metricsRows.map(r => r.map(q).join(',')).join('\n')
 
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws1, 'Operaciones')
-    XLSX.utils.book_append_sheet(wb, ws2, 'Métricas')
-    XLSX.writeFile(wb, `track-record-${new Date().toLocaleDateString('en-CA')}.xlsx`)
+    const blob = new Blob(['﻿' + sessionsCsv + '\n\n' + metricsCsv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `track-record-${new Date().toLocaleDateString('en-CA')}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   // ── Import ───────────────────────────────────────────────────────────────────
@@ -234,17 +206,43 @@ export default function TrackRecordClient({
     const reader = new FileReader()
     reader.onload = (ev) => {
       try {
-        const data = new Uint8Array(ev.target!.result as ArrayBuffer)
-        const wb = XLSX.read(data, { type: 'array', cellDates: true })
-        const ws = wb.Sheets[wb.SheetNames[0]]
-        const json: Record<string, string>[] = XLSX.utils.sheet_to_json(ws, { defval: '' })
+        const text = (ev.target!.result as string).replace(/^﻿/, '')
+        const allLines = text.split(/\r?\n/)
+        // Stop at first blank line after row 1 (metrics section separator)
+        const blankIdx = allLines.findIndex((l, i) => i > 0 && l.trim() === '')
+        const dataLines = blankIdx > 0 ? allLines.slice(0, blankIdx) : allLines
+        const nonEmpty = dataLines.filter(l => l.trim())
+        if (nonEmpty.length < 2) { setImportError('El archivo está vacío o no tiene filas.'); return }
+
+        const parseCSVLine = (line: string): string[] => {
+          const result: string[] = []
+          let cur = '', inQuote = false
+          for (let i = 0; i < line.length; i++) {
+            const ch = line[i]
+            if (ch === '"') {
+              if (inQuote && line[i + 1] === '"') { cur += '"'; i++ }
+              else inQuote = !inQuote
+            } else if (ch === ',' && !inQuote) { result.push(cur); cur = '' }
+            else cur += ch
+          }
+          result.push(cur)
+          return result
+        }
+
+        const headers = parseCSVLine(nonEmpty[0]).map(h => h.trim().toLowerCase())
+        const json: Record<string, string>[] = nonEmpty.slice(1).map(line => {
+          const cols = parseCSVLine(line)
+          const obj: Record<string, string> = {}
+          headers.forEach((h, i) => { obj[h] = cols[i]?.trim() ?? '' })
+          return obj
+        })
         if (json.length === 0) { setImportError('El archivo está vacío o no tiene filas.'); return }
         setImportRows(json)
       } catch {
-        setImportError('No se pudo leer el archivo. Verifica que sea CSV o Excel válido.')
+        setImportError('No se pudo leer el archivo. Verifica que sea CSV válido.')
       }
     }
-    reader.readAsArrayBuffer(file)
+    reader.readAsText(file, 'utf-8')
     e.target.value = ''
   }
 
@@ -546,35 +544,25 @@ export default function TrackRecordClient({
           <p className="text-[var(--text-secondary)] text-sm">Historial completo de operaciones</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Export split group */}
-          <div className="flex items-stretch" style={{ borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(201,168,76,0.4)' }}>
-            <button
-              onClick={exportCSV}
-              className="text-[var(--gold)] font-mono text-xs font-semibold px-4 py-2.5 hover:bg-[rgba(201,168,76,0.08)] transition-colors"
-              style={{ borderRight: '1px solid rgba(201,168,76,0.4)' }}
-              title="Exportar sesiones filtradas como CSV"
-            >
-              ↑ CSV
-            </button>
-            <button
-              onClick={exportXLSX}
-              className="text-[var(--gold)] font-mono text-xs font-semibold px-4 py-2.5 hover:bg-[rgba(201,168,76,0.08)] transition-colors"
-              title="Exportar sesiones + métricas como Excel (.xlsx con 2 hojas)"
-            >
-              ↑ Excel
-            </button>
-          </div>
+          {/* Export */}
+          <button
+            onClick={exportCSV}
+            className="text-[var(--gold)] font-mono text-xs font-semibold px-4 py-2.5 hover:bg-[rgba(201,168,76,0.08)] transition-colors rounded-lg border border-[rgba(201,168,76,0.4)]"
+            title="Exportar sesiones + métricas como CSV"
+          >
+            ↑ CSV
+          </button>
           <button
             onClick={() => importRef.current?.click()}
             className="btn-outline py-2.5 px-4 rounded-lg text-sm"
-            title="Importar operaciones desde CSV o Excel"
+            title="Importar operaciones desde CSV"
           >
             ↓ Importar CSV
           </button>
           <input
             ref={importRef}
             type="file"
-            accept=".csv,.xlsx,.xls"
+            accept=".csv"
             className="hidden"
             onChange={handleImportFile}
           />
