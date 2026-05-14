@@ -174,7 +174,7 @@ export default function DashboardClient({
       const sr = await fetch('/api/cfds/signals')
       if (sr.ok) {
         const data2 = await sr.json()
-        if (Array.isArray(data2)) setSignals(data2.filter((s: CfdSignal) => s.active))
+        if (Array.isArray(data2)) setSignals(data2.filter((s: CfdSignal) => s.active && isToday(s.createdAt)))
       }
       setLastUpdated(new Date())
     } catch (err) {
@@ -210,11 +210,11 @@ export default function DashboardClient({
       if (!res.ok) return
       const data = await res.json()
       if (Array.isArray(data)) {
-        const active = data.filter((s: CfdSignal) => s.active)
+        const active = data.filter((s: CfdSignal) => s.active && isToday(s.createdAt))
         setSignals(active)
 
         // Auto-trigger analysis if no signals from today
-        const hasToday = active.some(s => isToday(s.createdAt))
+        const hasToday = active.length > 0
         if (!hasToday && !analysisTriggered.current) {
           runAutoAnalysis()
         }
@@ -222,6 +222,13 @@ export default function DashboardClient({
     } catch {}
     finally { setSignalsLoading(false) }
   }, [runAutoAnalysis])
+
+  const handleRefresh = useCallback(() => {
+    analysisTriggered.current = false
+    setAutoStatus('idle')
+    setSignalsLoading(true)
+    fetchSignals()
+  }, [fetchSignals])
 
   useEffect(() => {
     fetchNews()
@@ -434,7 +441,7 @@ export default function DashboardClient({
             <span className="gradient-gold">Market</span> Intelligence
           </h1>
           <p className="text-sm text-[var(--text-secondary)]">
-            {greeting()}, <span className="text-white font-medium">{userName || 'trader'}</span>
+            {greeting()}, <span className="text-white font-medium">{userName?.split(' ')[0] || 'trader'}</span>
             {userPlan && (
               <span
                 className="ml-2 text-[10px] font-mono tracking-widest px-2 py-0.5 rounded-full border"
@@ -468,11 +475,21 @@ export default function DashboardClient({
           <div className="card h-full">
             <div className="flex items-center justify-between mb-4">
               <div className="label-mono text-xs text-[var(--text-muted)]">SESGOS HOY</div>
-              {autoStatus === 'done' && (
-                <span className="text-[9px] font-mono text-green-400 px-1.5 py-0.5 rounded bg-green-500/10">
-                  IA
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {autoStatus === 'done' && (
+                  <span className="text-[9px] font-mono text-green-400 px-1.5 py-0.5 rounded bg-green-500/10">
+                    IA
+                  </span>
+                )}
+                <button
+                  onClick={handleRefresh}
+                  disabled={autoStatus === 'running'}
+                  className="text-[14px] text-[var(--text-muted)] hover:text-white disabled:opacity-30 transition-colors leading-none"
+                  title="Actualizar sesgos"
+                >
+                  ↺
+                </button>
+              </div>
             </div>
             {renderSesgosContent()}
           </div>
