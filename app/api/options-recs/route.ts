@@ -9,12 +9,31 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // Auto-dedup: conservar solo la más reciente por ticker+strategy
+  const activas = await prisma.optionRecommendation.findMany({
+    where: { status: 'ACTIVA', active: true },
+    orderBy: { publishedAt: 'desc' },
+  })
+  const seen = new Map<string, boolean>()
+  const toDeactivate: string[] = []
+  for (const rec of activas) {
+    const key = `${rec.ticker}|${rec.strategy}`
+    if (seen.has(key)) toDeactivate.push(rec.id)
+    else seen.set(key, true)
+  }
+  if (toDeactivate.length > 0) {
+    await prisma.optionRecommendation.updateMany({
+      where: { id: { in: toDeactivate } },
+      data: { active: false },
+    })
+  }
+
   const isAdmin = user.email === ADMIN_EMAIL
   const recs = await prisma.optionRecommendation.findMany({
     orderBy: { publishedAt: 'desc' },
     ...(isAdmin ? {} : { where: { active: true } }),
   })
-  return NextResponse.json({ recommendations: recs, isAdmin })
+  return NextResponse.json({ recommendations: recs })
 }
 
 export async function POST(req: NextRequest) {
@@ -38,7 +57,7 @@ export async function POST(req: NextRequest) {
   }
 
   const existing = await prisma.optionRecommendation.findFirst({
-    where: { ticker, strategy, status: 'ACTIVA' },
+    where: { ticker, strategy, status: 'ACTIVA', active: true },
   })
   if (existing) {
     return NextResponse.json({ recommendation: existing, skipped: true }, { status: 200 })

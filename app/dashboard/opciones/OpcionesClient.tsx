@@ -542,23 +542,6 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
           </div>
           <div className="flex items-center gap-2">
             {optRecsLoading && <span className="text-[9px] font-mono animate-pulse" style={{ color: 'var(--text-muted)' }}>cargando…</span>}
-            {isAdmin && (
-              <button
-                onClick={async () => {
-                  if (!confirm('¿Eliminar duplicados activos? Se conserva solo la recomendación más reciente por ticker+estrategia.')) return
-                  const res = await fetch('/api/options-recs/cleanup', { method: 'DELETE' })
-                  const json = await res.json()
-                  if (res.ok) {
-                    const d = await fetch('/api/options-recs').then(r => r.json())
-                    if (d?.recommendations) setOptRecs(d.recommendations)
-                    alert(`${json.deleted} duplicado(s) eliminado(s)`)
-                  }
-                }}
-                className="text-[9px] font-mono px-2 py-1 rounded border border-yellow-500/40 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-colors"
-              >
-                Limpiar duplicados
-              </button>
-            )}
           </div>
         </div>
 
