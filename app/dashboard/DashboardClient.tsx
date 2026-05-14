@@ -143,39 +143,39 @@ export default function DashboardClient({
 
       const data: { activos: AssetAnalysis[] } = await res.json()
 
-      // Save all activos as CfdSignals (sesgos for dashboard display)
       if (data.activos?.length) {
-        const signalsPayload = data.activos.map(a => ({
-          simbolo:       a.simbolo,
-          nombre:        a.nombre,
-          sector:        a.sector,
-          sesgo:         a.sesgo,
-          confianza:     a.confianza,
-          razon:         a.razon,
-          precioEntrada: a.precio,
-          stopLoss:      0,
-          takeProfit:    0,
-          lotaje:        0,
-          riesgoUsd:     0,
-          rrRatio:       0,
-          riskProfile:   'moderado',
+        // Show sesgos immediately from analysis result — no DB round-trip needed
+        const now = new Date().toISOString()
+        const syntheticSignals: CfdSignal[] = data.activos.map((a, i) => ({
+          id: `live-${i}`,
+          simbolo: a.simbolo,
+          nombre: a.nombre,
+          sector: a.sector,
+          sesgo: a.sesgo,
+          confianza: a.confianza,
+          razon: a.razon,
+          active: true,
+          createdAt: now,
         }))
+        setSignals(syntheticSignals)
 
-        await fetch('/api/cfds/signals', {
+        // Save to DB in background for persistence (non-blocking)
+        fetch('/api/cfds/signals', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ signals: signalsPayload, forceRefresh: true }),
+          body: JSON.stringify({
+            signals: data.activos.map(a => ({
+              simbolo: a.simbolo, nombre: a.nombre, sector: a.sector,
+              sesgo: a.sesgo, confianza: a.confianza, razon: a.razon,
+              precioEntrada: a.precio, stopLoss: 0, takeProfit: 0,
+              lotaje: 0, riesgoUsd: 0, rrRatio: 0, riskProfile: 'moderado',
+            })),
+            forceRefresh: true,
+          }),
         }).catch(() => {})
       }
 
       setAutoStatus('done')
-
-      // Reload signals from DB
-      const sr = await fetch('/api/cfds/signals')
-      if (sr.ok) {
-        const data2 = await sr.json()
-        if (Array.isArray(data2)) setSignals(data2.filter((s: CfdSignal) => s.active && isToday(s.createdAt)))
-      }
       setLastUpdated(new Date())
     } catch (err) {
       clearInterval(stepInterval)
