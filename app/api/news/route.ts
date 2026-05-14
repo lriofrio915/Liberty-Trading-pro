@@ -37,8 +37,10 @@ function parseRSS(xml: string, source: string): NewsItem[] {
 }
 
 const FEEDS = [
-  { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', source: 'BBC World' },
-  { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', source: 'NYT World' },
+  { url: 'https://feeds.reuters.com/reuters/businessNews', source: 'Reuters' },
+  { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', source: 'CNBC' },
+  { url: 'https://feeds.marketwatch.com/marketwatch/topstories/', source: 'MarketWatch' },
+  { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
 ]
 
 export async function GET() {
@@ -63,7 +65,7 @@ export async function GET() {
     const da = a.pubDate ? new Date(a.pubDate).getTime() : 0
     const db = b.pubDate ? new Date(b.pubDate).getTime() : 0
     return db - da
-  }).slice(0, 12)
+  }).slice(0, 16)
 
   return NextResponse.json({ news: sorted, timestamp: Date.now() })
 }

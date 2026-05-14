@@ -5,10 +5,35 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 
 const FuturosSesgoTab = dynamic(() => import('./FuturosSesgoTab'), { ssr: false })
+const DashboardClient = dynamic(() => import('../DashboardClient'), { ssr: false })
 
-type Tab = 'overview' | 'sesgo'
+type Tab = 'overview' | 'sesgo' | 'cuenta'
 
-export default function FuturosClient({ isAdmin }: { isAdmin: boolean }) {
+interface Session {
+  id: string; date: string; instrumento: string; direccion: string; resultado: string
+  pnlBruto: number; comisiones: number; pnlNeto: number; contratos: number
+  entryPrice: number | null; exitPrice: number | null; siguioPlan: boolean
+  sentimiento: string | null; notas: string | null; planId: string | null
+}
+
+interface Plan {
+  id: string; name: string; capitalInicial: number; createdAt: string
+  dataFeedMensual: number | null; comisionPorTrade: number | null
+}
+
+export default function FuturosClient({
+  isAdmin,
+  sessions = [],
+  plans = [],
+  userName = null,
+  userPlan = null,
+}: {
+  isAdmin: boolean
+  sessions?: Session[]
+  plans?: Plan[]
+  userName?: string | null
+  userPlan?: string | null
+}) {
   const [tab, setTab] = useState<Tab>('overview')
   const [video, setVideo] = useState<{ youtubeUrl: string; title: string | null }>({ youtubeUrl: '', title: null })
   const [editMode, setEditMode] = useState(false)
@@ -59,7 +84,7 @@ export default function FuturosClient({ isAdmin }: { isAdmin: boolean }) {
 
       {/* Tabs */}
       <div className="flex gap-1 p-1 rounded-xl mb-8 w-fit" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        {([['overview', 'OVERVIEW'], ['sesgo', 'SESGO INTRADÍA']] as [Tab, string][]).map(([id, label]) => (
+        {([['overview', 'OVERVIEW'], ['sesgo', 'SESGO INTRADÍA'], ['cuenta', 'MI CUENTA']] as [Tab, string][]).map(([id, label]) => (
           <button
             key={id}
             onClick={() => setTab(id)}
@@ -74,6 +99,15 @@ export default function FuturosClient({ isAdmin }: { isAdmin: boolean }) {
       </div>
 
       {tab === 'sesgo' && <FuturosSesgoTab isAdmin={isAdmin} />}
+
+      {tab === 'cuenta' && (
+        <DashboardClient
+          sessions={sessions}
+          plans={plans}
+          userName={userName}
+          userPlan={userPlan}
+        />
+      )}
 
       {tab === 'overview' && (
         <div>
