@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 
 const FuturosSesgoTab = dynamic(() => import('./FuturosSesgoTab'), { ssr: false })
-const DashboardClient = dynamic(() => import('../DashboardClient'), { ssr: false })
+const MiCuentaTab = dynamic(() => import('./MiCuentaTab'), { ssr: false })
 
 type Tab = 'overview' | 'sesgo' | 'cuenta'
 
@@ -101,7 +101,7 @@ export default function FuturosClient({
       {tab === 'sesgo' && <FuturosSesgoTab isAdmin={isAdmin} />}
 
       {tab === 'cuenta' && (
-        <DashboardClient
+        <MiCuentaTab
           sessions={sessions}
           plans={plans}
           userName={userName}

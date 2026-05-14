@@ -1,0 +1,1146 @@
+{
+  "/var/www/liberty-trading-new/postcss.config.mjs": {
+    "mtime": 1772459629.631323,
+    "hash": "b7941c02b947e17ae32f67ae7e664ec8"
+  },
+  "/var/www/liberty-trading-new/vitest.config.ts": {
+    "mtime": 1776528760.4608335,
+    "hash": "e0e9346ac5d5ba00b8f319d11344bbaa"
+  },
+  "/var/www/liberty-trading-new/next-env.d.ts": {
+    "mtime": 1772459629.631323,
+    "hash": "b5ed9dd8b4c5ba8e5ab8e6a379c15838"
+  },
+  "/var/www/liberty-trading-new/proxy.ts": {
+    "mtime": 1777700350.8038833,
+    "hash": "f8d833bed35b2d572fa04f3af5c3a1a1"
+  },
+  "/var/www/liberty-trading-new/next.config.mjs": {
+    "mtime": 1777610630.2401695,
+    "hash": "22e152b5d2e8cc5254e9cfac83401b56"
+  },
+  "/var/www/liberty-trading-new/eslint.config.mjs": {
+    "mtime": 1777700350.7958834,
+    "hash": "7581e3f443c1e9c402037877dc3e3764"
+  },
+  "/var/www/liberty-trading-new/tailwind.config.ts": {
+    "mtime": 1772459629.631323,
+    "hash": "56905d2463187f39b5b23e0831120ab9"
+  },
+  "/var/www/liberty-trading-new/components/ThemeProvider.tsx": {
+    "mtime": 1773075183.1302452,
+    "hash": "b09ae0381d576a8c4f4d3fe9e4546ada"
+  },
+  "/var/www/liberty-trading-new/components/GdeltMap.tsx": {
+    "mtime": 1773076182.8525338,
+    "hash": "ff827c5e00a3b148de527d8b51289754"
+  },
+  "/var/www/liberty-trading-new/components/ScrollToTop.tsx": {
+    "mtime": 1776533725.221894,
+    "hash": "6dfaf302125a75dc4e697b4f98581f18"
+  },
+  "/var/www/liberty-trading-new/components/CoberturasClient.tsx": {
+    "mtime": 1778724172.285598,
+    "hash": "24aba518f5d05dded35bab65ff90e559"
+  },
+  "/var/www/liberty-trading-new/components/TrackRecord/PublicChart.tsx": {
+    "mtime": 1773634947.894314,
+    "hash": "2ad014be21bdaa75e036435619654ec3"
+  },
+  "/var/www/liberty-trading-new/components/TrackRecord/TrackRecordClient.tsx": {
+    "mtime": 1778267971.2899234,
+    "hash": "b714c82930fb48bb34d042fed15d9d68"
+  },
+  "/var/www/liberty-trading-new/components/Pricing/Pricing.tsx": {
+    "mtime": 1773964876.0145192,
+    "hash": "46cafc944f3a02bb07abf89fd9c5a077"
+  },
+  "/var/www/liberty-trading-new/components/Footer/Footer.tsx": {
+    "mtime": 1773459035.026902,
+    "hash": "19e68cb0dfe8af78b986554399068e9b"
+  },
+  "/var/www/liberty-trading-new/components/Hero/Hero.tsx": {
+    "mtime": 1778267971.2889235,
+    "hash": "147c2a4828de07193451b59d9e0cc491"
+  },
+  "/var/www/liberty-trading-new/components/TrialBanner/TrialBanner.tsx": {
+    "mtime": 1773547419.3884697,
+    "hash": "cf82c69d8e48e5e059fe975161790114"
+  },
+  "/var/www/liberty-trading-new/components/Notifications/NotificationBell.tsx": {
+    "mtime": 1776094027.4710453,
+    "hash": "4fa93d5002af06cf6f581496ca0664ac"
+  },
+  "/var/www/liberty-trading-new/components/Sidebar/MobileNav.tsx": {
+    "mtime": 1776096665.054687,
+    "hash": "170be006fbd186d451036e17230144b4"
+  },
+  "/var/www/liberty-trading-new/components/Sidebar/SidebarNav.tsx": {
+    "mtime": 1776094027.473045,
+    "hash": "e56266fbf2bfcedf00fdd5e5779fe145"
+  },
+  "/var/www/liberty-trading-new/components/Sidebar/navConfig.ts": {
+    "mtime": 1778696891.3063655,
+    "hash": "aa9f22d294688ba25a387c16f2a250eb"
+  },
+  "/var/www/liberty-trading-new/components/CustomCursor/CustomCursor.tsx": {
+    "mtime": 1772471321.135099,
+    "hash": "47c97751fc3dd5595a7b0fab23939938"
+  },
+  "/var/www/liberty-trading-new/components/Monitor/LeafletMap.tsx": {
+    "mtime": 1772477997.844395,
+    "hash": "81f590b08a47a69e35f5780bac2bb946"
+  },
+  "/var/www/liberty-trading-new/components/LeadCaptureForm/LeadCaptureForm.tsx": {
+    "mtime": 1774023341.907112,
+    "hash": "c151ce282541f2050a9d0e9749aa4f73"
+  },
+  "/var/www/liberty-trading-new/components/MT5/MT5ConnectPanel.tsx": {
+    "mtime": 1778567292.981286,
+    "hash": "6c3dc986732852ee880c48d71d6677ec"
+  },
+  "/var/www/liberty-trading-new/components/MT5/MT5TradeModal.tsx": {
+    "mtime": 1776528554.676783,
+    "hash": "ed62be73196de3f0c934a5724fe115a9"
+  },
+  "/var/www/liberty-trading-new/components/Navbar/Navbar.tsx": {
+    "mtime": 1778267971.2889235,
+    "hash": "d9e59b1a4dcd26747057a3890029455f"
+  },
+  "/var/www/liberty-trading-new/components/VideoSemana/VideoSemanaWidget.tsx": {
+    "mtime": 1776096555.4234881,
+    "hash": "cfd2976f22024e49ac8e954a9099d332"
+  },
+  "/var/www/liberty-trading-new/components/TickerBar/TickerBar.tsx": {
+    "mtime": 1778267971.2899234,
+    "hash": "3688474a2d55fef8bffe59ca0e7d485f"
+  },
+  "/var/www/liberty-trading-new/components/Dashboard/TopBar.tsx": {
+    "mtime": 1778696894.5143151,
+    "hash": "88c1be423580f8c5edb9a90854bc1d7a"
+  },
+  "/var/www/liberty-trading-new/components/VincesWidget/VincesWidget.tsx": {
+    "mtime": 1778267971.2909236,
+    "hash": "cdad3504bb6b8f2c3f443e6cef223d4a"
+  },
+  "/var/www/liberty-trading-new/components/PersonalContactForm/PersonalContactForm.tsx": {
+    "mtime": 1774023319.9214327,
+    "hash": "fe2d32236338a54ed97cdda12d125551"
+  },
+  "/var/www/liberty-trading-new/prisma/seed-academia.ts": {
+    "mtime": 1773540184.8598313,
+    "hash": "bfb8f031448542746188e164381646d4"
+  },
+  "/var/www/liberty-trading-new/prisma/migrations/20260408_add_notifications/migration.sql": {
+    "mtime": 1776094027.4830449,
+    "hash": "c4a288fd6a34c966a3ccfba22f2c9232"
+  },
+  "/var/www/liberty-trading-new/prisma/migrations/20260504_add_cfd_signal/migration.sql": {
+    "mtime": 1778267971.2959235,
+    "hash": "0194e1dc0b4ac614fe58a519ae658685"
+  },
+  "/var/www/liberty-trading-new/contexts/LanguageContext.tsx": {
+    "mtime": 1772459773.5993128,
+    "hash": "9fdf148da7fe0a7f421053709af67a23"
+  },
+  "/var/www/liberty-trading-new/__tests__/api/mt5-connect.test.ts": {
+    "mtime": 1776528791.7293794,
+    "hash": "090f89cd2fa81f9c3f456cf2dfb3e5c8"
+  },
+  "/var/www/liberty-trading-new/__tests__/lib/faros-metrics.test.ts": {
+    "mtime": 1777610630.2191699,
+    "hash": "e0dc53ae02ea40a846586205a051b056"
+  },
+  "/var/www/liberty-trading-new/__tests__/lib/options-pricing.test.ts": {
+    "mtime": 1778267971.4799204,
+    "hash": "d97a13e3a4583a2c67a50a6822563650"
+  },
+  "/var/www/liberty-trading-new/__tests__/lib/analisis-engine.test.ts": {
+    "mtime": 1777610630.21817,
+    "hash": "72754943229b560965502db8e8e78194"
+  },
+  "/var/www/liberty-trading-new/__tests__/lib/mt5-validation.test.ts": {
+    "mtime": 1776528781.589527,
+    "hash": "52188bfe7ac8a23597423cae65990809"
+  },
+  "/var/www/liberty-trading-new/__tests__/lib/slug.test.ts": {
+    "mtime": 1777610630.2201698,
+    "hash": "74a439d63916b0434998f0de04027322"
+  },
+  "/var/www/liberty-trading-new/__tests__/lib/cron-utils.test.ts": {
+    "mtime": 1777610630.2191699,
+    "hash": "697db74d9d04803a01a9f34538d1b90c"
+  },
+  "/var/www/liberty-trading-new/__tests__/lib/access.test.ts": {
+    "mtime": 1777610630.21817,
+    "hash": "1d58c50b00ed7fbfc9398a1485ac24b7"
+  },
+  "/var/www/liberty-trading-new/__tests__/lib/price-format.test.ts": {
+    "mtime": 1776528800.965245,
+    "hash": "a4191cce58637743cf236e8b74017bcb"
+  },
+  "/var/www/liberty-trading-new/__tests__/lib/notifications.test.ts": {
+    "mtime": 1777610630.2191699,
+    "hash": "133a8bed1f2677dfaf8c29830c7acbdd"
+  },
+  "/var/www/liberty-trading-new/lib/notifications.ts": {
+    "mtime": 1776094027.477045,
+    "hash": "38252dcf1a6aab8928044cc22a6d0c92"
+  },
+  "/var/www/liberty-trading-new/lib/supabase.ts": {
+    "mtime": 1772459769.906313,
+    "hash": "4b3f9b7aea9a7392cd7a49ea72c88408"
+  },
+  "/var/www/liberty-trading-new/lib/notify-nexus.ts": {
+    "mtime": 1778267971.2939234,
+    "hash": "99994907b89cdee676a9ef448b017d88"
+  },
+  "/var/www/liberty-trading-new/lib/vibe-trading.ts": {
+    "mtime": 1778567292.983286,
+    "hash": "e28df478509498ebee16e95c9f469371"
+  },
+  "/var/www/liberty-trading-new/lib/cron-utils.ts": {
+    "mtime": 1776094027.477045,
+    "hash": "18c9513e3ea6e4f6b7870c64da83775b"
+  },
+  "/var/www/liberty-trading-new/lib/faros-metrics.ts": {
+    "mtime": 1776526391.7059956,
+    "hash": "5e42ee9f354a493065429f710a9bd3a2"
+  },
+  "/var/www/liberty-trading-new/lib/analisis-engine.ts": {
+    "mtime": 1778567292.982286,
+    "hash": "3f177b93b1fa517f484dd841dbf1bb80"
+  },
+  "/var/www/liberty-trading-new/lib/timesfm.ts": {
+    "mtime": 1778567292.983286,
+    "hash": "dd5125af3777c933d55f7a7d02385971"
+  },
+  "/var/www/liberty-trading-new/lib/supabase-browser.ts": {
+    "mtime": 1772460278.9662724,
+    "hash": "34aae651adb29e523d6312f6400fde87"
+  },
+  "/var/www/liberty-trading-new/lib/brokers-client.ts": {
+    "mtime": 1778567292.982286,
+    "hash": "ef5fc43bc63068bf1ba347a3999b2864"
+  },
+  "/var/www/liberty-trading-new/lib/sendWA.ts": {
+    "mtime": 1773547334.4987457,
+    "hash": "8541372966b7dcb5c419f1e8fd8c4f70"
+  },
+  "/var/www/liberty-trading-new/lib/rate-limit.ts": {
+    "mtime": 1778267971.2939234,
+    "hash": "8909d2a3cd14553e6fe76e9db9c64cec"
+  },
+  "/var/www/liberty-trading-new/lib/slug.ts": {
+    "mtime": 1773636823.3579733,
+    "hash": "aecbd890ec3a90f43f7cf13585c037e4"
+  },
+  "/var/www/liberty-trading-new/lib/ai-providers.ts": {
+    "mtime": 1778267971.2909236,
+    "hash": "c5fb30000779c6709a4e805c06eab778"
+  },
+  "/var/www/liberty-trading-new/lib/supabase-server.ts": {
+    "mtime": 1777610630.2401695,
+    "hash": "824e19a0e07ed6732e14ab856268c1be"
+  },
+  "/var/www/liberty-trading-new/lib/yahoo-financials.ts": {
+    "mtime": 1778267971.4839203,
+    "hash": "ee25f54b3cbad2fad7eef2b6a128c15b"
+  },
+  "/var/www/liberty-trading-new/lib/access.ts": {
+    "mtime": 1773547340.7696517,
+    "hash": "26fb63a57eb2b78d6a7e5a08f4d05041"
+  },
+  "/var/www/liberty-trading-new/lib/daily-signals.ts": {
+    "mtime": 1778567292.983286,
+    "hash": "57c005694cbb098eaa572480c2b26db4"
+  },
+  "/var/www/liberty-trading-new/lib/tauric.ts": {
+    "mtime": 1778567292.983286,
+    "hash": "acc25274f751c831a644529acfef0383"
+  },
+  "/var/www/liberty-trading-new/lib/prisma.ts": {
+    "mtime": 1772461582.3653216,
+    "hash": "bfcb15201048f138867e698650f613c6"
+  },
+  "/var/www/liberty-trading-new/lib/supabase/client.ts": {
+    "mtime": 1772485343.352702,
+    "hash": "4cb5739c1e33353d8f9d66c1737df2d1"
+  },
+  "/var/www/liberty-trading-new/lib/screener/sp500-nasdaq-tickers.ts": {
+    "mtime": 1778567292.983286,
+    "hash": "5a9ee26211e3ce97bbc7751a538bb2d2"
+  },
+  "/var/www/liberty-trading-new/lib/screener/peter-lynch-filter.ts": {
+    "mtime": 1778567292.983286,
+    "hash": "98e2517725b0bd5834ff19ef69aa31e7"
+  },
+  "/var/www/liberty-trading-new/lib/options/technical-zones.ts": {
+    "mtime": 1778267971.4829204,
+    "hash": "99187d3140c2a9d87e36fa6967fff19d"
+  },
+  "/var/www/liberty-trading-new/lib/options/yahoo-options.ts": {
+    "mtime": 1778699489.7403576,
+    "hash": "a4b8486e4b40502b09297aec44b71776"
+  },
+  "/var/www/liberty-trading-new/lib/options/analyzer.ts": {
+    "mtime": 1778267971.4819205,
+    "hash": "30605f2070e220cf492e77327ed671c1"
+  },
+  "/var/www/liberty-trading-new/lib/options/pricing.ts": {
+    "mtime": 1778267971.4829204,
+    "hash": "aabfa6ab1d398215987683de36ddeeec"
+  },
+  "/var/www/liberty-trading-new/lib/options/strategy-scoring.ts": {
+    "mtime": 1778267971.4829204,
+    "hash": "2f8bb8f12bcdd04be382d77f198e91c4"
+  },
+  "/var/www/liberty-trading-new/liberty-brokers/main.py": {
+    "mtime": 1778567292.985286,
+    "hash": "a97c0be3fc8e12a786cacb3ab1580303"
+  },
+  "/var/www/liberty-trading-new/liberty-brokers/services/__init__.py": {
+    "mtime": 1778567292.9882858,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "/var/www/liberty-trading-new/liberty-brokers/services/db_service.py": {
+    "mtime": 1778567292.989286,
+    "hash": "cdddcc9f329e37fad25b10b0ba4072ae"
+  },
+  "/var/www/liberty-trading-new/liberty-brokers/services/mt5_service.py": {
+    "mtime": 1778567292.989286,
+    "hash": "883507ea4dc82d693df26578ce2883e7"
+  },
+  "/var/www/liberty-trading-new/liberty-brokers/services/ibkr_service.py": {
+    "mtime": 1778567292.989286,
+    "hash": "64c0bd63e8170f4e30345a736725bfd9"
+  },
+  "/var/www/liberty-trading-new/liberty-brokers/services/crypto_service.py": {
+    "mtime": 1778567292.989286,
+    "hash": "b9fa52dbf75cc939d9128358b777aa41"
+  },
+  "/var/www/liberty-trading-new/liberty-brokers/routers/__init__.py": {
+    "mtime": 1778567292.985286,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "/var/www/liberty-trading-new/liberty-brokers/routers/mt5.py": {
+    "mtime": 1778567292.9882858,
+    "hash": "2d6a8e253355233d06dfdc366fc7b2c5"
+  },
+  "/var/www/liberty-trading-new/liberty-brokers/routers/trades.py": {
+    "mtime": 1778567292.9882858,
+    "hash": "8fadd842f49f5ff91a3592f5976a97ca"
+  },
+  "/var/www/liberty-trading-new/liberty-brokers/routers/ibkr.py": {
+    "mtime": 1778567292.9882858,
+    "hash": "159229865738391420424be7c91dccde"
+  },
+  "/var/www/liberty-trading-new/app/error.tsx": {
+    "mtime": 1772497611.3436236,
+    "hash": "46be8a93749a36601495d972119f2e50"
+  },
+  "/var/www/liberty-trading-new/app/page.tsx": {
+    "mtime": 1778267971.2799237,
+    "hash": "bf8724322b88ce754105a6b1a930df77"
+  },
+  "/var/www/liberty-trading-new/app/loading.tsx": {
+    "mtime": 1778267971.264924,
+    "hash": "2161d6bbe4a22ccf96403c6a18915c41"
+  },
+  "/var/www/liberty-trading-new/app/layout.tsx": {
+    "mtime": 1778267971.264924,
+    "hash": "5f55d938ef077e56831e5b2295a755cb"
+  },
+  "/var/www/liberty-trading-new/app/global-error.tsx": {
+    "mtime": 1772497605.1936245,
+    "hash": "91d60165822cae1cd757d01742c77742"
+  },
+  "/var/www/liberty-trading-new/app/track-record/[slug]/page.tsx": {
+    "mtime": 1778267971.2819238,
+    "hash": "7fd7a3d7e956b0ef52b3340ba64f32b0"
+  },
+  "/var/www/liberty-trading-new/app/track-record/[slug]/opengraph-image.tsx": {
+    "mtime": 1778267971.2799237,
+    "hash": "ac5b91cd5a027cb047f6342933e6548d"
+  },
+  "/var/www/liberty-trading-new/app/unirse/page.tsx": {
+    "mtime": 1777681301.6604717,
+    "hash": "427cf28a38e7d09dad4389914fbd0c4a"
+  },
+  "/var/www/liberty-trading-new/app/p2p/page.tsx": {
+    "mtime": 1777610630.2381694,
+    "hash": "302b92342f449c4eecec405026f528cf"
+  },
+  "/var/www/liberty-trading-new/app/api/forecast/route.ts": {
+    "mtime": 1778567292.9572864,
+    "hash": "3adab34d3cf7984a1023ae7a5c480464"
+  },
+  "/var/www/liberty-trading-new/app/api/retiros/route.ts": {
+    "mtime": 1772561999.656314,
+    "hash": "bf0ad5a9bdfb589892224ced1cf0399b"
+  },
+  "/var/www/liberty-trading-new/app/api/retiros/[id]/route.ts": {
+    "mtime": 1777700350.7668839,
+    "hash": "a17133261baaac2e7f7bf6fad9c65b86"
+  },
+  "/var/www/liberty-trading-new/app/api/championship/route.ts": {
+    "mtime": 1777610630.2211697,
+    "hash": "2950bfa6098bf68511f75ecbdda4ce1c"
+  },
+  "/var/www/liberty-trading-new/app/api/analisis/route.ts": {
+    "mtime": 1778267971.2119248,
+    "hash": "d52f7e519936b955c7d3be45846586a8"
+  },
+  "/var/www/liberty-trading-new/app/api/profile/route.ts": {
+    "mtime": 1774659045.5171661,
+    "hash": "7cefc6bfb09d3b1e7a788d015b80aa49"
+  },
+  "/var/www/liberty-trading-new/app/api/prices/route.ts": {
+    "mtime": 1778267971.2359245,
+    "hash": "c00ce8c31620bfa0c9b7b46c7d59042e"
+  },
+  "/var/www/liberty-trading-new/app/api/webhook/hotmart/route.ts": {
+    "mtime": 1777610630.2341695,
+    "hash": "3a7fceeeea5d27b8353012ae5a43e67f"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/connections/route.ts": {
+    "mtime": 1778567292.9492865,
+    "hash": "0b08573cf40eb67d2d9dd14d6156fd89"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/connections/[brokerType]/route.ts": {
+    "mtime": 1778567292.9492865,
+    "hash": "9d55b3c4bbe96603bb5a8e13e8311417"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/mt5/account/route.ts": {
+    "mtime": 1778567292.9512866,
+    "hash": "59c0c08303465d05cdaac9b828c97a97"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/mt5/positions/route.ts": {
+    "mtime": 1778567292.9522865,
+    "hash": "608e7cac6597354a1a7986f538e25bd1"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/mt5/order/route.ts": {
+    "mtime": 1778567292.9522865,
+    "hash": "33c2a0053cabcf33c246d08f6df83835"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/mt5/close/[ticket]/route.ts": {
+    "mtime": 1778567292.9522865,
+    "hash": "6fcfb1142d4893e1d6520e15368fb75e"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/mt5/quote/[symbol]/route.ts": {
+    "mtime": 1778567292.9532864,
+    "hash": "4961159bea431b1060300197c9f7d890"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/mt5/configure/route.ts": {
+    "mtime": 1778567292.9522865,
+    "hash": "222c72b8ae98940a27818317f5a6e3fc"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/mt5/status/route.ts": {
+    "mtime": 1778567292.9532864,
+    "hash": "da6c54de9cf6451609a666496f03c5f2"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/trades/route.ts": {
+    "mtime": 1778567292.9542863,
+    "hash": "dcf974ce3c3c60fd89a17a17e27f7f72"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/ibkr/account/route.ts": {
+    "mtime": 1778567292.9502864,
+    "hash": "df75cc1dfc08f02129f75d37a761d5ca"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/ibkr/positions/route.ts": {
+    "mtime": 1778567292.9512866,
+    "hash": "0758de33e81f44c5262d2dae756ea893"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/ibkr/order/route.ts": {
+    "mtime": 1778567292.9502864,
+    "hash": "1e5266dcc7583278952926fce985dd40"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/ibkr/order/[id]/route.ts": {
+    "mtime": 1778567292.9502864,
+    "hash": "70f83030a4ae5ea8e8e22fcfbc470aa6"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/ibkr/quote/[symbol]/route.ts": {
+    "mtime": 1778567292.9512866,
+    "hash": "f62d06f02c8c4b8cdffcf0d40852b611"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/ibkr/configure/route.ts": {
+    "mtime": 1778567292.9502864,
+    "hash": "24c5c2b68997faa5f0c61ce571b474e6"
+  },
+  "/var/www/liberty-trading-new/app/api/brokers/ibkr/status/route.ts": {
+    "mtime": 1778567292.9512866,
+    "hash": "2a03c91a5f51e429c8e6e8c25bbe2bc2"
+  },
+  "/var/www/liberty-trading-new/app/api/upload/route.ts": {
+    "mtime": 1778267971.2459242,
+    "hash": "d98adf62a264060467da07a79c83853c"
+  },
+  "/var/www/liberty-trading-new/app/api/upload/document/route.ts": {
+    "mtime": 1773634844.4427543,
+    "hash": "98810c1baa43110968825839f2ac8cda"
+  },
+  "/var/www/liberty-trading-new/app/api/news/route.ts": {
+    "mtime": 1778756822.9832077,
+    "hash": "e7de3a5bb30d10c562e187569efdfe41"
+  },
+  "/var/www/liberty-trading-new/app/api/admin/alumnos/route.ts": {
+    "mtime": 1778267971.192925,
+    "hash": "0a4c0be4abb781c398654323c2f6b5e9"
+  },
+  "/var/www/liberty-trading-new/app/api/admin/alumnos/[id]/route.ts": {
+    "mtime": 1777610630.2201698,
+    "hash": "262f00af035fba55df6d0cf95d773c25"
+  },
+  "/var/www/liberty-trading-new/app/api/notifications/route.ts": {
+    "mtime": 1776094027.4470456,
+    "hash": "9b04a42760aa34d268e1122edc2796ee"
+  },
+  "/var/www/liberty-trading-new/app/api/notifications/mark-read/route.ts": {
+    "mtime": 1776094027.4470456,
+    "hash": "bfc4ac5cc4625bfd130ecb26c7a7a5dd"
+  },
+  "/var/www/liberty-trading-new/app/api/auth/logout/route.ts": {
+    "mtime": 1772460297.5522707,
+    "hash": "bccb2633a041f69d7ef6e297cc0681d9"
+  },
+  "/var/www/liberty-trading-new/app/api/auth/register/route.ts": {
+    "mtime": 1778267971.2119248,
+    "hash": "59d50c64a45337958ef57909ffba40a1"
+  },
+  "/var/www/liberty-trading-new/app/api/academia/route.ts": {
+    "mtime": 1777610630.2201698,
+    "hash": "bc7598939dcd89e5fd5efb006a3877db"
+  },
+  "/var/www/liberty-trading-new/app/api/academia/progreso/route.ts": {
+    "mtime": 1772562121.2823036,
+    "hash": "29cd676fd5001bb5b460ff427a45bafe"
+  },
+  "/var/www/liberty-trading-new/app/api/academia/[id]/route.ts": {
+    "mtime": 1777700350.7238846,
+    "hash": "f823c761fde44dfb4cda2b996fbabd0b"
+  },
+  "/var/www/liberty-trading-new/app/api/cfds/signals/route.ts": {
+    "mtime": 1778759534.917758,
+    "hash": "b83add26f0f6893a2abe9647bed0e328"
+  },
+  "/var/www/liberty-trading-new/app/api/cfds/signals/[id]/route.ts": {
+    "mtime": 1778567292.9542863,
+    "hash": "032e7ff6179242f413b4dc5b511926a4"
+  },
+  "/var/www/liberty-trading-new/app/api/options-recs/route.ts": {
+    "mtime": 1778724175.6875453,
+    "hash": "3c90e7f6f1fa692404504241bbbe8789"
+  },
+  "/var/www/liberty-trading-new/app/api/options-recs/[id]/route.ts": {
+    "mtime": 1778567292.9592865,
+    "hash": "b35ab519b4e701ad26962abaf6fa906d"
+  },
+  "/var/www/liberty-trading-new/app/api/knowledge/route.ts": {
+    "mtime": 1773077812.90578,
+    "hash": "d744b21ffaac0f5685745cc44b3562c0"
+  },
+  "/var/www/liberty-trading-new/app/api/knowledge/[id]/route.ts": {
+    "mtime": 1777700350.7548842,
+    "hash": "6d4cbcca751e698b2bdb44cb48bac3a5"
+  },
+  "/var/www/liberty-trading-new/app/api/certificates/route.ts": {
+    "mtime": 1773634850.3746722,
+    "hash": "8c4c0031c4d7707e560072b943f8669c"
+  },
+  "/var/www/liberty-trading-new/app/api/certificates/[id]/route.ts": {
+    "mtime": 1777700350.7348845,
+    "hash": "c32a328c1d69015908024bf96cd520e5"
+  },
+  "/var/www/liberty-trading-new/app/api/reportes/route.ts": {
+    "mtime": 1777610630.2271698,
+    "hash": "6d666ceebb7bf7da4eef1e72d6928589"
+  },
+  "/var/www/liberty-trading-new/app/api/reportes/analisis/route.ts": {
+    "mtime": 1778267971.2379243,
+    "hash": "13238481c3860f85e4afba217cb2b78a"
+  },
+  "/var/www/liberty-trading-new/app/api/section-video/route.ts": {
+    "mtime": 1777698679.5110574,
+    "hash": "e5f7bed32155195caaf18be09f84cfdc"
+  },
+  "/var/www/liberty-trading-new/app/api/comunidad/route.ts": {
+    "mtime": 1773543298.9354196,
+    "hash": "7bbbfe054d860dacb4fe86ca49f33a0a"
+  },
+  "/var/www/liberty-trading-new/app/api/comunidad/[id]/route.ts": {
+    "mtime": 1777700350.7468843,
+    "hash": "f56838c3e131c8057efe12840a56234d"
+  },
+  "/var/www/liberty-trading-new/app/api/comunidad/[id]/like/route.ts": {
+    "mtime": 1777700350.7448843,
+    "hash": "b0bd493ad1bbda8dbc4ce35cc038f627"
+  },
+  "/var/www/liberty-trading-new/app/api/comunidad/[id]/share/route.ts": {
+    "mtime": 1777700350.7478843,
+    "hash": "0d9ee9a0c0e63272d94278c3bde4399c"
+  },
+  "/var/www/liberty-trading-new/app/api/comunidad/[id]/comments/route.ts": {
+    "mtime": 1777700350.7418845,
+    "hash": "521893eebb677184468f53b636c2c1cc"
+  },
+  "/var/www/liberty-trading-new/app/api/comunidad/[id]/comments/[commentId]/route.ts": {
+    "mtime": 1777700350.7378845,
+    "hash": "c1868de3b499720acd3b06d01ccb0c4f"
+  },
+  "/var/www/liberty-trading-new/app/api/public-track-record/route.ts": {
+    "mtime": 1773453480.204082,
+    "hash": "2cb7937ed2bc813d982caf6654ed2405"
+  },
+  "/var/www/liberty-trading-new/app/api/public-track-record/[userId]/route.ts": {
+    "mtime": 1777700350.762884,
+    "hash": "9d3e82655a4dfcd324fb3620862d8d76"
+  },
+  "/var/www/liberty-trading-new/app/api/screener/lynch/route.ts": {
+    "mtime": 1778567292.9602864,
+    "hash": "5f33d1df0b0b4ca66ae265acf13c26ec"
+  },
+  "/var/www/liberty-trading-new/app/api/cron/scan-prices/route.ts": {
+    "mtime": 1778267971.2149248,
+    "hash": "52fe3333a899f08fa5c1482c9c50b98e"
+  },
+  "/var/www/liberty-trading-new/app/api/cron/market-scan/route.ts": {
+    "mtime": 1778267971.2129247,
+    "hash": "ebaea9d7b7dfc8d72950b57e1b7e7c7e"
+  },
+  "/var/www/liberty-trading-new/app/api/cron/monitor-signals/route.ts": {
+    "mtime": 1778567292.9552865,
+    "hash": "7bc2e3492a6d56cf85c4d46daee35be1"
+  },
+  "/var/www/liberty-trading-new/app/api/cron/bias-monitor/route.ts": {
+    "mtime": 1778267971.2129247,
+    "hash": "fa66891824893f0825e9c4eca1912a0c"
+  },
+  "/var/www/liberty-trading-new/app/api/options/analyze/route.ts": {
+    "mtime": 1778267971.4809206,
+    "hash": "031cd2014457f3fa7eda5e24b11c5fef"
+  },
+  "/var/www/liberty-trading-new/app/api/options/search/route.ts": {
+    "mtime": 1778291377.845898,
+    "hash": "a67abac2cef71205bd5d26d9ec524f74"
+  },
+  "/var/www/liberty-trading-new/app/api/futures/analyze/route.ts": {
+    "mtime": 1778567292.9592865,
+    "hash": "5dc20d1ab2f6dd4d3af3d2c2c7c44a1b"
+  },
+  "/var/www/liberty-trading-new/app/api/scan-today/route.ts": {
+    "mtime": 1778267971.2379243,
+    "hash": "5ece6b9e3ce4de6f200383de3e8d54d1"
+  },
+  "/var/www/liberty-trading-new/app/api/leads/route.ts": {
+    "mtime": 1778267971.2219245,
+    "hash": "e8f1b20296b77bf448a47e9347ecf73d"
+  },
+  "/var/www/liberty-trading-new/app/api/leads/personal-contact/route.ts": {
+    "mtime": 1778267971.2189248,
+    "hash": "09814f50670bb4364d49fec1d866b60d"
+  },
+  "/var/www/liberty-trading-new/app/api/leads/capture/route.ts": {
+    "mtime": 1777610630.2241697,
+    "hash": "0489a3333274dcf8060010c45a825cc3"
+  },
+  "/var/www/liberty-trading-new/app/api/daily-signals/tasks/route.ts": {
+    "mtime": 1778567292.9562864,
+    "hash": "76d0640905f45efe5b933d2839558b3a"
+  },
+  "/var/www/liberty-trading-new/app/api/daily-signals/results/route.ts": {
+    "mtime": 1778567292.9562864,
+    "hash": "ff0da4c63d9b16045541032875a90283"
+  },
+  "/var/www/liberty-trading-new/app/api/daily-signals/telegram/test/route.ts": {
+    "mtime": 1778567292.9572864,
+    "hash": "1f0476992b04b5ef3cf21722e0ebe54f"
+  },
+  "/var/www/liberty-trading-new/app/api/daily-signals/telegram/send/route.ts": {
+    "mtime": 1778567292.9562864,
+    "hash": "f2699d3b0b4a132bbee3477063914c4a"
+  },
+  "/var/www/liberty-trading-new/app/api/daily-signals/analyze/route.ts": {
+    "mtime": 1778567292.9552865,
+    "hash": "1697b610984bed3828005db2d1a20edf"
+  },
+  "/var/www/liberty-trading-new/app/api/daily-signals/status/route.ts": {
+    "mtime": 1778567292.9562864,
+    "hash": "e1d841a12d47fc313d038fa47a8aebe7"
+  },
+  "/var/www/liberty-trading-new/app/api/flujo/route.ts": {
+    "mtime": 1778567292.9572864,
+    "hash": "6f9ec07f276a34fa2f3c0c41ed133b5e"
+  },
+  "/var/www/liberty-trading-new/app/api/flujo/search/route.ts": {
+    "mtime": 1778567292.9572864,
+    "hash": "d84ec3f7af4e22c6aa4068d7c6ef8187"
+  },
+  "/var/www/liberty-trading-new/app/api/flujo/ticker/route.ts": {
+    "mtime": 1778567292.9572864,
+    "hash": "501036c4f1a12dbe47b1abab65c6deea"
+  },
+  "/var/www/liberty-trading-new/app/api/bot/lead/route.ts": {
+    "mtime": 1773636438.1226578,
+    "hash": "d53c5b1185b586884156c9cf3df8cdc5"
+  },
+  "/var/www/liberty-trading-new/app/api/bot/lead/[phone]/route.ts": {
+    "mtime": 1777700350.7308846,
+    "hash": "e332fc52d82da64771d36c18c5055126"
+  },
+  "/var/www/liberty-trading-new/app/api/sessions/route.ts": {
+    "mtime": 1773083597.9596016,
+    "hash": "5602d9d2abaea7bf1d004cebdc0e032e"
+  },
+  "/var/www/liberty-trading-new/app/api/sessions/import/route.ts": {
+    "mtime": 1774653528.8943827,
+    "hash": "f08f2d7958f3500f30b7b3a5764ceb81"
+  },
+  "/var/www/liberty-trading-new/app/api/sessions/[id]/route.ts": {
+    "mtime": 1773083881.060612,
+    "hash": "c7e2a54c9533792fc350f9b88ed3b122"
+  },
+  "/var/www/liberty-trading-new/app/api/video-semana/route.ts": {
+    "mtime": 1777610630.2321696,
+    "hash": "9a9c1b68ec50f199faedb6eb14937828"
+  },
+  "/var/www/liberty-trading-new/app/api/video-semana/[id]/route.ts": {
+    "mtime": 1777700350.7878835,
+    "hash": "01e8a325b4e73f29e6a4b457dfcda835"
+  },
+  "/var/www/liberty-trading-new/app/api/monitor/events/route.ts": {
+    "mtime": 1773076161.5975282,
+    "hash": "eb58e7e9ca59466eb4e409f87d2c827c"
+  },
+  "/var/www/liberty-trading-new/app/api/monitor/news/route.ts": {
+    "mtime": 1778267971.2239246,
+    "hash": "b82584bba3e3bac626b4a2ee4feee3ee"
+  },
+  "/var/www/liberty-trading-new/app/api/vinces-wa/route.ts": {
+    "mtime": 1778267971.2489243,
+    "hash": "0a68ee8b6e02445ef85687cc23c34b9d"
+  },
+  "/var/www/liberty-trading-new/app/api/benchmark/route.ts": {
+    "mtime": 1773067410.743422,
+    "hash": "bc442462b1bccd56a9c344a14090d67f"
+  },
+  "/var/www/liberty-trading-new/app/api/tauric/runs/[id]/route.ts": {
+    "mtime": 1778567292.9612863,
+    "hash": "5d1f59deb6bb113bfdce465948993c79"
+  },
+  "/var/www/liberty-trading-new/app/api/tauric/runs/[id]/stream/route.ts": {
+    "mtime": 1778567292.9612863,
+    "hash": "3f92a29eece19fa6edc99f260b33f2fc"
+  },
+  "/var/www/liberty-trading-new/app/api/tauric/explain/route.ts": {
+    "mtime": 1778567292.9612863,
+    "hash": "4b52a51916a076cbd6b1c8caff6eb838"
+  },
+  "/var/www/liberty-trading-new/app/api/tauric/analyze/route.ts": {
+    "mtime": 1778567292.9602864,
+    "hash": "2d752f3671d975d1475a25b6c20ca065"
+  },
+  "/var/www/liberty-trading-new/app/api/tauric/search/route.ts": {
+    "mtime": 1778567292.9622862,
+    "hash": "1d7d43cd1df212f10accc7ec33ad4c6b"
+  },
+  "/var/www/liberty-trading-new/app/api/mt5/queue-signals/route.ts": {
+    "mtime": 1778567292.9592865,
+    "hash": "7f840c72a27af2fe9b9c74e1f0c0cd12"
+  },
+  "/var/www/liberty-trading-new/app/api/vinces-landing/route.ts": {
+    "mtime": 1778267971.2489243,
+    "hash": "95a77a0bf4df0ca186af01831da528de"
+  },
+  "/var/www/liberty-trading-new/app/api/planes/route.ts": {
+    "mtime": 1773083871.5746114,
+    "hash": "23ece59645045c89a51860d66037269f"
+  },
+  "/var/www/liberty-trading-new/app/api/planes/[id]/route.ts": {
+    "mtime": 1777700350.758884,
+    "hash": "af850f48b9676ccd211bc92629ae53c2"
+  },
+  "/var/www/liberty-trading-new/app/api/vinces/route.ts": {
+    "mtime": 1778267971.2499242,
+    "hash": "8b57ce3e9a614efdddf72a04457187da"
+  },
+  "/var/www/liberty-trading-new/app/api/trading/vibe/history/route.ts": {
+    "mtime": 1778267971.2419243,
+    "hash": "1bafe960d6620bee769e81d8439b7dfd"
+  },
+  "/var/www/liberty-trading-new/app/api/trading/vibe/sessions/route.ts": {
+    "mtime": 1777610630.2291696,
+    "hash": "89d23db84ce11f65b611adebb498dcbb"
+  },
+  "/var/www/liberty-trading-new/app/api/trading/vibe/sessions/[id]/stream/route.ts": {
+    "mtime": 1777700350.7768838,
+    "hash": "bc8461d79ae04d83d2446f7f569706e8"
+  },
+  "/var/www/liberty-trading-new/app/api/trading/vibe/sessions/[id]/messages/route.ts": {
+    "mtime": 1778267971.2439244,
+    "hash": "7f42b8bba834d80ec557aaad0551731a"
+  },
+  "/var/www/liberty-trading-new/app/api/trading/vibe/swarm/route.ts": {
+    "mtime": 1777610630.2301695,
+    "hash": "75bb73b776514bed3c0b5882cba76dca"
+  },
+  "/var/www/liberty-trading-new/app/api/trading/vibe/swarm/runs/[id]/route.ts": {
+    "mtime": 1778567292.9622862,
+    "hash": "dfb53de64f3585b1dbe9fdca32e3d0a5"
+  },
+  "/var/www/liberty-trading-new/app/api/trading/vibe/swarm/runs/[id]/stream/route.ts": {
+    "mtime": 1777700350.7818837,
+    "hash": "ae3968e89071dec25d9f5f882708b590"
+  },
+  "/var/www/liberty-trading-new/app/api/trading/vibe/swarm/translate/route.ts": {
+    "mtime": 1778567292.9632864,
+    "hash": "68b93a7b2865183768ea36ae94342c0c"
+  },
+  "/var/www/liberty-trading-new/app/api/picks/route.ts": {
+    "mtime": 1778567292.9602864,
+    "hash": "472029d66677da6ebaf71cef5740489c"
+  },
+  "/var/www/liberty-trading-new/app/api/picks/price/route.ts": {
+    "mtime": 1777682997.6444514,
+    "hash": "e6a17f5531f1d1a56aebc80a7747169d"
+  },
+  "/var/www/liberty-trading-new/app/api/picks/search/route.ts": {
+    "mtime": 1777610630.2261698,
+    "hash": "c89d420f2320d4bda6e3b08463bc1a7f"
+  },
+  "/var/www/liberty-trading-new/app/api/picks/[id]/route.ts": {
+    "mtime": 1778567292.9592865,
+    "hash": "b0c0c1ed2e0f3f886a77e4c5e41e345d"
+  },
+  "/var/www/liberty-trading-new/app/p/[id]/page.tsx": {
+    "mtime": 1778267971.2799237,
+    "hash": "bc72ec09484807c788f0604ef19e425d"
+  },
+  "/var/www/liberty-trading-new/app/p/[id]/opengraph-image.tsx": {
+    "mtime": 1778267971.2779238,
+    "hash": "55d0e817ae7dcd6881ab3e1f063b7e26"
+  },
+  "/var/www/liberty-trading-new/app/auth/reset-password/page.tsx": {
+    "mtime": 1776094027.4480455,
+    "hash": "cc7f5072913258f1a10192bf9df93223"
+  },
+  "/var/www/liberty-trading-new/app/auth/callback/route.ts": {
+    "mtime": 1778267971.250924,
+    "hash": "4ad3831d01c84bbd70c44afd7709d69b"
+  },
+  "/var/www/liberty-trading-new/app/maestria-futuros/page.tsx": {
+    "mtime": 1778267971.2679238,
+    "hash": "bccc7ce8adf5ea9f7f459e59b468f6a3"
+  },
+  "/var/www/liberty-trading-new/app/video-semana/[id]/page.tsx": {
+    "mtime": 1778267971.2819238,
+    "hash": "123258400e59d92ba29b24c3f8bd9318"
+  },
+  "/var/www/liberty-trading-new/app/video-semana/[id]/opengraph-image.tsx": {
+    "mtime": 1778267971.2819238,
+    "hash": "b96652a8d98f37ad93e4a4021f304128"
+  },
+  "/var/www/liberty-trading-new/app/video-semana/[id]/ShareButtons.tsx": {
+    "mtime": 1773540478.1403556,
+    "hash": "167e5d9e4a9a35981e1b81f309d83e16"
+  },
+  "/var/www/liberty-trading-new/app/forgot-password/page.tsx": {
+    "mtime": 1776094027.4630454,
+    "hash": "aaa6c2344a9028d32b79d42a3a74b64b"
+  },
+  "/var/www/liberty-trading-new/app/register/page.tsx": {
+    "mtime": 1776096714.8568683,
+    "hash": "89a9b646abaef8516427986112f1dbe0"
+  },
+  "/var/www/liberty-trading-new/app/register/loading.tsx": {
+    "mtime": 1778267971.2799237,
+    "hash": "a0d15e1fa611d332e5f3fa8caa65f94f"
+  },
+  "/var/www/liberty-trading-new/app/mentoria-integral/page.tsx": {
+    "mtime": 1778267971.2679238,
+    "hash": "b526f681d571feed95afb265a09728f2"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/page.tsx": {
+    "mtime": 1778725401.1491597,
+    "hash": "68443dd059cb9f0ec90cbeb4afa0015d"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/loading.tsx": {
+    "mtime": 1778267971.255924,
+    "hash": "f78af55ab985ef81904c2a31bd2ee2fb"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/layout.tsx": {
+    "mtime": 1778267971.255924,
+    "hash": "5458b4ea215b14568432154ce04981b7"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/DashboardClient.tsx": {
+    "mtime": 1778760396.177743,
+    "hash": "964f3ea86252402cb9ef978678bd76f4"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/retiros/RetirosClient.tsx": {
+    "mtime": 1772562096.8873055,
+    "hash": "d000ed1b5b1c41a1bb5bd8cd94f712ec"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/retiros/page.tsx": {
+    "mtime": 1778267971.259924,
+    "hash": "9db6730c2075020ebebc6a42d556d567"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/championship/EquityChart.tsx": {
+    "mtime": 1772569020.080958,
+    "hash": "bc218a7c0ca3a5f36e75b2782c70667e"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/championship/page.tsx": {
+    "mtime": 1777610630.2361696,
+    "hash": "87a39cee3930e700284976a9d61a82a5"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/track-record/page.tsx": {
+    "mtime": 1778267971.259924,
+    "hash": "a26d855dd29bebb2c0ad9cbe169aaec0"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/analisis/AnalisisClient.tsx": {
+    "mtime": 1778567292.974286,
+    "hash": "753b1a5dc505b04e10911cd95ceb00f8"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/analisis/page.tsx": {
+    "mtime": 1778267971.2539241,
+    "hash": "6223014558c6d57e0de99ef6a7a8fd00"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/profile/page.tsx": {
+    "mtime": 1776096896.8978727,
+    "hash": "b5d759d20b43d902dac5b97683369c09"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/acciones/TauricResearchTab.tsx": {
+    "mtime": 1778567292.9652863,
+    "hash": "f16b2a7a82b8251ce7e54dbb21be268a"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/acciones/ResearchTab.tsx": {
+    "mtime": 1778567292.9652863,
+    "hash": "cdf70bc5be41a981c6e8c043e214a5ab"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/acciones/DailySignalsTab.tsx": {
+    "mtime": 1778567292.9642863,
+    "hash": "af7b7c99472c5f8f7978d23f3f84a7af"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/acciones/page.tsx": {
+    "mtime": 1778567292.9652863,
+    "hash": "39b1e7361316774c1185c7676c059a87"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/acciones/AccionesClient.tsx": {
+    "mtime": 1778567292.9632864,
+    "hash": "aeb6146752bf98187bd91bf64a929d11"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/brokers/BrokersClient.tsx": {
+    "mtime": 1778567292.974286,
+    "hash": "16d61bee1a1d875ccfd5ab3418e88290"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/brokers/page.tsx": {
+    "mtime": 1778567292.9762862,
+    "hash": "7b5bba641d9aad27c3a492ea6531a966"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/brokers/components/MT5OrderModal.tsx": {
+    "mtime": 1778567292.9762862,
+    "hash": "4a9706748d6076c3609558e24cca61cf"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/brokers/components/IBKROrderModal.tsx": {
+    "mtime": 1778567292.975286,
+    "hash": "f8500df8db7e74a87ce8c88542752838"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/brokers/components/IBKRDashboard.tsx": {
+    "mtime": 1778567292.974286,
+    "hash": "765e005f9b2ecf898852979ad1197a6f"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/brokers/components/MT5Dashboard.tsx": {
+    "mtime": 1778567292.975286,
+    "hash": "144f9a33e6fe80f4e436e38520383e40"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/brokers/components/IBKRSetupForm.tsx": {
+    "mtime": 1778567292.975286,
+    "hash": "1ceb8f081165113af5d7e812e3ec667d"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/brokers/components/MT5Wizard.tsx": {
+    "mtime": 1778567292.9762862,
+    "hash": "fcfe39e564bf2a54f0315939d2aa8479"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/brokers/components/BrokerExecuteDropdown.tsx": {
+    "mtime": 1778567292.974286,
+    "hash": "82e94cdf417307290df7fd0fe717cdc3"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/vibe/VibeClient.tsx": {
+    "mtime": 1778567292.981286,
+    "hash": "f62a93f3674ee05de9c8d0e8a95e8879"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/vibe/page.tsx": {
+    "mtime": 1778267971.264924,
+    "hash": "0509adba6761ee360838c07677af9c91"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/academia/AcademiaClient.tsx": {
+    "mtime": 1773546559.7843251,
+    "hash": "e949e3be660c0a0b254c7f69015003bb"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/academia/page.tsx": {
+    "mtime": 1778267971.251924,
+    "hash": "e931e9194382251c67488b3c7834f115"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/agentes/AgenteVanilla.tsx": {
+    "mtime": 1778567292.9692862,
+    "hash": "0b4c08578d6e70433c0ff258e3bd6aa2"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/agentes/AgentesClient.tsx": {
+    "mtime": 1778567292.9692862,
+    "hash": "745321e0105a13a69e97d5c35300c49c"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/agentes/AgenteSmallCap.tsx": {
+    "mtime": 1778567292.9682863,
+    "hash": "156e288f487df122f0906aeaf6ede5d9"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/agentes/AgentePeter.tsx": {
+    "mtime": 1778567292.9682863,
+    "hash": "8478a4fd2e98154a94ea31f81af860e3"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/agentes/page.tsx": {
+    "mtime": 1778567292.9702861,
+    "hash": "58bf0e25cd79fd6fe2649367501c6f5b"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/agentes/AgenteMonitor.tsx": {
+    "mtime": 1778567292.967286,
+    "hash": "e72c71dbd49b4ac9d48098cdd8485c1f"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/reportes/ReportesClient.tsx": {
+    "mtime": 1778267971.257924,
+    "hash": "ca764039f071070ff98c5938be46209d"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/reportes/page.tsx": {
+    "mtime": 1778267971.257924,
+    "hash": "668b3a0eff042fa6b81b6cfd9d1d55ee"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/comunidad/page.tsx": {
+    "mtime": 1778267971.254924,
+    "hash": "a04a7839447d34931d87e177c056669d"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/comunidad/ComunidadClient.tsx": {
+    "mtime": 1777610630.2361696,
+    "hash": "b381f73323759fe1391a649f96fbd58b"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/conocimiento/page.tsx": {
+    "mtime": 1778267971.254924,
+    "hash": "7a2d1357832c9fc6e080e52aff51f5c6"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/conocimiento/ConocimientoClient.tsx": {
+    "mtime": 1777700350.7908835,
+    "hash": "2d007b0e37851384d351a41f89955b28"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/leads/page.tsx": {
+    "mtime": 1778267971.255924,
+    "hash": "62d3fa59b24ca3cd9f808a56ebb74094"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/leads/LeadsClient.tsx": {
+    "mtime": 1774023376.4666076,
+    "hash": "fc6605deb8d2bfb520c068a47da24d5b"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/flujo/FlujoDineroClient.tsx": {
+    "mtime": 1778567292.977286,
+    "hash": "00d70b1d55f67810e443106371fb4796"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/flujo/ForecastTab.tsx": {
+    "mtime": 1778567292.977286,
+    "hash": "3a14959db4efc270ec60dfe717c9e868"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/flujo/page.tsx": {
+    "mtime": 1778267971.254924,
+    "hash": "528fa2e4a39399e1d4ab39205a27782c"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/oportunidades/page.tsx": {
+    "mtime": 1777698868.601862,
+    "hash": "45017c81238603a69eadf51f5eb2bb3d"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/oportunidades/OportunidadesClient.tsx": {
+    "mtime": 1778567292.9802861,
+    "hash": "10f97d88b8af334b37b4687166a43e92"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/monitor/page.tsx": {
+    "mtime": 1777779937.2857335,
+    "hash": "189616b03c89c441c1b41741ecbaf50e"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/futuros/FuturosSesgoTab.tsx": {
+    "mtime": 1778567292.978286,
+    "hash": "1e4d7137aa21485273f34a01e22f7ef1"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/futuros/page.tsx": {
+    "mtime": 1778725395.5272493,
+    "hash": "cb9ff623d5871db3ccedf78e4f1e852f"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/futuros/FuturosClient.tsx": {
+    "mtime": 1778725428.9227166,
+    "hash": "f5eb6498a2db2a45f0345e33731f91fe"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/planes/PlanesClient.tsx": {
+    "mtime": 1776096840.746797,
+    "hash": "dba79b0bb03d0fd3fc4dac601b9de324"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/planes/page.tsx": {
+    "mtime": 1778267971.2569242,
+    "hash": "0d757350e94292585514f6abdfac0b4d"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/vinces/page.tsx": {
+    "mtime": 1778267971.264924,
+    "hash": "c030dd968a566184ec690a9627d96cd2"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/vinces/VincesClient.tsx": {
+    "mtime": 1778267971.264924,
+    "hash": "0ce33eae7bb84f5c17b827f33fd1dcfc"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/upgrade/page.tsx": {
+    "mtime": 1778267971.259924,
+    "hash": "61b9f0b38e76425edf9fdef9ac680f65"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/opciones/page.tsx": {
+    "mtime": 1778567292.979286,
+    "hash": "3a70ffe81491004b075ea0d52ffab109"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/opciones/OpcionesClient.tsx": {
+    "mtime": 1778724175.6875453,
+    "hash": "6b09fbbb2dff70d30df27ff04067a03a"
+  },
+  "/var/www/liberty-trading-new/app/login/page.tsx": {
+    "mtime": 1778267971.266924,
+    "hash": "33aa26b6cf7b0f7782a5471dcba4f45b"
+  },
+  "/var/www/liberty-trading-new/app/login/loading.tsx": {
+    "mtime": 1778267971.266924,
+    "hash": "d6470cbcf32b284a1caf06ecda5df042"
+  },
+  "/var/www/liberty-trading-new/types/index.ts": {
+    "mtime": 1773964622.340154,
+    "hash": "2997bca2adedfbe47bc4b39af441d845"
+  },
+  "/var/www/liberty-trading-new/AUDIT_REPORT.md": {
+    "mtime": 1778267971.1679256,
+    "hash": "30a33d70cdf30765b15a2f9681062007"
+  },
+  "/var/www/liberty-trading-new/CLAUDE.md": {
+    "mtime": 1778777224.039726,
+    "hash": "9ab4a2d2afbe2f83f776bd18274b84d9"
+  },
+  "/var/www/liberty-trading-new/README.md": {
+    "mtime": 1772459629.6303232,
+    "hash": "f15aaa42d5d299d091b1171097ea56ad"
+  },
+  "/var/www/liberty-trading-new/ANALISIS_COBERTURAS.md": {
+    "mtime": 1778724172.284598,
+    "hash": "7934e8b1d66699eab75531b3a4eda274"
+  },
+  "/var/www/liberty-trading-new/CHANGELOG.md": {
+    "mtime": 1777681301.643472,
+    "hash": "5d749e9d52bd7bf29e0e9a40eed31338"
+  },
+  "/var/www/liberty-trading-new/liberty-brokers/README.md": {
+    "mtime": 1778567292.9842858,
+    "hash": "ec47543a0f4788e3ce26202f7ab88af9"
+  },
+  "/var/www/liberty-trading-new/liberty-brokers/requirements.txt": {
+    "mtime": 1778567292.985286,
+    "hash": "3ff5f169a00de82871b32070c5c74fa4"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/vibe/README.md": {
+    "mtime": 1777610630.2381694,
+    "hash": "8212351b02fa3ea8b9e0c1fca47627e9"
+  }
+}
