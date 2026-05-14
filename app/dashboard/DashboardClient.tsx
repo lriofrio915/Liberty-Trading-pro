@@ -164,7 +164,7 @@ export default function DashboardClient({
         await fetch('/api/cfds/signals', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ signals: signalsPayload }),
+          body: JSON.stringify({ signals: signalsPayload, forceRefresh: true }),
         }).catch(() => {})
       }
 
