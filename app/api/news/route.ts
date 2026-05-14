@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-export const revalidate = 180 // cache 3 min
+export const revalidate = 300 // cache 5 min
 
 interface NewsItem {
   title: string
@@ -43,6 +43,33 @@ const FEEDS = [
   { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
 ]
 
+async function translateNews(items: NewsItem[]): Promise<NewsItem[]> {
+  const apiKey = process.env.GROQ_API_KEY
+  if (!apiKey) return items
+  try {
+    const prompt = `Translate ONLY the "title" and "description" fields from English to Spanish. Keep "link", "pubDate", "source" unchanged. Return ONLY a valid JSON array with the same structure, no extra text.\nNews: ${JSON.stringify(items)}`
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.1,
+        max_tokens: 4000,
+      }),
+      signal: AbortSignal.timeout(15_000),
+    })
+    if (!res.ok) return items
+    const data = await res.json()
+    const text: string = data.choices?.[0]?.message?.content ?? ''
+    const match = text.match(/\[[\s\S]*\]/)
+    if (!match) return items
+    return JSON.parse(match[0]) as NewsItem[]
+  } catch {
+    return items
+  }
+}
+
 export async function GET() {
   const results = await Promise.allSettled(
     FEEDS.map(async ({ url, source }) => {
@@ -67,5 +94,6 @@ export async function GET() {
     return db - da
   }).slice(0, 16)
 
-  return NextResponse.json({ news: sorted, timestamp: Date.now() })
+  const translated = await translateNews(sorted).catch(() => sorted)
+  return NextResponse.json({ news: translated, timestamp: Date.now() })
 }

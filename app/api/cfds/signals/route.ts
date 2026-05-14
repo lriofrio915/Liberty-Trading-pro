@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
       sesgo:         String(s.sesgo ?? 'COMPRA'),
       confianza:     Number(s.confianza ?? 70),
       razon:         String(s.razon ?? ''),
+      active:        true,
       precioEntrada: Number(s.precioEntrada ?? 0),
       stopLoss:      Number(s.stopLoss ?? 0),
       takeProfit:    Number(s.takeProfit ?? 0),

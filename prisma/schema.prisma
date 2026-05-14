@@ -499,6 +499,8 @@ model CfdSignal {
   confianza     Int
   razon         String    @db.Text
 
+  active        Boolean   @default(true)
+
   precioEntrada Float
   stopLoss      Float
   takeProfit    Float
