@@ -883,18 +883,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
   const [rowEdits, setRowEdits] = useState<Record<string, { resultado: string; pnlUsd: string; closedPrice: string }>>({})
   const [skippedSignals, setSkippedSignals] = useState<{ skipped: string[]; updated: string[] } | null>(null)
 
-  // Today's scan opportunities (auto-populated at 09:00am by cron)
-  const [todayScan, setTodayScan] = useState<{
-    id: string; fecha: string; hora: string; sesgogeneral: string; resumen?: string | null
-  } | null>(null)
-  const [todayOps, setTodayOps] = useState<{
-    id: string; simbolo: string; nombre: string; sector: string; sesgo: string
-    confianza: number; precio9am: number; razon: string | null
-    precio12pm: number | null; rendimiento12pm: number | null
-    precio3pm: number | null; rendimiento3pm: number | null
-    precio1445: number | null; rendimiento1445: number | null
-  }[]>([])
-  const [loadingTodayScan, setLoadingTodayScan] = useState(false)
 
   // History table state
   const [refreshing, setRefreshing] = useState(false)
@@ -1006,16 +994,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
   }, [activeTab, loadSignalHistory])
 
   useEffect(() => {
-    if (activeTab === 'senales') {
-      loadSignalHistory()
-      // Load today's scan opportunities
-      setLoadingTodayScan(true)
-      fetch('/api/scan-today')
-        .then(r => r.json())
-        .then(d => { setTodayScan(d.scan ?? null); setTodayOps(d.oportunidades ?? []) })
-        .catch(() => {})
-        .finally(() => setLoadingTodayScan(false))
-    }
+    if (activeTab === 'senales') loadSignalHistory()
   }, [activeTab, loadSignalHistory])
 
   const handleCopySignal = (text: string) => {
@@ -1256,7 +1235,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
       <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
         {[
           { id: 'analisis' as ActiveTab, label: '🔍 Análisis de Mercado' },
-          { id: 'senales' as ActiveTab, label: `📊 Escaneo Diario${todayOps.length > 0 ? ` (${todayOps.length})` : ''}` },
+          { id: 'senales' as ActiveTab, label: `📊 Track Record${signalHistory.filter(s => s.confianza >= 80).length > 0 ? ` (${signalHistory.filter(s => s.confianza >= 80).length})` : ''}` },
         ].map(tab => (
           <button
             key={tab.id}
@@ -1280,348 +1259,169 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
         </div>
       )}
 
-      {/* ── Señales CFD Tab ── */}
+      {/* ── Track Record Tab ── */}
       {activeTab === 'senales' && (
-        <div className="space-y-6">
-          {/* Today's scan header */}
-          {todayScan && (
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div>
-                <div className="label-mono text-[10px] text-[var(--text-muted)]">
-                  Análisis automático · {new Date(todayScan.fecha).toLocaleDateString('es-EC', { weekday: 'long', day: '2-digit', month: 'short' })} · {todayScan.hora}
-                </div>
-                <div className={`text-sm font-bold mt-0.5 ${todayScan.sesgogeneral === 'ALCISTA' ? 'text-green-400' : todayScan.sesgogeneral === 'BAJISTA' ? 'text-red-400' : 'text-yellow-400'}`}>
-                  {todayScan.sesgogeneral} — {todayOps.length} señales
-                </div>
-              </div>
-              <button onClick={() => {
-                setLoadingTodayScan(true)
-                fetch('/api/scan-today').then(r => r.json()).then(d => { setTodayScan(d.scan ?? null); setTodayOps(d.oportunidades ?? []) }).catch(() => {}).finally(() => setLoadingTodayScan(false))
-              }} className="label-mono text-[10px] px-3 py-1.5 rounded-lg border transition-colors hover:border-[var(--gold-dark)]" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-                {loadingTodayScan ? '...' : 'Actualizar'}
-              </button>
+        <div className="space-y-4">
+          {/* Header with stats */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>TRACK RECORD CFD</p>
+              {signalHistory.filter(s => s.confianza >= 80).length > 0 && (() => {
+                const filtered = signalHistory.filter(s => s.confianza >= 80)
+                const ganadas = filtered.filter(s => s.resultado === 'GANADA').length
+                const cerradas = filtered.filter(s => s.resultado !== 'PENDIENTE').length
+                const totalPnl = filtered.reduce((sum, s) => sum + (s.pnlUsd ?? 0), 0)
+                const wr = cerradas > 0 ? Math.round((ganadas / cerradas) * 100) : null
+                return (
+                  <div className="flex items-center gap-3 text-[9px] font-mono flex-wrap">
+                    <span style={{ color: 'var(--text-muted)' }}>{filtered.length} ops ≥80%</span>
+                    {wr !== null && <span className={wr >= 50 ? 'text-green-400' : 'text-red-400'}>{wr}% WR</span>}
+                    <span className={totalPnl >= 0 ? 'text-green-400' : 'text-red-400'}>{totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(0)} USD</span>
+                  </div>
+                )
+              })()}
             </div>
-          )}
-
-          {/* Compact signals table */}
-          {loadingTodayScan && !todayScan && (
-            <div className="rounded-xl border p-6 text-center text-xs" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>Cargando señales del día...</div>
-          )}
-
-          {!loadingTodayScan && !todayScan && (
-            <div className="rounded-xl border p-8 text-center" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
-              <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>No hay análisis automático para hoy.</p>
-              <p className="text-xs" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>El cron genera las señales a las 09:00am ET de lunes a viernes.</p>
-            </div>
-          )}
-
-          {todayOps.length > 0 && (
-            <div className="rounded-xl overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
-                    {['Símbolo', 'Sector', 'Dirección', 'Conf%', 'Precio 09am', '12pm', '3pm', '14:45', 'R%'].map(h => (
-                      <th key={h} className="px-3 py-2.5 text-left label-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {todayOps.map((op, i) => {
-                    const isCompra = op.sesgo === 'COMPRA'
-                    const rend = op.rendimiento1445 ?? op.rendimiento3pm ?? op.rendimiento12pm
-                    const rendColor = rend == null ? '' : rend >= 0 ? 'text-green-400' : 'text-red-400'
-                    const fmtP = (n: number | null) => n == null ? '—' : n >= 1000 ? n.toLocaleString('en-US', { maximumFractionDigits: 1 }) : n.toFixed(4)
-                    const fmtR = (r: number | null) => r == null ? '—' : `${r >= 0 ? '+' : ''}${r.toFixed(2)}%`
-                    return (
-                      <tr key={op.id} className="border-b last:border-0 hover:bg-white/3 transition-colors" style={{ borderColor: 'var(--border)' }}>
-                        <td className="px-3 py-2.5 font-bold" style={{ color: 'var(--text-primary)' }}>{op.simbolo}</td>
-                        <td className="px-3 py-2.5 label-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>{op.sector}</td>
-                        <td className="px-3 py-2.5">
-                          <span className={`label-mono text-[10px] px-2 py-0.5 rounded-full font-bold ${isCompra ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
-                            {isCompra ? '▲ COMPRA' : '▼ VENTA'}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5 label-mono font-bold" style={{ color: 'var(--gold)' }}>{op.confianza}%</td>
-                        <td className="px-3 py-2.5 label-mono" style={{ color: 'var(--text-secondary)' }}>{fmtP(op.precio9am)}</td>
-                        <td className="px-3 py-2.5 label-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>{fmtP(op.precio12pm)}</td>
-                        <td className="px-3 py-2.5 label-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>{fmtP(op.precio3pm)}</td>
-                        <td className="px-3 py-2.5 label-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>{fmtP(op.precio1445)}</td>
-                        <td className={`px-3 py-2.5 label-mono font-bold text-[11px] ${rendColor}`}>{fmtR(rend)}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Legacy FAROS block placeholder — REMOVED */}
-          {false && (
-          <div className="rounded-xl border p-5 space-y-3" style={{ background: 'rgba(201,168,76,0.04)', borderColor: 'rgba(201,168,76,0.18)' }}>
-            <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>FAROS v7.0 — QUÉ HACE Y POR QUÉ IMPORTA</p>
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-              Los 5 agentes estándar analizan solo el precio del día (cambio 24h). <strong className="text-[var(--text-secondary)]">FAROS añade la dimensión de régimen de mercado</strong> usando 30 días de OHLCV y física de fluidos (Navier-Stokes):
-              Z-Score termodinámico · Reynolds% (turbulencia) · αflow (demanda orgánica) · Ψ Governance.
-            </p>
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-              <strong className="text-yellow-400">Sin FAROS</strong>: una señal COMPRA BTC al 82% confianza en régimen PLASMA (euforia extrema, Reynolds{'>'}90%) parece igual de válida que en régimen LÍQUIDO saludable.{' '}
-              <strong className="text-[var(--text-secondary)]">Con FAROS</strong>: la señal se marca como <span className="text-red-400 font-bold">VETADA</span> cuando killSwitch=true — independiente del sesgo del agente.
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-              {[
-                { k: 'Z-Score', v: 'Estado termodinámico. LÍQUIDO=OK, PLASMA=veto' },
-                { k: 'Reynolds%', v: '<50% laminar · >75% turbulento · >95% colapso' },
-                { k: 'αflow', v: 'Cerca 1=orgánico · cerca 0=manipulado' },
-                { k: 'Ψ Score', v: '>0.6 señal fuerte · =0 Kill Switch activo' },
-              ].map(item => (
-                <div key={item.k} className="rounded-lg p-2.5" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                  <div className="text-[10px] font-bold font-mono mb-1" style={{ color: 'var(--gold)' }}>{item.k}</div>
-                  <div className="text-[10px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>{item.v}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          )}
-
-          {/* Signal history moved to Análisis de Mercado tab */}
-          {false && <div className="space-y-3">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-2">
-                <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                  Historial de señales guardadas
-                </p>
-                {/* Auto-refresh indicator */}
-                {refreshing && (
-                  <span className="label-mono text-[9px] text-[var(--gold)] animate-pulse">actualizando...</span>
-                )}
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {/* Admin view toggle */}
-                {isAdmin && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {isAdmin && allCandidates.length > 0 && (
+                <button
+                  onClick={() => handleSaveSignals(allCandidates)}
+                  disabled={savingSignals}
+                  className="label-mono text-[10px] px-3 py-1.5 rounded-lg border transition-all disabled:opacity-50"
+                  style={{ borderColor: 'rgba(201,168,76,0.5)', color: 'var(--gold)', background: 'rgba(201,168,76,0.06)' }}
+                >
+                  {savingSignals ? '⏳ Guardando...' : `💾 Guardar ${allCandidates.length} señal${allCandidates.length !== 1 ? 'es' : ''}`}
+                </button>
+              )}
+              {savedCount !== null && (
+                <span className="text-[9px] font-mono text-green-400">✓ {savedCount} guardadas</span>
+              )}
+              {isAdmin && (
+                <>
                   <button
                     onClick={() => setAdminViewMode(m => m === 'admin' ? 'user' : 'admin')}
-                    className="label-mono text-[10px] px-2.5 py-1 rounded-lg border transition-all"
-                    style={{ borderColor: adminViewMode === 'user' ? 'rgba(201,168,76,0.5)' : 'var(--border)', color: adminViewMode === 'user' ? 'var(--gold)' : 'var(--text-muted)' }}
-                    title={adminViewMode === 'admin' ? 'Ver como usuario' : 'Volver a vista admin'}
+                    className="label-mono text-[9px] px-2 py-1 rounded-lg border"
+                    style={{ borderColor: adminViewMode !== 'admin' ? 'rgba(201,168,76,0.5)' : 'var(--border)', color: adminViewMode !== 'admin' ? 'var(--gold)' : 'var(--text-muted)' }}
                   >
-                    {adminViewMode === 'admin' ? '👁 Vista usuario' : '⚙ Vista admin'}
+                    {adminViewMode === 'admin' ? '👁 Usuario' : '⚙ Admin'}
                   </button>
-                )}
-                {/* Delete selected */}
-                {isAdmin && adminViewMode === 'admin' && selectedIds.size > 0 && (
-                  <button
-                    onClick={handleDeleteSelected}
-                    disabled={clearingSignals}
-                    className="label-mono text-[10px] px-2.5 py-1 rounded-lg border transition-all"
-                    style={{ borderColor: 'rgba(239,68,68,0.4)', color: 'rgb(239,68,68)' }}
-                  >
-                    Borrar seleccionados ({selectedIds.size})
-                  </button>
-                )}
-                {/* Delete all */}
-                {isAdmin && adminViewMode === 'admin' && signalHistory.length > 0 && (
-                  <button
-                    onClick={handleClearSignals}
-                    disabled={clearingSignals}
-                    className="label-mono text-[10px] px-2.5 py-1 rounded-lg border transition-all"
-                    style={{ borderColor: 'rgba(239,68,68,0.3)', color: 'rgba(239,68,68,0.7)' }}
-                  >
-                    {clearingSignals ? 'Borrando...' : 'Borrar todo'}
-                  </button>
-                )}
-                <button
-                  onClick={loadSignalHistory}
-                  disabled={refreshing}
-                  className="label-mono text-[10px] px-2.5 py-1 rounded-lg border transition-all disabled:opacity-50"
-                  style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-                >
-                  {refreshing ? 'Actualizando...' : 'Actualizar'}
-                </button>
+                  {selectedIds.size > 0 && (
+                    <button onClick={handleDeleteSelected} disabled={clearingSignals} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'rgba(239,68,68,0.4)', color: 'rgb(239,68,68)' }}>
+                      Borrar sel. ({selectedIds.size})
+                    </button>
+                  )}
+                  {signalHistory.length > 0 && (
+                    <button onClick={handleClearSignals} disabled={clearingSignals} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'rgba(239,68,68,0.3)', color: 'rgba(239,68,68,0.7)' }}>
+                      {clearingSignals ? 'Borrando...' : 'Borrar todo'}
+                    </button>
+                  )}
+                </>
+              )}
+              <button onClick={loadSignalHistory} disabled={refreshing} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+                {refreshing ? '...' : '↺'}
+              </button>
+            </div>
+          </div>
+
+          {/* Table filtered ≥80% */}
+          {signalHistory.filter(s => s.confianza >= 80).length === 0 ? (
+            <div className="rounded-xl border p-8 text-center" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
+              <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>Sin señales con confianza ≥ 80%.</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>Las señales se guardan automáticamente al ejecutar el análisis.</p>
+            </div>
+          ) : (
+            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+              <div className="overflow-x-auto">
+                <table className="w-full text-[10px] font-mono">
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.3)' }}>
+                      {['Fecha', 'Par', 'Dir', 'Entrada', 'SL', 'TP', 'Lotes', 'Conf', 'Resultado', 'P&L USD', ...(isAdmin && adminViewMode === 'admin' ? ['Acc.'] : [])].map(h => (
+                        <th key={h} className="px-2.5 py-2 text-left whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {signalHistory.filter(s => s.confianza >= 80).map(sig => {
+                      const isDirty = rowEdits[sig.id] !== undefined
+                      const edit = rowEdits[sig.id]
+                      const isClosed = sig.resultado !== 'PENDIENTE'
+                      return (
+                        <tr
+                          key={sig.id}
+                          className="border-b border-[var(--border)]"
+                          style={{
+                            opacity: isClosed ? 0.6 : 1,
+                            filter: isClosed ? 'saturate(0.5)' : undefined,
+                          }}
+                        >
+                          <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
+                            {new Date(sig.createdAt).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', timeZone: 'America/Guayaquil' })}
+                          </td>
+                          <td className="px-2.5 py-2 font-bold whitespace-nowrap" style={{ color: 'var(--gold)' }}>{sig.simbolo}</td>
+                          <td className="px-2.5 py-2 whitespace-nowrap">
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${sig.sesgo === 'COMPRA' ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}`}>
+                              {sig.sesgo}
+                            </span>
+                          </td>
+                          <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>{sig.precioEntrada.toFixed(sig.precioEntrada > 100 ? 2 : 5)}</td>
+                          <td className="px-2.5 py-2 whitespace-nowrap text-red-400">{sig.stopLoss.toFixed(sig.stopLoss > 100 ? 2 : 5)}</td>
+                          <td className="px-2.5 py-2 whitespace-nowrap text-green-400">{sig.takeProfit.toFixed(sig.takeProfit > 100 ? 2 : 5)}</td>
+                          <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{sig.lotaje}</td>
+                          <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--gold)' }}>{sig.confianza}%</td>
+                          <td className="px-2.5 py-2 whitespace-nowrap">
+                            {isAdmin && adminViewMode === 'admin' ? (
+                              <select
+                                value={edit?.resultado ?? sig.resultado}
+                                onChange={e => setRowEdits(prev => ({ ...prev, [sig.id]: { resultado: e.target.value, pnlUsd: String(edit?.pnlUsd ?? sig.pnlUsd ?? ''), closedPrice: String(edit?.closedPrice ?? sig.closedPrice ?? '') } }))}
+                                className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5"
+                                style={{ color: sig.resultado === 'GANADA' ? '#4ade80' : sig.resultado === 'PERDIDA' ? '#f87171' : sig.resultado === 'BREAKEVEN' ? '#facc15' : 'var(--text-muted)' }}
+                              >
+                                {['PENDIENTE','GANADA','PERDIDA','BREAKEVEN'].map(r => <option key={r} value={r}>{r}</option>)}
+                              </select>
+                            ) : (
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${sig.resultado === 'GANADA' ? 'text-green-400' : sig.resultado === 'PERDIDA' ? 'text-red-400' : sig.resultado === 'BREAKEVEN' ? 'text-yellow-400' : ''}`} style={sig.resultado === 'PENDIENTE' ? { color: 'var(--text-muted)' } : {}}>
+                                {sig.resultado}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-2.5 py-2 whitespace-nowrap">
+                            {isAdmin && adminViewMode === 'admin' ? (
+                              <input
+                                type="number"
+                                step="0.01"
+                                className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5 w-14"
+                                value={edit?.pnlUsd ?? (sig.pnlUsd != null ? String(sig.pnlUsd) : '')}
+                                placeholder="0.00"
+                                onChange={e => setRowEdits(prev => ({ ...prev, [sig.id]: { resultado: edit?.resultado ?? sig.resultado, pnlUsd: e.target.value, closedPrice: String(edit?.closedPrice ?? sig.closedPrice ?? '') } }))}
+                                style={{ color: 'var(--text-secondary)' }}
+                              />
+                            ) : (
+                              <span className={sig.pnlUsd != null ? (sig.pnlUsd >= 0 ? 'text-green-400' : 'text-red-400') : ''} style={sig.pnlUsd == null ? { color: 'var(--text-muted)' } : {}}>
+                                {sig.pnlUsd != null ? `${sig.pnlUsd >= 0 ? '+' : ''}$${sig.pnlUsd.toFixed(2)}` : '—'}
+                              </span>
+                            )}
+                          </td>
+                          {isAdmin && adminViewMode === 'admin' && (
+                            <td className="px-2.5 py-2 whitespace-nowrap">
+                              {isDirty && (
+                                <button
+                                  onClick={() => handleSaveRow(sig.id)}
+                                  disabled={updatingResultado === sig.id}
+                                  className="text-[9px] px-1.5 py-0.5 rounded border font-semibold"
+                                  style={{ borderColor: 'rgba(234,179,8,0.5)', color: 'rgb(234,179,8)' }}
+                                >
+                                  {updatingResultado === sig.id ? '...' : 'Guardar'}
+                                </button>
+                              )}
+                            </td>
+                          )}
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
-
-            {signalHistory.length === 0 ? (
-              <div className="rounded-xl border p-4 text-center text-xs" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-                No hay señales guardadas aún. Corre un análisis y haz clic en &quot;Guardar en DB&quot;.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {/* Stats */}
-                {(() => {
-                  const ganadas = signalHistory.filter(s => s.resultado === 'GANADA').length
-                  const perdidas = signalHistory.filter(s => s.resultado === 'PERDIDA').length
-                  const total = ganadas + perdidas
-                  const wr = total > 0 ? ((ganadas / total) * 100).toFixed(0) : '—'
-                  const pnl = signalHistory.reduce((acc, s) => acc + (s.pnlUsd ?? 0), 0)
-                  return (
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { label: 'Win Rate', value: `${wr}%`, color: 'text-green-400' },
-                        { label: 'Operaciones', value: `${total}/${signalHistory.length}`, color: 'var(--text-primary)' },
-                        { label: 'PnL Total', value: `${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}`, color: pnl >= 0 ? 'text-green-400' : 'text-red-400' },
-                      ].map(stat => (
-                        <div key={stat.label} className="rounded-xl border p-3 text-center" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
-                          <div className={`text-lg font-black font-mono ${stat.color}`} style={typeof stat.color === 'string' && stat.color.startsWith('var') ? { color: stat.color } : {}}>{stat.value}</div>
-                          <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{stat.label}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )
-                })()}
-
-                {/* Table */}
-                <div className="overflow-x-auto rounded-xl border" style={{ borderColor: 'var(--border)' }}>
-                  <table className="w-full text-[11px]" style={{ borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-hover)' }}>
-                        {isAdmin && adminViewMode === 'admin' && (
-                          <th className="px-3 py-2 w-8">
-                            <input
-                              type="checkbox"
-                              className="w-3 h-3 accent-[var(--gold)] cursor-pointer"
-                              checked={selectedIds.size === signalHistory.length && signalHistory.length > 0}
-                              onChange={e => setSelectedIds(e.target.checked ? new Set(signalHistory.map(s => s.id)) : new Set())}
-                            />
-                          </th>
-                        )}
-                        {['Fecha', 'Activo', 'Dir', 'Entrada', 'SL', 'TP', 'Lotes', 'Conf', 'Resultado', 'PnL USD'].map(h => (
-                          <th key={h} className="text-left px-3 py-2 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
-                        ))}
-                        {isAdmin && adminViewMode === 'admin' && <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Cierre</th>}
-                        {isAdmin && adminViewMode === 'admin' && <th className="px-3 py-2" />}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {signalHistory.map((sig, idx) => {
-                        const isCompra = sig.sesgo === 'COMPRA'
-                        const resultColor: Record<string, string> = {
-                          GANADA: '#4ade80', PERDIDA: '#f87171',
-                          BREAKEVEN: '#facc15', PENDIENTE: '#9ca3af',
-                        }
-                        const formatP = (n: number) =>
-                          n >= 1000 ? n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : n.toFixed(5)
-                        const edit = rowEdits[sig.id]
-                        const isDirty = !!edit
-                        const currentResult = edit?.resultado ?? sig.resultado
-                        const showAdminCols = isAdmin && adminViewMode === 'admin'
-                        return (
-                          <tr
-                            key={sig.id}
-                            style={{
-                              borderBottom: idx < signalHistory.length - 1 ? '1px solid var(--border)' : undefined,
-                              background: selectedIds.has(sig.id) ? 'rgba(201,168,76,0.04)' : isDirty ? 'rgba(234,179,8,0.04)' : undefined,
-                            }}
-                          >
-                            {showAdminCols && (
-                              <td className="px-3 py-2 w-8">
-                                <input
-                                  type="checkbox"
-                                  className="w-3 h-3 accent-[var(--gold)] cursor-pointer"
-                                  checked={selectedIds.has(sig.id)}
-                                  onChange={e => setSelectedIds(prev => {
-                                    const n = new Set(prev)
-                                    e.target.checked ? n.add(sig.id) : n.delete(sig.id)
-                                    return n
-                                  })}
-                                />
-                              </td>
-                            )}
-                            <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
-                              {new Date(sig.createdAt).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
-                            </td>
-                            <td className="px-3 py-2 font-mono font-bold whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
-                              {sig.simbolo}
-                              {(sig as any).killSwitch && <span className="ml-1 text-red-400 text-[9px]">VETADO</span>}
-                            </td>
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isCompra ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
-                                {isCompra ? '▲ COMPRA' : '▼ VENTA'}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2 font-mono whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>{formatP(sig.precioEntrada)}</td>
-                            <td className="px-3 py-2 font-mono whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{formatP(sig.stopLoss)}</td>
-                            <td className="px-3 py-2 font-mono whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{formatP(sig.takeProfit)}</td>
-                            <td className="px-3 py-2 font-mono whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{sig.lotaje}</td>
-                            <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{sig.confianza}%</td>
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              {isAdmin ? (
-                                <select
-                                  value={currentResult}
-                                  disabled={updatingResultado === sig.id}
-                                  onChange={e => setRowEdits(prev => ({
-                                    ...prev,
-                                    [sig.id]: { resultado: e.target.value, pnlUsd: prev[sig.id]?.pnlUsd ?? '', closedPrice: prev[sig.id]?.closedPrice ?? '' },
-                                  }))}
-                                  className="text-[10px] rounded px-1.5 py-0.5 border"
-                                  style={{ background: 'var(--bg-hover)', borderColor: 'var(--border)', color: resultColor[currentResult] ?? 'var(--text-muted)' }}
-                                >
-                                  {['PENDIENTE', 'GANADA', 'PERDIDA', 'BREAKEVEN'].map(r => (
-                                    <option key={r} value={r}>{r}</option>
-                                  ))}
-                                </select>
-                              ) : (
-                                <span className="font-bold" style={{ color: resultColor[sig.resultado] ?? '#9ca3af' }}>
-                                  {sig.resultado}
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-3 py-2 font-mono whitespace-nowrap" style={{ color: sig.pnlUsd != null ? (sig.pnlUsd >= 0 ? '#4ade80' : '#f87171') : 'var(--text-muted)' }}>
-                              {showAdminCols ? (
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  placeholder="0.00"
-                                  value={edit?.pnlUsd ?? (sig.pnlUsd != null ? String(sig.pnlUsd) : '')}
-                                  onChange={e => setRowEdits(prev => ({
-                                    ...prev,
-                                    [sig.id]: { resultado: prev[sig.id]?.resultado ?? sig.resultado, pnlUsd: e.target.value, closedPrice: prev[sig.id]?.closedPrice ?? '' },
-                                  }))}
-                                  className="w-20 text-[10px] rounded px-1.5 py-0.5 border font-mono"
-                                  style={{ background: 'var(--bg-hover)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
-                                />
-                              ) : (
-                                sig.pnlUsd != null ? `${sig.pnlUsd >= 0 ? '+' : ''}$${sig.pnlUsd.toFixed(2)}` : '—'
-                              )}
-                            </td>
-                            {showAdminCols && (
-                              <td className="px-3 py-2 font-mono whitespace-nowrap">
-                                <input
-                                  type="number"
-                                  step="0.00001"
-                                  placeholder="precio"
-                                  value={edit?.closedPrice ?? (sig.closedPrice != null ? String(sig.closedPrice) : '')}
-                                  onChange={e => setRowEdits(prev => ({
-                                    ...prev,
-                                    [sig.id]: { resultado: prev[sig.id]?.resultado ?? sig.resultado, pnlUsd: prev[sig.id]?.pnlUsd ?? '', closedPrice: e.target.value },
-                                  }))}
-                                  className="w-24 text-[10px] rounded px-1.5 py-0.5 border font-mono"
-                                  style={{ background: 'var(--bg-hover)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
-                                />
-                              </td>
-                            )}
-                            {showAdminCols && (
-                              <td className="px-3 py-2 whitespace-nowrap">
-                                {isDirty ? (
-                                  <button
-                                    onClick={() => handleSaveRow(sig.id)}
-                                    disabled={updatingResultado === sig.id}
-                                    className="text-[10px] px-2 py-0.5 rounded border font-semibold transition-colors"
-                                    style={{ borderColor: 'rgba(234,179,8,0.5)', color: 'rgb(234,179,8)' }}
-                                  >
-                                    {updatingResultado === sig.id ? '...' : 'Guardar'}
-                                  </button>
-                                ) : null}
-                              </td>
-                            )}
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>}
+          )}
         </div>
       )}
 
@@ -1765,174 +1565,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                 return <SectorTable key={sector} sector={sector} activos={sectorActivos} />
               })}
 
-              {/* ── Recomendaciones CFD — Save + Track Record ── */}
-              {(allCandidates.length > 0 || signalHistory.length > 0) && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <p className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>RECOMENDACIONES CFD</p>
-                      {signalHistory.length > 0 && (() => {
-                        const ganadas = signalHistory.filter(s => s.resultado === 'GANADA').length
-                        const cerradas = signalHistory.filter(s => s.resultado !== 'PENDIENTE').length
-                        const totalPnl = signalHistory.reduce((sum, s) => sum + (s.pnlUsd ?? 0), 0)
-                        const wr = cerradas > 0 ? Math.round((ganadas / cerradas) * 100) : null
-                        return (
-                          <div className="flex items-center gap-3 text-[9px] font-mono flex-wrap">
-                            <span style={{ color: 'var(--text-muted)' }}>{signalHistory.length} ops</span>
-                            {wr !== null && <span className={wr >= 50 ? 'text-green-400' : 'text-red-400'}>{wr}% WR</span>}
-                            <span className={totalPnl >= 0 ? 'text-green-400' : 'text-red-400'}>{totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(0)} USD</span>
-                          </div>
-                        )
-                      })()}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {isAdmin && allCandidates.length > 0 && (
-                        <button
-                          onClick={() => handleSaveSignals(allCandidates)}
-                          disabled={savingSignals}
-                          className="label-mono text-[10px] px-3 py-1.5 rounded-lg border transition-all disabled:opacity-50"
-                          style={{ borderColor: 'rgba(201,168,76,0.5)', color: 'var(--gold)', background: 'rgba(201,168,76,0.06)' }}
-                        >
-                          {savingSignals ? '⏳ Guardando...' : `💾 Guardar ${allCandidates.length} señal${allCandidates.length !== 1 ? 'es' : ''}`}
-                        </button>
-                      )}
-                      {savedCount !== null && (
-                        <span className="text-[9px] font-mono text-green-400">✓ {savedCount} guardadas</span>
-                      )}
-                      {skippedSignals && skippedSignals.skipped.length > 0 && (
-                        <span className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>↷ {skippedSignals.skipped.length} sin cambios</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {signalHistory.length === 0 ? (
-                    <div className="rounded-xl border p-4 text-center text-[10px] font-mono" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-                      Sin recomendaciones CFD guardadas. Corre un análisis y haz clic en Guardar.
-                    </div>
-                  ) : (
-                    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-[10px] font-mono">
-                          <thead>
-                            <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.3)' }}>
-                              {['Fecha', 'Par', 'Dir', 'Entrada', 'SL', 'TP', 'Lotes', 'Conf', 'Resultado', 'P&L USD', ...(isAdmin && adminViewMode === 'admin' ? ['Acc.'] : [])].map(h => (
-                                <th key={h} className="px-2.5 py-2 text-left whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {signalHistory.map(sig => {
-                              const isDirty = rowEdits[sig.id] !== undefined
-                              const edit = rowEdits[sig.id]
-                              const isClosed = sig.resultado !== 'PENDIENTE'
-                              return (
-                                <tr
-                                  key={sig.id}
-                                  className="border-b border-[var(--border)]"
-                                  style={{
-                                    opacity: isClosed ? 0.6 : 1,
-                                    filter: isClosed ? 'saturate(0.5)' : undefined,
-                                  }}
-                                >
-                                  <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
-                                    {new Date(sig.createdAt).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', timeZone: 'America/Guayaquil' })}
-                                  </td>
-                                  <td className="px-2.5 py-2 font-bold whitespace-nowrap" style={{ color: 'var(--gold)' }}>{sig.simbolo}</td>
-                                  <td className="px-2.5 py-2 whitespace-nowrap">
-                                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${sig.sesgo === 'COMPRA' ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}`}>
-                                      {sig.sesgo}
-                                    </span>
-                                  </td>
-                                  <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>{sig.precioEntrada.toFixed(sig.precioEntrada > 100 ? 2 : 5)}</td>
-                                  <td className="px-2.5 py-2 whitespace-nowrap text-red-400">{sig.stopLoss.toFixed(sig.stopLoss > 100 ? 2 : 5)}</td>
-                                  <td className="px-2.5 py-2 whitespace-nowrap text-green-400">{sig.takeProfit.toFixed(sig.takeProfit > 100 ? 2 : 5)}</td>
-                                  <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{sig.lotaje}</td>
-                                  <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: sig.confianza >= 80 ? 'var(--gold)' : 'var(--text-secondary)' }}>{sig.confianza}%</td>
-                                  <td className="px-2.5 py-2 whitespace-nowrap">
-                                    {isAdmin && adminViewMode === 'admin' ? (
-                                      <select
-                                        value={edit?.resultado ?? sig.resultado}
-                                        onChange={e => setRowEdits(prev => ({ ...prev, [sig.id]: { resultado: e.target.value, pnlUsd: String(edit?.pnlUsd ?? sig.pnlUsd ?? ''), closedPrice: String(edit?.closedPrice ?? sig.closedPrice ?? '') } }))}
-                                        className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5"
-                                        style={{ color: sig.resultado === 'GANADA' ? '#4ade80' : sig.resultado === 'PERDIDA' ? '#f87171' : sig.resultado === 'BREAKEVEN' ? '#facc15' : 'var(--text-muted)' }}
-                                      >
-                                        {['PENDIENTE','GANADA','PERDIDA','BREAKEVEN'].map(r => <option key={r} value={r}>{r}</option>)}
-                                      </select>
-                                    ) : (
-                                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${sig.resultado === 'GANADA' ? 'text-green-400' : sig.resultado === 'PERDIDA' ? 'text-red-400' : sig.resultado === 'BREAKEVEN' ? 'text-yellow-400' : ''}`} style={sig.resultado === 'PENDIENTE' ? { color: 'var(--text-muted)' } : {}}>
-                                        {sig.resultado}
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td className="px-2.5 py-2 whitespace-nowrap">
-                                    {isAdmin && adminViewMode === 'admin' ? (
-                                      <input
-                                        type="number"
-                                        step="0.01"
-                                        className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5 w-14"
-                                        value={edit?.pnlUsd ?? (sig.pnlUsd != null ? String(sig.pnlUsd) : '')}
-                                        placeholder="0.00"
-                                        onChange={e => setRowEdits(prev => ({ ...prev, [sig.id]: { resultado: edit?.resultado ?? sig.resultado, pnlUsd: e.target.value, closedPrice: String(edit?.closedPrice ?? sig.closedPrice ?? '') } }))}
-                                        style={{ color: 'var(--text-secondary)' }}
-                                      />
-                                    ) : (
-                                      <span className={sig.pnlUsd != null ? (sig.pnlUsd >= 0 ? 'text-green-400' : 'text-red-400') : ''} style={sig.pnlUsd == null ? { color: 'var(--text-muted)' } : {}}>
-                                        {sig.pnlUsd != null ? `${sig.pnlUsd >= 0 ? '+' : ''}$${sig.pnlUsd.toFixed(2)}` : '—'}
-                                      </span>
-                                    )}
-                                  </td>
-                                  {isAdmin && adminViewMode === 'admin' && (
-                                    <td className="px-2.5 py-2 whitespace-nowrap">
-                                      {isDirty && (
-                                        <button
-                                          onClick={() => handleSaveRow(sig.id)}
-                                          disabled={updatingResultado === sig.id}
-                                          className="text-[9px] px-1.5 py-0.5 rounded border font-semibold"
-                                          style={{ borderColor: 'rgba(234,179,8,0.5)', color: 'rgb(234,179,8)' }}
-                                        >
-                                          {updatingResultado === sig.id ? '...' : 'Guardar'}
-                                        </button>
-                                      )}
-                                    </td>
-                                  )}
-                                </tr>
-                              )
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-
-                  {isAdmin && signalHistory.length > 0 && (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <button
-                        onClick={() => setAdminViewMode(m => m === 'admin' ? 'user' : 'admin')}
-                        className="label-mono text-[9px] px-2 py-1 rounded-lg border"
-                        style={{ borderColor: adminViewMode !== 'admin' ? 'rgba(201,168,76,0.5)' : 'var(--border)', color: adminViewMode !== 'admin' ? 'var(--gold)' : 'var(--text-muted)' }}
-                      >
-                        {adminViewMode === 'admin' ? '👁 Vista usuario' : '⚙ Vista admin'}
-                      </button>
-                      {selectedIds.size > 0 && (
-                        <button onClick={handleDeleteSelected} disabled={clearingSignals} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'rgba(239,68,68,0.4)', color: 'rgb(239,68,68)' }}>
-                          Borrar sel. ({selectedIds.size})
-                        </button>
-                      )}
-                      <button onClick={handleClearSignals} disabled={clearingSignals} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'rgba(239,68,68,0.3)', color: 'rgba(239,68,68,0.7)' }}>
-                        {clearingSignals ? 'Borrando...' : 'Borrar todo'}
-                      </button>
-                      <button onClick={loadSignalHistory} disabled={refreshing} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-                        {refreshing ? '...' : 'Actualizar'}
-                      </button>
-                    </div>
-                  )}
-                  {!isAdmin && signalHistory.length > 0 && (
-                    <button onClick={() => setAdminViewMode(m => m === 'admin' ? 'user' : 'admin')} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-                      {adminViewMode === 'admin' ? '👁 Vista usuario' : '⚙ Vista admin'}
-                    </button>
-                  )}
-                </div>
-              )}
 
               <div className="space-y-3">
                 <p className="text-xs text-center" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>
