@@ -16,16 +16,6 @@ interface IndexAsset {
   riesgo: string
 }
 
-interface ScanSignal {
-  stock_code?: string
-  symbol?: string
-  operation_advice?: string
-  recommendation?: string
-  signal?: string
-  sentiment_score?: number
-  score?: number
-}
-
 interface FuturesSignal {
   simbolo: string
   nombre: string
@@ -60,45 +50,30 @@ interface TrackRec {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const ETF_MAP: Record<string, string> = { QQQ: 'NQ', SPY: 'SP500', IWM: 'RUSSELL' }
-
 const INDEX_NAMES: Record<string, string> = {
   NQ:      'Micro Nasdaq (MNQ)',
   SP500:   'Micro S&P 500 (MES)',
   RUSSELL: 'Micro Russell (M2K)',
-}
-
-function normalizeBias(signal: string): 'COMPRA' | 'VENTA' | 'NEUTRAL' {
-  const u = signal.toUpperCase()
-  if (u.includes('BUY') || u.includes('COMPRAR') || u.includes('ALCISTA') || u.includes('买入') || u.includes('增持')) return 'COMPRA'
-  if (u.includes('SELL') || u.includes('VENDER') || u.includes('BAJISTA') || u.includes('卖出') || u.includes('减持')) return 'VENTA'
-  return 'NEUTRAL'
+  DOW:     'Dow Jones',
 }
 
 function getETMinutes(): { mins: number; day: number } {
   const now = new Date()
-  // Use Intl to get the correct America/New_York time (handles EDT/EST switch automatically)
-  const etParts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/New_York',
-    hour: 'numeric', minute: 'numeric', hour12: false,
-    weekday: 'narrow',
-  }).formatToParts(now)
-  const hour   = parseInt(etParts.find(p => p.type === 'hour')?.value   ?? '0', 10)
-  const minute = parseInt(etParts.find(p => p.type === 'minute')?.value ?? '0', 10)
-  const weekday = etParts.find(p => p.type === 'weekday')?.value ?? ''
-  // weekday narrow: M=Mon, T=Tue, W=Wed, T=Thu, F=Fri, S=Sat, S=Sun
-  const dayMap: Record<string, number> = { S: -1, M: 1, T: 2, W: 3, F: 5 }
-  // Safer: use a full date part to get the day-of-week number
   const etDateStr = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',
     weekday: 'long',
   }).format(now)
+  const etParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    hour: 'numeric', minute: 'numeric', hour12: false,
+  }).formatToParts(now)
+  const hour   = parseInt(etParts.find(p => p.type === 'hour')?.value   ?? '0', 10)
+  const minute = parseInt(etParts.find(p => p.type === 'minute')?.value ?? '0', 10)
   const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
   const day = dayNames.indexOf(etDateStr)
   return { mins: hour * 60 + minute, day }
 }
 
-// 3:43–3:48 PM ET window — forced EOD close 15 min before market close
 function isEODCloseWindow(): boolean {
   const { mins, day } = getETMinutes()
   if (day === 0 || day === 6) return false
@@ -108,33 +83,37 @@ function isEODCloseWindow(): boolean {
 function marketCloseCountdown(): string {
   const { mins, day } = getETMinutes()
   if (day === 0 || day === 6) return 'Fin de semana'
-  const eodMins = 15 * 60 + 45 // 3:45 PM ET
+  const eodMins = 15 * 60 + 45
   if (mins >= eodMins) return 'Cierre EOD pasado'
   const diff = eodMins - mins
   return `${Math.floor(diff / 60)}h ${diff % 60}m al cierre EOD`
 }
 
+function vixInterpretation(vixPrice: number): { label: string; color: string; description: string } {
+  if (vixPrice > 25) return { label: 'MIEDO ELEVADO', color: '#f87171', description: 'Posible oportunidad contraria — mercado sobrevendido' }
+  if (vixPrice < 13) return { label: 'COMPLACENCIA', color: '#facc15', description: 'Riesgo de corrección — mercado excesivamente optimista' }
+  return { label: 'NORMAL', color: '#4ade80', description: 'Volatilidad en rango estable — condiciones operables' }
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
-  const [phase1, setPhase1]       = useState<'idle'|'running'|'done'|'error'>('idle')
-  const [phase2, setPhase2]       = useState<'idle'|'running'|'done'|'error'>('idle')
-  const [scanBias, setScanBias]   = useState<Record<string, { sesgo: 'COMPRA'|'VENTA'|'NEUTRAL'; conf: number }>>({})
-  const [idxBias, setIdxBias]     = useState<IndexAsset[]>([])
-  const [confirmed, setConfirmed] = useState<FuturesSignal[]>([])
+  const [phase, setPhase]           = useState<'idle'|'running'|'done'|'error'>('idle')
+  const [idxBias, setIdxBias]       = useState<IndexAsset[]>([])
+  const [metodologia, setMetodologia] = useState<string>('')
+  const [confirmed, setConfirmed]   = useState<FuturesSignal[]>([])
   const [savedCount, setSavedCount] = useState<number | null>(null)
-  const [trackRecs, setTrackRecs] = useState<TrackRec[]>([])
-  const [rowEdits, setRowEdits]   = useState<Record<string, { resultado: string; pnlUsd: string; closedPrice: string }>>({})
+  const [trackRecs, setTrackRecs]   = useState<TrackRec[]>([])
+  const [rowEdits, setRowEdits]     = useState<Record<string, { resultado: string; pnlUsd: string; closedPrice: string }>>({})
   const [updatingId, setUpdatingId] = useState<string | null>(null)
-  const [log, setLog]             = useState<string[]>([])
+  const [log, setLog]               = useState<string[]>([])
   const [lastPriceCheck, setLastPriceCheck] = useState<Date | null>(null)
   const [priceChecking, setPriceChecking]   = useState(false)
-  const [countdown, setCountdown] = useState(marketCloseCountdown())
+  const [countdown, setCountdown]   = useState(marketCloseCountdown())
   const priceMapRef = useRef<Record<string, number>>({})
 
   const addLog = (msg: string) => setLog(prev => [...prev, msg])
 
-  // Countdown ticker
   useEffect(() => {
     const id = setInterval(() => setCountdown(marketCloseCountdown()), 30000)
     return () => clearInterval(id)
@@ -196,12 +175,12 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
     }
   }, [trackRecs, loadTrackRecs])
 
-  // EOD auto-close: check every 60s for the 3:43-3:48 PM ET window, then force-close
+  // EOD auto-close
   const eodTriggeredRef = useRef(false)
   useEffect(() => {
     const tick = async () => {
       if (!isEODCloseWindow()) { eodTriggeredRef.current = false; return }
-      if (eodTriggeredRef.current) return  // only once per day
+      if (eodTriggeredRef.current) return
       eodTriggeredRef.current = true
       try {
         const res = await fetch('/api/futures/analyze', { method: 'POST' })
@@ -212,14 +191,13 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
           if (a.precio > 0) pm[a.simbolo] = a.precio
         }
         priceMapRef.current = pm
-        await checkPriceLevels(pm, true)  // forceEOD = true
+        await checkPriceLevels(pm, true)
       } catch {}
     }
     const id = setInterval(tick, 60000)
     return () => clearInterval(id)
   }, [checkPriceLevels])
 
-  // Manual refresh
   const handlePriceRefresh = async () => {
     setPriceChecking(true)
     try {
@@ -253,23 +231,22 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
     } catch {}
   }, [loadTrackRecs])
 
-  // Reconcile confirmed signals + auto-save + check levels
+  // Reconcile + auto-save
   useEffect(() => {
-    if (phase2 !== 'done' || idxBias.length === 0) return
+    if (phase !== 'done' || idxBias.length === 0) return
     const final: FuturesSignal[] = []
     const pm: Record<string, number> = {}
 
     for (const idx of idxBias) {
       if (idx.precio > 0) pm[idx.simbolo] = idx.precio
-      if (idx.simbolo === 'VIX' || idx.sesgo === 'NEUTRAL' || idx.confianza < 65) continue
-      const scanEntry = scanBias[idx.simbolo]
-      if (scanEntry && scanEntry.sesgo !== 'NEUTRAL' && scanEntry.sesgo !== idx.sesgo) continue
+      if (idx.simbolo === 'VIX' || idx.simbolo === 'DOW') continue
+      if (idx.sesgo === 'NEUTRAL' || idx.confianza < 65) continue
       const levels = computeFuturesLevels(idx.sesgo, idx.precio, idx.simbolo)
       final.push({
         simbolo: idx.simbolo,
         nombre: INDEX_NAMES[idx.simbolo] ?? idx.nombre,
         sesgo: idx.sesgo,
-        confianza: Math.max(idx.confianza, scanEntry?.conf ?? 0),
+        confianza: idx.confianza,
         precioEntrada: idx.precio,
         stopLoss: levels.stopLoss,
         takeProfit: levels.takeProfit,
@@ -284,83 +261,35 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
 
     priceMapRef.current = pm
     setConfirmed(final)
-
-    // Auto-save and check price levels
     if (final.length > 0) autoSaveSignals(final)
     if (Object.keys(pm).length > 0) checkPriceLevels(pm)
-  }, [phase2, idxBias, scanBias, autoSaveSignals, checkPriceLevels])
+  }, [phase, idxBias, autoSaveSignals, checkPriceLevels])
 
   // ── Main analysis runner ───────────────────────────────────────────────────
 
   const runAnalysis = async () => {
-    setPhase1('running'); setPhase2('idle')
-    setScanBias({}); setIdxBias([]); setConfirmed([]); setSavedCount(null); setLog([])
+    setPhase('running')
+    setIdxBias([]); setConfirmed([]); setSavedCount(null); setLog([]); setMetodologia('')
 
     try {
-      addLog('📡 Iniciando Daily Scanner para QQQ, SPY, IWM...')
-      let scanDone = false
-
-      const scanRes = await fetch('/api/daily-signals/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stocks: ['QQQ', 'SPY', 'IWM'] }),
-      })
-
-      if (scanRes.ok) {
-        // Capture task_id if returned (async mode) — use specific task polling instead of global history
-        const scanInit = await scanRes.json().catch(() => ({})) as Record<string, unknown>
-        const taskId = (scanInit?.task_id ?? scanInit?.taskId) as string | undefined
-
-        const extractEtfSignals = (data: unknown): ScanSignal[] => {
-          const d = data as Record<string, unknown>
-          const raw = Array.isArray(data) ? data : d?.results ?? d?.result ?? []
-          return (Array.isArray(raw) ? raw : []).filter((s: ScanSignal) =>
-            Object.keys(ETF_MAP).includes((s.stock_code ?? s.symbol ?? '').toUpperCase())
-          )
-        }
-
-        for (let i = 0; i < 12 && !scanDone; i++) {
-          await new Promise(r => setTimeout(r, 8000))
-          addLog(`⟳ Consultando resultados... (${i + 1}/12)`)
-          const pollUrl = taskId
-            ? `/api/daily-signals/tasks?task_id=${taskId}`
-            : '/api/daily-signals/results'
-          const rr = await fetch(pollUrl)
-          if (rr.ok) {
-            const data = await rr.json() as Record<string, unknown>
-            // Skip if task still pending/running
-            if (data?.status === 'pending' || data?.status === 'running') continue
-            const payload = data?.status === 'completed' ? (data?.result ?? data) : data
-            const etfSignals = extractEtfSignals(payload)
-            if (etfSignals.length > 0) {
-              const bm: Record<string, { sesgo: 'COMPRA'|'VENTA'|'NEUTRAL'; conf: number }> = {}
-              for (const s of etfSignals) {
-                const sym = (s.stock_code ?? s.symbol ?? '').toUpperCase()
-                const sig = s.operation_advice ?? s.recommendation ?? s.signal ?? ''
-                bm[ETF_MAP[sym]] = { sesgo: normalizeBias(sig), conf: s.sentiment_score ?? s.score ?? 65 }
-              }
-              setScanBias(bm)
-              addLog(`✓ Daily Scanner: ${etfSignals.length} señales`)
-              scanDone = true
-            }
-          }
-        }
+      addLog('🔍 Iniciando análisis MAIA de índices...')
+      const res = await fetch('/api/futures/analyze', { method: 'POST' })
+      if (!res.ok) throw new Error('Análisis de índices falló')
+      const data = await res.json()
+      const activos: IndexAsset[] = data.activos ?? []
+      setIdxBias(activos)
+      setMetodologia(data.metodologia ?? '')
+      addLog(`✓ Análisis completado: ${activos.filter(a => a.simbolo !== 'VIX').length} índices analizados`)
+      const actionable = activos.filter(a => a.simbolo !== 'VIX' && a.simbolo !== 'DOW' && a.sesgo !== 'NEUTRAL' && a.confianza >= 65)
+      if (actionable.length > 0) {
+        addLog(`→ ${actionable.length} señal(es) con confianza ≥ 65%: ${actionable.map(a => `${a.simbolo} ${a.sesgo}`).join(', ')}`)
+      } else {
+        addLog('→ Sin señales accionables (confianza insuficiente o sesgo NEUTRAL)')
       }
-      if (!scanDone) addLog('⚠ Daily Scanner timeout — continuando sin ETF filter')
-      setPhase1('done')
-
-      setPhase2('running')
-      addLog('🔍 Iniciando Analizador de Índices (9:15 AM ET, 1min)...')
-      const idxRes = await fetch('/api/futures/analyze', { method: 'POST' })
-      if (!idxRes.ok) throw new Error('Analizador de Índices falló')
-      const idxData = await idxRes.json()
-      setIdxBias(idxData.activos ?? [])
-      addLog(`✓ Analizador: ${(idxData.activos ?? []).filter((a: IndexAsset) => a.simbolo !== 'VIX').length} índices`)
-      setPhase2('done')
+      setPhase('done')
     } catch (e) {
       addLog(`❌ Error: ${(e as Error).message}`)
-      setPhase1(p => p === 'idle' ? 'error' : 'done')
-      setPhase2('error')
+      setPhase('error')
     }
   }
 
@@ -404,7 +333,10 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
   const cerradas = trackRecs.filter(r => r.resultado !== 'PENDIENTE').length
   const totalPnl = trackRecs.reduce((s, r) => s + (r.pnlUsd ?? 0), 0)
   const winRate  = cerradas > 0 ? Math.round((ganadas / cerradas) * 100) : null
-  const isRunning = phase1 === 'running' || phase2 === 'running'
+  const isRunning = phase === 'running'
+
+  const vixAsset = idxBias.find(a => a.simbolo === 'VIX')
+  const vixInfo  = vixAsset ? vixInterpretation(vixAsset.precio) : null
 
   return (
     <div className="space-y-5">
@@ -412,10 +344,9 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
       <div className="rounded-xl border p-4" style={{ borderColor: 'rgba(201,168,76,0.2)', background: 'linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 70%)' }}>
         <div className="flex items-start justify-between gap-4 flex-wrap mb-3">
           <div>
-            <p className="text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--gold)' }}>ESTRATEGIA DUAL-FILTER — MICRO FUTUROS INTRADÍA</p>
+            <p className="text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--gold)' }}>MAIA ÍNDICES — MICRO FUTUROS INTRADÍA</p>
             <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              Daily Scanner ETFs → Analizador de Índices IA → Señal CONFIRMADA con SL/TP automático.
-              1 entrada máxima por índice por día. Señales auto-guardadas.
+              Agente especializado de análisis de índices (sistema MAIA). Evalúa NQ, S&P 500, Russell 2000, Dow Jones y VIX con datos en tiempo real para determinar el sesgo diario.
             </p>
           </div>
           <div className="flex flex-col gap-1.5 text-right text-[10px] font-mono flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
@@ -454,44 +385,28 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
         </div>
       </div>
 
-      {/* Phase steps */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {[
-          { num: 1, label: 'DAILY SCANNER ETFs', desc: 'QQQ (NQ) · SPY (SP500) · IWM (Russell)', phase: phase1 },
-          { num: 2, label: 'ANALIZADOR DE ÍNDICES IA', desc: 'NQ · SP500 · RUSSELL · VIX — temporalidad 1min', phase: phase2 },
-        ].map(step => (
-          <div key={step.num} className="rounded-xl border p-4" style={{
-            borderColor: step.phase === 'running' ? 'rgba(251,191,36,0.4)' : step.phase === 'done' ? 'rgba(74,222,128,0.25)' : 'var(--border)',
-            background: step.phase === 'running' ? 'rgba(251,191,36,0.04)' : 'transparent',
-          }}>
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold" style={{ color: 'var(--gold)' }}>{step.num}</span>
-                <span className="text-[10px] font-mono font-bold" style={{ color: 'var(--text-primary)' }}>{step.label}</span>
-              </div>
-              {phaseBadge(step.phase)}
-            </div>
-            <p className="text-[10px] pl-4" style={{ color: 'var(--text-muted)' }}>{step.desc}</p>
-            {step.num === 1 && Object.keys(scanBias).length > 0 && (
-              <div className="mt-2 pl-4 flex flex-wrap gap-1.5">
-                {Object.entries(scanBias).map(([sym, b]) => (
-                  <span key={sym} className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${b.sesgo === 'COMPRA' ? 'border-green-500/40 bg-green-500/10 text-green-400' : b.sesgo === 'VENTA' ? 'border-red-500/40 bg-red-500/10 text-red-400' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>
-                    {sym} {b.sesgo}
-                  </span>
-                ))}
-              </div>
-            )}
-            {step.num === 2 && idxBias.filter(a => a.simbolo !== 'VIX').length > 0 && (
-              <div className="mt-2 pl-4 flex flex-wrap gap-1.5">
-                {idxBias.filter(a => a.simbolo !== 'VIX').map(a => (
-                  <span key={a.simbolo} className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${a.sesgo === 'COMPRA' ? 'border-green-500/40 bg-green-500/10 text-green-400' : a.sesgo === 'VENTA' ? 'border-red-500/40 bg-red-500/10 text-red-400' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>
-                    {a.simbolo} {a.sesgo} {a.confianza}%
-                  </span>
-                ))}
-              </div>
-            )}
+      {/* Phase step */}
+      <div className="rounded-xl border p-4" style={{
+        borderColor: phase === 'running' ? 'rgba(251,191,36,0.4)' : phase === 'done' ? 'rgba(74,222,128,0.25)' : 'var(--border)',
+        background: phase === 'running' ? 'rgba(251,191,36,0.04)' : 'transparent',
+      }}>
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono font-bold" style={{ color: 'var(--gold)' }}>1</span>
+            <span className="text-[10px] font-mono font-bold" style={{ color: 'var(--text-primary)' }}>ANALIZADOR MAIA — ÍNDICES</span>
           </div>
-        ))}
+          {phaseBadge(phase)}
+        </div>
+        <p className="text-[10px] pl-4" style={{ color: 'var(--text-muted)' }}>NQ · S&P 500 · Russell 2000 · Dow Jones · VIX — datos en tiempo real</p>
+        {idxBias.filter(a => a.simbolo !== 'VIX').length > 0 && (
+          <div className="mt-2 pl-4 flex flex-wrap gap-1.5">
+            {idxBias.map(a => (
+              <span key={a.simbolo} className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${a.sesgo === 'COMPRA' ? 'border-green-500/40 bg-green-500/10 text-green-400' : a.sesgo === 'VENTA' ? 'border-red-500/40 bg-red-500/10 text-red-400' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>
+                {a.simbolo} {a.sesgo} {a.confianza}%
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Log */}
@@ -506,7 +421,75 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
         </div>
       )}
 
-      {/* Confirmed signals (current session) */}
+      {/* Informativo de análisis */}
+      {phase === 'done' && idxBias.length > 0 && (
+        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(139,92,246,0.3)' }}>
+          <div className="px-4 py-2" style={{ background: 'rgba(139,92,246,0.08)', borderBottom: '1px solid rgba(139,92,246,0.2)' }}>
+            <span className="text-[10px] font-mono tracking-widest font-bold" style={{ color: '#a78bfa' }}>CÓMO SE DETERMINÓ EL SESGO</span>
+          </div>
+          <div className="p-4 space-y-4">
+            {/* Metodología */}
+            {metodologia && (
+              <div>
+                <p className="text-[9px] font-mono tracking-widest mb-1.5" style={{ color: 'var(--text-muted)' }}>METODOLOGÍA</p>
+                <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{metodologia}</p>
+              </div>
+            )}
+
+            {/* VIX */}
+            {vixAsset && vixInfo && (
+              <div className="rounded-lg p-3" style={{ background: 'rgba(0,0,0,0.3)', border: `1px solid ${vixInfo.color}30` }}>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[9px] font-mono tracking-widest" style={{ color: 'var(--text-muted)' }}>NIVEL VIX</p>
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded" style={{ color: vixInfo.color, background: `${vixInfo.color}15`, border: `1px solid ${vixInfo.color}30` }}>
+                    {vixInfo.label}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl font-mono font-bold" style={{ color: vixInfo.color }}>{vixAsset.precio.toFixed(2)}</span>
+                  <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{vixInfo.description}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Razonamiento por índice */}
+            <div>
+              <p className="text-[9px] font-mono tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>RAZONAMIENTO POR ÍNDICE</p>
+              <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                <table className="w-full text-[10px] font-mono">
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.3)' }}>
+                      {['Índice', 'Precio', 'Sesgo', 'Conf.', 'Razonamiento IA'].map(h => (
+                        <th key={h} className="px-3 py-2 text-left whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {idxBias.map(a => (
+                      <tr key={a.simbolo} className="border-b border-[var(--border)]">
+                        <td className="px-3 py-2 font-bold whitespace-nowrap" style={{ color: 'var(--gold)' }}>{a.simbolo}</td>
+                        <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>{fmt(a.precio, a.precio < 100 ? 2 : 0)}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${a.sesgo === 'COMPRA' ? 'bg-green-500/15 text-green-400 border border-green-500/30' : a.sesgo === 'VENTA' ? 'bg-red-500/15 text-red-400 border border-red-500/30' : 'border border-[var(--border)] text-[var(--text-muted)]'}`}>
+                            {a.sesgo}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap" style={{ color: a.confianza >= 75 ? 'var(--gold)' : 'var(--text-secondary)' }}>{a.confianza}%</td>
+                        <td className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>{a.razon}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[9px] mt-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                Señales accionables: índices con confianza ≥ 65% y sesgo COMPRA/VENTA (excluye VIX y DOW). SL/TP calculado según specs de contratos micro (MNQ $2/pt, MES $5/pt, M2K $5/pt).
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmed signals */}
       {confirmed.length > 0 && (
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(201,168,76,0.3)' }}>
           <div className="flex items-center justify-between px-4 py-2" style={{ background: 'rgba(201,168,76,0.08)', borderBottom: '1px solid rgba(201,168,76,0.2)' }}>
