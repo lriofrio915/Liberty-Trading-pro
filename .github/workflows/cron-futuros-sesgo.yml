@@ -1,0 +1,24 @@
+name: Cron — Futuros Sesgo 9:15am ET
+
+on:
+  schedule:
+    - cron: '15 13 * * 1-5'  # 13:15 UTC = 9:15am EDT (UTC-4, Mar-Nov)
+  workflow_dispatch:
+
+jobs:
+  sesgo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Analisis sesgo intradiario futuros
+        run: |
+          HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
+            --max-time 100 \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/futuros-sesgo")
+          echo "HTTP status: $HTTP"
+          cat /tmp/response.txt || true
+          if [ "$HTTP" != "200" ]; then
+            echo "Error: expected 200, got $HTTP"
+            exit 1
+          fi

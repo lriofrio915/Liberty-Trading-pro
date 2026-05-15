@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { computeFuturesLevels, getFuturesSpec } from '@/lib/futures-specs'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -67,23 +68,11 @@ const INDEX_NAMES: Record<string, string> = {
   RUSSELL: 'Micro Russell (M2K)',
 }
 
-const SL_PCT = 0.005
-
 function normalizeBias(signal: string): 'COMPRA' | 'VENTA' | 'NEUTRAL' {
   const u = signal.toUpperCase()
   if (u.includes('BUY') || u.includes('COMPRAR') || u.includes('ALCISTA') || u.includes('买入') || u.includes('增持')) return 'COMPRA'
   if (u.includes('SELL') || u.includes('VENDER') || u.includes('BAJISTA') || u.includes('卖出') || u.includes('减持')) return 'VENTA'
   return 'NEUTRAL'
-}
-
-function computeLevels(sesgo: 'COMPRA' | 'VENTA', entry: number) {
-  const slDist = entry * SL_PCT
-  const tpDist = slDist * 2
-  return {
-    sl:     parseFloat((sesgo === 'COMPRA' ? entry - slDist : entry + slDist).toFixed(2)),
-    tp:     parseFloat((sesgo === 'COMPRA' ? entry + tpDist : entry - tpDist).toFixed(2)),
-    lotaje: 1,
-  }
 }
 
 function getETMinutes(): { mins: number; day: number } {
@@ -174,29 +163,25 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
         const currentPrice = pm[sig.simbolo]
         if (!currentPrice || currentPrice <= 0) continue
         const isCompra = sig.sesgo === 'COMPRA'
-        const slDist = Math.abs(sig.precioEntrada - sig.stopLoss)
+        const spec = getFuturesSpec(sig.simbolo)
 
         let resultado: string
+        let rawPnl: number
         if (forceEOD) {
-          // Force-close at current price (EOD 3:45 PM ET)
           const priceDiff = isCompra
             ? currentPrice - sig.precioEntrada
             : sig.precioEntrada - currentPrice
-          if (priceDiff > slDist * 0.05) resultado = 'GANADA'
-          else if (priceDiff < -slDist * 0.05) resultado = 'PERDIDA'
+          rawPnl = priceDiff * spec.pointValue
+          if (rawPnl > 0) resultado = 'GANADA'
+          else if (rawPnl < 0) resultado = 'PERDIDA'
           else resultado = 'BREAKEVEN'
         } else {
           const hitTP = isCompra ? currentPrice >= sig.takeProfit : currentPrice <= sig.takeProfit
           const hitSL = isCompra ? currentPrice <= sig.stopLoss  : currentPrice >= sig.stopLoss
           if (!hitTP && !hitSL) continue
           resultado = hitTP ? 'GANADA' : 'PERDIDA'
+          rawPnl = hitTP ? spec.tpUsd : -spec.slUsd
         }
-
-        const rawPnl = slDist > 0
-          ? (isCompra
-              ? ((currentPrice - sig.precioEntrada) / slDist) * 10
-              : ((sig.precioEntrada - currentPrice) / slDist) * 10)
-          : 0
         await fetch(`/api/cfds/signals/${sig.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -279,21 +264,21 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
       if (idx.simbolo === 'VIX' || idx.sesgo === 'NEUTRAL' || idx.confianza < 65) continue
       const scanEntry = scanBias[idx.simbolo]
       if (scanEntry && scanEntry.sesgo !== 'NEUTRAL' && scanEntry.sesgo !== idx.sesgo) continue
-      const { sl, tp, lotaje } = computeLevels(idx.sesgo, idx.precio)
+      const levels = computeFuturesLevels(idx.sesgo, idx.precio, idx.simbolo)
       final.push({
         simbolo: idx.simbolo,
         nombre: INDEX_NAMES[idx.simbolo] ?? idx.nombre,
         sesgo: idx.sesgo,
         confianza: Math.max(idx.confianza, scanEntry?.conf ?? 0),
         precioEntrada: idx.precio,
-        stopLoss: sl,
-        takeProfit: tp,
-        lotaje,
+        stopLoss: levels.stopLoss,
+        takeProfit: levels.takeProfit,
+        lotaje: levels.lotaje,
         razon: idx.razon,
         sector: 'Futuros',
         riskProfile: 'moderado',
-        riesgoUsd: 10,
-        rrRatio: 2.0,
+        riesgoUsd: levels.riesgoUsd,
+        rrRatio: levels.rrRatio,
       })
     }
 
@@ -322,17 +307,31 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
       })
 
       if (scanRes.ok) {
+        // Capture task_id if returned (async mode) — use specific task polling instead of global history
+        const scanInit = await scanRes.json().catch(() => ({})) as Record<string, unknown>
+        const taskId = (scanInit?.task_id ?? scanInit?.taskId) as string | undefined
+
+        const extractEtfSignals = (data: unknown): ScanSignal[] => {
+          const d = data as Record<string, unknown>
+          const raw = Array.isArray(data) ? data : d?.results ?? d?.result ?? []
+          return (Array.isArray(raw) ? raw : []).filter((s: ScanSignal) =>
+            Object.keys(ETF_MAP).includes((s.stock_code ?? s.symbol ?? '').toUpperCase())
+          )
+        }
+
         for (let i = 0; i < 12 && !scanDone; i++) {
           await new Promise(r => setTimeout(r, 8000))
           addLog(`⟳ Consultando resultados... (${i + 1}/12)`)
-          const rr = await fetch('/api/daily-signals/results')
+          const pollUrl = taskId
+            ? `/api/daily-signals/tasks?task_id=${taskId}`
+            : '/api/daily-signals/results'
+          const rr = await fetch(pollUrl)
           if (rr.ok) {
-            const data = await rr.json()
-            const signals: ScanSignal[] = Array.isArray(data) ? data : data.results ?? []
-            const etfSignals = signals.filter(s => {
-              const sym = (s.stock_code ?? s.symbol ?? '').toUpperCase()
-              return Object.keys(ETF_MAP).includes(sym)
-            })
+            const data = await rr.json() as Record<string, unknown>
+            // Skip if task still pending/running
+            if (data?.status === 'pending' || data?.status === 'running') continue
+            const payload = data?.status === 'completed' ? (data?.result ?? data) : data
+            const etfSignals = extractEtfSignals(payload)
             if (etfSignals.length > 0) {
               const bm: Record<string, { sesgo: 'COMPRA'|'VENTA'|'NEUTRAL'; conf: number }> = {}
               for (const s of etfSignals) {
@@ -351,7 +350,7 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
       setPhase1('done')
 
       setPhase2('running')
-      addLog('🔍 Iniciando Analizador de Índices (9:45 AM ET, 15min)...')
+      addLog('🔍 Iniciando Analizador de Índices (9:15 AM ET, 1min)...')
       const idxRes = await fetch('/api/futures/analyze', { method: 'POST' })
       if (!idxRes.ok) throw new Error('Analizador de Índices falló')
       const idxData = await idxRes.json()
@@ -420,8 +419,8 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
             </p>
           </div>
           <div className="flex flex-col gap-1.5 text-right text-[10px] font-mono flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
-            <span>📅 Temporalidad: <strong style={{ color: 'var(--gold)' }}>15 min</strong></span>
-            <span>⏰ Análisis: <strong style={{ color: 'var(--gold)' }}>9:45 AM ET</strong></span>
+            <span>📅 Temporalidad: <strong style={{ color: 'var(--gold)' }}>1 min</strong></span>
+            <span>⏰ Análisis: <strong style={{ color: 'var(--gold)' }}>9:15 AM ET</strong></span>
             <span>🔔 Cierre EOD: <strong style={{ color: 'var(--gold)' }}>3:45 PM ET</strong></span>
             <span style={{ color: 'var(--text-muted)' }}>{countdown}</span>
           </div>
@@ -459,7 +458,7 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[
           { num: 1, label: 'DAILY SCANNER ETFs', desc: 'QQQ (NQ) · SPY (SP500) · IWM (Russell)', phase: phase1 },
-          { num: 2, label: 'ANALIZADOR DE ÍNDICES IA', desc: 'NQ · SP500 · RUSSELL · VIX — temporalidad 15min', phase: phase2 },
+          { num: 2, label: 'ANALIZADOR DE ÍNDICES IA', desc: 'NQ · SP500 · RUSSELL · VIX — temporalidad 1min', phase: phase2 },
         ].map(step => (
           <div key={step.num} className="rounded-xl border p-4" style={{
             borderColor: step.phase === 'running' ? 'rgba(251,191,36,0.4)' : step.phase === 'done' ? 'rgba(74,222,128,0.25)' : 'var(--border)',
@@ -566,7 +565,7 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
 
         {trackRecs.length === 0 ? (
           <div className="rounded-xl border p-6 text-center text-[10px] font-mono" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-            Sin señales. Corre el análisis a las 9:45 AM ET.
+            Sin señales. Corre el análisis a las 9:15 AM ET.
           </div>
         ) : (
           <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>

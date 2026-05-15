@@ -1,0 +1,24 @@
+name: Cron — Futuros Open Entry 9:30am ET
+
+on:
+  schedule:
+    - cron: '30 13 * * 1-5'  # 13:30 UTC = 9:30am EDT (UTC-4, Mar-Nov)
+  workflow_dispatch:
+
+jobs:
+  open:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Registrar entrada desde vela de apertura 9:30am
+        run: |
+          HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
+            --max-time 60 \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/futuros-open")
+          echo "HTTP status: $HTTP"
+          cat /tmp/response.txt || true
+          if [ "$HTTP" != "200" ]; then
+            echo "Error: expected 200, got $HTTP"
+            exit 1
+          fi

@@ -1,0 +1,24 @@
+name: Cron — Futuros Close Audit 3:45pm ET
+
+on:
+  schedule:
+    - cron: '45 19 * * 1-5'  # 19:45 UTC = 3:45pm EDT (UTC-4, Mar-Nov)
+  workflow_dispatch:
+
+jobs:
+  close:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auditar resultado cierre EOD futuros
+        run: |
+          HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
+            --max-time 60 \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/futuros-close")
+          echo "HTTP status: $HTTP"
+          cat /tmp/response.txt || true
+          if [ "$HTTP" != "200" ]; then
+            echo "Error: expected 200, got $HTTP"
+            exit 1
+          fi
