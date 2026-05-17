@@ -37,9 +37,10 @@ primary_region = "ewr"  # Secaucus NJ — mejor disponibilidad GPU A10
     soft_limit = 5
 
 [[vm]]
-  size = "performance-8x"   # CPU-only: 8 vCPUs, 32GB RAM — sin GPU
-  memory = "32768"           # 32GB necesarios para BLOOM-7B float16
+  # GPU (activo cuando billing@fly.io habilite GPU en la cuenta):
+  size = "a10"
+  memory = "32gb"
   cpus = 8
-  # Para activar GPU cuando billing@fly.io lo habilite:
-  # size = "a10"
-  # memory = "32gb"
+  # CPU fallback (si GPU no disponible, cambiar a estas líneas):
+  # size = "performance-8x"
+  # memory = "32768"
