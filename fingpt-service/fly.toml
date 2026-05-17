@@ -2,7 +2,7 @@
 # GPU machine: L40S (48GB VRAM) — sufficient for BLOOM-7B in 4-bit (~4GB VRAM)
 
 app = "liberty-fingpt"
-primary_region = "iad"  # US East — closest to trading hours NY
+primary_region = "ewr"  # Secaucus NJ — mejor disponibilidad GPU A10
 
 [build]
   dockerfile = "Dockerfile"
@@ -22,12 +22,24 @@ primary_region = "iad"  # US East — closest to trading hours NY
   auto_stop_machines = true      # scale to zero when idle
   auto_start_machines = true
   min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    port = 8080
+    timeout = "10s"
+
   [http_service.concurrency]
     type = "requests"
     hard_limit = 10
     soft_limit = 5
 
 [[vm]]
-  size = "l40s"          # GPU: NVIDIA L40S 48GB VRAM
-  memory = "32gb"
+  size = "performance-8x"   # CPU-only: 8 vCPUs, 32GB RAM — sin GPU
+  memory = "32768"           # 32GB necesarios para BLOOM-7B float16
   cpus = 8
+  # Para activar GPU cuando billing@fly.io lo habilite:
+  # size = "a10"
+  # memory = "32gb"

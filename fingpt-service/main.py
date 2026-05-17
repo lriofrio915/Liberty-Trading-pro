@@ -8,7 +8,6 @@ Model is cached to /cache on a Fly.io volume to survive restarts.
 import os
 import re
 import logging
-from contextlib import asynccontextmanager
 from typing import Optional
 
 import torch
@@ -58,14 +57,18 @@ def load_model():
     log.info("CUDA available: %s", use_gpu)
 
     log.info("Loading base model %s ...", BASE_MODEL)
-    _model = AutoModelForCausalLM.from_pretrained(
-        BASE_MODEL,
-        cache_dir=CACHE_DIR,
-        trust_remote_code=True,
-        torch_dtype=torch.float16 if use_gpu else torch.float32,
-        load_in_4bit=use_gpu,       # 4-bit quantization when GPU present
-        device_map="auto" if use_gpu else None,
-    )
+    load_kwargs: dict = {
+        "cache_dir": CACHE_DIR,
+        "trust_remote_code": True,
+    }
+    if use_gpu:
+        load_kwargs["torch_dtype"] = torch.float16
+        load_kwargs["device_map"] = "auto"
+    else:
+        load_kwargs["torch_dtype"] = torch.float32
+        load_kwargs["low_cpu_mem_usage"] = True
+
+    _model = AutoModelForCausalLM.from_pretrained(BASE_MODEL, **load_kwargs)
 
     log.info("Applying LoRA adapter %s ...", PEFT_MODEL)
     _model = PeftModel.from_pretrained(
@@ -77,13 +80,7 @@ def load_model():
     log.info("FinGPT model ready.")
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    load_model()
-    yield
-
-
-app = FastAPI(title="FinGPT Service", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="FinGPT Service", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -125,6 +122,7 @@ def _build_keywords(text: str) -> list[str]:
 
 @app.post("/sentiment", response_model=SentimentResponse)
 async def sentiment(req: SentimentRequest):
+    load_model()   # lazy — no-op after first call
     if not req.text.strip():
         raise HTTPException(status_code=400, detail="text is required")
 
@@ -172,4 +170,4 @@ async def sentiment(req: SentimentRequest):
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "model_loaded": _model is not None}
+    return {"status": "loading" if _model is None else "ok", "model_loaded": _model is not None}
