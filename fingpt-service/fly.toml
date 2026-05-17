@@ -1,0 +1,33 @@
+# FinGPT inference service — Fly.io config
+# GPU machine: L40S (48GB VRAM) — sufficient for BLOOM-7B in 4-bit (~4GB VRAM)
+
+app = "liberty-fingpt"
+primary_region = "iad"  # US East — closest to trading hours NY
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  MODEL_CACHE_DIR = "/cache"
+  PORT = "8080"
+
+[[mounts]]
+  source = "fingpt_model_cache"
+  destination = "/cache"
+  initial_size = "50gb"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true      # scale to zero when idle
+  auto_start_machines = true
+  min_machines_running = 0
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 10
+    soft_limit = 5
+
+[[vm]]
+  size = "l40s"          # GPU: NVIDIA L40S 48GB VRAM
+  memory = "32gb"
+  cpus = 8

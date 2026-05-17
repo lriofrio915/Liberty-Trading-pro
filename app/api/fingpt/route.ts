@@ -11,7 +11,22 @@ type Mode = 'sentiment' | 'qa' | 'signals'
 
 const ASSETS_DEFAULT = ['BTC', 'ETH', 'SPY', 'QQQ', 'NQ=F', 'ES=F', 'GC=F', 'CL=F', 'EUR/USD', 'AAPL', 'TSLA', 'NVDA']
 
-async function runSentiment(input: string): Promise<object> {
+// Real FinGPT Python service — set FINGPT_SERVICE_URL in env to enable
+// Falls back to OpenRouter when unset or service is unreachable
+const FINGPT_URL = process.env.FINGPT_SERVICE_URL?.replace(/\/$/, '')
+
+async function sentimentViaFinGPT(input: string): Promise<object> {
+  const res = await fetch(`${FINGPT_URL}/sentiment`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: input }),
+    signal: AbortSignal.timeout(45_000),
+  })
+  if (!res.ok) throw new Error(`FinGPT service error: ${res.status}`)
+  return res.json()
+}
+
+async function sentimentViaOpenRouter(input: string): Promise<object> {
   const system = `Eres FinGPT, modelo especializado en análisis de sentimiento financiero del framework AI4Finance-Foundation.
 Tu tarea: analizar texto financiero y clasificar su sentimiento de mercado.
 Responde ÚNICAMENTE con JSON válido, sin texto extra:
@@ -29,6 +44,17 @@ Responde ÚNICAMENTE con JSON válido, sin texto extra:
 
   const json = repairJSON(extractJSON(raw.content))
   return JSON.parse(json)
+}
+
+async function runSentiment(input: string): Promise<object> {
+  if (FINGPT_URL) {
+    try {
+      return await sentimentViaFinGPT(input)
+    } catch (err) {
+      console.warn('[/api/fingpt] Python service unreachable, falling back to OpenRouter:', err)
+    }
+  }
+  return sentimentViaOpenRouter(input)
 }
 
 async function runQA(input: string): Promise<string> {
