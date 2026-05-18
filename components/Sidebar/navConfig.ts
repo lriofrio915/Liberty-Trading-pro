@@ -18,7 +18,6 @@ export const navGroups: NavGroup[] = [
       { href: '/dashboard/academia',     icon: '🎓', label: 'Academia',        requiresClub: false },
       { href: '/dashboard/comunidad',    icon: '🤝', label: 'Comunidad',       requiresClub: false },
       { href: '/dashboard/championship', icon: '🏆', label: 'Championship',    requiresClub: false },
-      { href: '/dashboard/monitor',      icon: '🌍', label: 'Monitor Mundial', requiresClub: false },
     ],
   },
   {
