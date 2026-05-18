@@ -35,7 +35,6 @@ export const navGroups: NavGroup[] = [
     label: 'Agentes IA',
     items: [
       { href: '/dashboard/agentes', icon: '🤖', label: 'Agentes',  requiresClub: true },
-      { href: '/dashboard/fingpt',  icon: '🧬', label: 'FinGPT',   requiresClub: true },
     ],
   },
 ]

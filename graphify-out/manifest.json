@@ -8,8 +8,8 @@
     "hash": "e0e9346ac5d5ba00b8f319d11344bbaa"
   },
   "/var/www/liberty-trading-new/next-env.d.ts": {
-    "mtime": 1772459629.631323,
-    "hash": "b5ed9dd8b4c5ba8e5ab8e6a379c15838"
+    "mtime": 1778796144.359347,
+    "hash": "2a74d3909800ca5467fa83b0ab4a4890"
   },
   "/var/www/liberty-trading-new/proxy.ts": {
     "mtime": 1777700350.8038833,
@@ -48,8 +48,8 @@
     "hash": "2ad014be21bdaa75e036435619654ec3"
   },
   "/var/www/liberty-trading-new/components/TrackRecord/TrackRecordClient.tsx": {
-    "mtime": 1778267971.2899234,
-    "hash": "b714c82930fb48bb34d042fed15d9d68"
+    "mtime": 1778796094.0121121,
+    "hash": "343b27312b27e5f7e585ff93a01d7d1c"
   },
   "/var/www/liberty-trading-new/components/Pricing/Pricing.tsx": {
     "mtime": 1773964876.0145192,
@@ -80,8 +80,8 @@
     "hash": "e56266fbf2bfcedf00fdd5e5779fe145"
   },
   "/var/www/liberty-trading-new/components/Sidebar/navConfig.ts": {
-    "mtime": 1778696891.3063655,
-    "hash": "aa9f22d294688ba25a387c16f2a250eb"
+    "mtime": 1778988926.649883,
+    "hash": "d70dfa78097ccf03e695bb9f5f9f20b7"
   },
   "/var/www/liberty-trading-new/components/CustomCursor/CustomCursor.tsx": {
     "mtime": 1772471321.135099,
@@ -138,6 +138,10 @@
   "/var/www/liberty-trading-new/prisma/migrations/20260504_add_cfd_signal/migration.sql": {
     "mtime": 1778267971.2959235,
     "hash": "0194e1dc0b4ac614fe58a519ae658685"
+  },
+  "/var/www/liberty-trading-new/fingpt-service/main.py": {
+    "mtime": 1778990918.5933058,
+    "hash": "3df4f962cb906323c8bdc51c5c14f4cc"
   },
   "/var/www/liberty-trading-new/contexts/LanguageContext.tsx": {
     "mtime": 1772459773.5993128,
@@ -246,6 +250,10 @@
   "/var/www/liberty-trading-new/lib/yahoo-financials.ts": {
     "mtime": 1778267971.4839203,
     "hash": "ee25f54b3cbad2fad7eef2b6a128c15b"
+  },
+  "/var/www/liberty-trading-new/lib/futures-specs.ts": {
+    "mtime": 1778850501.6253529,
+    "hash": "c9087c4fa8b4f4c8c4d6134a4a191563"
   },
   "/var/www/liberty-trading-new/lib/access.ts": {
     "mtime": 1773547340.7696517,
@@ -611,6 +619,18 @@
     "mtime": 1778567292.9552865,
     "hash": "7bc2e3492a6d56cf85c4d46daee35be1"
   },
+  "/var/www/liberty-trading-new/app/api/cron/futuros-sesgo/route.ts": {
+    "mtime": 1778850943.0066385,
+    "hash": "602a18b8cdb5407dc8e303268972a3e4"
+  },
+  "/var/www/liberty-trading-new/app/api/cron/futuros-open/route.ts": {
+    "mtime": 1778850887.7345638,
+    "hash": "0e7a033e41e0daa52b15a391f217cc12"
+  },
+  "/var/www/liberty-trading-new/app/api/cron/futuros-close/route.ts": {
+    "mtime": 1778850754.7748892,
+    "hash": "7b9fa0dba4b62170c56be2da9eec4cc5"
+  },
   "/var/www/liberty-trading-new/app/api/cron/bias-monitor/route.ts": {
     "mtime": 1778267971.2129247,
     "hash": "fa66891824893f0825e9c4eca1912a0c"
@@ -624,8 +644,8 @@
     "hash": "a67abac2cef71205bd5d26d9ec524f74"
   },
   "/var/www/liberty-trading-new/app/api/futures/analyze/route.ts": {
-    "mtime": 1778567292.9592865,
-    "hash": "5dc20d1ab2f6dd4d3af3d2c2c7c44a1b"
+    "mtime": 1778880617.9053197,
+    "hash": "b4e00b8dec28f890e1863f4caa707e2d"
   },
   "/var/www/liberty-trading-new/app/api/scan-today/route.ts": {
     "mtime": 1778267971.2379243,
@@ -648,8 +668,8 @@
     "hash": "76d0640905f45efe5b933d2839558b3a"
   },
   "/var/www/liberty-trading-new/app/api/daily-signals/results/route.ts": {
-    "mtime": 1778567292.9562864,
-    "hash": "ff0da4c63d9b16045541032875a90283"
+    "mtime": 1779141266.474533,
+    "hash": "e52750d9b798f3d1351ca7d582af300f"
   },
   "/var/www/liberty-trading-new/app/api/daily-signals/telegram/test/route.ts": {
     "mtime": 1778567292.9572864,
@@ -706,6 +726,10 @@
   "/var/www/liberty-trading-new/app/api/video-semana/[id]/route.ts": {
     "mtime": 1777700350.7878835,
     "hash": "01e8a325b4e73f29e6a4b457dfcda835"
+  },
+  "/var/www/liberty-trading-new/app/api/fingpt/route.ts": {
+    "mtime": 1778989310.1835248,
+    "hash": "f23961473b04486b55311c29e922f4cf"
   },
   "/var/www/liberty-trading-new/app/api/monitor/events/route.ts": {
     "mtime": 1773076161.5975282,
@@ -896,8 +920,8 @@
     "hash": "a26d855dd29bebb2c0ad9cbe169aaec0"
   },
   "/var/www/liberty-trading-new/app/dashboard/analisis/AnalisisClient.tsx": {
-    "mtime": 1778567292.974286,
-    "hash": "753b1a5dc505b04e10911cd95ceb00f8"
+    "mtime": 1778882217.815624,
+    "hash": "74fde658a3779699d54cced0cbde0ac7"
   },
   "/var/www/liberty-trading-new/app/dashboard/analisis/page.tsx": {
     "mtime": 1778267971.2539241,
@@ -916,8 +940,8 @@
     "hash": "cdf70bc5be41a981c6e8c043e214a5ab"
   },
   "/var/www/liberty-trading-new/app/dashboard/acciones/DailySignalsTab.tsx": {
-    "mtime": 1778567292.9642863,
-    "hash": "af7b7c99472c5f8f7978d23f3f84a7af"
+    "mtime": 1779141306.9868574,
+    "hash": "0be995096657aa06397ecfc01be001a0"
   },
   "/var/www/liberty-trading-new/app/dashboard/acciones/page.tsx": {
     "mtime": 1778567292.9652863,
@@ -988,12 +1012,12 @@
     "hash": "745321e0105a13a69e97d5c35300c49c"
   },
   "/var/www/liberty-trading-new/app/dashboard/agentes/AgenteSmallCap.tsx": {
-    "mtime": 1778567292.9682863,
-    "hash": "156e288f487df122f0906aeaf6ede5d9"
+    "mtime": 1779141259.4046512,
+    "hash": "bb55ef3b81c1931e8f0384ff9caf9500"
   },
   "/var/www/liberty-trading-new/app/dashboard/agentes/AgentePeter.tsx": {
-    "mtime": 1778567292.9682863,
-    "hash": "8478a4fd2e98154a94ea31f81af860e3"
+    "mtime": 1779141252.6407642,
+    "hash": "7c63bd30e380670a29683901d097f257"
   },
   "/var/www/liberty-trading-new/app/dashboard/agentes/page.tsx": {
     "mtime": 1778567292.9702861,
@@ -1047,6 +1071,14 @@
     "mtime": 1778267971.254924,
     "hash": "528fa2e4a39399e1d4ab39205a27782c"
   },
+  "/var/www/liberty-trading-new/app/dashboard/fingpt/FinGPTClient.tsx": {
+    "mtime": 1778989039.9839864,
+    "hash": "4ce727992f5deb4f861bfaf9b492acdb"
+  },
+  "/var/www/liberty-trading-new/app/dashboard/fingpt/page.tsx": {
+    "mtime": 1778988974.1650858,
+    "hash": "f91872085b42d74c643d9c39390f8150"
+  },
   "/var/www/liberty-trading-new/app/dashboard/oportunidades/page.tsx": {
     "mtime": 1777698868.601862,
     "hash": "45017c81238603a69eadf51f5eb2bb3d"
@@ -1064,8 +1096,8 @@
     "hash": "50d51e32ab85f59b6b7e782a8f67cd75"
   },
   "/var/www/liberty-trading-new/app/dashboard/futuros/FuturosSesgoTab.tsx": {
-    "mtime": 1778567292.978286,
-    "hash": "1e4d7137aa21485273f34a01e22f7ef1"
+    "mtime": 1778880750.498189,
+    "hash": "93c144b08360fac90ed4d8de7d88d3dc"
   },
   "/var/www/liberty-trading-new/app/dashboard/futuros/page.tsx": {
     "mtime": 1778725395.5272493,
@@ -1134,6 +1166,10 @@
   "/var/www/liberty-trading-new/CHANGELOG.md": {
     "mtime": 1777681301.643472,
     "hash": "5d749e9d52bd7bf29e0e9a40eed31338"
+  },
+  "/var/www/liberty-trading-new/fingpt-service/requirements.txt": {
+    "mtime": 1778990636.6119056,
+    "hash": "348bc8753d034f62adf19e47a52d88e6"
   },
   "/var/www/liberty-trading-new/liberty-brokers/README.md": {
     "mtime": 1778567292.9842858,
