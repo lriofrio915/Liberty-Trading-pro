@@ -212,6 +212,13 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
             const pRes = await fetch(`/api/daily-signals/tasks?task_id=${taskId}`, { signal })
             const pData = await pRes.json()
             if (pData.status === 'completed' || pData.status === 'failed') {
+              if (pData.status === 'failed') {
+                const errRaw = (pData.error as string | undefined) ?? ''
+                const isKeyLimit = /key limit|limit exceeded|quota|rate.?limit/i.test(errRaw)
+                throw new Error(isKeyLimit
+                  ? 'OpenRouter key agotado — recarga en openrouter.ai/settings'
+                  : `Análisis fallido: ${errRaw.slice(0, 80)}`)
+              }
               const rRes = await fetch('/api/daily-signals/results', { signal })
               const rData = await rRes.json()
               const list = Array.isArray(rData) ? rData

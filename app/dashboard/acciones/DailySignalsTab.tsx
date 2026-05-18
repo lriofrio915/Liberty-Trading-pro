@@ -31,6 +31,7 @@ type TaskStatus = {
   task_id: string
   status: 'pending' | 'processing' | 'completed' | 'failed'
   progress: number | null
+  error?: string
 }
 
 const LS_BOT_TOKEN = 'ds_telegram_bot_token'
@@ -274,6 +275,16 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
           const allDone = statuses.every(t => t.status === 'completed' || t.status === 'failed')
           if (allDone) {
             clearInterval(lookupPollRef.current!)
+            const allFailed = statuses.every(t => t.status === 'failed')
+            if (allFailed) {
+              const errRaw = statuses[0]?.error ?? ''
+              const isKeyLimit = /key limit|limit exceeded|quota|rate.?limit/i.test(errRaw)
+              setLookupError(isKeyLimit
+                ? 'OpenRouter key agotado — recarga en openrouter.ai/settings'
+                : `Análisis fallido: ${errRaw.slice(0, 80)}`)
+              setLookupAnalyzing(false)
+              return
+            }
             const list = await fetchResults()
             const found = list.find(s => (s.stock_code ?? s.symbol ?? '').toUpperCase() === sym)
             if (found) setLookupSignal(found)
@@ -354,7 +365,11 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
               setTaskProgress(null)
               const allFailed = results.every(t => t.status === 'failed')
               if (allFailed) {
-                setRunError('Todos los análisis fallaron. Revisa los logs del servidor.')
+                const errRaw = results[0]?.error ?? ''
+                const isKeyLimit = /key limit|limit exceeded|quota|rate.?limit/i.test(errRaw)
+                setRunError(isKeyLimit
+                  ? 'OpenRouter key agotado — recarga en openrouter.ai/settings'
+                  : `Análisis fallido: ${errRaw.slice(0, 120) || 'Revisa los logs del servidor.'}`)
               } else {
                 const list = await fetchResults()
                 if (list.length === 0) {

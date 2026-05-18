@@ -12,7 +12,7 @@ export async function GET() {
 
   try {
     // GET /api/v1/history — returns paginated history records
-    const data = await dailySignalsJSON('/api/v1/history?page=1&page_size=20', {}, 10_000)
+    const data = await dailySignalsJSON('/api/v1/history?page=1&page_size=100', {}, 10_000)
     return NextResponse.json(data ?? [])
   } catch (err) {
     if (err instanceof DailySignalsError) {
