@@ -575,7 +575,8 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
                           borderLeft: `3px solid ${rec.sesgo === 'COMPRA' ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}`,
                         }}>
                         <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
-                          {new Date(rec.createdAt).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', timeZone: 'America/Guayaquil' })}
+                          <div>{new Date(rec.openEntryAt ?? rec.createdAt).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'America/New_York' })}</div>
+                          <div className="text-[8px]" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>9:30am ET</div>
                         </td>
                         <td className="px-3 py-2 font-bold whitespace-nowrap" style={{ color: 'var(--gold)' }}>{rec.simbolo}</td>
                         <td className="px-3 py-2 whitespace-nowrap">
