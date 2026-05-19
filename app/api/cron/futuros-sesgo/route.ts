@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { fetchYahoo, runAgent, repairJSON, PRICE_LOOKUP } from '@/lib/analisis-engine'
 import { computeFuturesLevels, FUTURES_SPECS } from '@/lib/futures-specs'
 import { prisma } from '@/lib/prisma'
+import { notifyFuturosSesgo } from '@/lib/notify-nexus'
 
 export const runtime = 'nodejs'
 export const maxDuration = 90
@@ -71,6 +72,7 @@ VIX COMPRA = miedo (>25), VENTA = complacencia (<13).`
     )
 
     if (toSave.length === 0) {
+      void notifyFuturosSesgo(data.activos ?? [], 0)
       return NextResponse.json({ saved: 0, activos: data.activos, message: 'No hay señales direccionales hoy' })
     }
 
@@ -118,6 +120,8 @@ VIX COMPRA = miedo (>25), VENTA = complacencia (<13).`
       })
       created.push(signal.id)
     }
+
+    void notifyFuturosSesgo(data.activos ?? [], created.length)
 
     return NextResponse.json({
       saved: created.length,

@@ -75,6 +75,7 @@ const eventLabels: Record<string, string> = {
   new_lead: '💬 Nuevo lead de WhatsApp',
   lead_cta: '🎯 Lead listo para cierre',
   lead_vendido: '✅ Lead convertido — ¡venta!',
+  futuros_sesgo: '📊 Sesgo Futuros 9:15am ET',
 }
 
 function formatEmailBody(event: string, data: Record<string, unknown>): string {
@@ -193,4 +194,46 @@ export function notifyLeadVendido(data: {
   phone: string
 }) {
   return notifyNexus('lead_vendido', data)
+}
+
+// ── Futuros sesgo ─────────────────────────────────────────────────────────────
+
+interface ActivoSesgo {
+  simbolo: string
+  nombre: string
+  precio: number
+  cambio24h: number
+  sesgo: string
+  confianza: number
+  razon: string
+  riesgo: string
+}
+
+export function notifyFuturosSesgo(activos: ActivoSesgo[], saved: number) {
+  const fecha = new Date().toLocaleDateString('es-EC', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    timeZone: 'America/New_York',
+  })
+
+  const sesgoBadge = (s: string) => s === 'COMPRA' ? '✅' : s === 'VENTA' ? '🔴' : '⚪'
+
+  const lineas = activos.map(a => {
+    if (a.simbolo === 'VIX') {
+      const dir = a.cambio24h >= 0 ? '+' : ''
+      return `📈 VIX: $${a.precio.toFixed(2)} (${dir}${a.cambio24h.toFixed(2)}%)`
+    }
+    return `${sesgoBadge(a.sesgo)} ${a.simbolo}: ${a.sesgo} (${a.confianza}%) — ${a.razon}`
+  })
+
+  const resumen = [
+    `📊 *Sesgo Futuros 9:15am ET — ${fecha}*`,
+    '',
+    ...lineas,
+    '',
+    saved > 0
+      ? `Señales guardadas: ${saved}. Entrada se confirma a las 9:30am ET.`
+      : 'Sin señales direccionales hoy.',
+  ].join('\n')
+
+  return notifyNexus('futuros_sesgo', { resumen, saved })
 }
