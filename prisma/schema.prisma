@@ -515,6 +515,10 @@ model CfdSignal {
   closedAt      DateTime?
   closedPrice   Float?
 
+  // 9:30am entry confirmation (set by futuros-open cron only)
+  openEntry     Boolean   @default(false)
+  openEntryAt   DateTime?
+
   @@index([createdAt])
   @@index([simbolo, createdAt])
   @@index([resultado])

@@ -13,7 +13,9 @@ export async function GET(req: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const sector = new URL(req.url).searchParams.get('sector') ?? null
+  const url = new URL(req.url)
+  const sector = url.searchParams.get('sector') ?? null
+  const openEntryOnly = url.searchParams.get('openEntry') === 'true'
   const isAdmin = session.user.email === ADMIN_EMAIL
 
   const signals = await prisma.cfdSignal.findMany({
@@ -22,6 +24,7 @@ export async function GET(req: NextRequest) {
     where: {
       ...(isAdmin ? {} : { active: true }),
       ...(sector ? { sector } : {}),
+      ...(openEntryOnly ? { openEntry: true } : {}),
     },
   })
 

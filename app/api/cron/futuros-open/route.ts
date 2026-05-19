@@ -120,6 +120,8 @@ export async function POST(req: NextRequest) {
           precioEntrada: entryPrice,
           stopLoss:      levels.stopLoss,
           takeProfit:    levels.takeProfit,
+          openEntry:     true,
+          openEntryAt:   new Date(),
         },
       })
       updated.push(sig.id)

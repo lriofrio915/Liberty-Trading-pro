@@ -46,6 +46,8 @@ interface TrackRec {
   pnlUsd: number | null
   closedPrice: number | null
   createdAt: string
+  openEntry: boolean
+  openEntryAt: string | null
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -121,7 +123,7 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
 
   const loadTrackRecs = useCallback(async () => {
     try {
-      const res = await fetch('/api/cfds/signals?sector=Futuros')
+      const res = await fetch('/api/cfds/signals?sector=Futuros&openEntry=true')
       if (res.ok) {
         const data = await res.json()
         setTrackRecs(Array.isArray(data) ? data : data.recommendations ?? [])
@@ -532,7 +534,7 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-3">
-            <p className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>TRACK RECORD — FUTUROS INTRADÍA</p>
+            <p className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>TRACK RECORD — FUTUROS INTRADÍA (entrada 9:30am ET)</p>
             {trackRecs.length > 0 && (
               <div className="flex gap-3 text-[9px] font-mono">
                 <span style={{ color: 'var(--text-muted)' }}>{trackRecs.length} ops</span>
