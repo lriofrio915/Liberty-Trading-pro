@@ -3,6 +3,7 @@
  *
  * Primary channel: OpenClaw Gateway webhook → nexus_claw → WhatsApp
  * Fallback channel: Resend email → Luis's inbox
+ * Direct channel:  Evolution API sendWA (used when gateway not configured)
  *
  * Configuration (env vars):
  *   OPENCLAW_GATEWAY_URL   — OpenClaw Gateway URL (e.g. https://nexus.tailnet.ts.net)
@@ -11,6 +12,8 @@
  *   LUIS_EMAIL             — Luis's email for fallback notifications
  *   ADMIN_EMAIL            — Used as fallback if LUIS_EMAIL not set
  */
+
+import { sendWA } from './sendWA'
 
 const GATEWAY_URL = process.env.OPENCLAW_GATEWAY_URL || ''
 const GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || ''
@@ -234,6 +237,10 @@ export function notifyFuturosSesgo(activos: ActivoSesgo[], saved: number) {
       ? `Señales guardadas: ${saved}. Entrada se confirma a las 9:30am ET.`
       : 'Sin señales direccionales hoy.',
   ].join('\n')
+
+  // Canal directo via Evolution API (funciona sin OPENCLAW_GATEWAY_URL)
+  const luisPhone = process.env.LUIS_PHONE
+  if (luisPhone) void sendWA(luisPhone, resumen)
 
   return notifyNexus('futuros_sesgo', { resumen, saved })
 }
