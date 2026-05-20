@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Image from 'next/image'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -411,11 +411,21 @@ function PostCard({
         {post.contenido}
       </p>
 
-      {/* Image */}
+      {/* Media */}
       {post.imageUrl && (
-        <div className="mb-3 rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
-          <Image src={post.imageUrl} alt="post" width={800} height={384} className="w-full object-cover max-h-96" unoptimized />
-        </div>
+        post.imageUrl.includes('/raw/') || post.imageUrl.toLowerCase().endsWith('.pdf')
+          ? (
+            <a href={post.imageUrl} target="_blank" rel="noopener noreferrer"
+              className="mb-3 flex items-center gap-2 px-4 py-3 rounded-lg text-sm"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#C9A84C' }}>
+              📄 Ver documento adjunto
+            </a>
+          )
+          : (
+            <div className="mb-3 rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+              <Image src={post.imageUrl} alt="post" width={800} height={384} className="w-full object-cover max-h-96" unoptimized />
+            </div>
+          )
       )}
 
       {/* Actions */}
@@ -498,9 +508,41 @@ function NewPostForm({
 }) {
   const [tipo, setTipo] = useState('OPERATIVA')
   const [contenido, setContenido] = useState('')
-  const [imageUrl, setImageUrl] = useState('')
+  const [mediaUrl, setMediaUrl] = useState('')
+  const [mediaType, setMediaType] = useState<'image' | 'pdf' | null>(null)
+  const [mediaFile, setMediaFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [dragging, setDragging] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  async function handleFile(file: File) {
+    const isPdf = file.type === 'application/pdf'
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf']
+    if (!allowed.includes(file.type)) { setError('Tipo de archivo no permitido. Usa imágenes o PDF.'); return }
+    setUploading(true)
+    setError('')
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await fetch(isPdf ? '/api/upload/document' : '/api/upload', { method: 'POST', body: fd })
+    const data = await res.json()
+    if (data.url) {
+      setMediaUrl(data.url)
+      setMediaType(isPdf ? 'pdf' : 'image')
+      setMediaFile(file)
+    } else {
+      setError(data.error ?? 'Error al subir archivo')
+    }
+    setUploading(false)
+  }
+
+  function clearMedia() {
+    setMediaUrl('')
+    setMediaType(null)
+    setMediaFile(null)
+    if (fileRef.current) fileRef.current.value = ''
+  }
 
   async function submit() {
     if (!contenido.trim()) { setError('Escribe algo antes de publicar.'); return }
@@ -509,7 +551,7 @@ function NewPostForm({
     const res = await fetch('/api/comunidad', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipo, contenido, imageUrl: imageUrl.trim() || undefined }),
+      body: JSON.stringify({ tipo, contenido, imageUrl: mediaUrl || undefined }),
     })
     const json = await res.json()
     if (json.post) {
@@ -575,25 +617,62 @@ function NewPostForm({
           />
         </div>
 
-        {/* Image URL (optional) */}
+        {/* Media upload (optional) */}
         <div className="px-5 pb-3">
           <input
-            value={imageUrl}
-            onChange={e => setImageUrl(e.target.value)}
-            placeholder="URL de imagen / screenshot (opcional)"
-            className="w-full bg-transparent rounded-lg px-3 py-2 text-xs text-white border outline-none focus:border-[#C9A84C]"
-            style={{ borderColor: 'rgba(255,255,255,0.08)', color: '#888' }}
+            ref={fileRef}
+            type="file"
+            className="hidden"
+            accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
           />
+          {!mediaUrl && !uploading && (
+            <div
+              onClick={() => fileRef.current?.click()}
+              onDragOver={e => { e.preventDefault(); setDragging(true) }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files?.[0]; if (f) handleFile(f) }}
+              className="flex flex-col items-center justify-center gap-1.5 rounded-lg py-4 cursor-pointer transition-colors"
+              style={{
+                border: `1.5px dashed ${dragging ? '#C9A84C' : 'rgba(255,255,255,0.12)'}`,
+                background: dragging ? 'rgba(201,168,76,0.04)' : 'transparent',
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="1.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              <span className="text-xs" style={{ color: '#555' }}>Arrastra o haz clic para adjuntar foto o PDF <span style={{ color: '#333' }}>(opcional)</span></span>
+            </div>
+          )}
+          {uploading && (
+            <div className="flex items-center gap-2 py-3 px-2">
+              <div className="w-4 h-4 border-2 border-[#C9A84C] border-t-transparent rounded-full animate-spin" />
+              <span className="text-xs" style={{ color: '#555' }}>Subiendo...</span>
+            </div>
+          )}
+          {mediaUrl && mediaType === 'image' && (
+            <div className="relative rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={mediaUrl} alt="preview" className="w-full object-cover max-h-48" />
+              <button onClick={clearMedia} className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors" style={{ background: 'rgba(0,0,0,0.7)', color: '#fff' }}>✕</button>
+            </div>
+          )}
+          {mediaUrl && mediaType === 'pdf' && (
+            <div className="flex items-center justify-between px-3 py-2.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-base">📄</span>
+                <span className="text-xs truncate max-w-[240px]" style={{ color: '#aaa' }}>{mediaFile?.name ?? 'documento.pdf'}</span>
+              </div>
+              <button onClick={clearMedia} className="text-xs ml-2" style={{ color: '#555' }}>✕</button>
+            </div>
+          )}
         </div>
 
         {error && <p className="px-5 pb-2 text-xs text-red-400">{error}</p>}
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-4 border-t"
+        <div className="flex items-center justify-end px-5 py-4 border-t"
           style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
-          <span className="text-xs" style={{ color: '#444' }}>
-            Solo contenido relacionado con la operativa en NQ
-          </span>
           <button
             onClick={submit}
             disabled={saving || !contenido.trim()}
