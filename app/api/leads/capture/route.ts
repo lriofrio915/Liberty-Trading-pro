@@ -13,7 +13,6 @@ const N8N_WEBHOOK_LANDING = process.env.N8N_WEBHOOK_LANDING || ''
 
 const LINKS = {
   MENSUAL: process.env.HOTMART_LINK_MENSUAL || 'https://pay.hotmart.com/R104900326X?checkoutMode=2',
-  ANUAL:   process.env.HOTMART_LINK_ANUAL   || 'https://pay.hotmart.com/L104900408S?checkoutMode=2',
 }
 
 function cleanPhone(phone: string): string {
@@ -30,8 +29,8 @@ async function sendWA(phone: string, text: string) {
 }
 
 async function sendConfirmationEmail(name: string, email: string, plan: string) {
-  const planLabel = plan === 'ANUAL' ? 'Plan Pro Anual ($649/año)' : 'Plan Pro Mensual ($79/mes)'
-  const planLink  = plan === 'ANUAL' ? LINKS.ANUAL : LINKS.MENSUAL
+  const planLabel = 'Plan Pro Mensual ($29/mes)'
+  const planLink  = LINKS.MENSUAL
 
   await resend.emails.send({
     from: 'Liberty Trading Pro <noreply@libertytrading.pro>',
@@ -72,7 +71,7 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
             ${planLabel}
           </div>
           <div style="font-size:12px;color:#8a8480;margin-top:4px;">
-            ${plan === 'ANUAL' ? 'Pago único · Ahorras $299 vs mensual · ~$54/mes' : 'Sin permanencia · Cancela cuando quieras'}
+            Sin permanencia · Cancela cuando quieras
           </div>
         </div>
 
@@ -84,7 +83,7 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
           <a href="${planLink}"
             style="display:inline-block;background:#C9A84C;color:#000;font-weight:700;font-size:14px;
                    padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;">
-            Unirme al ${plan === 'ANUAL' ? 'Plan Pro Anual' : 'Plan Pro Mensual'} →
+            Unirme al Plan Pro Mensual →
           </a>
         </div>
 
@@ -132,8 +131,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Teléfono inválido' }, { status: 400 })
     }
 
-    const planNorm: 'MENSUAL' | 'ANUAL' = plan === 'ANUAL' ? 'ANUAL' : 'MENSUAL'
-    const planLabel = planNorm === 'ANUAL' ? 'Plan Pro Anual ($649/año)' : 'Plan Pro Mensual ($79/mes)'
+    const planNorm: 'MENSUAL' = 'MENSUAL'
+    const planLabel = 'Plan Pro Mensual ($29/mes)'
 
     const existing = await (prisma as any).whatsappLead.findUnique({
       where: { phone: cleanedPhone },
@@ -165,9 +164,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Construir mensajes
-    const planCtx = planNorm === 'ANUAL'
-      ? 'Vi que te interesa el Plan Pro Anual — la mejor opción si ya decidiste que el trading es tu camino. '
-      : 'Vi que te interesa el Plan Pro Mensual — perfecto para empezar sin compromisos. '
+    const planCtx = 'Vi que te interesa el Plan Pro Mensual — perfecto para empezar sin compromisos. '
 
     const mensajeLead =
       `¡Hola ${name.trim()}! 👋 Soy Vinces, el asistente del Club Liberty Trading.\n\n` +

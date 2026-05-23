@@ -79,7 +79,6 @@ function saveSession(key: string | null, session: LandingSession) {
 }
 
 const HOTMART_MENSUAL = 'https://pay.hotmart.com/R104900326X?checkoutMode=2'
-const HOTMART_ANUAL   = 'https://pay.hotmart.com/L104900408S?checkoutMode=2'
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -218,7 +217,7 @@ export default function VincesWidget({ mode = 'dashboard' }: Props) {
     if (sess.captured && msgs.length > 0) {
       const last = msgs[msgs.length - 1]
       if (last.role === 'assistant' && !last.links) {
-        msgs[msgs.length - 1] = { ...last, links: { mensual: HOTMART_MENSUAL, anual: HOTMART_ANUAL } }
+        msgs[msgs.length - 1] = { ...last, links: { mensual: HOTMART_MENSUAL } }
       }
     }
 
@@ -401,22 +400,14 @@ export default function VincesWidget({ mode = 'dashboard' }: Props) {
                 </div>
 
                 {msg.links && (
-                  <div className="mt-2 max-w-[85%] w-full space-y-2">
+                  <div className="mt-2 max-w-[85%] w-full">
                     <a
                       href={msg.links.mensual}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block text-center text-xs font-bold py-2.5 px-4 rounded-xl border border-[var(--gold-dark)] text-[var(--gold)] hover:bg-[rgba(201,168,76,0.1)] transition-colors"
-                    >
-                      Plan Mensual — $79/mes →
-                    </a>
-                    <a
-                      href={msg.links.anual}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="block text-center text-xs font-bold py-2.5 px-4 rounded-xl btn-gold"
                     >
-                      Plan Anual — $649/año · Mejor valor →
+                      Plan Pro Mensual — $29/mes →
                     </a>
                   </div>
                 )}

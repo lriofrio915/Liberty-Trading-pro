@@ -7,47 +7,38 @@ export default function Pricing() {
 
         {/* Header */}
         <div className="mb-14 text-center">
-          <div className="label-mono mb-3">Plan Pro · Liberty Trading</div>
+          <div className="label-mono mb-3">Planes · Liberty Trading Pro</div>
           <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)]">
-            Una suscripción,<br />
-            <span className="gradient-gold">acceso a todo</span>
+            Empieza gratis,<br />
+            <span className="gradient-gold">sube cuando estés listo</span>
           </h2>
           <p className="text-[var(--text-secondary)] mt-4 max-w-xl mx-auto">
-            Aprende trading de cero a profesional con Luis Riofrio. Paga mientras quieras pertenecer —
-            sin compromisos, sin contratos largos.
+            Dos planes simples. Sin contratos, sin sorpresas.
+            El plan PRO desbloquea todo — cancela cuando quieras.
           </p>
         </div>
 
         {/* ── PLANES ───────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 max-w-3xl mx-auto">
 
-          {/* Plan Mensual */}
+          {/* Plan FREE */}
           <div className="card-panel relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none opacity-5"
-              style={{ background: 'radial-gradient(circle, var(--gold) 0%, transparent 70%)' }} />
-
-            <div className="label-mono mb-2">Mensual · Cancela cuando quieras</div>
-            <h3 className="headline text-3xl text-[var(--text-primary)] mb-1">Pro Mensual</h3>
+            <div className="label-mono mb-2">Gratis · Siempre</div>
+            <h3 className="headline text-3xl text-[var(--text-primary)] mb-1">Plan Free</h3>
             <p className="text-xs text-[var(--text-secondary)] mb-5 leading-relaxed">
-              Ideal si quieres probar el trading sin comprometer demasiado. Con un solo mes ya sabrás si esto es para ti.
+              Crea tu perfil, compite en el Championship y explora la plataforma sin pagar nada.
             </p>
 
             <div className="flex items-baseline gap-1 mb-6">
-              <span className="text-5xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>$79</span>
-              <span className="label-mono text-sm">/mes</span>
+              <span className="text-5xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>$0</span>
+              <span className="label-mono text-sm">/siempre</span>
             </div>
 
             <ul className="space-y-2 mb-8">
               {[
-                { icon: '🎓', text: 'Mentoría Integral de Mercados Financieros (desde cero)' },
-                { icon: '📈', text: 'Especialización en Day Trading — Futuros NQ/MNQ Nasdaq' },
-                { icon: '🤝', text: 'Mentorías 1:1 personalizadas con Luis cada mes' },
-                { icon: '🤖', text: 'Vinces IA — coaching diario personalizado con IA' },
-                { icon: '💡', text: 'Reportes de oportunidades en acciones y ETFs' },
-                { icon: '🌐', text: 'Monitor Mundial — geopolítica y macro en tiempo real' },
-                { icon: '📊', text: 'Track record verificable — operaciones reales de Luis' },
-                { icon: '📄', text: 'Reportes de rendimiento semanales y mensuales' },
-                { icon: '👥', text: 'Comunidad privada activa' },
+                { icon: '👤', text: 'Perfil del trader — configura tu cuenta' },
+                { icon: '🏆', text: 'Championship — torneo de trading entre usuarios' },
+                { icon: '🔍', text: 'Vista del catálogo de planes y herramientas' },
               ].map((f) => (
                 <li key={f.text} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
                   <span className="flex-shrink-0 mt-0.5">{f.icon}</span>
@@ -56,52 +47,46 @@ export default function Pricing() {
               ))}
             </ul>
 
-            <a
-              href="https://pay.hotmart.com/R104900326X?checkoutMode=2"
-              onClick={() => false}
-              className="hotmart-fb hotmart__button-checkout btn-outline text-sm py-3.5 px-6 rounded-lg w-full text-center block">
-              Unirme al Plan Pro Mensual →
+            <a href="/login"
+              className="btn-outline text-sm py-3.5 px-6 rounded-lg w-full text-center block">
+              Crear cuenta gratis →
             </a>
-            <p className="text-center label-mono text-[10px] mt-3">Sin permanencia · Cancela cuando quieras</p>
+            <p className="text-center label-mono text-[10px] mt-3">Sin tarjeta · Sin compromiso</p>
           </div>
 
-          {/* Plan Anual DESTACADO */}
+          {/* Plan PRO DESTACADO */}
           <div className="relative rounded-2xl overflow-hidden border border-[var(--gold)] glow-gold-sm"
             style={{ background: 'rgba(201,168,76,0.04)' }}>
             <div className="p-7">
               <div className="flex items-center justify-between mb-2">
-                <div className="label-mono text-[var(--gold)]">Anual · Pago único al año</div>
-                <span className="btn-gold text-[10px] py-1 px-3 rounded-full tracking-widest flex-shrink-0 ml-2">MEJOR VALOR</span>
+                <div className="label-mono text-[var(--gold)]">Mensual · Cancela cuando quieras</div>
+                <span className="btn-gold text-[10px] py-1 px-3 rounded-full tracking-widest flex-shrink-0 ml-2">TODO INCLUIDO</span>
               </div>
-              <h3 className="headline text-3xl text-[var(--text-primary)] mb-1">Pro Anual</h3>
+              <h3 className="headline text-3xl text-[var(--text-primary)] mb-1">Plan Pro</h3>
               <p className="text-xs text-[var(--text-secondary)] mb-5 leading-relaxed">
-                Para quien ya decidió que el trading es su camino. Paga una vez al año —
-                te ahorras $299 vs el plan mensual.
+                Acceso completo a todas las herramientas, formación, señales y comunidad.
+                Sin contratos — paga mientras perteneces.
               </p>
 
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-5xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>$649</span>
-                <span className="label-mono text-sm">/año</span>
-              </div>
-              <div className="flex items-center gap-2 mb-6">
-                <span className="text-[var(--text-muted)] text-sm line-through">$948</span>
-                <span className="text-[10px] font-mono text-green-400 border border-green-800 rounded-full px-2 py-0.5">
-                  Ahorras $299
-                </span>
-                <span className="label-mono text-[10px]">≈ $54/mes</span>
+              <div className="flex items-baseline gap-1 mb-6">
+                <span className="text-5xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>$29</span>
+                <span className="label-mono text-sm">/mes</span>
               </div>
 
               <ul className="space-y-2 mb-8">
                 {[
-                  { icon: '🎓', text: 'Mentoría Integral de Mercados Financieros (desde cero)' },
-                  { icon: '📈', text: 'Especialización en Day Trading — Futuros NQ/MNQ Nasdaq' },
+                  { icon: '🎓', text: 'Academia completa — 17+ lecciones desde cero' },
+                  { icon: '📈', text: 'Day Trading NQ/MNQ — señales y sesgo intradía' },
                   { icon: '🤝', text: 'Mentorías 1:1 personalizadas con Luis cada mes' },
-                  { icon: '🤖', text: 'Vinces IA — coaching diario personalizado con IA' },
-                  { icon: '💡', text: 'Reportes de oportunidades en acciones y ETFs' },
+                  { icon: '🤖', text: 'Vinces IA — coaching diario personalizado 24/7' },
+                  { icon: '💡', text: 'Oportunidades en acciones, ETFs y opciones' },
                   { icon: '🌐', text: 'Monitor Mundial — geopolítica y macro en tiempo real' },
                   { icon: '📊', text: 'Track record verificable — operaciones reales de Luis' },
                   { icon: '📄', text: 'Reportes de rendimiento semanales y mensuales' },
-                  { icon: '👥', text: 'Comunidad privada activa' },
+                  { icon: '👥', text: 'Comunidad privada activa de traders' },
+                  { icon: '🎬', text: 'Video de la semana — entradas en vivo' },
+                  { icon: '🤖', text: 'Agentes IA (Peter Lynch y más)' },
+                  { icon: '🏦', text: 'Brokers integrados — MT5 + IBKR' },
                 ].map((f) => (
                   <li key={f.text} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
                     <span className="flex-shrink-0 mt-0.5">{f.icon}</span>
@@ -111,12 +96,12 @@ export default function Pricing() {
               </ul>
 
               <a
-                href="https://pay.hotmart.com/L104900408S?checkoutMode=2"
+                href="https://pay.hotmart.com/R104900326X?checkoutMode=2"
                 onClick={() => false}
                 className="hotmart-fb hotmart__button-checkout btn-gold text-sm py-3.5 px-6 rounded-lg w-full text-center block">
-                Unirme al Plan Pro Anual →
+                Activar Plan Pro — $29/mes →
               </a>
-              <p className="text-center label-mono text-[10px] mt-3">Pago único por 12 meses completos</p>
+              <p className="text-center label-mono text-[10px] mt-3">Sin permanencia · Cancela cuando quieras</p>
             </div>
           </div>
 
@@ -127,11 +112,11 @@ export default function Pricing() {
           {[
             {
               q: '¿Y si no me gusta?',
-              a: 'Con un mes ($79) ya tienes suficiente para saber si el trading es para ti. Nada que perder vs un curso de $1,000+ sin garantía.',
+              a: 'Con $29 ya tienes acceso completo durante un mes. Cancelas cuando quieras desde tu cuenta de Hotmart — sin penalizaciones.',
             },
             {
               q: '¿Sirve si soy completamente nuevo?',
-              a: 'Sí, la formación empieza desde cero. La Mentoría Integral te lleva desde abrir tu primera cuenta hasta entender el mercado.',
+              a: 'Sí, la formación empieza desde cero. La Academia te lleva desde abrir tu primera cuenta hasta entender el mercado y operar con disciplina.',
             },
             {
               q: '¿Y si ya sé trading?',

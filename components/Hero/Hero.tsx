@@ -109,9 +109,9 @@ export default function Hero() {
 
               {/* Price teaser */}
               <div className="flex items-baseline gap-2 mb-8">
-                <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>$79</span>
+                <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>$29</span>
                 <span className="label-mono">/mes</span>
-                <span className="text-[var(--text-muted)] text-sm ml-1">· o $649/año y ahorra $300</span>
+                <span className="text-[var(--text-muted)] text-sm ml-1">· cancela cuando quieras</span>
               </div>
 
               {/* CTAs */}

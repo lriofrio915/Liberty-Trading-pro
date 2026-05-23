@@ -7,16 +7,12 @@ import Link from 'next/link'
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-const HOTMART = {
-  MENSUAL: process.env.NEXT_PUBLIC_HOTMART_LINK_MENSUAL || '',
-  ANUAL:   process.env.NEXT_PUBLIC_HOTMART_LINK_ANUAL   || '',
-}
+const HOTMART_MENSUAL = process.env.NEXT_PUBLIC_HOTMART_LINK_MENSUAL || ''
 const VINCES_WA = process.env.NEXT_PUBLIC_VINCES_WA || ''
 const TRACK_RECORD_URL = '/track-record/luis-riofrio'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Plan = 'MENSUAL' | 'ANUAL'
 type FormState = 'idle' | 'loading' | 'success' | 'error'
 
 interface TrackRecord {
@@ -50,7 +46,7 @@ const FAQS = [
   },
   {
     q: '¿Puedo cancelar cuando quiera?',
-    a: 'Con el plan mensual sí, cancelas en cualquier momento sin penalidades. El plan anual te da 2 meses gratis a cambio del compromiso.',
+    a: 'Sí, cancelas en cualquier momento sin penalidades desde tu cuenta de Hotmart.',
   },
   {
     q: '¿Cuándo tengo acceso?',
@@ -116,7 +112,6 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 export default function UnirsePage() {
   const [stats, setStats] = useState<TrackRecord | null>(null)
-  const [plan, setPlan] = useState<Plan>('ANUAL')
   const [nombre, setNombre] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -180,7 +175,7 @@ export default function UnirsePage() {
           name: nombre.trim(),
           phone: digits,
           email: email.trim(),
-          plan,
+          plan: 'MENSUAL',
           source: 'landing',
         }),
       })
@@ -241,10 +236,10 @@ export default function UnirsePage() {
           </div>
 
           <div className="space-y-3">
-            <a href={plan === 'ANUAL' ? HOTMART.ANUAL : HOTMART.MENSUAL}
+            <a href={HOTMART_MENSUAL}
               className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-80"
               style={{ background: '#C9A84C', color: '#080808' }}>
-              Ir directo al pago · {plan === 'ANUAL' ? '$649/año' : '$79/mes'} →
+              Ir directo al pago · $29/mes →
             </a>
             {VINCES_WA && (
               <a href={VINCES_WA} target="_blank" rel="noopener noreferrer"
@@ -344,46 +339,20 @@ export default function UnirsePage() {
           {/* LEFT — Features + FAQ (on mobile: after form) */}
           <div className="lg:col-span-3 order-2 lg:order-1">
 
-            {/* Plan selector */}
+            {/* Plan info */}
             <div className="mb-8">
-              <p className="text-[10px] font-mono tracking-widest uppercase mb-4" style={{ color: '#555' }}>
-                Elige tu plan
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                {/* Mensual */}
-                <button type="button" onClick={() => setPlan('MENSUAL')}
-                  className="relative rounded-2xl border p-5 text-left transition-all"
-                  style={{
-                    borderColor: plan === 'MENSUAL' ? '#C9A84C' : 'rgba(255,255,255,0.08)',
-                    background: plan === 'MENSUAL' ? 'rgba(201,168,76,0.07)' : 'rgba(255,255,255,0.02)',
-                  }}>
-                  <div className="text-[10px] font-mono uppercase tracking-widest mb-2" style={{ color: '#555' }}>Mensual</div>
-                  <div className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Georgia, serif' }}>$79</div>
-                  <div className="text-[11px]" style={{ color: '#666' }}>/ mes · cancela cuando quieras</div>
-                </button>
-
-                {/* Anual — recommended */}
-                <button type="button" onClick={() => setPlan('ANUAL')}
-                  className="relative rounded-2xl border p-5 text-left transition-all"
-                  style={{
-                    borderColor: plan === 'ANUAL' ? '#C9A84C' : 'rgba(201,168,76,0.2)',
-                    background: plan === 'ANUAL' ? 'rgba(201,168,76,0.09)' : 'rgba(201,168,76,0.03)',
-                  }}>
-                  <div className="absolute top-3 right-3 text-[9px] font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: '#C9A84C', color: '#080808' }}>
-                    AHORRA 32%
-                  </div>
-                  <div className="text-[10px] font-mono uppercase tracking-widest mb-2" style={{ color: '#C9A84C' }}>Anual</div>
-                  <div className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Georgia, serif' }}>$649</div>
-                  <div className="text-[11px]" style={{ color: '#888' }}>/ año · ~$54/mes · 2 meses gratis</div>
-                </button>
+              <div className="rounded-2xl border p-5"
+                style={{ borderColor: 'rgba(201,168,76,0.3)', background: 'rgba(201,168,76,0.06)' }}>
+                <div className="text-[10px] font-mono uppercase tracking-widest mb-2" style={{ color: '#C9A84C' }}>Plan Pro Mensual</div>
+                <div className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Georgia, serif' }}>$29</div>
+                <div className="text-[11px]" style={{ color: '#888' }}>/ mes · sin permanencia · cancela cuando quieras</div>
               </div>
             </div>
 
             {/* Features */}
             <div className="mb-8">
               <p className="text-[10px] font-mono tracking-widest uppercase mb-4" style={{ color: '#555' }}>
-                Todo incluido en ambos planes
+                Todo incluido en el Plan Pro
               </p>
               <div className="space-y-2.5">
                 {FEATURES.map(f => (
@@ -431,7 +400,7 @@ export default function UnirsePage() {
               {/* Card header */}
               <div className="px-6 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
                 <div className="text-[10px] font-mono tracking-widest uppercase mb-1" style={{ color: '#C9A84C' }}>
-                  {plan === 'ANUAL' ? 'Plan Pro Anual · $649/año' : 'Plan Pro Mensual · $79/mes'}
+                  Plan Pro Mensual · $29/mes
                 </div>
                 <h2 className="text-xl font-black text-white" style={{ fontFamily: 'Georgia, serif' }}>
                   Reserva tu lugar
@@ -515,26 +484,6 @@ export default function UnirsePage() {
                   />
                 </div>
 
-                {/* Plan toggle in form */}
-                <div>
-                  <label className="text-[10px] font-mono uppercase tracking-widest block mb-2" style={{ color: '#555' }}>
-                    Plan de interés
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(['MENSUAL', 'ANUAL'] as Plan[]).map(p => (
-                      <button key={p} type="button" onClick={() => setPlan(p)}
-                        className="py-2.5 rounded-xl text-xs font-mono font-bold transition-all"
-                        style={{
-                          background: plan === p ? '#C9A84C' : 'rgba(255,255,255,0.04)',
-                          color: plan === p ? '#080808' : '#666',
-                          border: `1px solid ${plan === p ? '#C9A84C' : 'rgba(255,255,255,0.08)'}`,
-                        }}>
-                        {p === 'MENSUAL' ? '$79/mes' : '$649/año ⭐'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 {errorMsg && (
                   <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
                     {errorMsg}
@@ -557,7 +506,7 @@ export default function UnirsePage() {
                       Enviando...
                     </span>
                   ) : (
-                    `Quiero unirme — ${plan === 'ANUAL' ? '$649/año' : '$79/mes'} →`
+                    `Quiero unirme — $29/mes →`
                   )}
                 </button>
 

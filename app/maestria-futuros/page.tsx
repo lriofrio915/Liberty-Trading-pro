@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Navbar from '@/components/Navbar/Navbar'
 import Footer from '@/components/Footer/Footer'
 import LeadCaptureForm from '@/components/LeadCaptureForm/LeadCaptureForm'
@@ -5,7 +6,19 @@ import PersonalContactForm from '@/components/PersonalContactForm/PersonalContac
 import VincesWidget from '@/components/VincesWidget/VincesWidget'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
-const HOTMART_ANUAL = process.env.HOTMART_LINK_ANUAL || ''
+export const metadata: Metadata = {
+  title: 'Maestría en Futuros NQ/MNQ | Liberty Trading Pro — $29/mes',
+  description:
+    'Aprende a operar futuros del Nasdaq (NQ/MNQ) con Luis Riofrio. Sistema completo de rompimiento y consecución, NinjaTrader 8, gestión de riesgo y psicología. Plan Pro $29/mes.',
+  keywords: 'futuros Nasdaq NQ MNQ, trading futuros Ecuador, NinjaTrader 8, Luis Riofrio, day trading, plan mensual 29 dólares',
+  openGraph: {
+    title: 'Maestría en Futuros NQ/MNQ — $29/mes | Liberty Trading Pro',
+    description: 'Sistema completo para operar futuros Nasdaq con Luis Riofrio. NinjaTrader 8, rompimiento y consecución. $29/mes.',
+    url: 'https://libertytrading.pro/maestria-futuros',
+  },
+}
+
+const HOTMART_MENSUAL = process.env.HOTMART_LINK_MENSUAL || ''
 
 export default async function MaestriaFuturosPage() {
   const supabase = await createSupabaseServerClient()
@@ -29,7 +42,7 @@ export default async function MaestriaFuturosPage() {
               style={{ background: 'rgba(201,168,76,0.06)' }}>
               <span className="w-2 h-2 rounded-full bg-[var(--green)] pulse-dot" />
               <span className="font-mono-custom text-[11px] text-[var(--gold)] tracking-wider uppercase">
-                Plan Pro Anual · Mejor valor · ~$54/mes · Futuros NQ/MNQ
+                Plan Pro Mensual · $29/mes · Futuros NQ/MNQ · Sin permanencia
               </span>
             </div>
 
@@ -39,17 +52,17 @@ export default async function MaestriaFuturosPage() {
             </h1>
 
             <p className="text-lg text-[var(--text-secondary)] max-w-2xl mb-10 leading-relaxed">
-              Accede al Club Liberty Trading Pro con el <strong className="text-[var(--text-primary)]">Plan Pro Anual</strong> —
+              Accede al Club Liberty Trading Pro con el <strong className="text-[var(--text-primary)]">Plan Pro Mensual</strong> —
               el sistema completo de Luis para operar Futuros Nasdaq (NQ/MNQ), mentoría 1 a 1,
-              Vinces IA y todo el contenido de inversión. Un pago al año, acceso a todo.
+              Vinces IA y todo el contenido de inversión. Sin contratos, cancela cuando quieras.
             </p>
 
             {/* Stats */}
             <div className="flex flex-wrap gap-8 mb-12">
               {[
-                { val: '$649', lbl: 'por año' },
-                { val: '~$54', lbl: 'al mes' },
-                { val: 'Ahorras $299', lbl: 'vs mensual' },
+                { val: '$29', lbl: 'por mes' },
+                { val: 'Mensual', lbl: 'Sin permanencia' },
+                { val: 'Cancela', lbl: 'cuando quieras' },
                 { val: 'NQ/MNQ', lbl: 'Instrumento CME' },
               ].map((s) => (
                 <div key={s.lbl}>
@@ -79,9 +92,9 @@ export default async function MaestriaFuturosPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <a href={HOTMART_ANUAL} target="_blank" rel="noopener noreferrer"
+              <a href={HOTMART_MENSUAL} target="_blank" rel="noopener noreferrer"
                 className="btn-gold text-sm py-4 px-8 rounded-lg">
-                Suscribirme al Plan Anual — $649 →
+                Suscribirme al Plan Pro — $29/mes →
               </a>
               <a href="#contacto-vinces"
                 className="btn-outline text-sm py-4 px-8 rounded-lg inline-flex items-center justify-center gap-2">
@@ -102,7 +115,7 @@ export default async function MaestriaFuturosPage() {
         style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
-            <div className="label-mono mb-2">Plan Pro Anual — $649/año · ~$54/mes</div>
+            <div className="label-mono mb-2">Plan Pro Mensual — $29/mes · Cancela cuando quieras</div>
             <h2 className="headline text-4xl text-[var(--text-primary)]">
               Todo incluido.<br /><span className="gradient-gold">Sin excepciones.</span>
             </h2>
@@ -114,7 +127,7 @@ export default async function MaestriaFuturosPage() {
               { icon: '🤖', title: 'Vinces IA como coach diario', desc: 'Registra tus trades, calcula métricas y genera reportes de coaching personalizados cada semana.' },
               { icon: '👥', title: 'Mentoring grupal + 1a1', desc: 'Sesiones grupales de análisis de mercado y revisiones 1 a 1 con Luis cada mes.' },
               { icon: '🌐', title: 'Comunidad + Monitor Mundial', desc: 'Acceso a la comunidad privada activa y al monitor geopolítico y macro de Luis.' },
-              { icon: '💰', title: 'Máximo ahorro', desc: 'Pagas $649/año en vez de $948 (12 × $79). Ahorras $299 con el mismo acceso completo.' },
+              { icon: '💰', title: 'Precio accesible', desc: 'Acceso completo a todo el sistema y la comunidad por $29/mes. Sin contratos ni permanencia mínima.' },
             ].map((f) => (
               <div key={f.title} className="card py-7">
                 <div className="text-3xl mb-3">{f.icon}</div>
@@ -127,11 +140,10 @@ export default async function MaestriaFuturosPage() {
           <div className="mt-8 p-6 rounded-xl border border-[var(--gold-dark)] text-center"
             style={{ background: 'rgba(201,168,76,0.04)' }}>
             <p className="text-sm text-[var(--text-secondary)]">
-              ¿Prefieres empezar sin compromisos anuales?{' '}
+              ¿Quieres enfocarte en inversión en acciones y ETFs?{' '}
               <a href="/mentoria-integral" className="text-[var(--gold)] hover:underline font-semibold">
-                Prueba el Plan Pro Mensual ($79/mes)
-              </a>{' '}
-              y actualiza a anual cuando estés seguro.
+                Ver la Mentoría Integral →
+              </a>
             </p>
           </div>
         </div>
@@ -337,8 +349,8 @@ export default async function MaestriaFuturosPage() {
           <div className="space-y-4">
             {[
               {
-                q: '¿Cuánto cuesta el Plan Pro Anual?',
-                a: '$649 al año, un único pago. Equivale a ~$54/mes. Frente al Plan Mensual ($79 × 12 = $948), ahorras $299.',
+                q: '¿Cuánto cuesta el Plan Pro?',
+                a: '$29 al mes, sin contratos ni permanencia. Cancelas cuando quieras desde tu cuenta de Hotmart.',
               },
               {
                 q: '¿Necesito experiencia previa en trading?',
@@ -357,8 +369,8 @@ export default async function MaestriaFuturosPage() {
                 a: 'Vinces es el agente de IA integrado en la plataforma que registra tus operaciones, calcula métricas (win rate, profit factor, drawdown) y genera reportes de coaching semanales.',
               },
               {
-                q: '¿Puedo empezar con el Plan Mensual y cambiar al Anual?',
-                a: 'Sí. Puedes empezar con el Plan Mensual ($79/mes) para probar sin compromiso y cuando estés seguro, cambiar al Plan Anual y aprovechar el ahorro.',
+                q: '¿Necesito NinjaTrader 8 para empezar?',
+                a: 'NinjaTrader 8 tiene cuenta demo gratuita. Puedes practicar con dinero simulado desde el primer día sin necesidad de capital real hasta que estés listo.',
               },
             ].map((faq) => (
               <div key={faq.q} className="card">
@@ -396,7 +408,7 @@ export default async function MaestriaFuturosPage() {
               </div>
             </div>
             <LeadCaptureForm
-              plan="ANUAL"
+              plan="MENSUAL"
               title="Habla con Vinces IA ahora"
               subtitle="Deja tus datos y Vinces te contacta por WhatsApp en segundos."
             />
@@ -408,23 +420,23 @@ export default async function MaestriaFuturosPage() {
       <section className="py-24 px-4 border-y border-[var(--border)]"
         style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-3xl mx-auto text-center">
-          <div className="label-mono mb-4 text-[var(--gold)]">Plan Pro Anual · Liberty Trading Pro</div>
+          <div className="label-mono mb-4 text-[var(--gold)]">Plan Pro Mensual · Liberty Trading Pro</div>
           <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)] mb-6">
-            Todo el sistema.<br />Un solo pago.<br />
-            <span className="gradient-gold">$649/año</span>
+            El sistema completo<br />de futuros NQ/MNQ.<br />
+            <span className="gradient-gold">$29/mes</span>
           </h2>
           <p className="text-[var(--text-secondary)] mb-4 max-w-lg mx-auto leading-relaxed">
             El sistema real de Luis. Clases 1 a 1. Vinces IA como mentor de métricas.
             Track record verificable desde el primer día.
           </p>
           <p className="text-sm text-[var(--text-muted)] mb-10">
-            ~$54/mes · Ahorras $299 frente al Plan Mensual
+            Sin contratos · Sin permanencia · Cancela cuando quieras
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-            <a href={HOTMART_ANUAL} target="_blank" rel="noopener noreferrer"
+            <a href={HOTMART_MENSUAL} target="_blank" rel="noopener noreferrer"
               className="btn-gold text-sm py-4 px-10 rounded-xl">
-              Suscribirme al Plan Anual — $649 →
+              Suscribirme al Plan Pro — $29/mes →
             </a>
             <a href="#contacto-luis"
               className="btn-outline text-sm py-4 px-8 rounded-xl">
@@ -464,7 +476,7 @@ export default async function MaestriaFuturosPage() {
               </div>
             </div>
             <PersonalContactForm
-              plan="ANUAL"
+              plan="MENSUAL"
               title="Quiero que Luis me contacte"
               subtitle="Deja tus datos y Luis Riofrio se pondrá en contacto contigo personalmente."
             />

@@ -1,9 +1,22 @@
+import type { Metadata } from 'next'
 import Navbar from '@/components/Navbar/Navbar'
 import Footer from '@/components/Footer/Footer'
 import LeadCaptureForm from '@/components/LeadCaptureForm/LeadCaptureForm'
 import PersonalContactForm from '@/components/PersonalContactForm/PersonalContactForm'
 import VincesWidget from '@/components/VincesWidget/VincesWidget'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+
+export const metadata: Metadata = {
+  title: 'Mentoría Integral de Trading | Liberty Trading Pro — $29/mes',
+  description:
+    'Aprende a invertir sin dejar tu trabajo. Acciones, ETFs, cripto y futuros con Luis Riofrio. Clases 1 a 1, Vinces IA y comunidad privada. Plan Pro desde $29/mes, cancela cuando quieras.',
+  keywords: 'mentoría trading, inversión acciones ETFs, aprender trading Ecuador, Luis Riofrio, plan mensual 29 dólares',
+  openGraph: {
+    title: 'Mentoría Integral de Trading — $29/mes | Liberty Trading Pro',
+    description: 'Aprende a invertir en acciones, ETFs y cripto con Luis Riofrio. Sin dejar tu trabajo, sin permanencia. $29/mes.',
+    url: 'https://libertytrading.pro/mentoria-integral',
+  },
+}
 
 const HOTMART_MENSUAL = process.env.HOTMART_LINK_MENSUAL || ''
 
@@ -47,7 +60,7 @@ export default async function MentoriaIntegralPage() {
             {/* Stats rápidas */}
             <div className="flex flex-wrap gap-8 mb-12">
               {[
-                { val: '$79', lbl: 'por mes' },
+                { val: '$29', lbl: 'por mes' },
                 { val: 'Mensual', lbl: 'Sin permanencia' },
                 { val: '1 a 1', lbl: 'Con Luis' },
                 { val: 'Acceso total', lbl: 'Todo incluido' },
@@ -64,7 +77,7 @@ export default async function MentoriaIntegralPage() {
             <div className="flex flex-col sm:flex-row gap-3">
               <a href={HOTMART_MENSUAL} target="_blank" rel="noopener noreferrer"
                 className="btn-gold text-sm py-4 px-8 rounded-lg">
-                Empezar ahora — $79/mes →
+                Empezar ahora — $29/mes →
               </a>
               <a href="#contacto-vinces"
                 className="btn-outline text-sm py-4 px-8 rounded-lg inline-flex items-center justify-center gap-2">
@@ -85,7 +98,7 @@ export default async function MentoriaIntegralPage() {
         style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
-            <div className="label-mono mb-2">Plan Pro Mensual — $79/mes</div>
+            <div className="label-mono mb-2">Plan Pro Mensual — $29/mes</div>
             <h2 className="headline text-4xl text-[var(--text-primary)]">
               Todo lo que incluye<br /><span className="gradient-gold">tu membresía</span>
             </h2>
@@ -108,11 +121,10 @@ export default async function MentoriaIntegralPage() {
           <div className="mt-8 p-6 rounded-xl border border-[var(--gold-dark)] text-center"
             style={{ background: 'rgba(201,168,76,0.04)' }}>
             <p className="text-sm text-[var(--text-secondary)]">
-              ¿Quieres el máximo valor? El{' '}
+              ¿Quieres especializarte en futuros NQ/MNQ?{' '}
               <a href="/maestria-futuros" className="text-[var(--gold)] hover:underline font-semibold">
-                Plan Pro Anual ($649/año)
-              </a>{' '}
-              te da todo esto más ahorras $299 vs pagar mes a mes.
+                Ver el programa Maestría en Futuros →
+              </a>
             </p>
           </div>
         </div>
@@ -291,7 +303,7 @@ export default async function MentoriaIntegralPage() {
             {[
               {
                 q: '¿Cuánto cuesta el Plan Pro Mensual?',
-                a: '$79 al mes, sin contratos ni permanencia. Puedes cancelar en cualquier momento desde tu cuenta de Hotmart.',
+                a: '$29 al mes, sin contratos ni permanencia. Puedes cancelar en cualquier momento desde tu cuenta de Hotmart.',
               },
               {
                 q: '¿Necesito experiencia previa?',
@@ -314,8 +326,8 @@ export default async function MentoriaIntegralPage() {
                 a: 'Ninguno. Es mes a mes. Si decides cancelar, pierdes el acceso al terminar el período ya pagado. Sin penalizaciones.',
               },
               {
-                q: '¿Cuál es la diferencia con el Plan Anual?',
-                a: 'El contenido es el mismo. El Plan Anual ($649/año) te sale a ~$54/mes y te ahorras $299 frente al pago mensual. Ideal si ya sabes que esto es para ti.',
+                q: '¿Hay algún período mínimo de permanencia?',
+                a: 'No. Es mes a mes, sin compromiso. Cancelas cuando quieras desde tu cuenta de Hotmart sin ninguna penalización.',
               },
             ].map((faq) => (
               <div key={faq.q} className="card">
@@ -368,7 +380,7 @@ export default async function MentoriaIntegralPage() {
           <div className="label-mono mb-4 text-[var(--gold)]">Plan Pro Mensual · Liberty Trading Pro</div>
           <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)] mb-6">
             Empieza hoy<br />por solo<br />
-            <span className="gradient-gold">$79/mes</span>
+            <span className="gradient-gold">$29/mes</span>
           </h2>
           <p className="text-[var(--text-secondary)] mb-10 max-w-lg mx-auto leading-relaxed">
             Clases 1 a 1 con Luis. Vinces IA como tu mentor de métricas.
@@ -378,7 +390,7 @@ export default async function MentoriaIntegralPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
             <a href={HOTMART_MENSUAL} target="_blank" rel="noopener noreferrer"
               className="btn-gold text-sm py-4 px-10 rounded-xl">
-              Suscribirme ahora — $79/mes →
+              Suscribirme ahora — $29/mes →
             </a>
             <a href="#contacto-luis"
               className="btn-outline text-sm py-4 px-8 rounded-xl">

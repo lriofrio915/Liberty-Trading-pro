@@ -45,5 +45,5 @@ export interface KPIs {
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
-  links?: { mensual: string; anual: string }
+  links?: { mensual: string }
 }

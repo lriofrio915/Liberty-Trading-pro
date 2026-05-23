@@ -27,13 +27,13 @@ const syne = Syne({
 })
 
 export const metadata: Metadata = {
-  title: 'Liberty Trading Pro — Operador Financiero Luis Riofrio',
+  title: 'Liberty Trading Pro — Club de Trading con Luis Riofrio',
   description:
-    'Oportunidades de inversión en acciones y ETFs, coaching con IA, gestión de portafolio vía IBKR. Luis Riofrio, Operador Financiero en Emporium Quality Funds.',
-  keywords: 'trading, futuros, inversión, acciones, ETFs, Luis Riofrio, Ecuador, IBKR, NinjaTrader',
+    'Aprende Day Trading en futuros NQ/MNQ, invierte en acciones y ETFs, y opera con Vinces IA como tu coach. Club de trading con Luis Riofrio desde $29/mes. Cancela cuando quieras.',
+  keywords: 'trading, futuros, inversión, acciones, ETFs, Luis Riofrio, Ecuador, IBKR, NinjaTrader, club trading, 29 dólares, plan mensual, NQ MNQ Nasdaq',
   openGraph: {
-    title: 'Liberty Trading Pro',
-    description: 'Oportunidades de inversión con enfoque institucional — Luis Riofrio',
+    title: 'Liberty Trading Pro — Club de Trading | $29/mes',
+    description: 'Day Trading NQ/MNQ, inversión en acciones y ETFs, Vinces IA y comunidad privada. Luis Riofrio — $29/mes, cancela cuando quieras.',
     url: 'https://libertytrading.pro',
     siteName: 'Liberty Trading Pro',
   },

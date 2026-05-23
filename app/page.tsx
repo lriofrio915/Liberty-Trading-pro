@@ -213,7 +213,7 @@ export default async function LandingPage() {
                 tag: 'NUEVO EN INVERSIONES',
                 title: 'El curioso que quiere probar',
                 desc: [
-                  'Pagas $79 y descubres en 1 mes si el trading es para ti',
+                  'Pagas $29 y descubres en 1 mes si el trading es para ti',
                   'Si no te convence, cancelas — sin perder miles en un curso',
                   'Si te engancha, sigues: ya tienes las bases para avanzar',
                   'La formación empieza desde abrir tu primera cuenta de broker',
@@ -233,10 +233,10 @@ export default async function LandingPage() {
                 tag: 'QUIERO SER TRADER PROFESIONAL',
                 title: 'El que hace del trading su vida',
                 desc: [
-                  'El plan anual a $649 te da 12 meses completos por $54/mes',
                   'Especialización profunda en futuros NQ/MNQ de Nasdaq',
                   'Revisión continua de tu operativa con Luis cada mes',
                   'Track record propio verificable para crecer como profesional',
+                  'Todo por $29/mes — cancela cuando quieras',
                 ],
               },
             ].map((card) => (
