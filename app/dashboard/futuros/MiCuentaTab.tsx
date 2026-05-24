@@ -354,7 +354,7 @@ export default function MiCuentaTab({
                 className="px-3 py-2 rounded-lg text-[10px] font-mono tracking-widest transition-colors border"
                 style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', background: 'transparent' }}
               >
-                {['PLAN', 'TRACK RECORD', 'REPORTES'][i]} ↗
+                {['TRADING PLAN', 'TRACK RECORD', 'REPORTES'][i]} ↗
               </button>
             ))}
           </div>
