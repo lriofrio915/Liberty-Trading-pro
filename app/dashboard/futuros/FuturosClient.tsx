@@ -82,20 +82,40 @@ export default function FuturosClient({
         </h1>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-xl mb-8 w-fit" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        {([['overview', 'OVERVIEW'], ['sesgo', 'SESGO INTRADÍA'], ['cuenta', 'MI CUENTA']] as [Tab, string][]).map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className="px-5 py-2 rounded-lg text-xs font-mono tracking-widest transition-all"
-            style={tab === id
-              ? { background: 'var(--gold-dark)', color: '#000', fontWeight: 700 }
-              : { color: 'var(--text-secondary)' }}
-          >
-            {label}
-          </button>
-        ))}
+      {/* Nav unificada */}
+      <div className="overflow-x-auto scrollbar-none mb-8">
+        <div className="flex items-center gap-1 p-1 rounded-xl w-fit" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          {([['overview', 'OVERVIEW'], ['sesgo', 'SESGO INTRADÍA'], ['cuenta', 'MI CUENTA']] as [Tab, string][]).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              className="px-5 py-2 rounded-lg text-xs font-mono tracking-widest transition-all whitespace-nowrap"
+              style={tab === id
+                ? { background: 'var(--gold-dark)', color: '#000', fontWeight: 700 }
+                : { color: 'var(--text-secondary)' }}
+            >
+              {label}
+            </button>
+          ))}
+
+          <div style={{ width: 1, height: 20, background: 'var(--border)', margin: '0 4px', flexShrink: 0 }} />
+
+          {([
+            ['/dashboard/planes', 'PLAN'],
+            ['/dashboard/track-record', 'TRACK RECORD'],
+            ['/dashboard/reportes', 'REPORTES'],
+          ] as [string, string][]).map(([href, label]) => (
+            <Link
+              key={href}
+              href={href}
+              className="flex items-center gap-1 px-5 py-2 rounded-lg text-xs font-mono tracking-widest transition-all whitespace-nowrap"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              {label}
+              <span style={{ color: 'var(--text-muted)', fontSize: 9 }}>↗</span>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {tab === 'sesgo' && <FuturosSesgoTab isAdmin={isAdmin} />}
@@ -197,33 +217,6 @@ export default function FuturosClient({
             )}
           </div>
 
-          {/* Navigation buttons */}
-          <div className="mb-8">
-            <p className="text-[10px] font-mono tracking-widest mb-4" style={{ color: 'var(--gold)' }}>HERRAMIENTAS DE FUTUROS</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Link href="/dashboard/planes"
-                className="group rounded-xl border p-6 transition-all duration-300 hover:scale-[1.02]"
-                style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
-                <div className="text-3xl mb-3">📋</div>
-                <p className="text-sm font-bold text-white mb-1 group-hover:text-[var(--gold)] transition-colors">Plan de Trading</p>
-                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Define tu capital, riesgo por trade, R:R y gestión de stop-loss.</p>
-              </Link>
-              <Link href="/dashboard/track-record"
-                className="group rounded-xl border p-6 transition-all duration-300 hover:scale-[1.02]"
-                style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
-                <div className="text-3xl mb-3">📊</div>
-                <p className="text-sm font-bold text-white mb-1 group-hover:text-[var(--gold)] transition-colors">Track Record</p>
-                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Registra cada operación y construye tu historial verificable.</p>
-              </Link>
-              <Link href="/dashboard/reportes"
-                className="group rounded-xl border p-6 transition-all duration-300 hover:scale-[1.02]"
-                style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
-                <div className="text-3xl mb-3">📄</div>
-                <p className="text-sm font-bold text-white mb-1 group-hover:text-[var(--gold)] transition-colors">Reportes</p>
-                <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Analiza tu rendimiento con KPIs, gráficos y feedback de IA.</p>
-              </Link>
-            </div>
-          </div>
         </div>
       )}
 
