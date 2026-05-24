@@ -45,7 +45,7 @@ export default async function LandingPage() {
               <span className="gradient-gold">operar con ventaja</span>
             </h2>
             <p className="text-[var(--text-secondary)] mt-4 max-w-lg">
-              Con tu membresía mensual o anual accedes a cada una de estas herramientas desde el primer día.
+              Con tu membresía mensual accedes a cada una de estas herramientas desde el primer día.
             </p>
           </div>
 
@@ -54,7 +54,7 @@ export default async function LandingPage() {
               {
                 num: '01',
                 title: 'Formación Completa',
-                desc: 'Desde cero hasta trader profesional. Mentoría Integral de Mercados Financieros + Especialización en Day Trading de Futuros NQ/MNQ — todo incluido.',
+                desc: 'Desde cero hasta trader profesional. Mentoría Integral de Mercados Financieros + Especialización en Day Trading de Futuros NQ/MNQ — con acceso a oportunidades en acciones y contratos de opciones. Todo incluido.',
                 badge: 'Academia',
               },
               {
@@ -78,7 +78,7 @@ export default async function LandingPage() {
               {
                 num: '05',
                 title: 'Track Record Real',
-                desc: 'Accede al historial operativo completo de Luis Riofrio — cada operación con datos reales. Transparencia total, incluyendo pérdidas.',
+                desc: 'Accede al historial operativo completo de Luis Riofrio — cada operación con datos reales. Transparencia total, incluyendo pérdidas. Tú también construyes y registras tu propio track record verificable desde el primer día.',
                 badge: 'Verificado',
               },
               {
@@ -217,6 +217,7 @@ export default async function LandingPage() {
                   'Si no te convence, cancelas — sin perder miles en un curso',
                   'Si te engancha, sigues: ya tienes las bases para avanzar',
                   'La formación empieza desde abrir tu primera cuenta de broker',
+                  'Oportunidades identificadas en acciones y opciones para empezar a operar con contexto real',
                 ],
               },
               {
@@ -227,6 +228,7 @@ export default async function LandingPage() {
                   'Mentorías 1:1 con Luis cada mes para avanzar más rápido',
                   'Reportes de oportunidades para aprender con contexto real del mercado',
                   'Coaching diario de Vinces IA para mejorar cada semana',
+                  'Agentes de IA analizan el mercado en tiempo real y te entregan el resumen de las mejores oportunidades en acciones, opciones y futuros',
                 ],
               },
               {
@@ -236,6 +238,7 @@ export default async function LandingPage() {
                   'Especialización profunda en futuros NQ/MNQ de Nasdaq',
                   'Revisión continua de tu operativa con Luis cada mes',
                   'Track record propio verificable para crecer como profesional',
+                  'Señales y oportunidades en acciones y contratos de opciones — no solo futuros',
                   'Todo por $29/mes — cancela cuando quieras',
                 ],
               },

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { getEffectiveAccess } from '@/lib/access'
@@ -55,5 +56,15 @@ export default async function TrackRecordPage() {
     }
   } catch {}
 
-  return <TrackRecordClient initialSessions={sessions} initialPlans={plans} userId={publicSlug || userId} />
+  return (
+    <div>
+      <Link href="/dashboard/futuros"
+        className="inline-flex items-center gap-1.5 text-[10px] font-mono tracking-widest mb-6 transition-colors hover:text-[var(--gold)]"
+        style={{ color: 'var(--text-muted)' }}
+      >
+        ← VOLVER A FUTUROS
+      </Link>
+      <TrackRecordClient initialSessions={sessions} initialPlans={plans} userId={publicSlug || userId} />
+    </div>
+  )
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -617,6 +618,13 @@ export default function PlanesClient({
 
   return (
     <div className="animate-fadeIn">
+
+      <Link href="/dashboard/futuros"
+        className="inline-flex items-center gap-1.5 text-[10px] font-mono tracking-widest mb-6 transition-colors hover:text-[var(--gold)]"
+        style={{ color: 'var(--text-muted)' }}
+      >
+        ← VOLVER A FUTUROS
+      </Link>
 
       {/* Header */}
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">

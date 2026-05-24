@@ -675,15 +675,19 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
       </div>
 
       {/* Guía de uso */}
-      <div className="mb-5 rounded-xl border" style={{ borderColor: 'rgba(201,168,76,0.15)' }}>
+      <div className="mb-5 rounded-xl">
         <button
           onClick={() => setShowGuide(v => !v)}
-          className="w-full flex items-center justify-between px-4 py-3 text-left"
+          className="w-full flex items-center justify-between px-5 py-4 text-left rounded-xl transition-all"
+          style={{
+            background: showGuide ? 'rgba(201,168,76,0.12)' : 'rgba(201,168,76,0.07)',
+            border: '1px solid rgba(201,168,76,0.35)',
+          }}
         >
-          <span className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>
+          <span className="text-[11px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>
             GUÍA DE USO — CÓMO SACAR PROVECHO AL LABORATORIO QUANT
           </span>
-          <span className="text-[var(--text-muted)] text-xs font-mono">{showGuide ? '▲' : '▼'}</span>
+          <span className="text-xs font-mono font-bold" style={{ color: 'var(--gold)' }}>{showGuide ? '▲' : '▼'}</span>
         </button>
         {showGuide && (
           <div className="px-4 pb-5 space-y-5 text-xs text-[var(--text-secondary)] leading-relaxed">

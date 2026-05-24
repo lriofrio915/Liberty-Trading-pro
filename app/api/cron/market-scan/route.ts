@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { runFullAnalysis } from '@/lib/analisis-engine'
+import { calcSignal } from '@/lib/calc-signal'
 
 export const runtime = 'nodejs'
 export const maxDuration = 90
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
     const scan = await prisma.marketScan.create({
       data: {
         fecha: today,
-        hora: '09:00 ET',
+        hora: '10:00 ET',
         sesgogeneral,
         resumen,
         riskProfile: 'agresivo',
@@ -50,12 +51,61 @@ export async function GET(req: NextRequest) {
       include: { oportunidades: true },
     })
 
+    // Auto-save high-probability signals (>=80%) as CfdSignal records
+    const highConf = oportunidades.filter(a => a.confianza >= 80)
+    let autoSaved = 0
+
+    if (highConf.length > 0) {
+      // Avoid duplicates: skip symbols that already have a PENDIENTE signal today
+      const existing = await prisma.cfdSignal.findMany({
+        where: {
+          resultado: 'PENDIENTE',
+          createdAt: { gte: today },
+          simbolo: { in: highConf.map(a => a.simbolo) },
+        },
+        select: { simbolo: true },
+      })
+      const existingSymbols = new Set(existing.map(s => s.simbolo))
+
+      const toCreate = highConf
+        .filter(a => !existingSymbols.has(a.simbolo))
+        .map(a => {
+          const sig = calcSignal(
+            { simbolo: a.simbolo, nombre: a.nombre, sector: a.sector, sesgo: a.sesgo, confianza: a.confianza, razon: a.razon, precio: a.precio },
+            'agresivo',
+          )
+          return {
+            simbolo:       sig.simbolo,
+            nombre:        sig.nombre,
+            sector:        sig.sector,
+            sesgo:         sig.sesgo,
+            confianza:     sig.confianza,
+            razon:         `[Auto 10am ET] ${sig.razon}`,
+            precioEntrada: sig.precioEntrada,
+            stopLoss:      sig.stopLoss,
+            takeProfit:    sig.takeProfit,
+            lotaje:        sig.lotaje,
+            riesgoUsd:     sig.riesgoUsd,
+            rrRatio:       sig.rrRatio,
+            riskProfile:   sig.riskProfile,
+            resultado:     'PENDIENTE' as const,
+          }
+        })
+
+      if (toCreate.length > 0) {
+        await prisma.cfdSignal.createMany({ data: toCreate })
+        autoSaved = toCreate.length
+        console.log(`[market-scan] Auto-saved ${autoSaved} CfdSignal records (>=80% confidence)`)
+      }
+    }
+
     console.log(`[market-scan] Created scan ${scan.id} with ${scan.oportunidades.length} opportunities`)
     return NextResponse.json({
       ok: true,
       scanId: scan.id,
       sesgogeneral,
       oportunidades: scan.oportunidades.length,
+      autoSavedSignals: autoSaved,
     })
   } catch (err) {
     console.error('[market-scan]', err)

@@ -370,6 +370,7 @@ export default function FlujoDineroClient({ hasAccess }: { hasAccess: boolean })
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [showGuide, setShowGuide] = useState(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -484,6 +485,58 @@ export default function FlujoDineroClient({ hasAccess }: { hasAccess: boolean })
             </span>
           ) : 'Actualizar'}
         </button>
+      </div>
+
+      {/* Instrucciones de uso */}
+      <div className="rounded-xl">
+        <button
+          onClick={() => setShowGuide(v => !v)}
+          className="w-full flex items-center justify-between px-5 py-4 text-left rounded-xl transition-all"
+          style={{
+            background: showGuide ? 'rgba(201,168,76,0.12)' : 'rgba(201,168,76,0.07)',
+            border: '1px solid rgba(201,168,76,0.35)',
+          }}
+        >
+          <span className="text-[11px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>
+            GUÍA DE USO — CÓMO LEER EL FLUJO DEL DINERO
+          </span>
+          <span className="text-xs font-mono font-bold" style={{ color: 'var(--gold)' }}>{showGuide ? '▲' : '▼'}</span>
+        </button>
+        {showGuide && (
+          <div className="px-5 py-5 space-y-5 text-xs text-[var(--text-secondary)] leading-relaxed rounded-b-xl"
+            style={{ border: '1px solid rgba(201,168,76,0.2)', borderTop: 'none', background: 'rgba(201,168,76,0.03)' }}>
+            <div>
+              <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>QUÉ MIDE ESTA HERRAMIENTA</p>
+              <p>El Flujo del Dinero (FAROS v7.0) rastrea la presión compradora y vendedora institucional en tiempo real usando física de fluidos financieros. No predice — confirma hacia dónde se mueve el capital inteligente.</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>CÓMO LEER EL HEATMAP</p>
+              <ul className="space-y-1 ml-3 list-disc">
+                <li><span className="text-green-400 font-semibold">Verde intenso</span> — entrada fuerte de capital. El activo está siendo acumulado.</li>
+                <li><span className="text-red-400 font-semibold">Rojo intenso</span> — salida de capital. Presión distribuidora activa.</li>
+                <li><span className="text-[var(--text-muted)] font-semibold">Neutro / gris</span> — sin tendencia clara. Evitar operar en esa dirección.</li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>INDICADORES CLAVE</p>
+              <ul className="space-y-1 ml-3 list-disc">
+                <li><span className="text-white font-semibold">MFI</span> — Money Flow Index. Mide volumen relativo en la dirección del precio.</li>
+                <li><span className="text-white font-semibold">αflow</span> — Alpha Flow. Flujo ajustado por volatilidad intradía.</li>
+                <li><span className="text-white font-semibold">Z-Score</span> — Desviación estadística del flujo respecto a su media histórica. &gt;2 = extremo.</li>
+                <li><span className="text-white font-semibold">Ψ Score</span> — Score compuesto FAROS. Combina los anteriores en una sola lectura.</li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>RUTINA DIARIA SUGERIDA</p>
+              <ol className="space-y-1 ml-3 list-decimal">
+                <li>Revisar al abrir sesión (antes de las 9:30am ET) — confirma el sesgo del día.</li>
+                <li>Antes de cada entrada, consulta el Ψ Score del activo que vas a operar.</li>
+                <li>Si el flujo contradice tu setup, reduce tamaño o espera confirmación.</li>
+                <li>Usa la pestaña Forecast para ver el pronóstico probabilístico de cierre.</li>
+              </ol>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* FAROS content */}

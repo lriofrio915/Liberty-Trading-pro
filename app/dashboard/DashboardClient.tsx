@@ -19,14 +19,6 @@ const GdeltMap = dynamic(() => import('@/components/GdeltMap'), {
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-interface NewsItem {
-  title: string
-  description: string
-  link: string
-  pubDate: string
-  source: string
-}
-
 interface PriceItem {
   symbol: string
   name: string
@@ -117,30 +109,11 @@ export default function DashboardClient({
   sessions?: unknown[]
   plans?: unknown[]
 }) {
-  const [news, setNews]               = useState<NewsItem[]>([])
-  const [newsLoading, setNewsLoading] = useState(true)
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
-
   const [prices, setPrices]                 = useState<PriceItem[]>([])
   const [pricesLoading, setPricesLoading]   = useState(true)
   const [monitorArticles, setMonitorArticles]           = useState<Article[]>([])
   const [monitorNewsLoading, setMonitorNewsLoading]     = useState(true)
   const [timespan, setTimespan] = useState<Timespan>('24h')
-
-  // ── Fetch financial news ───────────────────────────────────────────────────
-
-  const fetchNews = useCallback(async () => {
-    try {
-      const res = await fetch('/api/news')
-      if (!res.ok) return
-      const data = await res.json()
-      if (data.news?.length) {
-        setNews(data.news)
-        setLastUpdated(new Date())
-      }
-    } catch {}
-    finally { setNewsLoading(false) }
-  }, [])
 
   // ── Fetch prices (stress indicators) ──────────────────────────────────────
 
@@ -179,18 +152,15 @@ export default function DashboardClient({
   // ── Effects ────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    fetchNews()
     fetchPrices()
     fetchMonitorNews()
-    const newsTimer     = setInterval(fetchNews,        3 * 60_000)
     const pricesTimer   = setInterval(fetchPrices,      60_000)
     const monitorTimer  = setInterval(fetchMonitorNews, 120_000)
     return () => {
-      clearInterval(newsTimer)
       clearInterval(pricesTimer)
       clearInterval(monitorTimer)
     }
-  }, [fetchNews, fetchPrices, fetchMonitorNews])
+  }, [fetchPrices, fetchMonitorNews])
 
   // ── Stress indicators ──────────────────────────────────────────────────────
 
@@ -233,59 +203,6 @@ export default function DashboardClient({
             )}
           </p>
         </div>
-        {lastUpdated && (
-          <p className="text-[10px] font-mono text-[var(--text-muted)] mt-2">
-            Act. {lastUpdated.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}
-          </p>
-        )}
-      </div>
-
-      {/* ── Noticias financieras ─────────────────────────────────────────────── */}
-      <div className="card mb-6">
-        <div className="label-mono text-xs text-[var(--text-muted)] mb-4">NOTICIAS FINANCIERAS</div>
-        {newsLoading ? (
-          <div className="space-y-3">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-16 rounded-lg bg-[var(--bg-secondary)] animate-pulse" />
-            ))}
-          </div>
-        ) : news.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-xs text-[var(--text-muted)]">No se pudieron cargar las noticias</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[400px] overflow-y-auto pr-1">
-            {news.map((item, i) => (
-              <a
-                key={i}
-                href={item.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block px-3 py-3 rounded-lg transition-all hover:bg-[var(--bg-secondary)] group"
-              >
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <span
-                    className="text-[9px] font-mono tracking-widest px-1.5 py-0.5 rounded shrink-0"
-                    style={{ background: 'rgba(201,168,76,0.1)', color: 'var(--gold)' }}
-                  >
-                    {item.source.toUpperCase()}
-                  </span>
-                  <span className="text-[10px] text-[var(--text-muted)] font-mono shrink-0">
-                    {item.pubDate ? timeAgo(item.pubDate) : ''}
-                  </span>
-                </div>
-                <p className="text-xs text-white font-medium leading-snug group-hover:text-[var(--gold)] transition-colors line-clamp-2">
-                  {item.title}
-                </p>
-                {item.description && (
-                  <p className="text-[11px] text-[var(--text-muted)] mt-0.5 line-clamp-1">
-                    {item.description}
-                  </p>
-                )}
-              </a>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* ── Indicadores de stress ────────────────────────────────────────────── */}

@@ -86,13 +86,14 @@ export default function AccionesClient({
   return (
     <div className="animate-fadeIn">
       <h1 className="text-3xl font-black mb-2">
-        <span className="gradient-gold">Acciones</span>
+        <span className="gradient-gold">Acciones & Opciones</span>
       </h1>
       <p className="text-[var(--text-secondary)] text-sm max-w-2xl mb-6">
         Invertir en acciones significa comprar una participación en una empresa real.
-        Aquí encuentras recomendaciones profesionales basadas en análisis fundamental
-        y un screener avanzado con los criterios de Peter Lynch para filtrar las mejores
-        oportunidades del S&P 500 y NASDAQ 100.
+        Aquí encuentras recomendaciones profesionales basadas en análisis fundamental,
+        un screener avanzado con los criterios de Peter Lynch para filtrar las mejores
+        oportunidades del S&P 500 y NASDAQ 100, y una sección dedicada a oportunidades
+        en contratos de opciones financieras.
       </p>
 
       {/* Video admin */}

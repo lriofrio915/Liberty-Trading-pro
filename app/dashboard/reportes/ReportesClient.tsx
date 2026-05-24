@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useCallback, useEffect } from 'react'
 import DOMPurify from 'dompurify'
 
@@ -375,6 +376,13 @@ export default function ReportesClient() {
 
   return (
     <div className="animate-fadeIn">
+      <Link href="/dashboard/futuros"
+        className="inline-flex items-center gap-1.5 text-[10px] font-mono tracking-widest mb-6 transition-colors hover:text-[var(--gold)]"
+        style={{ color: 'var(--text-muted)' }}
+      >
+        ← VOLVER A FUTUROS
+      </Link>
+
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
         <div>

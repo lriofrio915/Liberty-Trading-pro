@@ -895,6 +895,7 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
     onConfirm: () => void
   } | null>(null)
 
+  const [showAnalisisGuide, setShowAnalisisGuide] = useState(false)
   const [video, setVideo] = useState<{ youtubeUrl: string; title: string | null }>({ youtubeUrl: '', title: null })
   const [editMode, setEditMode] = useState(false)
   const [editUrl, setEditUrl] = useState('')
@@ -1322,6 +1323,11 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
             </div>
           </div>
 
+          {/* Auto-save info */}
+          <p className="text-[10px] font-mono mb-3" style={{ color: 'var(--text-muted)' }}>
+            Las señales con confianza ≥ 80% se guardan automáticamente cada día a las 10am ET desde el análisis de mercado.
+          </p>
+
           {/* Table filtered ≥80% */}
           {signalHistory.filter(s => s.confianza >= 80).length === 0 ? (
             <div className="rounded-xl border p-8 text-center" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
@@ -1356,7 +1362,15 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                           <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
                             {new Date(sig.createdAt).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', timeZone: 'America/Guayaquil' })}
                           </td>
-                          <td className="px-2.5 py-2 font-bold whitespace-nowrap" style={{ color: 'var(--gold)' }}>{sig.simbolo}</td>
+                          <td className="px-2.5 py-2 font-bold whitespace-nowrap" style={{ color: 'var(--gold)' }}>
+                            {sig.simbolo}
+                            {sig.razon?.startsWith('[Auto 10am ET]') && (
+                              <span className="ml-1.5 text-[8px] font-mono px-1 py-0.5 rounded align-middle"
+                                style={{ background: 'rgba(201,168,76,0.15)', color: 'var(--gold)', border: '1px solid rgba(201,168,76,0.3)' }}>
+                                AUTO 10AM
+                              </span>
+                            )}
+                          </td>
                           <td className="px-2.5 py-2 whitespace-nowrap">
                             <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${sig.sesgo === 'COMPRA' ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}`}>
                               {sig.sesgo}
@@ -1469,6 +1483,45 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
       {/* ── Analysis Tab ── */}
       {activeTab === 'analisis' && (
         <div className="space-y-6">
+          {/* Instrucciones de uso */}
+          <div className="rounded-xl">
+            <button
+              onClick={() => setShowAnalisisGuide(v => !v)}
+              className="w-full flex items-center justify-between px-5 py-4 text-left rounded-xl transition-all"
+              style={{
+                background: showAnalisisGuide ? 'rgba(201,168,76,0.12)' : 'rgba(201,168,76,0.07)',
+                border: '1px solid rgba(201,168,76,0.35)',
+              }}
+            >
+              <span className="text-[11px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>
+                GUÍA DE USO — CÓMO USAR EL ANÁLISIS DE MERCADO
+              </span>
+              <span className="text-xs font-mono font-bold" style={{ color: 'var(--gold)' }}>{showAnalisisGuide ? '▲' : '▼'}</span>
+            </button>
+            {showAnalisisGuide && (
+              <div className="px-5 py-5 space-y-4 text-xs text-[var(--text-secondary)] leading-relaxed rounded-b-xl"
+                style={{ border: '1px solid rgba(201,168,76,0.2)', borderTop: 'none', background: 'rgba(201,168,76,0.03)' }}>
+                <div>
+                  <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>CUÁNDO USAR ESTA HERRAMIENTA</p>
+                  <p>Genera el análisis a la hora que decidas sentarte a operar. Los precios son en tiempo real, por lo que el análisis es válido para tu operativa del día en cualquier momento de la sesión.</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>FLUJO DE TRABAJO SUGERIDO</p>
+                  <ol className="space-y-1 ml-3 list-decimal">
+                    <li>Genera el análisis — 7 agentes de IA analizan más de 40 activos en paralelo.</li>
+                    <li>Revisa el <span className="text-white font-semibold">Sesgo General</span> del mercado (COMPRA / VENTA / NEUTRAL).</li>
+                    <li>Identifica los activos con mayor confianza en la dirección del sesgo general.</li>
+                    <li>Conecta MT5 para ejecutar directamente desde la señal.</li>
+                  </ol>
+                </div>
+                <div>
+                  <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>AUTO-GUARDADO DE SEÑALES</p>
+                  <p>Cada día a las 10am ET el análisis se ejecuta automáticamente. Las señales con confianza ≥ 80% se guardan en el <span className="text-white font-semibold">Track Record</span> sin que tengas que hacer nada — aparecen marcadas con <span className="text-[var(--gold)] font-semibold">AUTO 10AM</span>.</p>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* CTA */}
           <div className="card p-5 space-y-4">
             <div className="flex items-center gap-2 text-xs">
