@@ -20,28 +20,52 @@ export default async function FuturosPage() {
   let dbUser = null
   let sessions: any[] = []
   let plans: any[] = []
+  let fullPlans: any[] = []
+  let retiros: any[] = []
 
   try {
     dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
     if (dbUser) {
-      ;[sessions, plans] = await Promise.all([
+      ;[sessions, fullPlans, retiros] = await Promise.all([
         prisma.tradingSession.findMany({
           where: { userId: dbUser.id },
           orderBy: { date: 'desc' },
         }),
         prisma.tradingPlan.findMany({
           where: { userId: dbUser.id },
-          select: { id: true, name: true, capitalInicial: true, createdAt: true, dataFeedMensual: true, comisionPorTrade: true },
+          orderBy: { createdAt: 'desc' },
+          include: {
+            sessions: {
+              select: { id: true, date: true, resultado: true, pnlNeto: true, instrumento: true, direccion: true },
+            },
+          },
+        }),
+        prisma.retiro.findMany({
+          where: { userId: dbUser.id },
+          select: { planId: true, monto: true },
         }),
       ])
+      plans = fullPlans.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        capitalInicial: p.capitalInicial,
+        createdAt: p.createdAt,
+        dataFeedMensual: p.dataFeedMensual,
+        comisionPorTrade: p.comisionPorTrade,
+      }))
     }
   } catch {}
+
+  const userId = dbUser?.slug || dbUser?.id || ''
 
   return (
     <FuturosClient
       isAdmin={isAdmin}
       sessions={sessions}
       plans={plans}
+      fullPlans={fullPlans}
+      retiros={retiros}
+      userId={userId}
       userName={dbUser?.name || user.email || null}
       userPlan={dbUser?.plan || null}
     />

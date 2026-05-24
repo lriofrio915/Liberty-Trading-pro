@@ -2,12 +2,14 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
-import Link from 'next/link'
 
 const FuturosSesgoTab = dynamic(() => import('./FuturosSesgoTab'), { ssr: false })
 const MiCuentaTab = dynamic(() => import('./MiCuentaTab'), { ssr: false })
+const PlanesClient = dynamic(() => import('../planes/PlanesClient'), { ssr: false })
+const TrackRecordClient = dynamic(() => import('@/components/TrackRecord/TrackRecordClient'), { ssr: false })
+const ReportesClient = dynamic(() => import('../reportes/ReportesClient'), { ssr: false })
 
-type Tab = 'overview' | 'sesgo' | 'cuenta'
+type Tab = 'overview' | 'sesgo' | 'cuenta' | 'plan' | 'track' | 'reportes'
 
 interface Session {
   id: string; date: string; instrumento: string; direccion: string; resultado: string
@@ -21,16 +23,29 @@ interface Plan {
   dataFeedMensual: number | null; comisionPorTrade: number | null
 }
 
+const NAV_TABS: [Tab, string][] = [
+  ['overview', 'OVERVIEW'],
+  ['sesgo', 'SESGO INTRADÍA'],
+  ['cuenta', 'MI CUENTA'],
+  ['plan', 'PLAN'],
+]
+
 export default function FuturosClient({
   isAdmin,
   sessions = [],
   plans = [],
+  fullPlans = [],
+  retiros = [],
+  userId = '',
   userName = null,
   userPlan = null,
 }: {
   isAdmin: boolean
   sessions?: Session[]
   plans?: Plan[]
+  fullPlans?: any[]
+  retiros?: any[]
+  userId?: string
   userName?: string | null
   userPlan?: string | null
 }) {
@@ -73,6 +88,9 @@ export default function FuturosClient({
     return match?.[1] || ''
   }
 
+  // MI CUENTA se resalta también cuando estamos en sub-tabs track/reportes
+  const isActiveCuenta = tab === 'cuenta' || tab === 'track' || tab === 'reportes'
+
   return (
     <div className="animate-fadeIn">
       {/* Header */}
@@ -85,36 +103,21 @@ export default function FuturosClient({
       {/* Nav unificada */}
       <div className="overflow-x-auto scrollbar-none mb-8">
         <div className="flex items-center gap-1 p-1 rounded-xl w-fit" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-          {([['overview', 'OVERVIEW'], ['sesgo', 'SESGO INTRADÍA'], ['cuenta', 'MI CUENTA']] as [Tab, string][]).map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => setTab(id)}
-              className="px-5 py-2 rounded-lg text-xs font-mono tracking-widest transition-all whitespace-nowrap"
-              style={tab === id
-                ? { background: 'var(--gold-dark)', color: '#000', fontWeight: 700 }
-                : { color: 'var(--text-secondary)' }}
-            >
-              {label}
-            </button>
-          ))}
-
-          <div style={{ width: 1, height: 20, background: 'var(--border)', margin: '0 4px', flexShrink: 0 }} />
-
-          {([
-            ['/dashboard/planes', 'PLAN'],
-            ['/dashboard/track-record', 'TRACK RECORD'],
-            ['/dashboard/reportes', 'REPORTES'],
-          ] as [string, string][]).map(([href, label]) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-1 px-5 py-2 rounded-lg text-xs font-mono tracking-widest transition-all whitespace-nowrap"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              {label}
-              <span style={{ color: 'var(--text-muted)', fontSize: 9 }}>↗</span>
-            </Link>
-          ))}
+          {NAV_TABS.map(([id, label]) => {
+            const isActive = id === 'cuenta' ? isActiveCuenta : tab === id
+            return (
+              <button
+                key={id}
+                onClick={() => setTab(id === 'cuenta' && isActiveCuenta && tab !== 'cuenta' ? 'cuenta' : id)}
+                className="px-5 py-2 rounded-lg text-xs font-mono tracking-widest transition-all whitespace-nowrap"
+                style={isActive
+                  ? { background: 'var(--gold-dark)', color: '#000', fontWeight: 700 }
+                  : { color: 'var(--text-secondary)' }}
+              >
+                {label}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -126,7 +129,42 @@ export default function FuturosClient({
           plans={plans}
           userName={userName}
           userPlan={userPlan}
+          onSwitchTab={setTab}
         />
+      )}
+
+      {tab === 'plan' && (
+        <PlanesClient initialPlans={fullPlans} initialRetiros={retiros} />
+      )}
+
+      {tab === 'track' && (
+        <div>
+          <button
+            onClick={() => setTab('cuenta')}
+            className="inline-flex items-center gap-1.5 text-[10px] font-mono tracking-widest mb-6 transition-colors hover:text-[var(--gold)]"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            ← MI CUENTA
+          </button>
+          <TrackRecordClient
+            initialSessions={sessions as any}
+            initialPlans={plans.map(p => ({ id: p.id, name: p.name }))}
+            userId={userId}
+          />
+        </div>
+      )}
+
+      {tab === 'reportes' && (
+        <div>
+          <button
+            onClick={() => setTab('cuenta')}
+            className="inline-flex items-center gap-1.5 text-[10px] font-mono tracking-widest mb-6 transition-colors hover:text-[var(--gold)]"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            ← MI CUENTA
+          </button>
+          <ReportesClient />
+        </div>
       )}
 
       {tab === 'overview' && (
@@ -140,30 +178,7 @@ export default function FuturosClient({
             </p>
           </div>
 
-          {/* Features */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            {[
-              { icon: '⚡', title: 'Alto apalancamiento', desc: 'Controla grandes contratos con poco capital. Opera NQ desde $500 de margen intradía.' },
-              { icon: '🌍', title: 'Mercado 24h', desc: 'Opera casi 24 horas al día, 5 días a la semana. Liquidez constante en horario US.' },
-              { icon: '📉', title: 'Bidireccional', desc: 'Gana tanto en subidas (LONG) como en bajadas (SHORT). Sin restricciones de day trading.' },
-            ].map((f, i) => (
-              <div
-                key={i}
-                className="rounded-xl border p-5"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 80%)',
-                  borderColor: 'rgba(201,168,76,0.15)',
-                  animation: `fadeInUp 0.5s ${i * 0.1}s both`,
-                }}
-              >
-                <div className="text-2xl mb-2">{f.icon}</div>
-                <p className="text-xs font-bold text-white mb-1">{f.title}</p>
-                <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>{f.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Video admin */}
+          {/* Video admin — ahora encima de las tarjetas */}
           <div className="mb-8 rounded-xl border p-5" style={{ borderColor: 'rgba(201,168,76,0.18)', background: 'linear-gradient(135deg, rgba(201,168,76,0.04) 0%, transparent 70%)' }}>
             <div className="flex items-center justify-between mb-3">
               <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>VIDEO DEL PROFESIONAL</p>
@@ -217,6 +232,28 @@ export default function FuturosClient({
             )}
           </div>
 
+          {/* Features — ahora al final */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            {[
+              { icon: '⚡', title: 'Alto apalancamiento', desc: 'Controla grandes contratos con poco capital. Opera NQ desde $500 de margen intradía.' },
+              { icon: '🌍', title: 'Mercado 24h', desc: 'Opera casi 24 horas al día, 5 días a la semana. Liquidez constante en horario US.' },
+              { icon: '📉', title: 'Bidireccional', desc: 'Gana tanto en subidas (LONG) como en bajadas (SHORT). Sin restricciones de day trading.' },
+            ].map((f, i) => (
+              <div
+                key={i}
+                className="rounded-xl border p-5"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 80%)',
+                  borderColor: 'rgba(201,168,76,0.15)',
+                  animation: `fadeInUp 0.5s ${i * 0.1}s both`,
+                }}
+              >
+                <div className="text-2xl mb-2">{f.icon}</div>
+                <p className="text-xs font-bold text-white mb-1">{f.title}</p>
+                <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

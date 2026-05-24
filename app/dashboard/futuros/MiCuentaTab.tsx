@@ -145,11 +145,13 @@ export default function MiCuentaTab({
   userName,
   userPlan,
   plans = [],
+  onSwitchTab,
 }: {
   sessions: Session[]
   userName: string | null
   userPlan: string | null
   plans?: Plan[]
+  onSwitchTab?: (tab: 'track' | 'reportes') => void
 }) {
   const [mesSeleccionado, setMesSeleccionado] = useState('all')
   const [planSeleccionado, setPlanSeleccionado] = useState('all')
@@ -340,6 +342,25 @@ export default function MiCuentaTab({
                 <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>
               ))}
             </select>
+          </div>
+        )}
+
+        {onSwitchTab && (
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              onClick={() => onSwitchTab('reportes')}
+              className="px-3 py-2 rounded-lg text-[10px] font-mono tracking-widest transition-colors border"
+              style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', background: 'transparent' }}
+            >
+              REPORTES ↗
+            </button>
+            <button
+              onClick={() => onSwitchTab('track')}
+              className="px-3 py-2 rounded-lg text-[10px] font-mono tracking-widest transition-colors border"
+              style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', background: 'transparent' }}
+            >
+              TRACK RECORD ↗
+            </button>
           </div>
         )}
       </div>
