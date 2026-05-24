@@ -27,7 +27,6 @@ const NAV_TABS: [Tab, string][] = [
   ['overview', 'OVERVIEW'],
   ['sesgo', 'SESGO INTRADÍA'],
   ['cuenta', 'MI CUENTA'],
-  ['plan', 'PLAN'],
 ]
 
 export default function FuturosClient({
@@ -88,8 +87,8 @@ export default function FuturosClient({
     return match?.[1] || ''
   }
 
-  // MI CUENTA se resalta también cuando estamos en sub-tabs track/reportes
-  const isActiveCuenta = tab === 'cuenta' || tab === 'track' || tab === 'reportes'
+  // MI CUENTA se resalta también cuando estamos en sub-tabs plan/track/reportes
+  const isActiveCuenta = tab === 'cuenta' || tab === 'plan' || tab === 'track' || tab === 'reportes'
 
   return (
     <div className="animate-fadeIn">
@@ -134,7 +133,16 @@ export default function FuturosClient({
       )}
 
       {tab === 'plan' && (
-        <PlanesClient initialPlans={fullPlans} initialRetiros={retiros} />
+        <div>
+          <button
+            onClick={() => setTab('cuenta')}
+            className="inline-flex items-center gap-1.5 text-[10px] font-mono tracking-widest mb-6 transition-colors hover:text-[var(--gold)]"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            ← MI CUENTA
+          </button>
+          <PlanesClient initialPlans={fullPlans} initialRetiros={retiros} />
+        </div>
       )}
 
       {tab === 'track' && (

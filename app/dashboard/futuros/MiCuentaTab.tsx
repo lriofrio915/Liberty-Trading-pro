@@ -151,7 +151,7 @@ export default function MiCuentaTab({
   userName: string | null
   userPlan: string | null
   plans?: Plan[]
-  onSwitchTab?: (tab: 'track' | 'reportes') => void
+  onSwitchTab?: (tab: 'plan' | 'track' | 'reportes') => void
 }) {
   const [mesSeleccionado, setMesSeleccionado] = useState('all')
   const [planSeleccionado, setPlanSeleccionado] = useState('all')
@@ -347,20 +347,16 @@ export default function MiCuentaTab({
 
         {onSwitchTab && (
           <div className="flex items-center gap-2 ml-auto">
-            <button
-              onClick={() => onSwitchTab('reportes')}
-              className="px-3 py-2 rounded-lg text-[10px] font-mono tracking-widest transition-colors border"
-              style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', background: 'transparent' }}
-            >
-              REPORTES ↗
-            </button>
-            <button
-              onClick={() => onSwitchTab('track')}
-              className="px-3 py-2 rounded-lg text-[10px] font-mono tracking-widest transition-colors border"
-              style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', background: 'transparent' }}
-            >
-              TRACK RECORD ↗
-            </button>
+            {(['plan', 'track', 'reportes'] as const).map((t, i) => (
+              <button
+                key={t}
+                onClick={() => onSwitchTab(t as any)}
+                className="px-3 py-2 rounded-lg text-[10px] font-mono tracking-widest transition-colors border"
+                style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', background: 'transparent' }}
+              >
+                {['PLAN', 'TRACK RECORD', 'REPORTES'][i]} ↗
+              </button>
+            ))}
           </div>
         )}
       </div>
