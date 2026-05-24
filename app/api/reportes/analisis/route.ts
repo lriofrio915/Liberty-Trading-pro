@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       maxTokens: 1000,
       temperature: 0.5,
       httpReferer: process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
-      xTitle: 'Liberty Trading Pro -- Report Analysis',
+      xTitle: 'Liberty Trading Club -- Report Analysis',
     })
 
     const analysis = result.content || null

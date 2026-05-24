@@ -61,7 +61,7 @@ function RegisterForm() {
       style={{ background: 'var(--bg-primary)' }}>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-black gradient-gold">Liberty Trading Pro</Link>
+          <Link href="/" className="text-2xl font-black gradient-gold">Liberty Trading Club</Link>
           <div className="mt-3 inline-block border border-[var(--gold-dark)] rounded-full px-6 py-1 ml-3">
             <span className="text-sm text-[var(--gold)] font-bold">Plan {planInfo.name} — {planInfo.price}</span>
           </div>

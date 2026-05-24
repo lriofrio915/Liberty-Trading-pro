@@ -226,7 +226,7 @@ function ShareModal({ post, onClose }: { post: Post; onClose: () => void }) {
 
   const authorName = post.user.name.includes('@') ? 'Trader' : post.user.name
   const preview = post.contenido.slice(0, 100) + (post.contenido.length > 100 ? '...' : '')
-  const text = encodeURIComponent(`${authorName} en Liberty Trading Pro:\n"${preview}"\n`)
+  const text = encodeURIComponent(`${authorName} en Liberty Trading Club:\n"${preview}"\n`)
 
   const networks = [
     {

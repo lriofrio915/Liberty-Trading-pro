@@ -7,12 +7,12 @@ import VincesWidget from '@/components/VincesWidget/VincesWidget'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 export const metadata: Metadata = {
-  title: 'Mentoría Integral de Trading | Liberty Trading Pro — $29/mes',
+  title: 'Mentoría Integral de Trading | Liberty Trading Club — $29/mes',
   description:
     'Aprende a invertir sin dejar tu trabajo. Acciones, ETFs, cripto y futuros con Luis Riofrio. Clases 1 a 1, Vinces IA y comunidad privada. Plan Pro desde $29/mes, cancela cuando quieras.',
   keywords: 'mentoría trading, inversión acciones ETFs, aprender trading Ecuador, Luis Riofrio, plan mensual 29 dólares',
   openGraph: {
-    title: 'Mentoría Integral de Trading — $29/mes | Liberty Trading Pro',
+    title: 'Mentoría Integral de Trading — $29/mes | Liberty Trading Club',
     description: 'Aprende a invertir en acciones, ETFs y cripto con Luis Riofrio. Sin dejar tu trabajo, sin permanencia. $29/mes.',
     url: 'https://libertytrading.pro/mentoria-integral',
   },
@@ -52,7 +52,7 @@ export default async function MentoriaIntegralPage() {
             </h1>
 
             <p className="text-lg text-[var(--text-secondary)] max-w-2xl mb-10 leading-relaxed">
-              Accede al Club Liberty Trading Pro con el <strong className="text-[var(--text-primary)]">Plan Pro Mensual</strong> —
+              Accede al Club Liberty Trading Club con el <strong className="text-[var(--text-primary)]">Plan Pro Mensual</strong> —
               mentoría de inversión en acciones, ETFs y cripto, clases 1 a 1 con Luis,
               Vinces IA 24/7 y comunidad activa. Sin contratos. Cancela cuando quieras.
             </p>
@@ -260,7 +260,7 @@ export default async function MentoriaIntegralPage() {
                   '🏛 Operador Financiero en Emporium Quality Funds',
                   '📈 Trader de Futuros NQ/MNQ, Acciones y Opciones Financieras',
                   '🏦 Gestión de portafolios de acciones y opciones en IBKR',
-                  '🎓 Fundador de Liberty Trading Pro',
+                  '🎓 Fundador de Liberty Trading Club',
                   '💱 Operador P2P USDT/BTC — Ecuador y Latinoamérica',
                 ].map((c) => (
                   <div key={c} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
@@ -377,7 +377,7 @@ export default async function MentoriaIntegralPage() {
       <section className="py-24 px-4 border-y border-[var(--border)]"
         style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-3xl mx-auto text-center">
-          <div className="label-mono mb-4 text-[var(--gold)]">Plan Pro Mensual · Liberty Trading Pro</div>
+          <div className="label-mono mb-4 text-[var(--gold)]">Plan Pro Mensual · Liberty Trading Club</div>
           <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)] mb-6">
             Empieza hoy<br />por solo<br />
             <span className="gradient-gold">$29/mes</span>

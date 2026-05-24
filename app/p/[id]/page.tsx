@@ -19,11 +19,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     include: { user: { select: { name: true } } },
   })
 
-  if (!post) return { title: 'Post — Liberty Trading Pro' }
+  if (!post) return { title: 'Post — Liberty Trading Club' }
 
   const authorName = post.user.name.includes('@') ? 'Trader' : post.user.name
   const tipoLabel = TIPO_LABELS[post.tipo] ?? post.tipo
-  const title = `${tipoLabel} de ${authorName} — Liberty Trading Pro`
+  const title = `${tipoLabel} de ${authorName} — Liberty Trading Club`
   const description = post.contenido.slice(0, 160)
   const ogImage = post.imageUrl ?? `${APP_URL}/p/${id}/opengraph-image`
 
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       title,
       description,
       url: `${APP_URL}/p/${id}`,
-      siteName: 'Liberty Trading Pro',
+      siteName: 'Liberty Trading Club',
       images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
       type: 'article',
     },

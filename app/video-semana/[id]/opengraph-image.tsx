@@ -21,7 +21,7 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
 
   const titulo = video?.titulo ?? 'Video de la Semana'
   const descripcion = video?.descripcion ?? 'Trading real, entradas válidas, resultados verificables.'
-  const semana = video ? `Semana del ${formatSemana(video.semana)}` : 'Liberty Trading Pro'
+  const semana = video ? `Semana del ${formatSemana(video.semana)}` : 'Liberty Trading Club'
 
   return new ImageResponse(
     (

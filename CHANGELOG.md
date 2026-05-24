@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Liberty Trading Pro are documented here.
+All notable changes to Liberty Trading Club are documented here.
 
 ## [0.1.2.0] - 2026-05-01
 

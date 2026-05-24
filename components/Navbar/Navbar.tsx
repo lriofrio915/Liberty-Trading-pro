@@ -46,7 +46,7 @@ export default function Navbar({ initialUser = null }: NavbarProps) {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <span className="headline text-lg gradient-gold">Liberty Trading Pro</span>
+          <span className="headline text-lg gradient-gold">Liberty Trading Club</span>
         </Link>
 
         {/* Desktop Nav */}

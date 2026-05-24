@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     }
 
     const systemPrompt = sanitizeText(
-      `Eres Vinces, el asistente de ventas de Liberty Trading Pro, la plataforma de trading de Luis Riofrio (Ecuador).\n\n` +
+      `Eres Vinces, el asistente de ventas de Liberty Trading Club, la plataforma de trading de Luis Riofrio (Ecuador).\n\n` +
       `TU OBJETIVO: Entender la situacion del visitante, recomendarle el plan ideal y capturar su nombre + telefono para darle seguimiento personalizado.\n\n` +
       `PLAN DISPONIBLE:\n` +
       `- Plan Pro Mensual: $29/mes - sin permanencia, cancela cuando quieras, todo incluido\n\n` +
@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
       maxTokens: 400,
       temperature: 0.75,
       httpReferer: process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
-      xTitle: 'Liberty Trading Pro -- Vinces Landing',
+      xTitle: 'Liberty Trading Club -- Vinces Landing',
     })
 
     let content: string = result.content || ''

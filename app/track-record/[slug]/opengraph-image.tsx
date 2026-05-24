@@ -117,7 +117,7 @@ export default async function OgImage({ params }: { params: Promise<{ slug: stri
     return new ImageResponse(
       (
         <div style={{ width: 1200, height: 630, background: '#080808', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-          <div style={{ color: '#C9A84C', fontSize: 52, fontWeight: 900, fontFamily: 'sans-serif' }}>Liberty Trading Pro</div>
+          <div style={{ color: '#C9A84C', fontSize: 52, fontWeight: 900, fontFamily: 'sans-serif' }}>Liberty Trading Club</div>
           <div style={{ color: '#555', fontSize: 18, fontFamily: 'sans-serif' }}>Track Record Verificado</div>
         </div>
       ),

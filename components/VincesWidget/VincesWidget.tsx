@@ -18,7 +18,7 @@ const CONFIG = {
     storageKey: 'vinces_landing_msgs',
     sessionKey: 'vinces_landing_session' as string,
     apiUrl: '/api/vinces-landing',
-    initialMessage: '¡Hola! Soy **Vinces**, el asistente de Liberty Trading Pro.\n\n¿Ya tienes experiencia en trading o sería tu primera vez invirtiendo?',
+    initialMessage: '¡Hola! Soy **Vinces**, el asistente de Liberty Trading Club.\n\n¿Ya tienes experiencia en trading o sería tu primera vez invirtiendo?',
   },
 }
 

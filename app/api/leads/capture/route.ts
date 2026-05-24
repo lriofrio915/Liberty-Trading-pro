@@ -33,7 +33,7 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
   const planLink  = LINKS.MENSUAL
 
   await resend.emails.send({
-    from: 'Liberty Trading Pro <noreply@libertytrading.pro>',
+    from: 'Liberty Trading Club <noreply@libertytrading.pro>',
     to: email,
     subject: `¡Hola ${name}! Vinces te escribe en un momento 👋`,
     html: `
@@ -46,7 +46,7 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
       <!-- Header -->
       <div style="text-align:center;margin-bottom:32px;">
         <div style="font-size:22px;font-weight:700;color:#C9A84C;letter-spacing:2px;font-family:Georgia,serif;">
-          Liberty Trading Pro
+          Liberty Trading Club
         </div>
         <div style="font-size:11px;color:#4a4642;letter-spacing:3px;text-transform:uppercase;margin-top:4px;">
           Club de Trading · Luis Riofrío
@@ -107,7 +107,7 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
       <!-- Footer -->
       <div style="text-align:center;margin-top:24px;">
         <p style="font-size:11px;color:#4a4642;margin:0;">
-          © ${new Date().getFullYear()} Liberty Trading Pro · Ecuador 🇪🇨<br>
+          © ${new Date().getFullYear()} Liberty Trading Club · Ecuador 🇪🇨<br>
           Las inversiones implican riesgo. Resultados pasados no garantizan rendimientos futuros.
         </p>
       </div>

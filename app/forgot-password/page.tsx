@@ -36,7 +36,7 @@ function ForgotPasswordForm() {
     >
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-black gradient-gold">Liberty Trading Pro</Link>
+          <Link href="/" className="text-2xl font-black gradient-gold">Liberty Trading Club</Link>
           <p className="text-[var(--text-secondary)] mt-2 text-sm">Restablecer contraseña</p>
         </div>
 

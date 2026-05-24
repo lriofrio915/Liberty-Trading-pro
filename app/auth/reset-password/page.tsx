@@ -79,7 +79,7 @@ function ResetPasswordForm() {
       >
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <Link href="/" className="text-2xl font-black gradient-gold">Liberty Trading Pro</Link>
+            <Link href="/" className="text-2xl font-black gradient-gold">Liberty Trading Club</Link>
           </div>
           <div className="card-gold text-center space-y-4">
             <div className="text-4xl">⚠️</div>
@@ -103,7 +103,7 @@ function ResetPasswordForm() {
     >
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-black gradient-gold">Liberty Trading Pro</Link>
+          <Link href="/" className="text-2xl font-black gradient-gold">Liberty Trading Club</Link>
           <p className="text-[var(--text-secondary)] mt-2 text-sm">Nueva contraseña</p>
         </div>
 

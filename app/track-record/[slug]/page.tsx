@@ -44,7 +44,7 @@ export async function generateMetadata(
   const pnl = sessions.reduce((a, s) => a + s.pnlNeto, 0)
   const pnlStr = pnl >= 0 ? `+$${Math.round(pnl).toLocaleString()}` : `-$${Math.round(Math.abs(pnl)).toLocaleString()}`
 
-  const title = `${name} — Perfil Público del Operador · Liberty Trading Pro`
+  const title = `${name} — Perfil Público del Operador · Liberty Trading Club`
   const description = user?.bio
     ? `${user.bio} · ${winRate}% Win Rate · ${pnlStr} P&L Neto · ${total} operaciones verificadas.`
     : `${winRate}% Win Rate · ${pnlStr} P&L Neto · ${total} operaciones reales verificadas. Sin filtros.`
@@ -55,7 +55,7 @@ export async function generateMetadata(
     url: `${process.env.NEXT_PUBLIC_APP_URL}/track-record/${urlSlug}/opengraph-image`,
     width: 1200,
     height: 630,
-    alt: `Track Record de ${name} — Liberty Trading Pro`,
+    alt: `Track Record de ${name} — Liberty Trading Club`,
   }
 
   return {
@@ -66,7 +66,7 @@ export async function generateMetadata(
       title,
       description,
       url,
-      siteName: 'Liberty Trading Pro',
+      siteName: 'Liberty Trading Club',
       type: 'profile',
       locale: 'es_EC',
       images: [ogImage],
@@ -287,7 +287,7 @@ export default async function PublicTrackRecordPage({ params }: { params: Promis
       <nav style={{ borderBottom: '1px solid #141414' }}>
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" style={{ fontFamily: 'Georgia, serif', fontSize: 18, fontWeight: 700, color: '#C9A84C', letterSpacing: 1 }}>
-            Liberty Trading Pro
+            Liberty Trading Club
           </Link>
           <div className="flex items-center gap-2">
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e', display: 'inline-block' }} />
@@ -613,7 +613,7 @@ export default async function PublicTrackRecordPage({ params }: { params: Promis
             <p style={{ fontSize: 11, fontFamily: 'monospace', color: '#333' }}>
               Datos en tiempo real · Verificado por{' '}
               <Link href="/" style={{ color: '#555', textDecoration: 'none' }} className="hover:text-[#C9A84C]">
-                Liberty Trading Pro
+                Liberty Trading Club
               </Link>
               {' · '}Las inversiones implican riesgo. Resultados pasados no garantizan rendimientos futuros.
             </p>

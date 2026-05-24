@@ -7,12 +7,12 @@ import VincesWidget from '@/components/VincesWidget/VincesWidget'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 export const metadata: Metadata = {
-  title: 'Maestría en Futuros NQ/MNQ | Liberty Trading Pro — $29/mes',
+  title: 'Maestría en Futuros NQ/MNQ | Liberty Trading Club — $29/mes',
   description:
     'Aprende a operar futuros del Nasdaq (NQ/MNQ) con Luis Riofrio. Sistema completo de rompimiento y consecución, NinjaTrader 8, gestión de riesgo y psicología. Plan Pro $29/mes.',
   keywords: 'futuros Nasdaq NQ MNQ, trading futuros Ecuador, NinjaTrader 8, Luis Riofrio, day trading, plan mensual 29 dólares',
   openGraph: {
-    title: 'Maestría en Futuros NQ/MNQ — $29/mes | Liberty Trading Pro',
+    title: 'Maestría en Futuros NQ/MNQ — $29/mes | Liberty Trading Club',
     description: 'Sistema completo para operar futuros Nasdaq con Luis Riofrio. NinjaTrader 8, rompimiento y consecución. $29/mes.',
     url: 'https://libertytrading.pro/maestria-futuros',
   },
@@ -52,7 +52,7 @@ export default async function MaestriaFuturosPage() {
             </h1>
 
             <p className="text-lg text-[var(--text-secondary)] max-w-2xl mb-10 leading-relaxed">
-              Accede al Club Liberty Trading Pro con el <strong className="text-[var(--text-primary)]">Plan Pro Mensual</strong> —
+              Accede al Club Liberty Trading Club con el <strong className="text-[var(--text-primary)]">Plan Pro Mensual</strong> —
               el sistema completo de Luis para operar Futuros Nasdaq (NQ/MNQ), mentoría 1 a 1,
               Vinces IA y todo el contenido de inversión. Sin contratos, cancela cuando quieras.
             </p>
@@ -294,7 +294,7 @@ export default async function MaestriaFuturosPage() {
                   '📈 Trader intradia NQ/MNQ — apertura mercado americano (9:30 NY)',
                   '🤖 Creador de Vinces IA — mentor de métricas y track record',
                   '🏦 Gestión de portafolios de acciones y opciones en IBKR',
-                  '🎓 Fundador de Liberty Trading Pro',
+                  '🎓 Fundador de Liberty Trading Club',
                 ].map((c) => (
                   <div key={c} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
                     <span>{c}</span>
@@ -420,7 +420,7 @@ export default async function MaestriaFuturosPage() {
       <section className="py-24 px-4 border-y border-[var(--border)]"
         style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-3xl mx-auto text-center">
-          <div className="label-mono mb-4 text-[var(--gold)]">Plan Pro Mensual · Liberty Trading Pro</div>
+          <div className="label-mono mb-4 text-[var(--gold)]">Plan Pro Mensual · Liberty Trading Club</div>
           <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)] mb-6">
             El sistema completo<br />de futuros NQ/MNQ.<br />
             <span className="gradient-gold">$29/mes</span>

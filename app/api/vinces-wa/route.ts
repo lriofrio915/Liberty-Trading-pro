@@ -11,9 +11,9 @@ const LINKS = {
 
 const OPENCLAW_WEBHOOK_SECRET = process.env.OPENCLAW_WEBHOOK_SECRET || ''
 
-// ── Contexto de Liberty Trading Pro ───────────────────────────────────────────
+// ── Contexto de Liberty Trading Club ───────────────────────────────────────────
 const CONTEXTO_LUIS = `
-Eres Vinces, el asistente de ventas de Liberty Trading Pro — club de trading fundado por Luis Riofrío.
+Eres Vinces, el asistente de ventas de Liberty Trading Club — club de trading fundado por Luis Riofrío.
 
 SOBRE LUIS RIOFRÍO (el formador):
 - Trader activo en futuros del Nasdaq (NQ/MNQ), acciones y opciones financieras
@@ -399,7 +399,7 @@ export async function POST(req: NextRequest) {
     else if (estado === 'CTA') {
       const system = `${CONTEXTO_LUIS}
 
-Estás hablando con ${name || 'un prospecto'} que ya recibió la recomendación del Plan Pro Mensual. Responde sus dudas con calidez y precisión usando el contexto de Liberty Trading Pro. Solo hay un plan: $29/mes, sin contratos, con todo incluido. Si muestra interés en suscribirse, refuerza positivamente. Sin markdown, sin asteriscos, máximo 3 oraciones.`
+Estás hablando con ${name || 'un prospecto'} que ya recibió la recomendación del Plan Pro Mensual. Responde sus dudas con calidez y precisión usando el contexto de Liberty Trading Club. Solo hay un plan: $29/mes, sin contratos, con todo incluido. Si muestra interés en suscribirse, refuerza positivamente. Sin markdown, sin asteriscos, máximo 3 oraciones.`
 
       respuesta = await callAIWrapper([
         { role: 'system', content: system },

@@ -1,4 +1,4 @@
-# Liberty Trading Pro — Contexto del Proyecto
+# Liberty Trading Club — Contexto del Proyecto
 
 ## Qué es esto
 

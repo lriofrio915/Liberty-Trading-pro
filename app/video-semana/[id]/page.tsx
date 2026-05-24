@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const video = await prisma.videoSemana.findUnique({ where: { id } })
   if (!video) return {}
 
-  const title = `${video.titulo} · Liberty Trading Pro`
+  const title = `${video.titulo} · Liberty Trading Club`
   const description = video.descripcion || `Video de la semana: ${video.titulo}. Trading real, semana del ${formatSemana(video.semana)}.`
   const url = `${process.env.NEXT_PUBLIC_APP_URL}/video-semana/${video.id}`
 
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       title,
       description,
       url,
-      siteName: 'Liberty Trading Pro',
+      siteName: 'Liberty Trading Club',
       type: 'video.other',
     },
     twitter: {
@@ -64,7 +64,7 @@ export default async function PublicVideoSemanaPage({ params }: { params: Promis
       {/* Header */}
       <div className="border-b border-[#1a1a1a] px-4 py-4 flex items-center justify-between max-w-4xl mx-auto">
         <Link href="/" className="text-lg font-black" style={{ color: '#C9A84C', fontFamily: 'Georgia, serif' }}>
-          Liberty Trading Pro
+          Liberty Trading Club
         </Link>
         <span className="text-[10px] font-mono tracking-widest uppercase" style={{ color: '#555' }}>
           Video de la Semana
@@ -176,7 +176,7 @@ export default async function PublicVideoSemanaPage({ params }: { params: Promis
           <p className="text-xs font-mono" style={{ color: '#444' }}>
             Contenido en tiempo real ·{' '}
             <Link href="/" className="hover:text-[#C9A84C] transition-colors" style={{ color: '#555' }}>
-              Liberty Trading Pro
+              Liberty Trading Club
             </Link>
           </p>
           <Link

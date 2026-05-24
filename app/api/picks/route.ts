@@ -159,7 +159,7 @@ REGLAS ESTRICTAS:
         temperature: 0.15,
         maxTokens: 4096,
         httpReferer: process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
-        xTitle: 'Liberty Trading Pro - Investment Report',
+        xTitle: 'Liberty Trading Club - Investment Report',
         signal: AbortSignal.timeout(55000),
       })
 

@@ -16,7 +16,7 @@ export default function Footer() {
 
           {/* Brand */}
           <div className="md:col-span-5">
-            <div className="headline text-2xl gradient-gold mb-3">Liberty Trading Pro</div>
+            <div className="headline text-2xl gradient-gold mb-3">Liberty Trading Club</div>
             <p className="text-sm text-[var(--text-muted)] max-w-xs leading-relaxed mb-5">
               Oportunidades de inversión en acciones y ETFs, coaching con IA y gestión de portafolio
               institucional. Luis Riofrio — Operador Financiero, Emporium Quality Funds.
@@ -80,12 +80,6 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href={VINCES_WA} target="_blank" rel="noopener noreferrer"
-                  className="text-sm text-[var(--text-muted)] hover:text-[var(--gold)] transition-colors">
-                  Luis: +593 99 669 1586
-                </a>
-              </li>
-              <li>
                 <a href="mailto:soporte@libertytrading.pro"
                   className="text-sm text-[var(--text-muted)] hover:text-[var(--gold)] transition-colors">
                   soporte@libertytrading.pro
@@ -103,7 +97,7 @@ export default function Footer() {
 
         <div className="border-t border-[var(--border)] pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <p className="label-mono text-[10px]">
-            © {new Date().getFullYear()} Liberty Trading Pro — Todos los derechos reservados
+            © {new Date().getFullYear()} Liberty Trading Club — Todos los derechos reservados
           </p>
           <p className="label-mono text-[10px] max-w-sm text-right">
             Las inversiones implican riesgo. Resultados pasados no garantizan rendimientos futuros.

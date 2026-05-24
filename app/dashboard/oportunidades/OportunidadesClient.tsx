@@ -156,7 +156,7 @@ function printReport(opp: Opportunity) {
     </style>
   </head><body>
     ${body}
-    <div class="footer">Liberty Trading Pro · ${new Date(opp.publishedAt).toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'})} · Análisis generado con IA · Liberty Trading Club</div>
+    <div class="footer">Liberty Trading Club · ${new Date(opp.publishedAt).toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'})} · Análisis generado con IA · Liberty Trading Club</div>
   </body></html>`)
   win.document.close()
   win.print()

@@ -264,7 +264,7 @@ export default function UnirsePage() {
         style={{ background: 'rgba(8,8,8,0.95)', backdropFilter: 'blur(12px)', borderColor: 'rgba(255,255,255,0.07)' }}>
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link href="/" className="text-lg font-black" style={{ color: '#C9A84C', fontFamily: 'Georgia, serif' }}>
-            Liberty Trading Pro
+            Liberty Trading Club
           </Link>
           <div className="flex items-center gap-3">
             {VINCES_WA && <a href={VINCES_WA} target="_blank" rel="noopener noreferrer"
@@ -532,10 +532,10 @@ export default function UnirsePage() {
       {/* ── Footer ── */}
       <footer className="border-t px-4 py-8 text-center" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
         <Link href="/" className="text-sm font-black mb-3 block" style={{ color: '#C9A84C', fontFamily: 'Georgia, serif' }}>
-          Liberty Trading Pro
+          Liberty Trading Club
         </Link>
         <p className="text-[11px] font-mono max-w-md mx-auto" style={{ color: '#333' }}>
-          © {new Date().getFullYear()} Liberty Trading Pro · Las inversiones implican riesgo.
+          © {new Date().getFullYear()} Liberty Trading Club · Las inversiones implican riesgo.
           Resultados pasados no garantizan rendimientos futuros.
         </p>
       </footer>

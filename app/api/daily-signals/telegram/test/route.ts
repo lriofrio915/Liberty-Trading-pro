@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id,
-        text: '✅ *Liberty Trading Pro* — Conexión Telegram verificada correctamente.',
+        text: '✅ *Liberty Trading Club* — Conexión Telegram verificada correctamente.',
         parse_mode: 'Markdown',
       }),
       signal: AbortSignal.timeout(10_000),

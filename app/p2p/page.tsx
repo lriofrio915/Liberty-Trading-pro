@@ -5,7 +5,7 @@ export default function P2PPage() {
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       {/* Nav */}
       <div className="border-b border-[var(--border)] px-4 h-16 flex items-center">
-        <Link href="/" className="text-lg font-black gradient-gold">← Liberty Trading Pro</Link>
+        <Link href="/" className="text-lg font-black gradient-gold">← Liberty Trading Club</Link>
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-16 text-center">

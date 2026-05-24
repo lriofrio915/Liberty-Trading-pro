@@ -108,7 +108,7 @@ export default function VideoSemanaWidget({
   }
 
   const shareUrl = video ? `${appUrl}/video-semana/${video.id}` : ''
-  const shareText = video ? encodeURIComponent(`${video.titulo} — Liberty Trading Pro 📈`) : ''
+  const shareText = video ? encodeURIComponent(`${video.titulo} — Liberty Trading Club 📈`) : ''
 
   function copyLink() {
     navigator.clipboard.writeText(shareUrl).then(() => {

@@ -7,7 +7,7 @@ export default function Pricing() {
 
         {/* Header */}
         <div className="mb-14 text-center">
-          <div className="label-mono mb-3">Planes · Liberty Trading Pro</div>
+          <div className="label-mono mb-3">Planes · Liberty Trading Club</div>
           <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)]">
             Empieza gratis,<br />
             <span className="gradient-gold">sube cuando estés listo</span>

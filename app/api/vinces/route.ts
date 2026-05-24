@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
       maxTokens: 1500,
       temperature: 0.7,
       httpReferer: process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
-      xTitle: 'Liberty Trading Pro -- Vinces AI',
+      xTitle: 'Liberty Trading Club -- Vinces AI',
     })
 
     const content = result.content

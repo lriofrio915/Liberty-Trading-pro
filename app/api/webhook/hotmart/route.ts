@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   // Send WA confirmation
   if (phone) {
     const firstName = name.split(' ')[0]
-    const msg = `🎉 ¡Bienvenido al *Club Liberty Trading Pro*, ${firstName}!
+    const msg = `🎉 ¡Bienvenido al *Club Liberty Trading Club*, ${firstName}!
 
 Tu suscripción está activa. Ahora tienes acceso completo a:
 

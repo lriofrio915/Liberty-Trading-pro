@@ -133,7 +133,7 @@ export default function LeadCaptureForm({
         </button>
 
         <p className="text-[10px] text-[var(--text-muted)] text-center font-mono">
-          Sin spam. Solo te contacta Vinces IA de Liberty Trading Pro.
+          Sin spam. Solo te contacta Vinces IA de Liberty Trading Club.
         </p>
       </form>
     </div>

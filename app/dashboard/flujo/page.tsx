@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import FlujoDineroClient from './FlujoDineroClient'
 
-export const metadata = { title: 'Flujo del Dinero — Liberty Trading Pro' }
+export const metadata = { title: 'Flujo del Dinero — Liberty Trading Club' }
 
 export default async function FlujoDineroPage() {
   const supabase = await createSupabaseServerClient()

@@ -51,7 +51,7 @@ async function sendEmailFallback(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Liberty Trading Pro <notificaciones@libertytrading.pro>',
+        from: 'Liberty Trading Club <notificaciones@libertytrading.pro>',
         to: LUIS_EMAIL,
         subject,
         text: body,
@@ -88,7 +88,7 @@ function formatEmailBody(event: string, data: Record<string, unknown>): string {
     })
   return `Evento: ${eventLabels[event] || event}\n` +
     `Fecha: ${new Date().toLocaleString('es-EC', { timeZone: 'America/Guayaquil' })}\n` +
-    `Fuente: Liberty Trading Pro\n\n` +
+    `Fuente: Liberty Trading Club\n\n` +
     lines.join('\n') +
     `\n\n---\nNotificación automática. Responde a este email para contactar al equipo.`
 }

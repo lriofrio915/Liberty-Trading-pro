@@ -20,7 +20,7 @@ Usa este formato exacto (Markdown de Telegram):
 
 [al final:]
 ━━━━━━━━━━━━━━━
-🤖 _Liberty Trading Pro_
+🤖 _Liberty Trading Club_
 
 Reglas:
 - Traducir señales al español: 买入→COMPRAR, 卖出→VENDER, 持有→MANTENER, 增持→ACUMULAR, 减持→REDUCIR
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       const score  = s.sentiment_score ?? s.score
       return `🔹 *${ticker}* — ${name}\n  Señal: *${label}*${score != null ? `\n  Score: ${score}/100` : ''}`
     }).join('\n\n')
-    message = `━━━━━━━━━━━━━━━\n📊 *DAILY SCANNER — Liberty Trading*\n━━━━━━━━━━━━━━━\n\n${lines}\n\n━━━━━━━━━━━━━━━\n🤖 _Liberty Trading Pro_`
+    message = `━━━━━━━━━━━━━━━\n📊 *DAILY SCANNER — Liberty Trading*\n━━━━━━━━━━━━━━━\n\n${lines}\n\n━━━━━━━━━━━━━━━\n🤖 _Liberty Trading Club_`
   }
 
   // Send to Telegram
