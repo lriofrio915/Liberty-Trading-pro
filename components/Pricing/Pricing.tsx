@@ -76,7 +76,7 @@ export default function Pricing() {
               <ul className="space-y-2 mb-8">
                 {[
                   { icon: '🎓', text: 'Academia completa — 17+ lecciones desde cero' },
-                  { icon: '📈', text: 'Day Trading NQ/MNQ — señales y sesgo intradía' },
+                  { icon: '📈', text: 'Day Trading NQ/MNQ, CFDs, acciones y opciones — señales y sesgo' },
                   { icon: '🤝', text: 'Mentorías 1:1 personalizadas con Luis cada mes' },
                   { icon: '🤖', text: 'Vinces IA — coaching diario personalizado 24/7' },
                   { icon: '💡', text: 'Oportunidades en acciones, ETFs y opciones' },
@@ -143,7 +143,7 @@ export default function Pricing() {
                 <span className="gradient-gold">vía Interactive Brokers</span>
               </div>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-6">
-                Luis replica su operativa en tu cuenta de IBKR en tiempo real a través de NinjaTrader 8.
+                Luis compra acciones y contratos de opciones en tu cuenta de IBKR en tiempo real.
                 Solo pagas cuando ganas. Capital mínimo recomendado:{' '}
                 <strong className="text-white">$10,000 USD</strong>
               </p>
@@ -156,8 +156,7 @@ export default function Pricing() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { icon: '🏦', title: 'Apertura guiada', desc: 'Luis te acompaña en la apertura de cuenta IBKR' },
-                { icon: '🔗', title: 'NinjaTrader 8', desc: 'Tu cuenta conectada en tiempo real' },
-                { icon: '💼', title: '1% gestión', desc: 'Comisión sobre cada depósito realizado' },
+                { icon: '📊', title: 'Acciones y Opciones', desc: 'Compra de activos reales en IBKR' },
                 { icon: '🎯', title: '30% éxito', desc: 'Solo pagas sobre las ganancias generadas' },
                 { icon: '📅', title: 'Retiro anual', desc: 'Ganancias disponibles a fin de año' },
                 { icon: '🚫', title: 'Sin mensualidades', desc: 'Cero costo fijo — solo resultados' },

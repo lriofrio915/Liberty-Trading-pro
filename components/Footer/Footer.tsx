@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 const WA = 'https://wa.me/+593996691586'
-const VINCES_WA = 'https://wa.me/18287149177'
+const VINCES_WA = 'https://wa.me/593996691586'
 const IG = 'https://instagram.com/libertytradingclub'
 const FB = 'https://facebook.com/libertytradingclub'
 
@@ -82,7 +82,7 @@ export default function Footer() {
               <li>
                 <a href={VINCES_WA} target="_blank" rel="noopener noreferrer"
                   className="text-sm text-[var(--text-muted)] hover:text-[var(--gold)] transition-colors">
-                  Vinces / Soporte: +1 828 714 9177
+                  Luis: +593 99 669 1586
                 </a>
               </li>
               <li>

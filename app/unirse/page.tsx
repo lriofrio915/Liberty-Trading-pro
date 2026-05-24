@@ -26,7 +26,7 @@ interface TrackRecord {
 
 const FEATURES = [
   { icon: '🎓', title: 'Academia completa', desc: 'Formación desde cero hasta operar con disciplina' },
-  { icon: '📈', title: 'Day Trading en NQ/MNQ', desc: 'Futuros del Nasdaq con NinjaTrader 8' },
+  { icon: '📈', title: 'Day Trading de Futuros, CFDs y Acciones', desc: 'NQ/MNQ, CFDs globales, acciones y opciones en mercados reales' },
   { icon: '🤖', title: 'Vinces IA', desc: 'Coaching personalizado 24/7 con inteligencia artificial' },
   { icon: '🎯', title: 'Oportunidades de mercado', desc: 'Análisis en acciones, ETFs y futuros' },
   { icon: '🤝', title: 'Comunidad privada', desc: 'Traders reales compartiendo operativas y análisis' },

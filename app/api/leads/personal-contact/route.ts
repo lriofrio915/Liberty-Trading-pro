@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Teléfono inválido' }, { status: 400 })
     }
 
-    const planLabel = plan === 'ANUAL' ? 'Plan Pro Anual ($649/año)' : 'Plan Pro Mensual ($79/mes)'
+    const planLabel = 'Plan Pro Mensual ($29/mes)'
 
     // Store lead — do NOT trigger automated Vinces chat
     await (prisma as any).whatsappLead.upsert({

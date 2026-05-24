@@ -374,7 +374,7 @@ export default async function PublicTrackRecordPage({ params }: { params: Promis
         ) : (
           <>
             {/* ── Key metrics ─────────────────────────────────────────────── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 12 }}>
               {[
                 // Row 1
                 {
@@ -418,21 +418,21 @@ export default async function PublicTrackRecordPage({ params }: { params: Promis
               ].map(m => (
                 <div key={m.label} style={{
                   background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)',
-                  borderRadius: 16, padding: '16px 14px',
+                  borderRadius: 12, padding: 'clamp(10px, 3vw, 16px) clamp(8px, 2vw, 14px)',
                   display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-                  overflow: 'hidden',
+                  overflow: 'hidden', minWidth: 0,
                 }}>
-                  <div style={{ fontSize: 9, fontFamily: 'monospace', letterSpacing: 2, color: '#444', textTransform: 'uppercase', marginBottom: 8 }}>
+                  <div style={{ fontSize: 'clamp(8px, 2vw, 9px)', fontFamily: 'monospace', letterSpacing: 1, color: '#555', textTransform: 'uppercase', marginBottom: 6, lineHeight: 1.3 }}>
                     {m.label}
                   </div>
                   <div style={{
-                    fontFamily: 'Georgia, serif', fontSize: 'clamp(20px, 5vw, 30px)', fontWeight: 900,
+                    fontFamily: 'Georgia, serif', fontSize: 'clamp(18px, 5vw, 28px)', fontWeight: 900,
                     color: m.color, marginBottom: 4, lineHeight: 1,
                     wordBreak: 'break-all', maxWidth: '100%',
                   }}>
                     {m.value}
                   </div>
-                  <div style={{ fontSize: 9, fontFamily: 'monospace', color: '#444', wordBreak: 'break-word' }}>{m.sub}</div>
+                  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', fontFamily: 'monospace', color: '#444', wordBreak: 'break-word', lineHeight: 1.3 }}>{m.sub}</div>
                 </div>
               ))}
             </div>
@@ -566,14 +566,14 @@ export default async function PublicTrackRecordPage({ params }: { params: Promis
                   Historial completo · {sessions.length} operaciones registradas
                 </span>
               </div>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                <table style={{ width: '100%', minWidth: 320, borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                       {['Fecha', 'P&L Neto', 'Cuenta'].map(h => (
                         <th key={h} style={{
-                          textAlign: 'center', padding: '12px 16px',
-                          fontSize: 9, fontFamily: 'monospace', letterSpacing: 2,
+                          textAlign: 'center', padding: 'clamp(8px, 2vw, 12px) clamp(10px, 2.5vw, 16px)',
+                          fontSize: 'clamp(8px, 2vw, 9px)', fontFamily: 'monospace', letterSpacing: 1,
                           color: '#3a3a3a', textTransform: 'uppercase', whiteSpace: 'nowrap',
                         }}>
                           {h}
@@ -584,17 +584,18 @@ export default async function PublicTrackRecordPage({ params }: { params: Promis
                   <tbody>
                     {sessions.map((s, i) => (
                       <tr key={s.id} style={{ borderBottom: i < sessions.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                        <td style={{ padding: '10px 16px', fontFamily: 'monospace', fontSize: 11, color: '#555', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: 'clamp(7px, 1.8vw, 10px) clamp(10px, 2.5vw, 16px)', fontFamily: 'monospace', fontSize: 'clamp(10px, 2.5vw, 11px)', color: '#555', textAlign: 'center', whiteSpace: 'nowrap' }}>
                           {formatDate(s.date)}
                         </td>
                         <td style={{
-                          padding: '10px 16px', fontFamily: 'monospace', fontWeight: 700,
+                          padding: 'clamp(7px, 1.8vw, 10px) clamp(10px, 2.5vw, 16px)', fontFamily: 'monospace', fontWeight: 700,
+                          fontSize: 'clamp(11px, 3vw, 13px)',
                           color: s.pnlNeto >= 0 ? '#22c55e' : '#ef4444',
                           textAlign: 'center', whiteSpace: 'nowrap',
                         }}>
                           {formatPnl(s.pnlNeto)}
                         </td>
-                        <td style={{ padding: '10px 16px', fontFamily: 'monospace', fontSize: 11, color: '#888', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: 'clamp(7px, 1.8vw, 10px) clamp(10px, 2.5vw, 16px)', fontFamily: 'monospace', fontSize: 'clamp(9px, 2.2vw, 11px)', color: '#888', textAlign: 'center', whiteSpace: 'nowrap' }}>
                           {s.accountName ?? '—'}
                         </td>
                       </tr>

@@ -283,7 +283,7 @@ export default async function LandingPage() {
                 disponible las 24 horas.
               </p>
               <Link href="#precios" className="btn-gold text-sm py-3.5 px-7 rounded-lg">
-                Incluido desde $79/mes →
+                Incluido desde $29/mes →
               </Link>
             </div>
 
@@ -338,7 +338,7 @@ export default async function LandingPage() {
                 Luis Riofrio —<br /><span className="gradient-gold">Operador Financiero</span>
               </h2>
               <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
-                Trader de Futuros Nasdaq (NQ/MNQ) con operativa institucional verificable.
+                Trader activo en Futuros Nasdaq (NQ/MNQ), acciones y opciones financieras con operativa institucional verificable.
                 Resultados documentados con data real. Transparencia total en
                 cada operación — ganadores y perdedores.
               </p>
@@ -347,9 +347,9 @@ export default async function LandingPage() {
               <div className="space-y-2.5 mb-8">
                 {[
                   'Operador Financiero en Emporium Quality Funds',
-                  'Trader de Futuros Nasdaq (NQ/MNQ)',
+                  'Trader de Futuros NQ/MNQ, Acciones y Opciones Financieras',
                   'Fundador de Liberty Trading Club',
-                  'Gestor de portafolios vía IBKR + NinjaTrader 8',
+                  'Gestor de portafolios de acciones y opciones en IBKR',
                   'Operador P2P USDT y BTC — Ecuador y Latinoamérica',
                   'Mentor con más de 5 años formando traders en Latinoamérica',
                 ].map((c) => (
@@ -387,7 +387,7 @@ export default async function LandingPage() {
                     'Los mercados cambian — tu formación debe actualizarse con ellos',
                     'Una mentoría mensual vale más que un curso grabado de hace 2 años',
                     'Pagas mientras aprendes — no un curso caro que quizás no terminas',
-                    'Prueba con $79 en lugar de arriesgar $1,000 en algo desconocido',
+                    'Prueba con $29 en lugar de arriesgar $1,000 en algo desconocido',
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
                       <span className="text-[var(--gold)] mt-0.5 flex-shrink-0">✓</span>

@@ -284,7 +284,7 @@ export default async function MaestriaFuturosPage() {
                 Luis Riofrio —<br /><span className="gradient-gold">Trader Profesional</span>
               </h2>
               <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
-                Trader intradia especializado en futuros del Nasdaq (NQ/MNQ) con NinjaTrader 8.
+                Trader activo en futuros del Nasdaq (NQ/MNQ), acciones y opciones financieras.
                 Estrategias de rompimiento y consecución. Resultados documentados con capturas reales,
                 incluyendo las pérdidas. No hay filtros.
               </p>
@@ -293,7 +293,7 @@ export default async function MaestriaFuturosPage() {
                   '🏛 Operador Financiero en Emporium Quality Funds',
                   '📈 Trader intradia NQ/MNQ — apertura mercado americano (9:30 NY)',
                   '🤖 Creador de Vinces IA — mentor de métricas y track record',
-                  '🏦 Gestión de portafolios vía IBKR + NinjaTrader 8',
+                  '🏦 Gestión de portafolios de acciones y opciones en IBKR',
                   '🎓 Fundador de Liberty Trading Pro',
                 ].map((c) => (
                   <div key={c} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">

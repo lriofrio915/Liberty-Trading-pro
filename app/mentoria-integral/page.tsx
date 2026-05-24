@@ -258,8 +258,8 @@ export default async function MentoriaIntegralPage() {
               <div className="space-y-2.5 mb-8">
                 {[
                   '🏛 Operador Financiero en Emporium Quality Funds',
-                  '📈 Trader de Futuros Nasdaq (NQ/MNQ) — intradia',
-                  '🏦 Gestión de portafolios vía IBKR + NinjaTrader 8',
+                  '📈 Trader de Futuros NQ/MNQ, Acciones y Opciones Financieras',
+                  '🏦 Gestión de portafolios de acciones y opciones en IBKR',
                   '🎓 Fundador de Liberty Trading Pro',
                   '💱 Operador P2P USDT/BTC — Ecuador y Latinoamérica',
                 ].map((c) => (

@@ -30,8 +30,8 @@ async function captureLead(name: string, phone: string, email: string, plan: str
   const cleanedPhone = phone.replace(/[\s\-\+\(\)]/g, '')
   if (cleanedPhone.length < 7) return false
 
-  const planNorm: 'MENSUAL' | 'ANUAL' = plan === 'ANUAL' ? 'ANUAL' : 'MENSUAL'
-  const planLabel = planNorm === 'ANUAL' ? 'Plan Pro Anual ($649/ano)' : 'Plan Pro Mensual ($79/mes)'
+  const planNorm: 'MENSUAL' | 'ANUAL' = 'MENSUAL'
+  const planLabel = 'Plan Pro Mensual ($29/mes)'
 
   try {
     const existing = await (prisma as any).whatsappLead.findUnique({ where: { phone: cleanedPhone } })
@@ -111,12 +111,11 @@ export async function POST(req: NextRequest) {
     const systemPrompt = sanitizeText(
       `Eres Vinces, el asistente de ventas de Liberty Trading Pro, la plataforma de trading de Luis Riofrio (Ecuador).\n\n` +
       `TU OBJETIVO: Entender la situacion del visitante, recomendarle el plan ideal y capturar su nombre + telefono para darle seguimiento personalizado.\n\n` +
-      `PLANES DISPONIBLES:\n` +
-      `- Plan Pro Mensual: $79/mes - sin permanencia, cancela cuando quieras\n` +
-      `- Plan Pro Anual: $649/ano - ahorras $299 (~$54/mes) - MEJOR VALOR\n\n` +
-      `QUE INCLUYE (ambos planes):\n` +
+      `PLAN DISPONIBLE:\n` +
+      `- Plan Pro Mensual: $29/mes - sin permanencia, cancela cuando quieras, todo incluido\n\n` +
+      `QUE INCLUYE:\n` +
       `- Mentoria Integral de Mercados Financieros (desde cero hasta trader profesional)\n` +
-      `- Day Trading Futuros NQ/MNQ Nasdaq\n` +
+      `- Day Trading en Futuros NQ/MNQ, CFDs, acciones y opciones financieras\n` +
       `- Mentorias 1:1 con Luis Riofrio cada mes\n` +
       `- Vinces IA - coaching diario personalizado\n` +
       `- Reportes de oportunidades en acciones y ETFs\n` +

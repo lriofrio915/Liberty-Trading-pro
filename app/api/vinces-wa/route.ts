@@ -16,28 +16,23 @@ const CONTEXTO_LUIS = `
 Eres Vinces, el asistente de ventas de Liberty Trading Pro — club de trading fundado por Luis Riofrío.
 
 SOBRE LUIS RIOFRÍO (el formador):
-- Trader intradia especializado en futuros del Nasdaq (NQ/MNQ) con NinjaTrader 8
+- Trader activo en futuros del Nasdaq (NQ/MNQ), acciones y opciones financieras
 - Operador Financiero en Emporium Quality Funds con track record verificable y público
 - Estrategias: rompimiento y consecución (futuros intradia) | Dollar Cost Average (inversión a largo plazo)
 - NO enseña fórmulas mágicas. Enseña disciplina, consistencia, un método probado y un sistema que funciona
 - Honesto: el trading implica riesgo, no hay garantías de rentabilidad
 
-MODELO DE NEGOCIO — Club Liberty Trading (suscripción mensual o anual):
-Hay UN solo club con TODO incluido. El miembro elige cómo pagar:
+MODELO DE NEGOCIO — Club Liberty Trading (suscripción mensual):
+Hay UN solo plan con TODO incluido. Sin contratos, sin compromisos.
 
-CLUB MENSUAL — $79/mes (cancela cuando quieras):
-- Ideal para quien quiere probar antes de comprometerse largo plazo
+PLAN PRO — $29/mes (cancela cuando quieras):
 - Sin permanencia ni contratos. Puedes cancelar en cualquier momento.
+- Acceso completo desde el primer día.
 - LINK: ${LINKS.MENSUAL}
 
-CLUB ANUAL — $649/año (pago único, equivale a ~$54/mes):
-- Ahorras $299 vs pagar mes a mes ($948 vs $649)
-- Ideal para quien ya decidió que el trading es su camino y quiere la mejor tarifa
-- LINK: ${LINKS.ANUAL}
-
-QUÉ INCLUYE EL CLUB (ambos planes tienen TODO):
+QUÉ INCLUYE EL CLUB:
 - Mentoría Integral de Mercados Financieros (desde cero hasta invertir con método)
-- Especialización en Day Trading — Futuros NQ/MNQ Nasdaq con NinjaTrader 8
+- Day Trading — Futuros NQ/MNQ, CFDs, acciones y opciones financieras
 - Mentorías 1:1 personalizadas con Luis cada mes
 - Vinces IA — coaching diario personalizado con inteligencia artificial (24/7)
 - Reportes de oportunidades en acciones y ETFs
@@ -46,9 +41,8 @@ QUÉ INCLUYE EL CLUB (ambos planes tienen TODO):
 - Reportes de rendimiento semanales y mensuales
 - Comunidad privada activa
 
-CLAVE DE RECOMENDACIÓN DE PLAN:
-- ¿Quiere probar primero o tiene presupuesto ajustado? → Plan Pro Mensual ($79/mes)
-- ¿Ya está decidido y quiere el mejor precio? → Plan Pro Anual ($649/año, ahorra $299)
+CLAVE DE RECOMENDACIÓN:
+- Solo hay un plan: Plan Pro Mensual ($29/mes) — sin permanencia, cancela cuando quieras
 
 PARA QUIÉN NO ES (compártelo con naturalidad si el contexto lo amerita, nunca de forma agresiva):
 - NO es para quien busca ingresos inmediatos o "resultados ya". El trading es un proceso que toma tiempo.
@@ -162,9 +156,7 @@ async function notificarLuisCTA(lead: {
   respuestas: Record<string, string>
   productoUrl: string
 }) {
-  const perfilLabel = lead.perfil === 'ANUAL'
-    ? 'Plan Pro Anual ($649/año)'
-    : 'Plan Pro Mensual ($79/mes)'
+  const perfilLabel = 'Plan Pro Mensual ($29/mes)'
 
   const resumen = Object.entries(lead.respuestas)
     .map(([k, v]) => `• ${PREGUNTAS[k]}\n  → ${v}`)
@@ -198,11 +190,7 @@ Analizaste la conversación con ${name}:
 
 ${resumen}
 
-Basándote en su perfil, recomiéndale el plan de pago más adecuado del Club Liberty Trading:
-- MENSUAL: para quien quiere probar primero, tiene dudas sobre el compromiso, presupuesto más ajustado, o simplemente prefiere ir mes a mes ($79/mes)
-- ANUAL: para quien ya está decidido, quiere el mejor precio, y ve el trading como un camino serio ($649/año, ahorra $299)
-
-Recuerda: ambos planes incluyen exactamente lo mismo. La diferencia es solo el precio y el compromiso.
+Solo hay un plan: Plan Pro Mensual ($29/mes) — sin permanencia, todo incluido.
 
 Responde SOLO este JSON (sin texto adicional):
 {"perfil":"MENSUAL","mensaje":"texto"}
@@ -219,9 +207,9 @@ Reglas del mensaje:
 
   try {
     const parsed = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] || '{}')
-    const perfil: 'MENSUAL' | 'ANUAL' = parsed.perfil === 'ANUAL' ? 'ANUAL' : 'MENSUAL'
-    const url = LINKS[perfil]
-    const planLabel = perfil === 'ANUAL' ? 'Plan Pro Anual — $649/año (ahorras $299)' : 'Plan Pro Mensual — $79/mes (cancela cuando quieras)'
+    const perfil: 'MENSUAL' | 'ANUAL' = 'MENSUAL'
+    const url = LINKS.MENSUAL
+    const planLabel = 'Plan Pro Mensual — $29/mes (cancela cuando quieras)'
     const mensajeLimpio = (parsed.mensaje || '')
       .replace(/https?:\/\/\S+/g, '')
       .replace(/\[.*?\]\(.*?\)/g, '')
@@ -230,7 +218,7 @@ Reglas del mensaje:
   } catch {
     return {
       perfil: 'MENSUAL' as const,
-      mensaje: `Basado en lo que me contaste, el mejor punto de partida es el Plan Pro Mensual de Liberty Trading. 🎓\n\n👉 Plan Pro Mensual — $79/mes (cancela cuando quieras):\n${LINKS.MENSUAL}`,
+      mensaje: `Basado en lo que me contaste, el mejor punto de partida es el Plan Pro Mensual de Liberty Trading. 🎓\n\n👉 Plan Pro Mensual — $29/mes (cancela cuando quieras):\n${LINKS.MENSUAL}`,
       productoUrl: LINKS.MENSUAL,
     }
   }
@@ -411,7 +399,7 @@ export async function POST(req: NextRequest) {
     else if (estado === 'CTA') {
       const system = `${CONTEXTO_LUIS}
 
-Estás hablando con ${name || 'un prospecto'} que ya recibió tu recomendación de plan. Responde sus dudas con calidez y precisión usando el contexto de Liberty Trading Pro. Si pregunta sobre qué incluye el club, recuérdale que ambos planes tienen todo incluido. Si pregunta la diferencia entre mensual y anual, explica que es solo el precio: $79/mes vs $649/año (ahorra $299). Si muestra interés en suscribirse, refuerza positivamente. Sin markdown, sin asteriscos, máximo 3 oraciones.`
+Estás hablando con ${name || 'un prospecto'} que ya recibió la recomendación del Plan Pro Mensual. Responde sus dudas con calidez y precisión usando el contexto de Liberty Trading Pro. Solo hay un plan: $29/mes, sin contratos, con todo incluido. Si muestra interés en suscribirse, refuerza positivamente. Sin markdown, sin asteriscos, máximo 3 oraciones.`
 
       respuesta = await callAIWrapper([
         { role: 'system', content: system },
