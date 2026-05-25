@@ -1283,19 +1283,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
               })()}
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              {isAdmin && allCandidates.length > 0 && (
-                <button
-                  onClick={() => handleSaveSignals(allCandidates)}
-                  disabled={savingSignals}
-                  className="label-mono text-[10px] px-3 py-1.5 rounded-lg border transition-all disabled:opacity-50"
-                  style={{ borderColor: 'rgba(201,168,76,0.5)', color: 'var(--gold)', background: 'rgba(201,168,76,0.06)' }}
-                >
-                  {savingSignals ? '⏳ Guardando...' : `💾 Guardar ${allCandidates.length} señal${allCandidates.length !== 1 ? 'es' : ''}`}
-                </button>
-              )}
-              {savedCount !== null && (
-                <span className="text-[9px] font-mono text-green-400">✓ {savedCount} guardadas</span>
-              )}
               {isAdmin && (
                 <>
                   <button
