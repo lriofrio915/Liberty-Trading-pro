@@ -31,6 +31,8 @@ function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+const LYNCH_CATEGORIES = new Set(['PETER_LYNCH', 'SMALL_CAPS'])
+
 const CATEGORY_LABELS: Record<string, string> = {
   OPERATOR:    'Operador',
   PETER_LYNCH: 'Peter Lynch',
@@ -227,11 +229,12 @@ export default function AgenteMonitor({ isAdmin }: { isAdmin: boolean }) {
           lynchFail: null, forecastFail: null, dsFail: null, tauricFail: null,
         }
 
-        // Filter 1: Lynch
-        const lynchScore = lynchMap[opp.ticker] ?? 0
+        // Filter 1: Lynch (solo aplica a PETER_LYNCH y SMALL_CAPS)
+        const appliesLynch = LYNCH_CATEGORIES.has(opp.category)
+        const lynchScore = appliesLynch ? (lynchMap[opp.ticker] ?? 0) : 6
         patch.lynchFail = lynchScore < 6
         if (patch.lynchFail) fails++
-        addLog(`  Lynch: ${patch.lynchFail ? `✗ score ${lynchScore}/6` : '✓ 6/6'}`)
+        addLog(`  Lynch: ${!appliesLynch ? '— N/A' : patch.lynchFail ? `✗ score ${lynchScore}/6` : '✓ 6/6'}`)
         upsertResult(opp.id, patch)
 
         // Filter 2: Forecast
@@ -273,10 +276,11 @@ export default function AgenteMonitor({ isAdmin }: { isAdmin: boolean }) {
         }
         upsertResult(opp.id, patch)
 
-        // Con 3 fails → cierre inmediato sin Tauric
+        // Con 3 fails → cierre inmediato sin Tauric; si 2 → corre Tauric
+        let decision: Decision
         if (fails >= 3) {
-          const finalPatch: Partial<MonitorResult> = { ...patch, totalFails: fails, decision: 'cerrar' }
-          upsertResult(opp.id, finalPatch)
+          decision = 'cerrar'
+          upsertResult(opp.id, { ...patch, totalFails: fails, decision })
         } else {
           // Filter 4: Tauric — SOLO para decidir entre PRECAUCIÓN y CERRAR (fails===2)
           addLog('  Tauric: analizando (moderado ~3-7 min)...')
@@ -290,35 +294,43 @@ export default function AgenteMonitor({ isAdmin }: { isAdmin: boolean }) {
             patch.tauricFail = true; fails++
             addLog(`  Tauric: ✗ error — ${(e as Error).message}`)
           }
-          const decision: Decision = fails >= 3 ? 'cerrar' : 'precaución'
+          decision = fails >= 3 ? 'cerrar' : 'precaución'
           upsertResult(opp.id, { ...patch, totalFails: fails, decision })
         }
 
-        // Leer decisión actual
-        const currentDecision = fails >= 3 ? 'cerrar' : fails === 2 ? 'precaución' : 'mantener'
-
-        if (currentDecision === 'cerrar') {
+        if (decision === 'cerrar') {
           const currentPrice = prices[opp.ticker]
           if (currentPrice) {
             const closeStatus = currentPrice >= opp.precioObjetivo ? 'OBJETIVO_ALCANZADO' : 'STOP_ACTIVADO'
-            try {
-              await fetch(`/api/picks/${opp.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ precioVenta: currentPrice, status: closeStatus, active: false }),
-                signal,
-              })
+            let patchClosed = false
+            for (let attempt = 0; attempt < 2 && !patchClosed; attempt++) {
+              try {
+                if (attempt > 0) await sleep(2_000)
+                const pRes = await fetch(`/api/picks/${opp.id}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ precioVenta: currentPrice, status: closeStatus, active: false }),
+                  signal,
+                })
+                if (pRes.ok) patchClosed = true
+              } catch (e) {
+                if (signal.aborted) break
+                addLog(`  ⚠ Intento ${attempt + 1} fallido: ${(e as Error).message}`)
+              }
+            }
+            if (patchClosed) {
               upsertResult(opp.id, { closed: true, closeStatus, currentPrice })
               addLog(`  🔴 CERRADO a $${currentPrice.toFixed(2)} — ${closeStatus}`)
               countClosed++
-            } catch (e) {
-              addLog(`  ⚠ Error cerrando: ${(e as Error).message}`)
+            } else {
+              addLog(`  ⚠ No se pudo cerrar tras 2 intentos — posición queda activa en DB`)
+              countPrecaucion++
             }
           } else {
             addLog(`  ⚠ Sin precio actual — no se pudo cerrar`)
             countPrecaucion++
           }
-        } else if (currentDecision === 'precaución') {
+        } else if (decision === 'precaución') {
           addLog(`  🟡 PRECAUCIÓN (${fails} fails)`)
           countPrecaucion++
         }
