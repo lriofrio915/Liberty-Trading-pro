@@ -190,7 +190,6 @@ export default function AgenteIntraday({ isAdmin }: { isAdmin: boolean }) {
 
       if (!candidates.length) {
         addLog('⚠ Ningún ticker supera el filtro ADR ≥2.0%. Mercado poco volátil hoy.')
-        setStep4Phase('done'); setStep5Phase('done'); setStep6Phase('done')
         setPhase('done'); setSummary({ created: 0, total: VOLATILITY_UNIVERSE.length }); setActiveTicker(null); return
       }
 
@@ -245,7 +244,7 @@ export default function AgenteIntraday({ isAdmin }: { isAdmin: boolean }) {
 
       if (!paso5Candidates.length) {
         addLog('⚠ Ningún ticker con sesgo COMPRA o VENTA de MAIA.')
-        setStep5Phase('done'); setStep6Phase('done')
+        setStep5Phase('done')
         setPhase('done'); setSummary({ created: 0, total: VOLATILITY_UNIVERSE.length }); setActiveTicker(null); return
       }
 
@@ -279,7 +278,10 @@ export default function AgenteIntraday({ isAdmin }: { isAdmin: boolean }) {
             if (!pRes.ok) continue
             const pData = await pRes.json()
             if (pData.status === 'completed') {
-              conviction = /BUY|COMPRAR|ALCISTA|BULLISH|OVERWEIGHT/i.test(JSON.stringify(pData))
+              const resultText = pData.result ?? pData.signal ?? pData.recommendation ?? pData.summary ?? ''
+              conviction = /\b(BUY|COMPRAR|ALCISTA|BULLISH|OVERWEIGHT)\b/i.test(
+                typeof resultText === 'string' ? resultText : JSON.stringify(resultText)
+              )
               break
             }
             if (pData.status === 'failed') throw new Error('Tauric run failed')
