@@ -120,3 +120,5 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true, started: true })
 }
+
+export const GET = POST

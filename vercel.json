@@ -14,6 +14,10 @@
     {
       "path": "/api/cron/futuros-sesgo",
       "schedule": "15 13 * * 1-5"
+    },
+    {
+      "path": "/api/cron/daily-scanner",
+      "schedule": "35 13 * * 1-5"
     }
   ]
 }

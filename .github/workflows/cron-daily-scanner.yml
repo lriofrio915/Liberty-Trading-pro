@@ -1,8 +1,8 @@
 name: Cron — Daily Scanner Acciones 9:30am ET
 
 on:
-  schedule:
-    - cron: '30 14 * * 1-5'  # 14:30 UTC = 9:30am EST / 10:30am EDT (Mon-Fri)
+  # schedule deshabilitado — migrado a Vercel cron (vercel.json) 35 13 * * 1-5 = 8:35am Ecuador
+  # - cron: '30 14 * * 1-5'
   workflow_dispatch:
 
 jobs:
