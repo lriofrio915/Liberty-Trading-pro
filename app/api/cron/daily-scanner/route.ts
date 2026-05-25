@@ -85,51 +85,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Fetch active tickers from DB (same logic as AccionesClient activeTickers)
-  const opps = await prisma.opportunity.findMany({
-    where: {
-      active: true,
-      OR: [{ precioVenta: null }, { precioVenta: 0 }],
-    },
-    select: { ticker: true },
+  // Respond in <1s — DB query + Daily Signals call run in background to avoid Cloudflare 524
+  after(async () => {
+    try {
+      type AnalyzeResp = {
+        accepted?: { task_id: string }[]
+        task_id?: string
+        existing_task_id?: string
+      }
+
+      const opps = await prisma.opportunity.findMany({
+        where: { active: true, OR: [{ precioVenta: null }, { precioVenta: 0 }] },
+        select: { ticker: true },
+      })
+      const tickers = [...new Set(opps.map(o => o.ticker).filter(Boolean))]
+      if (!tickers.length) return
+
+      const data = await dailySignalsJSON<AnalyzeResp>('/api/v1/analysis/analyze', {
+        method: 'POST',
+        body: JSON.stringify({ stock_codes: tickers, async_mode: true }),
+      }, 55_000)
+
+      const taskIds: string[] = data?.accepted
+        ? data.accepted.map(t => t.task_id).filter(Boolean)
+        : data?.task_id ? [data.task_id]
+        : data?.existing_task_id ? [data.existing_task_id]
+        : []
+
+      if (taskIds.length) await pollAndNotify(taskIds, tickers)
+    } catch (err) {
+      console.error('[daily-scanner] background error:', err)
+    }
   })
 
-  const tickers = [...new Set(opps.map(o => o.ticker).filter(Boolean))]
-
-  if (tickers.length === 0) {
-    return NextResponse.json({ ok: true, skipped: true, reason: 'no_active_tickers' })
-  }
-
-  // Trigger analysis
-  type AnalyzeResp = {
-    accepted?: { task_id: string }[]
-    task_id?: string
-    existing_task_id?: string
-  }
-
-  let taskIds: string[]
-  try {
-    const data = await dailySignalsJSON<AnalyzeResp>('/api/v1/analysis/analyze', {
-      method: 'POST',
-      body: JSON.stringify({ stock_codes: tickers, async_mode: true }),
-    }, 55_000)
-
-    taskIds = data?.accepted
-      ? data.accepted.map(t => t.task_id).filter(Boolean)
-      : data?.task_id ? [data.task_id]
-      : data?.existing_task_id ? [data.existing_task_id]
-      : []
-  } catch (err) {
-    const msg = err instanceof DailySignalsError ? err.message : 'Daily Signals no disponible'
-    return NextResponse.json({ error: msg }, { status: 502 })
-  }
-
-  if (taskIds.length === 0) {
-    return NextResponse.json({ ok: true, skipped: true, reason: 'no_tasks_queued' })
-  }
-
-  // Respond immediately — polling and WhatsApp notification run in background
-  after(() => pollAndNotify(taskIds, tickers))
-
-  return NextResponse.json({ ok: true, started: true, tickers, tasks: taskIds.length })
+  return NextResponse.json({ ok: true, started: true })
 }
