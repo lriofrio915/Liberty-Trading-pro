@@ -5,7 +5,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-const VOLATILITY_UNIVERSE = [
+export const VOLATILITY_UNIVERSE = [
   'NVDA', 'TSLA', 'AMD', 'META', 'AMZN', 'NFLX', 'GOOGL',
   'AAPL', 'MSFT', 'COIN', 'MSTR', 'HOOD', 'PLTR', 'SOFI',
   'CRWD', 'SMCI', 'ARM', 'RIVN', 'LCID', 'SNOW', 'RBLX',
@@ -20,7 +20,7 @@ export interface ScreenCandidate {
   recentCloses: number[]
 }
 
-async function fetchOHLC(ticker: string): Promise<ScreenCandidate | null> {
+export async function fetchOHLC(ticker: string): Promise<ScreenCandidate | null> {
   try {
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=20d`
     const res = await fetch(url, {

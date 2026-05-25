@@ -78,6 +78,7 @@ const eventLabels: Record<string, string> = {
   lead_vendido: '✅ Lead convertido — ¡venta!',
   futuros_sesgo: '📊 Sesgo Futuros 9:15am ET',
   acciones_daily_scanner: '📈 Daily Scanner Acciones',
+  morning_agents_intraday: '⚡ Picks Intraday 9am Ecuador',
 }
 
 function formatEmailBody(event: string, data: Record<string, unknown>): string {
@@ -253,6 +254,51 @@ export function notifyAccionesDailyScanner(signals: DailyScanSignal[], tickers: 
   ].join('\n')
 
   return notifyNexus('acciones_daily_scanner', { resumen, count: signals.length, isAuto })
+}
+
+// ── Morning Agents 9am ───────────────────────────────────────────────────────
+
+export interface MorningAgentResult {
+  agent: string
+  picks: { ticker: string; direction: string; precioEntrada: number }[]
+}
+
+const AGENT_EMOJI: Record<string, string> = {
+  Peter: '🏛',
+  SmallCap: '📦',
+  Intraday: '⚡',
+}
+
+export function notifyMorningAgents(results: MorningAgentResult[]) {
+  const fecha = new Date().toLocaleDateString('es-EC', {
+    weekday: 'long', day: 'numeric', month: 'long',
+    timeZone: 'America/Guayaquil',
+  })
+
+  const dirEmoji = (d: string) => d === 'COMPRA' ? '✅' : '🔴'
+
+  const sections = results
+    .filter(r => r.picks.length > 0)
+    .map(r => {
+      const emoji = AGENT_EMOJI[r.agent] ?? '🤖'
+      const lines = r.picks.map(p =>
+        `${dirEmoji(p.direction)} ${p.ticker}: ${p.direction} @ $${p.precioEntrada.toFixed(2)}`
+      )
+      return [`${emoji} *Agente ${r.agent}* (${r.picks.length})`, ...lines].join('\n')
+    })
+
+  const total = results.reduce((sum, r) => sum + r.picks.length, 0)
+
+  const resumen = [
+    `⚡ *Agentes 9am — ${fecha}*`,
+    '_(Análisis automático)_',
+    '',
+    ...(sections.length ? sections : ['Sin picks hoy — mercado sin señales.']),
+    '',
+    total > 0 ? `Total: ${total} pick(s) guardados. Apertura: 9:30am ET.` : '',
+  ].join('\n')
+
+  return notifyNexus('morning_agents_intraday', { resumen, total })
 }
 
 // ── Futuros sesgo ─────────────────────────────────────────────────────────────
