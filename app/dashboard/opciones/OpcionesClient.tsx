@@ -3,9 +3,6 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 type StrategyKind = 'sell-put' | 'covered-call' | 'buy-call' | 'buy-put'
-type MainTab = "opciones" | "cfds" | "futuros"
-type SubTab = "analisis" | "calculadora" | "estrategias"
-type ToolTab = "bs" | "greeks" | "iv" | "fv"
 
 interface Contract {
   symbol: string
@@ -96,9 +93,6 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
   const [ticker, setTicker] = useState('')
   const [activeStrategy, setActiveStrategy] = useState<StrategyKind>('sell-put')
   const [filterExp, setFilterExp] = useState<string>('all')
-  const [activeMainTab, setActiveMainTab] = useState<MainTab>('opciones')
-  const [activeSubTab, setActiveSubTab] = useState<SubTab>('analisis')
-  const [activeToolTab, setActiveToolTab] = useState<ToolTab>('bs')
   const [data, setData] = useState<OptionsAnalyzeResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -109,28 +103,6 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
-
-  // Track record de recomendaciones de opciones
-  type OptRec = {
-    id: string; ticker: string; company: string; direction: string; action: string
-    contractSymbol: string; contractType: string; strike: number; expiration: string
-    dte: number; score: number; label: string; underlyingPrice: number
-    bid: number | null; ask: number | null; mid: number | null; delta: number | null
-    breakeven: number | null; maxLossHint: string | null; maxProfitHint: string | null
-    publishedAt: string; status: string; precioSalida: number | null; active: boolean
-    resultado: string | null; pnlPct: number | null; pnlUsd: number | null; closedAt: string | null
-  }
-  const [optRecs, setOptRecs] = useState<OptRec[]>([])
-  const [optRecsLoading, setOptRecsLoading] = useState(false)
-
-  useEffect(() => {
-    setOptRecsLoading(true)
-    fetch('/api/options-recs')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.recommendations) setOptRecs(d.recommendations) })
-      .catch(() => {})
-      .finally(() => setOptRecsLoading(false))
-  }, [])
 
   const fetchSuggestions = useCallback(async (q: string) => {
     if (!q.trim()) { setSuggestions([]); return }
@@ -203,85 +175,6 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
         <p className="text-sm text-[var(--text-secondary)] max-w-3xl">
           Analiza calls y puts con prima estimada, griegas, liquidez, soportes/resistencias y una recomendación directa para vender prima o comprar dirección.
         </p>
-      </div>
-
-      {/* Premium Horizontal Toolbar */}
-      <div className="mb-6">
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3">
-          <div className="grid grid-cols-3 gap-3">
-            
-            {/* Left Zone: Market Selector */}
-            <div className="flex gap-1">
-              {[
-                { id: "opciones" as MainTab, label: "Opciones", icon: "⚡" },
-                { id: "cfds" as MainTab, label: "CFDs", icon: "🎯" },
-                { id: "futuros" as MainTab, label: "Futuros", icon: "🚀" },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveMainTab(tab.id)}
-                  className={`px-3 py-2 text-xs font-mono tracking-widest rounded-lg border transition-all flex items-center gap-2 min-w-0 flex-1 justify-center ${
-                    activeMainTab === tab.id
-                      ? "bg-[var(--gold)] text-black border-[var(--gold)] shadow-sm"
-                      : "bg-[var(--bg-secondary)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--gold-dark)] hover:bg-white/5"
-                  }`}
-                >
-                  <span className="text-[10px]">{tab.icon}</span>
-                  <span className="truncate">{tab.label}</span>
-                </button>
-              ))}
-            </div>
-            
-            {/* Center Zone: Analysis Mode */}
-            <div className="flex gap-1">
-              {[
-                { id: "analisis" as SubTab, label: "Automático", icon: "🤖" },
-                { id: "calculadora" as SubTab, label: "Manual", icon: "🧮" },
-                { id: "estrategias" as SubTab, label: "IA", icon: "⚔️" },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveSubTab(tab.id)}
-                  className={`px-3 py-2 text-xs font-mono tracking-widest rounded-lg border transition-all flex items-center gap-2 min-w-0 flex-1 justify-center ${
-                    activeSubTab === tab.id
-                      ? "bg-[var(--gold)]/20 border-[var(--gold)]/50 text-[var(--gold)] shadow-sm"
-                      : "bg-[var(--bg-secondary)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--gold-dark)] hover:bg-white/5"
-                  }`}
-                >
-                  <span className="text-[10px]">{tab.icon}</span>
-                  <span className="truncate">{tab.label}</span>
-                </button>
-              ))}
-            </div>
-            
-            {/* Right Zone: Tools */}
-            <div className="flex gap-1">
-              {[
-                { id: "bs" as ToolTab, label: "BS", icon: "📊", tooltip: "Black-Scholes" },
-                { id: "greeks" as ToolTab, label: "Greeks", icon: "📈", tooltip: "Griegas" },
-                { id: "iv" as ToolTab, label: "IV", icon: "📉", tooltip: "Volatilidad Implícita" },
-                { id: "fv" as ToolTab, label: "FV", icon: "💰", tooltip: "Fair Value" },
-              ].map(tool => (
-                <button
-                  key={tool.id}
-                  onClick={() => setActiveToolTab(tool.id)}
-                  className={`px-2 py-2 text-xs font-mono tracking-widest rounded-lg border transition-all flex items-center gap-1 min-w-0 flex-1 justify-center group relative ${
-                    activeToolTab === tool.id
-                      ? "bg-[var(--gold)]/20 border-[var(--gold)]/50 text-[var(--gold)] shadow-sm"
-                      : "bg-[var(--bg-secondary)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--gold-dark)] hover:bg-white/5"
-                  }`}
-                  title={tool.tooltip}
-                >
-                  <span className="text-[10px]">{tool.icon}</span>
-                  <span className="truncate">{tool.label}</span>
-                  <div className="absolute bottom-full mb-2 hidden group-hover:block bg-black/90 text-white text-[10px] px-2 py-1 rounded pointer-events-none whitespace-nowrap z-50">
-                    {tool.tooltip}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Search Section */}
@@ -533,190 +426,12 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
         </>
       )}
 
-      {/* Track Record de Opciones */}
-      <section className="mt-12 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--gold)' }}>RECOMENDACIONES DE OPCIONES</p>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Track record de contratos recomendados por el Agente Vanilla</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {optRecsLoading && <span className="text-[9px] font-mono animate-pulse" style={{ color: 'var(--text-muted)' }}>cargando…</span>}
-          </div>
+      {/* Track Record de Opciones — nueva lógica próximamente */}
+      <section className="mt-12">
+        <p className="text-[10px] font-mono tracking-widest mb-3" style={{ color: 'var(--gold)' }}>RECOMENDACIONES DE OPCIONES</p>
+        <div className="card text-center py-10">
+          <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>Nueva lógica en desarrollo</p>
         </div>
-
-        {optRecs.length === 0 && !optRecsLoading ? (
-          <div className="card text-center py-10">
-            <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>Sin recomendaciones — ejecuta el Agente Vanilla para generar la primera</p>
-          </div>
-        ) : (
-          <div className="card overflow-x-auto p-0">
-            <table className="w-full text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-[var(--border)]" style={{ background: 'rgba(201,168,76,0.05)' }}>
-                  {['Fecha','Ticker','Acción','Contrato','Strike','Exp.','DTE','Subyacente','Bid/Ask','Delta','Score','Estado','Resultado','P&L %','P&L $','Acc.'].map(col => (
-                    <th key={col} className="px-3 py-2 text-left text-[9px] font-semibold uppercase tracking-widest whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{col}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {optRecs.map((rec, idx) => {
-                  const expDays = Math.ceil((new Date(rec.expiration).getTime() - Date.now()) / 86_400_000)
-                  const isExpired = expDays < 0
-                  const statusColor = rec.status === 'ACTIVA' ? 'text-green-400'
-                    : rec.status === 'CERRADA' ? 'text-blue-400' : 'text-red-400'
-                  return (
-                    <tr key={rec.id} className="border-b border-[var(--border)] hover:bg-white/5 transition-colors">
-                      <td className="px-3 py-2 text-[9px] font-mono whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
-                        {new Date(rec.publishedAt).toLocaleDateString('es-EC', { day:'2-digit', month:'short', year:'numeric', timeZone:'America/Guayaquil' })}
-                      </td>
-                      <td className="px-3 py-2 font-mono font-bold whitespace-nowrap" style={{ color: 'var(--gold)' }}>{rec.ticker}</td>
-                      <td className="px-3 py-2 whitespace-nowrap">
-                        <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${
-                          rec.action.includes('COMPRAR') ? 'border-green-500/40 bg-green-500/10 text-green-400'
-                            : 'border-red-500/40 bg-red-500/10 text-red-400'
-                        }`}>{rec.action}</span>
-                      </td>
-                      <td className="px-3 py-2 font-mono text-[9px]" style={{ color: 'var(--text-secondary)' }}>{rec.contractSymbol}</td>
-                      <td className="px-3 py-2 font-mono whitespace-nowrap">${rec.strike.toFixed(2)}</td>
-                      <td className="px-3 py-2 font-mono whitespace-nowrap text-[9px]">{rec.expiration}</td>
-                      <td className="px-3 py-2 font-mono whitespace-nowrap">
-                        <span className={isExpired ? 'text-red-400' : expDays <= 7 ? 'text-yellow-400' : ''}>{isExpired ? 'EXP' : `${expDays}d`}</span>
-                      </td>
-                      <td className="px-3 py-2 font-mono">${rec.underlyingPrice.toFixed(2)}</td>
-                      <td className="px-3 py-2 font-mono text-[9px]">{rec.bid != null && rec.ask != null ? `${rec.bid.toFixed(2)}/${rec.ask.toFixed(2)}` : '—'}</td>
-                      <td className="px-3 py-2 font-mono">{rec.delta != null ? rec.delta.toFixed(2) : '—'}</td>
-                      <td className="px-3 py-2 font-mono">{rec.score}</td>
-                      <td className="px-3 py-2">
-                        {isAdmin ? (
-                          <select
-                            value={rec.status}
-                            onChange={async e => {
-                              const newStatus = e.target.value
-                              await fetch(`/api/options-recs/${rec.id}`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ status: newStatus, active: newStatus === 'ACTIVA' }),
-                              })
-                              setOptRecs(prev => prev.map(r => r.id === rec.id ? { ...r, status: newStatus, active: newStatus === 'ACTIVA' } : r))
-                            }}
-                            className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5"
-                            style={{ color: rec.status === 'ACTIVA' ? '#4ade80' : rec.status === 'CERRADA' ? '#60a5fa' : '#f87171' }}
-                          >
-                            <option value="ACTIVA">ACTIVA</option>
-                            <option value="CERRADA">CERRADA</option>
-                            <option value="EXPIRADA">EXPIRADA</option>
-                          </select>
-                        ) : (
-                          <span className={`text-[9px] font-mono ${statusColor}`}>{rec.status}</span>
-                        )}
-                      </td>
-                      {/* Resultado inline edit */}
-                      <td className="px-3 py-2">
-                        {isAdmin ? (
-                          <select
-                            value={rec.resultado ?? ''}
-                            onChange={async e => {
-                              const val = e.target.value || null
-                              await fetch(`/api/options-recs/${rec.id}`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ resultado: val }),
-                              })
-                              setOptRecs(prev => prev.map(r => r.id === rec.id ? { ...r, resultado: val } : r))
-                            }}
-                            className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5"
-                            style={{ color: rec.resultado === 'GANADA' ? '#4ade80' : rec.resultado === 'PERDIDA' ? '#f87171' : 'var(--text-muted)' }}
-                          >
-                            <option value="">—</option>
-                            <option value="GANADA">GANADA</option>
-                            <option value="PERDIDA">PERDIDA</option>
-                            <option value="BREAKEVEN">BREAKEVEN</option>
-                          </select>
-                        ) : (
-                          <span className={`text-[9px] font-mono ${rec.resultado === 'GANADA' ? 'text-green-400' : rec.resultado === 'PERDIDA' ? 'text-red-400' : ''}`}>
-                            {rec.resultado ?? '—'}
-                          </span>
-                        )}
-                      </td>
-                      {/* P&L % inline */}
-                      <td className="px-3 py-2">
-                        {isAdmin ? (
-                          <input
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            defaultValue={rec.pnlPct ?? ''}
-                            className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5 w-16"
-                            style={{ color: 'var(--text-secondary)' }}
-                            onBlur={async e => {
-                              const val = e.target.value ? parseFloat(e.target.value) : null
-                              await fetch(`/api/options-recs/${rec.id}`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ pnlPct: val }),
-                              })
-                              setOptRecs(prev => prev.map(r => r.id === rec.id ? { ...r, pnlPct: val } : r))
-                            }}
-                          />
-                        ) : (
-                          <span className={`text-[9px] font-mono ${(rec.pnlPct ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {rec.pnlPct != null ? `${rec.pnlPct.toFixed(1)}%` : '—'}
-                          </span>
-                        )}
-                      </td>
-                      {/* P&L $ inline */}
-                      <td className="px-3 py-2">
-                        {isAdmin ? (
-                          <input
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            defaultValue={rec.pnlUsd ?? ''}
-                            className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5 w-16"
-                            style={{ color: 'var(--text-secondary)' }}
-                            onBlur={async e => {
-                              const val = e.target.value ? parseFloat(e.target.value) : null
-                              await fetch(`/api/options-recs/${rec.id}`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ pnlUsd: val }),
-                              })
-                              setOptRecs(prev => prev.map(r => r.id === rec.id ? { ...r, pnlUsd: val } : r))
-                            }}
-                          />
-                        ) : (
-                          <span className={`text-[9px] font-mono ${(rec.pnlUsd ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {rec.pnlUsd != null ? `$${rec.pnlUsd.toFixed(2)}` : '—'}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2">
-                        {isAdmin && (
-                          <button onClick={async () => {
-                            if (!confirm('¿Eliminar esta recomendación?')) return
-                            await fetch(`/api/options-recs/${rec.id}`, { method: 'DELETE' })
-                            setOptRecs(prev => prev.filter(r => r.id !== rec.id))
-                          }} className="text-red-400 hover:text-red-300 text-[9px] font-mono">✕</button>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Stats */}
-        {optRecs.length > 0 && (
-          <div className="flex gap-4 text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
-            <span>Total: {optRecs.length}</span>
-            <span className="text-green-400">Activas: {optRecs.filter(r => r.status === 'ACTIVA').length}</span>
-            <span className="text-blue-400">Cerradas: {optRecs.filter(r => r.status === 'CERRADA').length}</span>
-            <span className="text-red-400">Expiradas: {optRecs.filter(r => r.status === 'EXPIRADA').length}</span>
-          </div>
-        )}
       </section>
     </div>
   )
