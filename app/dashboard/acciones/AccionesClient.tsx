@@ -20,12 +20,7 @@ const OportunidadesClient = dynamic(
   isAdmin: boolean
 }>
 
-const OpcionesClient = dynamic(
-  () => import('@/app/dashboard/opciones/OpcionesClient'),
-  { ssr: false },
-) as React.ComponentType<{ isAdmin?: boolean }>
-
-type Tab = 'recomendaciones' | 'research' | 'tauric' | 'signals' | 'proyeccion' | 'opciones'
+type Tab = 'recomendaciones' | 'research' | 'tauric' | 'signals' | 'proyeccion'
 
 export default function AccionesClient({
   initialOpportunities,
@@ -86,14 +81,13 @@ export default function AccionesClient({
   return (
     <div className="animate-fadeIn">
       <h1 className="text-3xl font-black mb-2">
-        <span className="gradient-gold">Acciones & Opciones</span>
+        <span className="gradient-gold">Acciones</span>
       </h1>
       <p className="text-[var(--text-secondary)] text-sm max-w-2xl mb-6">
         Invertir en acciones significa comprar una participación en una empresa real.
-        Aquí encuentras recomendaciones profesionales basadas en análisis fundamental,
-        un screener avanzado con los criterios de Peter Lynch para filtrar las mejores
-        oportunidades del S&P 500 y NASDAQ 100, y una sección dedicada a oportunidades
-        en contratos de opciones financieras.
+        Aquí encuentras recomendaciones profesionales basadas en análisis fundamental
+        y un screener avanzado con los criterios de Peter Lynch para filtrar las mejores
+        oportunidades del S&P 500 y NASDAQ 100.
       </p>
 
       {/* Video admin */}
@@ -202,16 +196,6 @@ export default function AccionesClient({
         >
           CONFIRMACIÓN
         </button>
-        <button
-          onClick={() => setTab('opciones')}
-          className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border ${
-            tab === 'opciones'
-              ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
-              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
-          }`}
-        >
-          OPCIONES
-        </button>
       </div>
 
       {tab === 'recomendaciones' && (
@@ -221,7 +205,6 @@ export default function AccionesClient({
       {tab === 'proyeccion' && <ForecastTab />}
       {tab === 'tauric' && <TauricResearchTab />}
       {tab === 'signals' && <DailySignalsTab isAdmin={isAdmin} defaultTickers={activeTickers} />}
-      {tab === 'opciones' && <OpcionesClient isAdmin={isAdmin} />}
     </div>
   )
 }
