@@ -2,7 +2,8 @@
 
 import AgentePeter from './AgentePeter'
 import AgenteSmallCap from './AgenteSmallCap'
-import AgenteVanilla from './AgenteVanilla'
+import AgenteVanillaLong from './AgenteVanillaLong'
+import AgenteVanillaShort from './AgenteVanillaShort'
 import AgenteMonitor from './AgenteMonitor'
 
 export default function AgentesClient({ isAdmin }: { isAdmin: boolean }) {
@@ -19,7 +20,8 @@ export default function AgentesClient({ isAdmin }: { isAdmin: boolean }) {
       <div className="space-y-8">
         <AgentePeter isAdmin={isAdmin} />
         <AgenteSmallCap isAdmin={isAdmin} />
-        <AgenteVanilla isAdmin={isAdmin} />
+        <AgenteVanillaLong isAdmin={isAdmin} />
+        <AgenteVanillaShort isAdmin={isAdmin} />
         <AgenteMonitor isAdmin={isAdmin} />
       </div>
     </div>

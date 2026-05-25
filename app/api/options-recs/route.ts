@@ -4,14 +4,20 @@ import { prisma } from '@/lib/prisma'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const { searchParams } = new URL(req.url)
+  const strategiesParam = searchParams.get('strategies')
+  const strategyFilter = strategiesParam
+    ? { strategy: { in: strategiesParam.split(',').map(s => s.trim()) } }
+    : {}
+
   // Auto-dedup: conservar solo la más reciente por ticker+strategy
   const activas = await prisma.optionRecommendation.findMany({
-    where: { status: 'ACTIVA', active: true },
+    where: { status: 'ACTIVA', active: true, ...strategyFilter },
     orderBy: { publishedAt: 'desc' },
   })
   const seen = new Map<string, boolean>()
@@ -31,7 +37,10 @@ export async function GET() {
   const isAdmin = user.email === ADMIN_EMAIL
   const recs = await prisma.optionRecommendation.findMany({
     orderBy: { publishedAt: 'desc' },
-    ...(isAdmin ? {} : { where: { active: true } }),
+    where: {
+      ...strategyFilter,
+      ...(isAdmin ? {} : { active: true }),
+    },
   })
   return NextResponse.json({ recommendations: recs })
 }
