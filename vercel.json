@@ -10,5 +10,10 @@
       ]
     }
   ],
-  "crons": []
+  "crons": [
+    {
+      "path": "/api/cron/futuros-sesgo",
+      "schedule": "15 13 * * 1-5"
+    }
+  ]
 }

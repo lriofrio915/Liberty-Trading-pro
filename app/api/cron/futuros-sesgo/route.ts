@@ -134,3 +134,5 @@ VIX COMPRA = miedo (>25), VENTA = complacencia (<13).`
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }
+
+export const GET = POST
