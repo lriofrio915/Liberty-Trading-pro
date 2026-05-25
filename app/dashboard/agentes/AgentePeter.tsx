@@ -171,7 +171,7 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
 
       if (!paso2Pass.length) {
         addLog('⚠ Ningún ticker pasó proyección alcista.')
-        setStep3Phase('done'); setStep4Phase('done'); setStep5Phase('done')
+        setStep3Phase('done')
         setPhase('done'); setSummary({ created: 0, total: sixSix.length }); setActiveTicker(null); return
       }
 
@@ -254,7 +254,7 @@ export default function AgentePeter({ isAdmin }: { isAdmin: boolean }) {
 
       if (!paso3Pass.length) {
         addLog('⚠ Ningún ticker pasó momentum Daily Scanner.')
-        setStep4Phase('done'); setStep5Phase('done')
+        setStep4Phase('done')
         setPhase('done'); setSummary({ created: 0, total: sixSix.length }); setActiveTicker(null); return
       }
 

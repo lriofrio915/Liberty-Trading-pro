@@ -236,7 +236,7 @@ export default function AgenteVanillaLong({ isAdmin }: { isAdmin: boolean }) {
       const paso4Candidates = paso3Results.filter(t => t.step2 === 'call' || t.step2 === 'put')
       if (!paso4Candidates.length) {
         addLog('⚠ Ningún ticker con movimiento ≥+2% o ≤-3%.')
-        setStep4Phase('done'); setStep6Phase('done'); setStep7Phase('done')
+        setStep4Phase('done')
         setPhase('done'); setSummary({ created: 0, total: allTickers.length }); setActiveTicker(null); return
       }
       addLog(`📊 Analizando cadena de opciones para ${paso4Candidates.length} ticker(s)...`)
@@ -304,7 +304,7 @@ export default function AgenteVanillaLong({ isAdmin }: { isAdmin: boolean }) {
       const paso6Candidates = paso4Results.filter(t => t.step4 === 'pass')
       if (!paso6Candidates.length) {
         addLog('⚠ Ningún contrato calificó calidad mínima.')
-        setStep6Phase('done'); setStep7Phase('done')
+        setStep6Phase('done')
         setPhase('done'); setSummary({ created: 0, total: allTickers.length }); setActiveTicker(null); return
       }
       addLog(`🤖 Confirmación IA para ${paso6Candidates.length} ticker(s)...`)
@@ -325,7 +325,8 @@ export default function AgenteVanillaLong({ isAdmin }: { isAdmin: boolean }) {
             signal,
           })
           if (!analyzeRes.ok) throw new Error(`Tauric HTTP ${analyzeRes.status}`)
-          const { run_id: runId } = await analyzeRes.json()
+          const aData = await analyzeRes.json()
+          const runId: string = aData.run_id ?? aData.id ?? ''
           if (!runId) throw new Error('Sin run_id de Tauric')
 
           let conviction = false
@@ -336,8 +337,9 @@ export default function AgenteVanillaLong({ isAdmin }: { isAdmin: boolean }) {
             if (!pollRes.ok) continue
             const pollData = await pollRes.json()
             if (pollData.status === 'completed') {
-              const text: string = JSON.stringify(pollData)
-              conviction = /BUY|COMPRAR|ALCISTA|BULLISH|OVERWEIGHT/i.test(text)
+              const resultText = pollData.result ?? pollData.signal ?? pollData.recommendation ?? pollData.summary ?? ''
+              const text: string = typeof resultText === 'string' ? resultText : JSON.stringify(resultText)
+              conviction = /\b(BUY|COMPRAR|ALCISTA|BULLISH|OVERWEIGHT)\b/i.test(text)
               break
             }
           }
