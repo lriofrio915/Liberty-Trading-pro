@@ -77,6 +77,7 @@ const eventLabels: Record<string, string> = {
   lead_cta: '🎯 Lead listo para cierre',
   lead_vendido: '✅ Lead convertido — ¡venta!',
   futuros_sesgo: '📊 Sesgo Futuros 9:15am ET',
+  acciones_daily_scanner: '📈 Daily Scanner Acciones',
 }
 
 function formatEmailBody(event: string, data: Record<string, unknown>): string {
@@ -209,6 +210,52 @@ interface ActivoSesgo {
   razon: string
   riesgo: string
 }
+
+// ── Acciones Daily Scanner ────────────────────────────────────────────────────
+
+interface DailyScanSignal {
+  stock_code?: string
+  symbol?: string
+  operation_advice?: string
+  sentiment_score?: number
+  summary?: string
+}
+
+function signalEmoji(advice?: string): string {
+  const up = (advice ?? '').toUpperCase()
+  if (up.includes('买入') || up.includes('BUY') || up.includes('COMPRAR') || up.includes('ALCISTA') || up.includes('BULLISH')) return '✅'
+  if (up.includes('卖出') || up.includes('SELL') || up.includes('VENDER') || up.includes('BAJISTA') || up.includes('BEARISH')) return '🔴'
+  if (up.includes('减持') || up.includes('REDUCE')) return '🟠'
+  if (up.includes('增持') || up.includes('ACCUMULATE')) return '🟢'
+  return '⚪'
+}
+
+export function notifyAccionesDailyScanner(signals: DailyScanSignal[], tickers: string[], isAuto: boolean) {
+  const fecha = new Date().toLocaleDateString('es-EC', {
+    weekday: 'long', day: 'numeric', month: 'long',
+    timeZone: 'America/New_York',
+  })
+
+  const lineas = signals.map(s => {
+    const ticker = (s.stock_code ?? s.symbol ?? '').toUpperCase()
+    const emoji = signalEmoji(s.operation_advice)
+    const score = s.sentiment_score != null ? ` (${s.sentiment_score}%)` : ''
+    return `${emoji} ${ticker}${score}`
+  })
+
+  const resumen = [
+    `📈 *Daily Scanner Acciones — ${fecha}*`,
+    isAuto ? '_(Escaneo automático)_' : '_(Escaneo manual)_',
+    '',
+    ...lineas,
+    '',
+    `Total: ${signals.length} acciones escaneadas`,
+  ].join('\n')
+
+  return notifyNexus('acciones_daily_scanner', { resumen, count: signals.length, isAuto })
+}
+
+// ── Futuros sesgo ─────────────────────────────────────────────────────────────
 
 export function notifyFuturosSesgo(activos: ActivoSesgo[], saved: number) {
   const fecha = new Date().toLocaleDateString('es-EC', {

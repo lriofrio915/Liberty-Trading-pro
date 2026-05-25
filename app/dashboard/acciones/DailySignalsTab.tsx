@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import BrokerExecuteDropdown from '@/app/dashboard/brokers/components/BrokerExecuteDropdown'
 
 type ServerStatus = 'checking' | 'online' | 'offline'
-type TelegramStatus = 'unchecked' | 'testing' | 'ok' | 'error'
 
 type Signal = {
   id?: string | number
@@ -34,9 +33,6 @@ type TaskStatus = {
   error?: string
 }
 
-const LS_BOT_TOKEN = 'ds_telegram_bot_token'
-const LS_CHAT_ID   = 'ds_telegram_chat_id'
-
 function signalBadge(sig?: string): { label: string; color: string } {
   const up = (sig ?? '').toUpperCase()
   // Chinese signals: 买入=buy, 卖出=sell, 持有=hold, 增持=accumulate, 减持=reduce
@@ -51,25 +47,14 @@ function signalBadge(sig?: string): { label: string; color: string } {
   return { label: 'MANTENER', color: 'bg-yellow-500/15 border-yellow-500/30 text-yellow-400' }
 }
 
-function lsGet(key: string, def = ''): string {
-  try { return localStorage.getItem(key) ?? def } catch { return def }
-}
-function lsSet(key: string, val: string) {
-  try { localStorage.setItem(key, val) } catch {}
-}
-
 export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: boolean; defaultTickers?: string }) {
   const [serverStatus, setServerStatus] = useState<ServerStatus>('checking')
   const [showConfig, setShowConfig]     = useState(false)
   const [previewMode, setPreviewMode]   = useState(false)
 
-  const [botToken, setBotToken]   = useState(() => lsGet(LS_BOT_TOKEN))
-  const [chatId, setChatId]       = useState(() => lsGet(LS_CHAT_ID))
   const [stockList, setStockList] = useState(defaultTickers || '')
   const [tickersLoading, setTickersLoading] = useState(true)
   const [tickerCategories, setTickerCategories] = useState<Record<string, string>>({})
-  const [tgStatus, setTgStatus]   = useState<TelegramStatus>('unchecked')
-  const [tgError, setTgError]     = useState<string | null>(null)
 
   const [analyzing, setAnalyzing]   = useState(false)
   const [elapsed, setElapsed]       = useState(0)
@@ -77,8 +62,6 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
   const [runError, setRunError]     = useState<string | null>(null)
   const [taskProgress, setTaskProgress] = useState<number | null>(null)
   const [scanEmpty, setScanEmpty]   = useState(false)
-
-  const [sendingTg, setSendingTg] = useState(false)
 
   // Consulta rápida (admin only)
   type LookupSuggestion = { symbol: string; name: string; exchange: string }
@@ -93,11 +76,6 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
   const pollRef       = useRef<ReturnType<typeof setInterval> | null>(null)
   const lookupPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const lookupDebRef  = useRef<ReturnType<typeof setTimeout>  | null>(null)
-  const botTokRef  = useRef(lsGet(LS_BOT_TOKEN))
-  const chatIdRef  = useRef(lsGet(LS_CHAT_ID))
-
-  useEffect(() => { botTokRef.current = botToken }, [botToken])
-  useEffect(() => { chatIdRef.current = chatId }, [chatId])
 
   useEffect(() => {
     checkStatus()
@@ -177,58 +155,13 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
     }
   }
 
-  async function sendTelegramSpanish(list: Signal[], activeStockList: string) {
-    const tok = botTokRef.current
-    const cid = chatIdRef.current
-    if (!tok || !cid || list.length === 0) return
-    setSendingTg(true)
-    // Filter by active tickers + dedup (newest-first → first seen = most recent)
-    const activeSet = new Set(
-      activeStockList.split(',').map(t => t.trim().toUpperCase()).filter(Boolean)
-    )
-    const seen = new Set<string>()
-    const deduped = list.filter(s => {
-      const sym = (s.stock_code ?? s.symbol ?? '').toUpperCase()
-      if (!sym || (activeSet.size > 0 && !activeSet.has(sym))) return false
-      if (seen.has(sym)) return false
-      seen.add(sym)
-      return true
-    })
-    if (deduped.length === 0) { setSendingTg(false); return }
-    try {
-      await fetch('/api/daily-signals/telegram/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ signals: deduped, bot_token: tok, chat_id: cid }),
-      })
-    } catch { /* silent — Telegram send is best-effort */ }
-    finally { setSendingTg(false) }
-  }
-
-  async function testTelegram() {
-    lsSet(LS_BOT_TOKEN, botToken)
-    lsSet(LS_CHAT_ID, chatId)
-    setTgStatus('testing')
-    setTgError(null)
-    try {
-      const r = await fetch('/api/daily-signals/telegram/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bot_token: botToken, chat_id: chatId }),
-      })
-      const d = await r.json() as { ok: boolean; error?: string }
-      setTgStatus(d.ok ? 'ok' : 'error')
-      if (!d.ok) setTgError(d.error ?? 'Error desconocido')
-    } catch (err) {
-      setTgStatus('error')
-      setTgError(err instanceof Error ? err.message : 'Error de red')
-    }
-  }
-
-  function saveConfig() {
-    lsSet(LS_BOT_TOKEN, botToken)
-    lsSet(LS_CHAT_ID, chatId)
-    setShowConfig(false)
+  function sendWhatsApp(list: Signal[], activeStockList: string) {
+    if (list.length === 0) return
+    fetch('/api/daily-signals/whatsapp/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ signals: list, stockList: activeStockList }),
+    }).catch(() => {})
   }
 
   async function runLookup() {
@@ -375,7 +308,7 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
                 if (list.length === 0) {
                   setScanEmpty(true)
                 } else {
-                  sendTelegramSpanish(list, stockList)
+                  sendWhatsApp(list, stockList)
                 }
               }
             }
@@ -405,7 +338,6 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
   const mins = Math.floor(elapsed / 60)
   const secs = elapsed % 60
   const elapsedStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
-  const telegramReady = botToken && chatId
 
   function fmtEcuador(raw: string): string {
     if (!raw) return ''
@@ -430,7 +362,7 @@ export default function DailySignalsTab({ isAdmin, defaultTickers }: { isAdmin: 
             </p>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               Analiza múltiples acciones simultáneamente con IA. Genera señales BUY/SELL/HOLD
-              para tu portafolio y las envía automáticamente a Telegram.
+              para tu portafolio y las envía automáticamente a WhatsApp via nexus_claw.
             </p>
           </div>
 
@@ -520,63 +452,13 @@ flyctl secrets set \\
                 </p>
               </div>
 
-              {/* Telegram */}
-              <div className="rounded-lg border p-4 space-y-3" style={{ borderColor: 'rgba(201,168,76,0.2)', background: 'rgba(201,168,76,0.03)' }}>
-                <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>TELEGRAM</p>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[9px] font-mono tracking-widest block mb-1" style={{ color: 'var(--text-muted)' }}>BOT TOKEN</label>
-                    <input
-                      type="password"
-                      value={botToken}
-                      onChange={e => setBotToken(e.target.value)}
-                      placeholder="1234567890:ABC..."
-                      className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)]"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[9px] font-mono tracking-widest block mb-1" style={{ color: 'var(--text-muted)' }}>CHAT ID</label>
-                    <input
-                      type="text"
-                      value={chatId}
-                      onChange={e => setChatId(e.target.value)}
-                      placeholder="-100123456789 o @channel"
-                      className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] font-mono text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)]"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    disabled={!botToken || !chatId || tgStatus === 'testing'}
-                    onClick={testTelegram}
-                    className="px-4 py-1.5 text-[10px] font-mono tracking-widest rounded-lg border border-[var(--border)] text-[var(--text-secondary)] disabled:opacity-40 hover:border-[var(--gold-dark)]"
-                  >
-                    {tgStatus === 'testing' ? 'ENVIANDO…' : 'PROBAR CONEXIÓN'}
-                  </button>
-                  {tgStatus === 'ok'    && <span className="text-[10px] font-mono text-green-400">✓ Mensaje enviado correctamente</span>}
-                  {tgStatus === 'error' && <span className="text-[10px] font-mono text-red-400">✗ {tgError}</span>}
-                </div>
-                <p className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>
-                  Crea tu bot con <a href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer" className="underline">@BotFather</a> en Telegram. El Chat ID puedes obtenerlo con <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" className="underline">@userinfobot</a>.
-                </p>
-              </div>
-
-              <button
-                onClick={saveConfig}
-                className="px-5 py-2 text-xs font-mono tracking-widest rounded-xl bg-[var(--gold)] text-black font-bold hover:opacity-90"
-              >
-                GUARDAR CONFIGURACIÓN
-              </button>
             </div>
           )}
 
           {/* Config summary when collapsed */}
           {!showConfig && (
-            <div className="mt-3 flex items-center gap-4 text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
+            <div className="mt-3 text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
               <span>Stocks: <span style={{ color: 'var(--text-secondary)' }}>{stockList}</span></span>
-              <span className={telegramReady ? 'text-green-400' : ''}>
-                {telegramReady ? '📬 Telegram configurado' : '⚠ Telegram no configurado'}
-              </span>
             </div>
           )}
         </div>
@@ -690,11 +572,6 @@ flyctl secrets set \\
                 El servidor debe estar ONLINE para ejecutar el análisis
               </p>
             )}
-            {!telegramReady && (
-              <p className="text-[10px] font-mono text-center" style={{ color: 'var(--text-muted)' }}>
-                Configura Telegram para recibir las señales en tu canal
-              </p>
-            )}
           </div>
         ) : (
           <div className="space-y-3">
@@ -715,7 +592,7 @@ flyctl secrets set \\
               style={{ background: '#0d0d0d', borderColor: 'var(--border)', color: '#4ade80' }}
             >
               <span className="animate-pulse">Analizando {stockList.split(',').filter(Boolean).length} acciones con IA…</span>
-              {telegramReady && <p className="mt-1" style={{ color: 'var(--text-muted)' }}>Las señales se enviarán a Telegram al completar.</p>}
+              <p className="mt-1" style={{ color: 'var(--text-muted)' }}>Las señales se enviarán a WhatsApp al completar.</p>
             </div>
           </div>
         )}
@@ -860,29 +737,11 @@ flyctl secrets set \\
         </div>
       )}
 
-      {/* Sending indicator */}
-      {sendingTg && (
-        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border text-[11px] font-mono"
-          style={{ borderColor: 'rgba(201,168,76,0.2)', background: 'rgba(201,168,76,0.04)', color: 'var(--gold)' }}>
-          <span className="animate-pulse">●</span>
-          Traduciendo y enviando señales al Telegram…
-        </div>
-      )}
-
-      {/* Telegram footer */}
+      {/* WhatsApp footer */}
       <div className="rounded-lg border px-4 py-3 flex items-center gap-2 text-[10px] font-mono"
-        style={{ borderColor: 'var(--border)', color: telegramReady ? '#4ade80' : 'var(--text-muted)' }}>
-        {telegramReady ? (
-          <>
-            <span>📬</span>
-            <span>Telegram configurado — las señales se enviarán a tu canal al ejecutar el escaneo</span>
-          </>
-        ) : (
-          <>
-            <span>⚠</span>
-            <span>Telegram no configurado — abre Configuración para conectar tu canal</span>
-          </>
-        )}
+        style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+        <span>📲</span>
+        <span>Las señales se envían automáticamente a WhatsApp via nexus_claw al completar el escaneo</span>
       </div>
 
     </div>

@@ -1,0 +1,24 @@
+name: Cron — Daily Scanner Acciones 9:30am ET
+
+on:
+  schedule:
+    - cron: '30 14 * * 1-5'  # 14:30 UTC = 9:30am EST / 10:30am EDT (Mon-Fri)
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run daily scanner
+        run: |
+          HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
+            --max-time 310 \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/daily-scanner")
+          echo "HTTP status: $HTTP"
+          cat /tmp/response.txt || true
+          if [ "$HTTP" != "200" ]; then
+            echo "Error: expected 200, got $HTTP"
+            exit 1
+          fi
