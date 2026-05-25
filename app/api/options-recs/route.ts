@@ -14,10 +14,12 @@ export async function GET(req: NextRequest) {
   const strategyFilter = strategiesParam
     ? { strategy: { in: strategiesParam.split(',').map(s => s.trim()) } }
     : {}
+  const sourceParam = searchParams.get('source')
+  const sourceFilter = sourceParam ? { source: sourceParam } : {}
 
   // Auto-dedup: conservar solo la más reciente por ticker+strategy
   const activas = await prisma.optionRecommendation.findMany({
-    where: { status: 'ACTIVA', active: true, ...strategyFilter },
+    where: { status: 'ACTIVA', active: true, ...strategyFilter, ...sourceFilter },
     orderBy: { publishedAt: 'desc' },
   })
   const seen = new Map<string, boolean>()
@@ -39,6 +41,7 @@ export async function GET(req: NextRequest) {
     orderBy: { publishedAt: 'desc' },
     where: {
       ...strategyFilter,
+      ...sourceFilter,
       ...(isAdmin ? {} : { active: true }),
     },
   })
@@ -59,6 +62,7 @@ export async function POST(req: NextRequest) {
     score, label, underlyingPrice,
     bid, ask, mid, impliedVolatility, delta,
     breakeven, maxLossHint, maxProfitHint,
+    source = 'manual',
   } = body
 
   if (!ticker || !direction || !contractSymbol) {
@@ -78,7 +82,7 @@ export async function POST(req: NextRequest) {
       contractSymbol, contractType, strike, expiration, dte,
       score, label, underlyingPrice,
       bid, ask, mid, impliedVolatility, delta,
-      breakeven, maxLossHint, maxProfitHint,
+      breakeven, maxLossHint, maxProfitHint, source,
     },
   })
   return NextResponse.json({ recommendation: rec }, { status: 201 })

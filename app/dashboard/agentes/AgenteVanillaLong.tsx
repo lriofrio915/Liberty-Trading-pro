@@ -110,6 +110,7 @@ export default function AgenteVanillaLong({ isAdmin }: { isAdmin: boolean }) {
   const [activeTicker, setActiveTicker] = useState<string | null>(null)
   const [log, setLog]               = useState<string[]>([])
   const [summary, setSummary]       = useState<{ created: number; total: number } | null>(null)
+  const [savedRecs, setSavedRecs]   = useState<Array<{ id: string; ticker: string; action: string; strike: number; expiration: string; dte: number; score: number; label: string; mid?: number | null }>>([])
   const [stepsOpen, setStepsOpen]   = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -119,7 +120,7 @@ export default function AgenteVanillaLong({ isAdmin }: { isAdmin: boolean }) {
     setPhase('idle')
     setStep0Phase('idle'); setStep2Phase('idle'); setStep3Phase('idle')
     setStep4Phase('idle'); setStep6Phase('idle'); setStep7Phase('idle')
-    setTickers([]); setLog([]); setActiveTicker(null); setSummary(null)
+    setTickers([]); setLog([]); setActiveTicker(null); setSummary(null); setSavedRecs([])
     setStepsOpen(false)
   }
 
@@ -398,6 +399,7 @@ export default function AgenteVanillaLong({ isAdmin }: { isAdmin: boolean }) {
               breakeven: chosen.breakeven,
               maxLossHint: chosen.maxLossHint,
               maxProfitHint: chosen.maxProfitHint,
+              source: 'vanilla_long',
             }),
             signal,
           })
@@ -409,6 +411,7 @@ export default function AgenteVanillaLong({ isAdmin }: { isAdmin: boolean }) {
           } else {
             addLog(`✓ ${t.ticker}: ${chosen.action} registrado`)
             updateTicker(finalResults, t.ticker, { step7: 'done' })
+            if (iData.recommendation) setSavedRecs(prev => [...prev, iData.recommendation])
           }
         } catch (e) {
           if (signal.aborted) break
@@ -518,6 +521,24 @@ export default function AgenteVanillaLong({ isAdmin }: { isAdmin: boolean }) {
         <div className="mx-6 mb-5 p-4 rounded-xl border" style={{ borderColor: 'rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.05)' }}>
           <p className="text-[10px] font-mono tracking-widest mb-1 text-green-400">RESULTADO FINAL</p>
           <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{summary.created} pick(s) registrados de {summary.total} candidatos analizados</p>
+          {savedRecs.length > 0 && (
+            <div className="mt-3 space-y-1">
+              {savedRecs.map(r => (
+                <div key={r.id} className="flex items-center gap-2 text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
+                  <span className="text-green-400 font-bold">{r.ticker}</span>
+                  <span>{r.action}</span>
+                  <span>@{r.strike}</span>
+                  <span>exp:{r.expiration}</span>
+                  <span className="text-green-400">{r.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {summary.created > 0 && (
+            <a href="/dashboard/opciones?tab=vanilla_long" className="text-[10px] font-mono underline mt-2 block" style={{ color: '#4ade80' }}>
+              Ver en RECOMENDACIONES OPCIONES →
+            </a>
+          )}
         </div>
       )}
 

@@ -1,6 +1,15 @@
 'use client'
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+
+type OptionRec = {
+  id: string; ticker: string; action: string; strategy: string
+  strike: number; expiration: string; dte: number; score: number
+  label: string; status: string; resultado?: string | null
+  mid?: number | null; delta?: number | null; impliedVolatility?: number | null
+  breakeven?: number | null; publishedAt: string
+}
 
 type StrategyKind = 'sell-put' | 'covered-call' | 'buy-call' | 'buy-put'
 
@@ -90,12 +99,33 @@ interface TickerSuggestion {
 }
 
 export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean }) {
+  const searchParams = useSearchParams()
   const [ticker, setTicker] = useState('')
   const [activeStrategy, setActiveStrategy] = useState<StrategyKind>('sell-put')
   const [filterExp, setFilterExp] = useState<string>('all')
   const [data, setData] = useState<OptionsAnalyzeResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const [recTab, setRecTab] = useState<'vanilla_long' | 'vanilla_short'>(() => {
+    const t = searchParams.get('tab')
+    return (t === 'vanilla_long' || t === 'vanilla_short') ? t : 'vanilla_long'
+  })
+  const [longRecs, setLongRecs] = useState<OptionRec[]>([])
+  const [shortRecs, setShortRecs] = useState<OptionRec[]>([])
+  const [recsLoading, setRecsLoading] = useState(false)
+
+  useEffect(() => {
+    if (!isAdmin) return
+    setRecsLoading(true)
+    Promise.all([
+      fetch('/api/options-recs?source=vanilla_long').then(r => r.json()),
+      fetch('/api/options-recs?source=vanilla_short').then(r => r.json()),
+    ]).then(([lData, sData]) => {
+      setLongRecs(lData.recommendations ?? [])
+      setShortRecs(sData.recommendations ?? [])
+    }).catch(() => {}).finally(() => setRecsLoading(false))
+  }, [isAdmin])
 
   const [suggestions, setSuggestions] = useState<TickerSuggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -426,13 +456,96 @@ export default function OpcionesClient({ isAdmin = false }: { isAdmin?: boolean 
         </>
       )}
 
-      {/* Track Record de Opciones — nueva lógica próximamente */}
       <section className="mt-12">
         <p className="text-[10px] font-mono tracking-widest mb-3" style={{ color: 'var(--gold)' }}>RECOMENDACIONES DE OPCIONES</p>
-        <div className="card text-center py-10">
-          <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>Nueva lógica en desarrollo</p>
+        <div className="flex gap-2 mb-4">
+          {(['vanilla_long', 'vanilla_short'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setRecTab(tab)}
+              className={`text-[10px] font-mono px-3 py-1 rounded border transition-colors ${
+                recTab === tab
+                  ? tab === 'vanilla_long'
+                    ? 'border-green-400 text-green-400 bg-green-400/10'
+                    : 'border-purple-400 text-purple-400 bg-purple-400/10'
+                  : 'border-white/10 text-[var(--text-muted)]'
+              }`}
+            >
+              {tab === 'vanilla_long' ? 'VANILLA LONG' : 'VANILLA SHORT'}
+            </button>
+          ))}
         </div>
+        {recsLoading ? (
+          <div className="card text-center py-10">
+            <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>Cargando...</p>
+          </div>
+        ) : (
+          <RecTable recs={recTab === 'vanilla_long' ? longRecs : shortRecs} source={recTab} />
+        )}
       </section>
+    </div>
+  )
+}
+
+function RecTable({ recs, source }: { recs: OptionRec[]; source: string }) {
+  if (recs.length === 0) {
+    return (
+      <div className="card text-center py-10">
+        <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
+          Sin recomendaciones. Ejecuta el agente {source === 'vanilla_long' ? 'Vanilla LONG' : 'Vanilla SHORT'} para generar.
+        </p>
+      </div>
+    )
+  }
+  const color = source === 'vanilla_long' ? '#4ade80' : '#a855f7'
+  return (
+    <div className="overflow-x-auto rounded-xl border" style={{ borderColor: 'var(--border)' }}>
+      <table className="w-full text-xs font-mono">
+        <thead>
+          <tr className="border-b border-white/10" style={{ background: 'rgba(0,0,0,0.3)' }}>
+            <th className="text-left px-3 py-2" style={{ color: 'var(--text-muted)' }}>Ticker</th>
+            <th className="text-left px-3 py-2" style={{ color: 'var(--text-muted)' }}>Acción</th>
+            <th className="text-left px-3 py-2" style={{ color: 'var(--text-muted)' }}>Strike</th>
+            <th className="text-left px-3 py-2" style={{ color: 'var(--text-muted)' }}>Exp</th>
+            <th className="text-left px-3 py-2" style={{ color: 'var(--text-muted)' }}>DTE</th>
+            <th className="text-left px-3 py-2" style={{ color: 'var(--text-muted)' }}>Mid</th>
+            <th className="text-left px-3 py-2" style={{ color: 'var(--text-muted)' }}>Delta</th>
+            <th className="text-left px-3 py-2" style={{ color: 'var(--text-muted)' }}>Score</th>
+            <th className="text-left px-3 py-2" style={{ color: 'var(--text-muted)' }}>Estado</th>
+            <th className="text-left px-3 py-2" style={{ color: 'var(--text-muted)' }}>Resultado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {recs.map(r => (
+            <tr key={r.id} className="border-b border-white/5 hover:bg-white/5">
+              <td className="px-3 py-2 font-bold" style={{ color }}>{r.ticker}</td>
+              <td className="px-3 py-2" style={{ color: 'var(--text-primary)' }}>{r.action}</td>
+              <td className="px-3 py-2" style={{ color: 'var(--text-primary)' }}>{r.strike}</td>
+              <td className="px-3 py-2" style={{ color: 'var(--text-muted)' }}>{r.expiration}</td>
+              <td className="px-3 py-2" style={{ color: 'var(--text-muted)' }}>{r.dte}d</td>
+              <td className="px-3 py-2" style={{ color: 'var(--text-primary)' }}>{r.mid != null ? `$${r.mid.toFixed(2)}` : '-'}</td>
+              <td className="px-3 py-2" style={{ color: 'var(--text-muted)' }}>{r.delta != null ? r.delta.toFixed(2) : '-'}</td>
+              <td className="px-3 py-2" style={{ color: 'var(--gold)' }}>{r.score}</td>
+              <td className="px-3 py-2">
+                <span className={`px-1.5 py-0.5 rounded text-[9px] ${
+                  r.status === 'ACTIVA' ? 'bg-green-400/20 text-green-400' :
+                  r.status === 'EXPIRADA' ? 'bg-yellow-400/20 text-yellow-400' :
+                  'bg-gray-400/20 text-gray-400'
+                }`}>{r.status}</span>
+              </td>
+              <td className="px-3 py-2">
+                {r.resultado ? (
+                  <span className={`px-1.5 py-0.5 rounded text-[9px] ${
+                    r.resultado === 'GANADA' ? 'bg-green-400/20 text-green-400' :
+                    r.resultado === 'PERDIDA' ? 'bg-red-400/20 text-red-400' :
+                    'bg-gray-400/20 text-gray-400'
+                  }`}>{r.resultado}</span>
+                ) : <span style={{ color: 'var(--text-muted)' }}>-</span>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

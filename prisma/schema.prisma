@@ -291,6 +291,7 @@ model OptionRecommendation {
   pnlPct          Float?   // % sobre prima pagada
   pnlUsd          Float?   // P&L en dólares
   closedAt        DateTime? // fecha de cierre real
+  source          String   @default("manual") // 'manual' | 'vanilla_long' | 'vanilla_short'
 }
 
 model KnowledgeDoc {
