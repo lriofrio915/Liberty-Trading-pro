@@ -32,7 +32,7 @@
       "schedule": "*/30 13-19 * * 1-5"
     },
     {
-      "path": "/api/cron/close-prices",
+      "path": "/api/cron/scan-prices?checkpoint=3pm",
       "schedule": "5 19 * * 1-5"
     }
   ]
