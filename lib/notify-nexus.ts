@@ -76,7 +76,7 @@ const eventLabels: Record<string, string> = {
   new_lead: '💬 Nuevo lead de WhatsApp',
   lead_cta: '🎯 Lead listo para cierre',
   lead_vendido: '✅ Lead convertido — ¡venta!',
-  futuros_sesgo: '📊 Sesgo Futuros 9:15am ET',
+  futuros_sesgo: '📊 Sesgo Futuros 8:15am Ecuador',
   acciones_daily_scanner: '📈 Daily Scanner Acciones',
   morning_agents_intraday: '⚡ Picks Intraday 9am Ecuador',
 }
@@ -306,7 +306,7 @@ export function notifyMorningAgents(results: MorningAgentResult[]) {
 export function notifyFuturosSesgo(activos: ActivoSesgo[], saved: number) {
   const fecha = new Date().toLocaleDateString('es-EC', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    timeZone: 'America/New_York',
+    timeZone: 'America/Guayaquil',
   })
 
   const sesgoBadge = (s: string) => s === 'COMPRA' ? '✅' : s === 'VENTA' ? '🔴' : '⚪'
@@ -320,7 +320,7 @@ export function notifyFuturosSesgo(activos: ActivoSesgo[], saved: number) {
   })
 
   const resumen = [
-    `📊 *Sesgo Futuros 9:15am ET — ${fecha}*`,
+    `📊 *Sesgo Futuros 8:15am Ecuador — ${fecha}*`,
     '',
     ...lineas,
     '',
