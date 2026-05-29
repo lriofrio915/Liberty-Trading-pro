@@ -1,8 +1,8 @@
 name: Cron — Futuros Sesgo 9:15am ET
 
 on:
-  # schedule deshabilitado — cron oficial migrado a Vercel cron (vercel.json)
-  # - cron: '15 13 * * 1-5'  # 13:15 UTC = 9:15am EDT
+  schedule:
+    - cron: '15 13 * * 1-5'  # 13:15 UTC = 8:15am Ecuador (UTC-5, lun-vie)
   workflow_dispatch:
 
 jobs:

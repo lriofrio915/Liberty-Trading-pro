@@ -1,0 +1,19 @@
+name: Cron — Scan Prices Checkpoint 12pm Ecuador
+
+on:
+  schedule:
+    - cron: '0 17 * * 1-5'  # 17:00 UTC = 12pm Ecuador (UTC-5, lun-vie)
+  workflow_dispatch:
+
+jobs:
+  checkpoint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkpoint precios mediodía
+        run: |
+          HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
+            --max-time 60 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/scan-prices?checkpoint=12pm")
+          echo "HTTP status: $HTTP"
+          cat /tmp/response.txt || true

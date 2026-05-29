@@ -1,21 +1,21 @@
-name: Cron — Daily Scanner Acciones 9:30am ET
+name: Cron — Morning Agents 9am Ecuador
 
 on:
   schedule:
-    - cron: '35 13 * * 1-5'  # 13:35 UTC = 8:35am Ecuador (UTC-5, lun-vie)
+    - cron: '0 14 * * 1-5'  # 14:00 UTC = 9am Ecuador (UTC-5, lun-vie)
   workflow_dispatch:
 
 jobs:
-  scan:
+  agents:
     runs-on: ubuntu-latest
     steps:
-      - name: Run daily scanner
+      - name: Ejecutar pipeline morning agents (5 agentes AI)
         run: |
           HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
-            --max-time 310 \
+            --max-time 300 \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "${{ secrets.APP_URL }}/api/cron/daily-scanner")
+            "${{ secrets.APP_URL }}/api/cron/morning-agents")
           echo "HTTP status: $HTTP"
           cat /tmp/response.txt || true
           if [ "$HTTP" != "200" ]; then

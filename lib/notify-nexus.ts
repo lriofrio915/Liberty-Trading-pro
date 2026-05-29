@@ -76,6 +76,7 @@ const eventLabels: Record<string, string> = {
   new_lead: '💬 Nuevo lead de WhatsApp',
   lead_cta: '🎯 Lead listo para cierre',
   lead_vendido: '✅ Lead convertido — ¡venta!',
+  morning_news: '📰 Noticias Matutinas 6:30am Ecuador',
   futuros_sesgo: '📊 Sesgo Futuros 8:15am Ecuador',
   acciones_daily_scanner: '📈 Daily Scanner Acciones',
   morning_agents_intraday: '⚡ Picks Intraday 9am Ecuador',
@@ -476,6 +477,29 @@ export function notifyFuturosClose(results: { id: string; resultado: string; pnl
     pnlTotal: parseFloat(pnlTotal.toFixed(2)),
     total: results.length,
   })
+}
+
+// ── Morning News 6:30am ───────────────────────────────────────────────────────
+
+export function notifyMorningNews(articles: { title: string; description: string; source: string }[]) {
+  const fecha = new Date().toLocaleDateString('es-EC', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    timeZone: 'America/Guayaquil',
+  })
+
+  const lineas = articles.map((a, i) =>
+    `${i + 1}. *${a.title}* (${a.source})\n   ${a.description}`
+  )
+
+  const resumen = [
+    `📰 *Noticias Matutinas — ${fecha}*`,
+    '',
+    ...lineas,
+    '',
+    `${articles.length} noticias financieras del día.`,
+  ].join('\n')
+
+  return notifyNexus('morning_news', { resumen, count: articles.length })
 }
 
 // ── Monitor Signals — TP/SL en tiempo real ───────────────────────────────────

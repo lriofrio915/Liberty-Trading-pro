@@ -1,21 +1,20 @@
-name: Cron — Daily Scanner Acciones 9:30am ET
+name: Cron — Morning News 6:30am Ecuador
 
 on:
   schedule:
-    - cron: '35 13 * * 1-5'  # 13:35 UTC = 8:35am Ecuador (UTC-5, lun-vie)
+    - cron: '30 11 * * 1-5'  # 11:30 UTC = 6:30am Ecuador (UTC-5, lun-vie)
   workflow_dispatch:
 
 jobs:
-  scan:
+  news:
     runs-on: ubuntu-latest
     steps:
-      - name: Run daily scanner
+      - name: Enviar noticias financieras matutinas
         run: |
           HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
-            --max-time 310 \
-            -X POST \
+            --max-time 60 \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "${{ secrets.APP_URL }}/api/cron/daily-scanner")
+            "${{ secrets.APP_URL }}/api/cron/morning-news")
           echo "HTTP status: $HTTP"
           cat /tmp/response.txt || true
           if [ "$HTTP" != "200" ]; then
