@@ -99,10 +99,48 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // ── CfdSignal SL/TP monitoring ─────────────────────────────────────────
+    const signals = await prisma.cfdSignal.findMany({
+      where: { resultado: 'PENDIENTE', createdAt: { gte: today } },
+    })
+
+    let signalsClosed = 0
+    if (signals.length > 0) {
+      const signalPrices = await Promise.allSettled(
+        signals.map(s => {
+          const ticker = YAHOO_MAP[s.simbolo] ?? s.simbolo
+          return fetchYahoo(ticker, s.simbolo)
+        }),
+      )
+
+      for (let i = 0; i < signals.length; i++) {
+        const sig = signals[i]
+        const priceResult = signalPrices[i]
+        if (priceResult.status !== 'fulfilled' || !priceResult.value) continue
+
+        const precioNow = priceResult.value.price
+        const hitTP = sig.sesgo === 'COMPRA' ? precioNow >= sig.takeProfit : precioNow <= sig.takeProfit
+        const hitSL = sig.sesgo === 'COMPRA' ? precioNow <= sig.stopLoss  : precioNow >= sig.stopLoss
+
+        if (hitTP || hitSL) {
+          const resultado = hitTP ? 'GANADA' : 'PERDIDA'
+          const pnlUsd = hitTP ? sig.riesgoUsd * sig.rrRatio : -sig.riesgoUsd
+
+          await prisma.cfdSignal.update({
+            where: { id: sig.id },
+            data: { resultado, pnlUsd, closedAt: new Date(), closedPrice: precioNow },
+          })
+          signalsClosed++
+          console.log(`[bias-monitor] CfdSignal ${sig.simbolo} → ${resultado} @ ${precioNow} (${hitTP ? 'TP' : 'SL'})`)
+        }
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       monitored: scan.oportunidades.length,
       flips,
+      signalsClosed,
       hora: nowET(),
     })
   } catch (err) {

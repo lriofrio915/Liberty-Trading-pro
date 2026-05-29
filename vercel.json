@@ -13,7 +13,7 @@
   "crons": [
     {
       "path": "/api/cron/market-scan",
-      "schedule": "5 13 * * 1-5"
+      "schedule": "0 13 * * 1-5"
     },
     {
       "path": "/api/cron/futuros-sesgo",
