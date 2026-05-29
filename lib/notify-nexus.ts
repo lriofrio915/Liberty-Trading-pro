@@ -79,6 +79,7 @@ const eventLabels: Record<string, string> = {
   futuros_sesgo: '📊 Sesgo Futuros 8:15am Ecuador',
   acciones_daily_scanner: '📈 Daily Scanner Acciones',
   morning_agents_intraday: '⚡ Picks Intraday 9am Ecuador',
+  market_scan_morning: '📊 Market Scan 8:05am Ecuador',
 }
 
 function formatEmailBody(event: string, data: Record<string, unknown>): string {
@@ -330,4 +331,51 @@ export function notifyFuturosSesgo(activos: ActivoSesgo[], saved: number) {
   ].join('\n')
 
   return notifyNexus('futuros_sesgo', { resumen, saved })
+}
+
+// ── Market Scan 8:05am ───────────────────────────────────────────────────────
+
+interface MarketScanOportunidad {
+  simbolo: string
+  nombre: string
+  sesgo: string
+  confianza: number
+  precio9am: number
+  razon: string | null
+  sector?: string | null
+}
+
+export function notifyMarketScan(data: {
+  oportunidades: MarketScanOportunidad[]
+  sesgogeneral: string
+  autoSaved: number
+}) {
+  const fecha = new Date().toLocaleDateString('es-EC', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    timeZone: 'America/Guayaquil',
+  })
+
+  const sesgoBadge = (s: string) => s === 'COMPRA' ? '✅' : s === 'VENTA' ? '🔴' : '⚪'
+
+  const top = [...data.oportunidades]
+    .sort((a, b) => b.confianza - a.confianza)
+    .slice(0, 10)
+
+  const lineas = top.map(o =>
+    `${sesgoBadge(o.sesgo)} ${o.simbolo}: ${o.sesgo} (${o.confianza}%) — ${o.razon ?? ''}`
+  )
+
+  const resumen = [
+    `📊 *Market Scan 8:05am Ecuador — ${fecha}*`,
+    `Sesgo general: ${data.sesgogeneral}`,
+    '',
+    ...(lineas.length ? lineas : ['Sin oportunidades destacadas hoy.']),
+    '',
+    `Total oportunidades: ${data.oportunidades.length}`,
+    data.autoSaved > 0
+      ? `Señales guardadas (≥80%): ${data.autoSaved} — visibles en dashboard.`
+      : 'Sin señales de alta confianza guardadas.',
+  ].join('\n')
+
+  return notifyNexus('market_scan_morning', { resumen, total: data.oportunidades.length, autoSaved: data.autoSaved })
 }

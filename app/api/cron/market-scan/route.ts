@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { runFullAnalysis } from '@/lib/analisis-engine'
 import { calcSignal } from '@/lib/calc-signal'
+import { notifyMarketScan } from '@/lib/notify-nexus'
 
 export const runtime = 'nodejs'
 export const maxDuration = 90
@@ -100,6 +101,13 @@ export async function GET(req: NextRequest) {
     }
 
     console.log(`[market-scan] Created scan ${scan.id} with ${scan.oportunidades.length} opportunities`)
+
+    notifyMarketScan({
+      oportunidades: scan.oportunidades,
+      sesgogeneral,
+      autoSaved,
+    }).catch(() => {})
+
     return NextResponse.json({
       ok: true,
       scanId: scan.id,
