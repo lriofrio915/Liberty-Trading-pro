@@ -49,15 +49,28 @@ FREE < CLUB < PRO < PORTFOLIO
 
 Gestionados en Prisma (`Plan` enum). Hotmart actualiza el plan via webhook.
 
-## Cron Jobs (GitHub Actions)
+## Cron Jobs — Schedule Completo (hora Ecuador UTC-5, lun-vie)
 
-- `cron-morning-scan` — Escaneo matutino de mercado
-- `cron-midday-prices` — Precios al mediodía
-- `cron-close-prices` — Precios de cierre
-- `cron-bias-monitor` — Monitor de sesgo del mercado
-- `cron-followup` — Follow-up automático via WhatsApp a leads en estado CTA (3 etapas: 6h, 24h, 72h)
+Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus.ts` → nexus_claw → WhatsApp.
 
-Todos requieren `CRON_SECRET` en el header de la request.
+| Hora Ecuador | Ruta API | GH Action | Qué hace | Notifica WA |
+|---|---|---|---|---|
+| 5:00am | `/api/screener/lynch?refresh=true` | `cron-lynch-screener` | Refresca cache Peter Lynch para morning-agents | No |
+| 8:15am | `/api/cron/futuros-sesgo` | `cron-futuros-sesgo` | Sesgo NQ/SP500/RUSSELL, guarda CfdSignal con SL/TP | Sí |
+| 8:30am | `/api/cron/futuros-open` | `cron-futuros-open` | Registra precio entrada 9:30am ET desde vela apertura | Sí |
+| 8:35am | `/api/cron/market-scan` | `cron-market-scan` | Escaneo mercado, guarda señales ≥80% confianza | Sí |
+| 8:35am | `/api/cron/daily-scanner` | `cron-daily-scanner` | Escaneo acciones via API externa (async polling) | Sí |
+| 8am-2:30pm c/30min | `/api/cron/bias-monitor` | `cron-bias-monitor` | Detecta flips de sesgo en ScanOpportunity | No |
+| 8am-2:45pm c/15min | `/api/cron/monitor-signals` | `cron-monitor-signals` | Cierra CfdSignal al tocar TP o SL en tiempo real | Solo si cierra señales |
+| 9:00am | `/api/cron/morning-agents` | — | Pipeline 5 agentes: Peter, SmallCap, VanillaLong, VanillaShort, Intraday | Sí |
+| 9:05am | `/api/mt5/queue-signals` | `cron-auto-trade` | Encola señales morning-agents en MT5 (auto-trading) | No |
+| 12:00pm | `/api/cron/scan-prices?checkpoint=12pm` | — | Checkpoint precios mediodía en ScanOpportunity | No |
+| 2:45pm | `/api/cron/scan-prices?checkpoint=1445pm` | `cron-scan-1445` | Cierre de día — resumen rendimiento señales | Sí |
+| 2:45pm | `/api/cron/futuros-close` | `cron-futuros-close` | Audita cierre EOD futuros con velas 1min, calcula PnL | Sí |
+
+**Arquitectura de notificaciones:** `lib/notify-nexus.ts` → OpenClaw Gateway webhook → nexus_claw → WhatsApp Luis. Fallback: email via Resend.
+
+**Responsabilidad de CfdSignal TP/SL:** solo `monitor-signals` (cada 15min). `bias-monitor` solo maneja flips de `ScanOpportunity`.
 
 ## Páginas Públicas
 

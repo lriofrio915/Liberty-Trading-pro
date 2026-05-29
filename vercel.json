@@ -49,7 +49,7 @@
     },
     {
       "path": "/api/cron/monitor-signals",
-      "schedule": "*/15 13-21 * * 1-5"
+      "schedule": "*/15 13-19 * * 1-5"
     }
   ]
 }

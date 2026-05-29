@@ -2,8 +2,8 @@ name: Cron — Bias Monitor (cada 30 min)
 
 on:
   schedule:
-    # Every 30 min from 14:00-21:30 UTC = 9am-4:30pm EST (Mon-Fri)
-    - cron: '0,30 14-21 * * 1-5'
+    # Every 30 min 13:00-19:30 UTC = 8:00am-2:30pm Ecuador (UTC-5, Mon-Fri)
+    - cron: '0,30 13-19 * * 1-5'
   workflow_dispatch:
 
 jobs:

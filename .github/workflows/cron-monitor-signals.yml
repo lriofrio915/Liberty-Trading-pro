@@ -2,7 +2,7 @@ name: Cron — Monitor CfdSignal TP/SL (every 15min)
 
 on:
   schedule:
-    - cron: '*/15 13-21 * * 1-5'  # every 15 min, 13:00-21:00 UTC = 8am-4pm ET Mon-Fri
+    - cron: '*/15 13-19 * * 1-5'  # every 15 min, 13:00-19:45 UTC = 8:00am-2:45pm Ecuador (UTC-5) Mon-Fri
   workflow_dispatch:
 
 jobs:
