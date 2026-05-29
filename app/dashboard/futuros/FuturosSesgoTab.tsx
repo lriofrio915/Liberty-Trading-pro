@@ -48,6 +48,7 @@ interface TrackRec {
   createdAt: string
   openEntry: boolean
   openEntryAt: string | null
+  razon?: string
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -112,6 +113,7 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
   const [lastPriceCheck, setLastPriceCheck] = useState<Date | null>(null)
   const [priceChecking, setPriceChecking]   = useState(false)
   const [countdown, setCountdown]   = useState(marketCloseCountdown())
+  const [cronBias, setCronBias]     = useState<IndexAsset[]>([])
   const priceMapRef = useRef<Record<string, number>>({})
 
   const addLog = (msg: string) => setLog(prev => [...prev, msg])
@@ -132,6 +134,30 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
   }, [])
 
   useEffect(() => { loadTrackRecs() }, [loadTrackRecs])
+
+  const loadCronBias = useCallback(async () => {
+    try {
+      const res = await fetch('/api/cfds/signals?sector=Futuros')
+      if (!res.ok) return
+      const raw = await res.json()
+      const all: TrackRec[] = Array.isArray(raw) ? raw : raw.recommendations ?? []
+      const today = new Date(); today.setUTCHours(0, 0, 0, 0)
+      const todaySignals = all.filter(s => new Date(s.createdAt) >= today)
+      if (todaySignals.length === 0) return
+      setCronBias(todaySignals.map(s => ({
+        simbolo: s.simbolo,
+        nombre: s.nombre,
+        precio: s.precioEntrada,
+        cambio24h: 0,
+        sesgo: s.sesgo as 'COMPRA' | 'VENTA' | 'NEUTRAL',
+        confianza: s.confianza,
+        razon: s.razon ?? '',
+        riesgo: '',
+      })))
+    } catch {}
+  }, [])
+
+  useEffect(() => { loadCronBias() }, [loadCronBias])
 
   // ── Auto TP/SL price check ─────────────────────────────────────────────────
 
@@ -336,6 +362,8 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
   const totalPnl = trackRecs.reduce((s, r) => s + (r.pnlUsd ?? 0), 0)
   const winRate  = cerradas > 0 ? Math.round((ganadas / cerradas) * 100) : null
   const isRunning = phase === 'running'
+  const displayBias = idxBias.length > 0 ? idxBias : cronBias
+  const isLiveAnalysis = idxBias.length > 0
 
   const vixAsset = idxBias.find(a => a.simbolo === 'VIX')
   const vixInfo  = vixAsset ? vixInterpretation(vixAsset.precio) : null
@@ -366,7 +394,7 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
             className="px-5 py-2 rounded-xl text-xs font-mono tracking-widest font-bold transition-all disabled:opacity-50"
             style={{ background: 'var(--gold-dark)', color: '#000' }}
           >
-            {isRunning ? '⟳ ANALIZANDO...' : '▶ INICIAR ANÁLISIS'}
+            {isRunning ? '⟳ ANALIZANDO...' : '▶ ANÁLISIS EN VIVO'}
           </button>
           <button
             onClick={handlePriceRefresh}
@@ -400,9 +428,9 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
           {phaseBadge(phase)}
         </div>
         <p className="text-[10px] pl-4" style={{ color: 'var(--text-muted)' }}>NQ · S&P 500 · Russell 2000 · Dow Jones · VIX — datos en tiempo real</p>
-        {idxBias.filter(a => a.simbolo !== 'VIX').length > 0 && (
+        {displayBias.filter(a => a.simbolo !== 'VIX').length > 0 && (
           <div className="mt-2 pl-4 flex flex-wrap gap-1.5">
-            {idxBias.map(a => (
+            {displayBias.map(a => (
               <span key={a.simbolo} className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${a.sesgo === 'COMPRA' ? 'border-green-500/40 bg-green-500/10 text-green-400' : a.sesgo === 'VENTA' ? 'border-red-500/40 bg-red-500/10 text-red-400' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>
                 {a.simbolo} {a.sesgo} {a.confianza}%
               </span>
@@ -423,23 +451,30 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
         </div>
       )}
 
-      {/* Informativo de análisis */}
-      {phase === 'done' && idxBias.length > 0 && (
+      {/* Sesgo del día — cron o análisis en vivo */}
+      {displayBias.length > 0 && (
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(139,92,246,0.3)' }}>
-          <div className="px-4 py-2" style={{ background: 'rgba(139,92,246,0.08)', borderBottom: '1px solid rgba(139,92,246,0.2)' }}>
-            <span className="text-[10px] font-mono tracking-widest font-bold" style={{ color: '#a78bfa' }}>CÓMO SE DETERMINÓ EL SESGO</span>
+          <div className="px-4 py-2 flex items-center justify-between" style={{ background: 'rgba(139,92,246,0.08)', borderBottom: '1px solid rgba(139,92,246,0.2)' }}>
+            <span className="text-[10px] font-mono tracking-widest font-bold" style={{ color: '#a78bfa' }}>
+              {isLiveAnalysis ? 'CÓMO SE DETERMINÓ EL SESGO' : 'SESGO DEL DÍA — CRON 8:15am ET'}
+            </span>
+            {!isLiveAnalysis && (
+              <span className="text-[9px] font-mono px-2 py-0.5 rounded border border-purple-500/30 text-purple-400">
+                automático — futuros-sesgo
+              </span>
+            )}
           </div>
           <div className="p-4 space-y-4">
-            {/* Metodología */}
-            {metodologia && (
+            {/* Metodología — solo análisis en vivo */}
+            {isLiveAnalysis && metodologia && (
               <div>
                 <p className="text-[9px] font-mono tracking-widest mb-1.5" style={{ color: 'var(--text-muted)' }}>METODOLOGÍA</p>
                 <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{metodologia}</p>
               </div>
             )}
 
-            {/* VIX */}
-            {vixAsset && vixInfo && (
+            {/* VIX — solo análisis en vivo */}
+            {isLiveAnalysis && vixAsset && vixInfo && (
               <div className="rounded-lg p-3" style={{ background: 'rgba(0,0,0,0.3)', border: `1px solid ${vixInfo.color}30` }}>
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-[9px] font-mono tracking-widest" style={{ color: 'var(--text-muted)' }}>NIVEL VIX</p>
@@ -454,20 +489,20 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
               </div>
             )}
 
-            {/* Razonamiento por índice */}
+            {/* Sesgo por índice */}
             <div>
-              <p className="text-[9px] font-mono tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>RAZONAMIENTO POR ÍNDICE</p>
+              <p className="text-[9px] font-mono tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>SESGO POR ÍNDICE</p>
               <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
                 <table className="w-full text-[10px] font-mono">
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.3)' }}>
-                      {['Índice', 'Precio', 'Sesgo', 'Conf.', 'Razonamiento IA'].map(h => (
+                      {['Índice', 'Precio', 'Sesgo', 'Conf.', 'Razonamiento'].map(h => (
                         <th key={h} className="px-3 py-2 text-left whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {idxBias.map(a => (
+                    {displayBias.map(a => (
                       <tr key={a.simbolo} className="border-b border-[var(--border)]">
                         <td className="px-3 py-2 font-bold whitespace-nowrap" style={{ color: 'var(--gold)' }}>{a.simbolo}</td>
                         <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>{fmt(a.precio, a.precio < 100 ? 2 : 0)}</td>
