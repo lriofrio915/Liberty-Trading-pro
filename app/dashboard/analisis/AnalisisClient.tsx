@@ -911,9 +911,39 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
     })()
   }, [])
 
-  // Auto-run analysis on first mount
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { runAnalysis() }, [])
+  // Load today's MarketScan from cron (market-scan 8:35am ET) as default display
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const res = await fetch('/api/scan-today')
+        if (!res.ok) return
+        const data = await res.json()
+        if (!data.scan || !data.oportunidades?.length) return
+        setResult({
+          timestamp: data.scan.fecha,
+          riskProfile: 'agresivo',
+          activos: data.oportunidades.map((o: any) => ({
+            simbolo:   o.simbolo,
+            nombre:    o.nombre,
+            precio:    o.precio9am ?? 0,
+            cambio24h: 0,
+            sesgo:     o.sesgo as 'COMPRA' | 'VENTA' | 'NEUTRAL',
+            confianza: o.confianza,
+            razon:     o.razon ?? '',
+            riesgo:    'bajo' as const,
+            sector:    o.sector ?? '',
+          })),
+          estrategia: {
+            sesgo_general: data.scan.sesgogeneral as 'ALCISTA' | 'BAJISTA' | 'NEUTRAL',
+            resumen:       data.scan.resumen ?? '',
+            distribucion:  [],
+            oportunidad_destacada: '',
+            alerta_riesgo: '',
+          },
+        })
+      } catch {}
+    })()
+  }, [])
 
 
 
