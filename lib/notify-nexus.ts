@@ -81,6 +81,9 @@ const eventLabels: Record<string, string> = {
   morning_agents_intraday: '⚡ Picks Intraday 9am Ecuador',
   market_scan_morning: '📊 Market Scan 8:00am Ecuador',
   scan_prices_close: '📉 Cierre de Día — Resumen de Señales',
+  futuros_open: '📍 Entradas Futuros 9:30am ET',
+  futuros_close: '🏁 Cierre Futuros 3:45pm ET',
+  monitor_signals: '🔍 Monitor Señales TP/SL',
 }
 
 function formatEmailBody(event: string, data: Record<string, unknown>): string {
@@ -421,4 +424,73 @@ export function notifyScanPricesClose(oportunidades: ScanPricesOportunidad[]) {
   ].join('\n')
 
   return notifyNexus('scan_prices_close', { resumen, ganadas, perdidas, flips, total: oportunidades.length })
+}
+
+// ── Futuros Open — Entrada 9:30am ET ─────────────────────────────────────────
+
+export function notifyFuturosOpen(updated: number) {
+  const fecha = new Date().toLocaleDateString('es-EC', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    timeZone: 'America/Guayaquil',
+  })
+
+  const resumen = [
+    `📍 *Entradas Futuros 9:30am ET — ${fecha}*`,
+    '',
+    updated > 0
+      ? `${updated} señal(es) registrada(s) con precio de entrada, SL y TP desde vela de apertura.`
+      : 'Sin señales de futuros para registrar hoy.',
+  ].join('\n')
+
+  return notifyNexus('futuros_open', { resumen, updated })
+}
+
+// ── Futuros Close — Auditoría 3:45pm ET ─────────────────────────────────────
+
+export function notifyFuturosClose(results: { id: string; resultado: string; pnlUsd: number }[]) {
+  const fecha = new Date().toLocaleDateString('es-EC', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    timeZone: 'America/Guayaquil',
+  })
+
+  const ganadas  = results.filter(r => r.resultado === 'GANADA').length
+  const perdidas = results.filter(r => r.resultado === 'PERDIDA').length
+  const pnlTotal = results.reduce((acc, r) => acc + r.pnlUsd, 0)
+
+  const resumen = [
+    `🏁 *Cierre Futuros 3:45pm ET — ${fecha}*`,
+    '',
+    results.length > 0
+      ? [
+          `Auditadas: ${results.length} señal(es)`,
+          `✅ Ganadas: ${ganadas} | 🔴 Perdidas: ${perdidas}`,
+          `PnL Total: $${pnlTotal.toFixed(2)}`,
+        ].join('\n')
+      : 'Sin señales de futuros para cerrar hoy.',
+  ].join('\n')
+
+  return notifyNexus('futuros_close', {
+    resumen,
+    ganadas,
+    perdidas,
+    pnlTotal: parseFloat(pnlTotal.toFixed(2)),
+    total: results.length,
+  })
+}
+
+// ── Monitor Signals — TP/SL en tiempo real ───────────────────────────────────
+
+export function notifyMonitorSignals(checked: number, closed: number) {
+  const hora = new Date().toLocaleTimeString('es-EC', {
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Guayaquil',
+  })
+
+  const resumen = [
+    `🔍 *Monitor Señales ${hora} Ecuador — Cierre automático*`,
+    '',
+    `${closed} señal(es) cerrada(s) por TP/SL de ${checked} revisadas.`,
+  ].join('\n')
+
+  return notifyNexus('monitor_signals', { resumen, checked, closed })
 }

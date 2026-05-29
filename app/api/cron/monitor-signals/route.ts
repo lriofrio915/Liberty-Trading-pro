@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { fetchYahoo } from '@/lib/analisis-engine'
+import { notifyMonitorSignals } from '@/lib/notify-nexus'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -101,6 +102,8 @@ export async function GET(req: NextRequest) {
       console.log(`[monitor-signals] ${sig.simbolo} ${sig.sesgo} → ${resultado} @ ${currentPrice} | PnL $${pnlUsd.toFixed(2)}`)
       closed++
     }
+
+    if (closed > 0) void notifyMonitorSignals(pending.length, closed)
 
     return NextResponse.json({ ok: true, checked: pending.length, closed })
   } catch (err) {

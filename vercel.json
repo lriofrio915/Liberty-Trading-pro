@@ -38,6 +38,18 @@
     {
       "path": "/api/cron/scan-prices?checkpoint=1445pm",
       "schedule": "45 18 * * 1-5"
+    },
+    {
+      "path": "/api/cron/futuros-open",
+      "schedule": "30 13 * * 1-5"
+    },
+    {
+      "path": "/api/cron/futuros-close",
+      "schedule": "45 19 * * 1-5"
+    },
+    {
+      "path": "/api/cron/monitor-signals",
+      "schedule": "*/15 13-21 * * 1-5"
     }
   ]
 }

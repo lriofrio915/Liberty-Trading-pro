@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { computeFuturesLevels, FUTURES_SPECS } from '@/lib/futures-specs'
 import { prisma } from '@/lib/prisma'
+import { notifyFuturosOpen } from '@/lib/notify-nexus'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -84,6 +85,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (signals.length === 0) {
+      void notifyFuturosOpen(0)
       return NextResponse.json({ updated: 0, message: 'No hay señales PENDIENTE hoy' })
     }
 
@@ -126,6 +128,8 @@ export async function POST(req: NextRequest) {
       })
       updated.push(sig.id)
     }
+
+    void notifyFuturosOpen(updated.length)
 
     return NextResponse.json({
       updated: updated.length,

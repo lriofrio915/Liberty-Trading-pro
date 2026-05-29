@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFuturesSpec } from '@/lib/futures-specs'
 import { prisma } from '@/lib/prisma'
+import { notifyFuturosClose } from '@/lib/notify-nexus'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -130,6 +131,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (signals.length === 0) {
+      void notifyFuturosClose([])
       return NextResponse.json({ audited: 0, message: 'Sin señales 9:30am PENDIENTE con entrada registrada' })
     }
 
@@ -178,6 +180,8 @@ export async function POST(req: NextRequest) {
       })
       results.push({ id: sig.id, resultado, pnlUsd })
     }
+
+    void notifyFuturosClose(results)
 
     return NextResponse.json({
       audited: results.length,
