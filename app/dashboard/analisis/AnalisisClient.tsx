@@ -865,10 +865,7 @@ function SignalCard({ signal, onCopy }: { signal: CfdSignalCalc; onCopy: (text: 
 
 export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
   const riskProfile: RiskProfile = 'agresivo'
-  const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AnalysisResult | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [agentStep, setAgentStep] = useState(0)
   const [activeTab, setActiveTab] = useState<ActiveTab>('analisis')
 
   const [tradeSuccess, setTradeSuccess] = useState<string | null>(null)
@@ -895,7 +892,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
     onConfirm: () => void
   } | null>(null)
 
-  const [showAnalisisGuide, setShowAnalisisGuide] = useState(false)
   const [video, setVideo] = useState<{ youtubeUrl: string; title: string | null }>({ youtubeUrl: '', title: null })
   const [editMode, setEditMode] = useState(false)
   const [editUrl, setEditUrl] = useState('')
@@ -946,61 +942,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
   }, [])
 
 
-
-  const runAnalysis = async () => {
-    setLoading(true)
-    setError(null)
-    setResult(null)
-    setAgentStep(0)
-
-    let step = 0
-    const stepInterval = setInterval(() => {
-      step++
-      setAgentStep(step)
-      if (step >= AGENTS.length) clearInterval(stepInterval)
-    }, 3000)
-
-    try {
-      const res = await fetch('/api/analisis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ riskProfile }),
-        signal: AbortSignal.timeout(70000),
-      })
-
-      clearInterval(stepInterval)
-      setAgentStep(AGENTS.length)
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body?.error ?? `Error ${res.status}`)
-      }
-
-      const data: AnalysisResult = await res.json()
-      setResult(data)
-
-      // Auto-save recommendations (admin): auto-close expired signals + save new ones
-      if (isAdmin) {
-        const candidates: CfdSignalCalc[] = data.activos
-          .filter(a => a.confianza >= 70 && a.sesgo !== 'NEUTRAL')
-          .map(a => calcSignal(a, riskProfile))
-        if (candidates.length > 0) {
-          handleSaveSignals(candidates, data.activos)
-        }
-      }
-    } catch (err) {
-      clearInterval(stepInterval)
-      const msg =
-        err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError')
-          ? 'El análisis tardó demasiado. Los mercados están lentos, intenta nuevamente en unos momentos.'
-          : err instanceof Error
-            ? err.message
-            : 'Error al ejecutar el análisis. Intenta nuevamente.'
-      setError(msg)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const loadSignalHistory = useCallback(async () => {
     setRefreshing(true)
@@ -1500,92 +1441,39 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
       {/* ── Analysis Tab ── */}
       {activeTab === 'analisis' && (
         <div className="space-y-6">
-          {/* Instrucciones de uso */}
-          <div className="rounded-xl">
-            <button
-              onClick={() => setShowAnalisisGuide(v => !v)}
-              className="w-full flex items-center justify-between px-5 py-4 text-left rounded-xl transition-all"
-              style={{
-                background: showAnalisisGuide ? 'rgba(201,168,76,0.12)' : 'rgba(201,168,76,0.07)',
-                border: '1px solid rgba(201,168,76,0.35)',
-              }}
-            >
-              <span className="text-[11px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>
-                GUÍA DE USO — CÓMO USAR EL ANÁLISIS DE MERCADO
-              </span>
-              <span className="text-xs font-mono font-bold" style={{ color: 'var(--gold)' }}>{showAnalisisGuide ? '▲' : '▼'}</span>
-            </button>
-            {showAnalisisGuide && (
-              <div className="px-5 py-5 space-y-4 text-xs text-[var(--text-secondary)] leading-relaxed rounded-b-xl"
-                style={{ border: '1px solid rgba(201,168,76,0.2)', borderTop: 'none', background: 'rgba(201,168,76,0.03)' }}>
-                <div>
-                  <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>CUÁNDO USAR ESTA HERRAMIENTA</p>
-                  <p>Genera el análisis a la hora que decidas sentarte a operar. Los precios son en tiempo real, por lo que el análisis es válido para tu operativa del día en cualquier momento de la sesión.</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>FLUJO DE TRABAJO SUGERIDO</p>
-                  <ol className="space-y-1 ml-3 list-decimal">
-                    <li>Genera el análisis — 7 agentes de IA analizan más de 40 activos en paralelo.</li>
-                    <li>Revisa el <span className="text-white font-semibold">Sesgo General</span> del mercado (COMPRA / VENTA / NEUTRAL).</li>
-                    <li>Identifica los activos con mayor confianza en la dirección del sesgo general.</li>
-                    <li>Conecta MT5 para ejecutar directamente desde la señal.</li>
-                  </ol>
-                </div>
-                <div>
-                  <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>AUTO-GUARDADO DE SEÑALES</p>
-                  <p>Cada día a las 10am ET el análisis se ejecuta automáticamente. Las señales con confianza ≥ 80% se guardan en el <span className="text-white font-semibold">Track Record</span> sin que tengas que hacer nada — aparecen marcadas con <span className="text-[var(--gold)] font-semibold">AUTO 10AM</span>.</p>
-                </div>
-              </div>
-            )}
+          {/* Info banner */}
+          <div className="rounded-xl px-5 py-4 text-xs" style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)' }}>
+            <p className="text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--gold)' }}>
+              ANÁLISIS AUTOMÁTICO DIARIO
+            </p>
+            <p style={{ color: 'var(--text-muted)' }}>
+              7 agentes de IA analizan más de 40 activos cada día a las 8:35am ET. El análisis se actualiza automáticamente — no requiere ninguna acción de tu parte.
+            </p>
           </div>
 
-          {/* CTA */}
-          <div className="card p-5 space-y-4">
-            <div className="flex items-center gap-2 text-xs">
-              <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[var(--gold)]/15 text-[var(--gold)] border border-[var(--gold)]/30">
-                🚀 Perfil Agresivo
-              </span>
-              <span style={{ color: 'var(--text-muted)' }}>Máximo potencial — análisis se ejecuta automáticamente al entrar</span>
-            </div>
-
-
-            <button
-              onClick={runAnalysis}
-              disabled={loading}
-              className="w-full py-3.5 rounded-xl font-bold text-sm transition-all btn-gold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Analizando mercados...
-                </span>
-              ) : (
-                '🔍 Analizar Mercados'
-              )}
-            </button>
-          </div>
-
-          {/* Agent status */}
-          {loading && (
-            <div className="card p-5">
-              <p className="text-[10px] font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
-                Agentes trabajando en paralelo
-              </p>
-              <div className="space-y-3.5">
-                {AGENTS.map((agent, i) => (
-                  <AgentRow key={agent.key} agent={agent} step={agentStep} index={i} />
-                ))}
+          {/* Fecha del análisis */}
+          {result ? (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)' }}>
+              <span className="text-green-400 text-base">✓</span>
+              <div>
+                <p className="text-[10px] font-mono tracking-widest text-green-400">ANÁLISIS DEL DÍA</p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  {new Date(result.timestamp).toLocaleDateString('es-EC', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                    timeZone: 'America/Guayaquil',
+                  })}
+                </p>
               </div>
             </div>
-          )}
-
-          {/* Error */}
-          {error && (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
-              ⚠️ {error}
+          ) : (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)' }}>
+              <span style={{ color: 'var(--gold)' }}>🕐</span>
+              <div>
+                <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>SIN ANÁLISIS AÚN</p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  El análisis del día se genera automáticamente a las 8:35am ET. Vuelve después de esa hora.
+                </p>
+              </div>
             </div>
           )}
 
