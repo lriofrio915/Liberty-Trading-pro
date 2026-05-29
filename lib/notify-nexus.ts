@@ -79,7 +79,8 @@ const eventLabels: Record<string, string> = {
   futuros_sesgo: '📊 Sesgo Futuros 8:15am Ecuador',
   acciones_daily_scanner: '📈 Daily Scanner Acciones',
   morning_agents_intraday: '⚡ Picks Intraday 9am Ecuador',
-  market_scan_morning: '📊 Market Scan 8:05am Ecuador',
+  market_scan_morning: '📊 Market Scan 8:00am Ecuador',
+  scan_prices_close: '📉 Cierre de Día — Resumen de Señales',
 }
 
 function formatEmailBody(event: string, data: Record<string, unknown>): string {
@@ -378,4 +379,46 @@ export function notifyMarketScan(data: {
   ].join('\n')
 
   return notifyNexus('market_scan_morning', { resumen, total: data.oportunidades.length, autoSaved: data.autoSaved })
+}
+
+// ── Scan Prices — Cierre de Día ──────────────────────────────────────────────
+
+interface ScanPricesOportunidad {
+  simbolo: string
+  sesgo: string
+  confianza: number
+  precio9am: number
+  rendimiento12pm: number | null
+  rendimientoFlip: number | null
+  horaSesgoFlip: string | null
+  rendimiento3pm: number | null
+}
+
+export function notifyScanPricesClose(oportunidades: ScanPricesOportunidad[]) {
+  const fecha = new Date().toLocaleDateString('es-EC', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    timeZone: 'America/Guayaquil',
+  })
+
+  const pctFmt = (v: number | null) => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—'
+  const badge = (v: number | null) => v == null ? '⚪' : v >= 0 ? '✅' : '🔴'
+
+  const lineas = oportunidades.map(o => {
+    const flip = o.horaSesgoFlip ? ` | flip ${o.horaSesgoFlip}: ${pctFmt(o.rendimientoFlip)}` : ''
+    return `${badge(o.rendimiento3pm)} ${o.simbolo} (${o.sesgo} ${o.confianza}%): 12pm ${pctFmt(o.rendimiento12pm)} | 3pm ${pctFmt(o.rendimiento3pm)}${flip}`
+  })
+
+  const ganadas  = oportunidades.filter(o => (o.rendimiento3pm ?? 0) > 0).length
+  const perdidas = oportunidades.filter(o => (o.rendimiento3pm ?? 0) < 0).length
+  const flips    = oportunidades.filter(o => o.horaSesgoFlip != null).length
+
+  const resumen = [
+    `📉 *Cierre de Día — ${fecha}*`,
+    '',
+    ...lineas,
+    '',
+    `✅ Ganadoras: ${ganadas} | 🔴 Perdedoras: ${perdidas} | Flips: ${flips}`,
+  ].join('\n')
+
+  return notifyNexus('scan_prices_close', { resumen, ganadas, perdidas, flips, total: oportunidades.length })
 }

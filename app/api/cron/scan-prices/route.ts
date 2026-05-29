@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { fetchYahoo } from '@/lib/analisis-engine'
+import { notifyScanPricesClose } from '@/lib/notify-nexus'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -102,6 +103,19 @@ export async function GET(req: NextRequest) {
     }
 
     console.log(`[scan-prices-${checkpoint}] Updated ${updated}/${pending.length} opportunities`)
+
+    // End-of-day notify after 3pm checkpoint
+    if (checkpoint === '3pm' && updated > 0) {
+      const fresh = await prisma.scanOpportunity.findMany({
+        where: { scanId: scan.id },
+        select: {
+          simbolo: true, sesgo: true, confianza: true, precio9am: true,
+          rendimiento12pm: true, rendimientoFlip: true, horaSesgoFlip: true, rendimiento3pm: true,
+        },
+      })
+      notifyScanPricesClose(fresh).catch(() => {})
+    }
+
     return NextResponse.json({ ok: true, checkpoint, updated, total: pending.length })
   } catch (err) {
     console.error(`[scan-prices-${checkpoint}]`, err)
