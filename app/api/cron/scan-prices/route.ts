@@ -104,8 +104,8 @@ export async function GET(req: NextRequest) {
 
     console.log(`[scan-prices-${checkpoint}] Updated ${updated}/${pending.length} opportunities`)
 
-    // End-of-day notify after 3pm checkpoint
-    if (checkpoint === '3pm' && updated > 0) {
+    // End-of-day notify after 1445pm checkpoint (último cierre del día)
+    if (checkpoint === '1445pm' && updated > 0) {
       const fresh = await prisma.scanOpportunity.findMany({
         where: { scanId: scan.id },
         select: {

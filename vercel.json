@@ -38,10 +38,6 @@
     {
       "path": "/api/cron/scan-prices?checkpoint=1445pm",
       "schedule": "45 18 * * 1-5"
-    },
-    {
-      "path": "/api/cron/scan-prices?checkpoint=3pm",
-      "schedule": "5 19 * * 1-5"
     }
   ]
 }
