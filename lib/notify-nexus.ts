@@ -141,14 +141,19 @@ export async function notifyNexus(
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
       if (GATEWAY_TOKEN) headers['Authorization'] = `Bearer ${GATEWAY_TOKEN}`
 
-      await fetch(`${GATEWAY_URL}/webhook/liberty-trading`, {
+      const res = await fetch(`${GATEWAY_URL}/webhook/liberty-trading`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
         signal: AbortSignal.timeout(10_000),
       })
-      console.log('[notify-nexus] Webhook sent:', event)
-      sent = true
+      if (res.ok) {
+        console.log('[notify-nexus] Webhook sent:', event)
+        sent = true
+      } else {
+        const body = await res.text().catch(() => '')
+        console.error('[notify-nexus] Webhook rejected:', res.status, body.slice(0, 200))
+      }
     } catch (err: any) {
       console.error('[notify-nexus] Webhook failed, trying email fallback:', event, err?.message)
     }
