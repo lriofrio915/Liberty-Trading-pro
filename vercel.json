@@ -28,10 +28,6 @@
       "schedule": "0 14 * * 1-5"
     },
     {
-      "path": "/api/cron/bias-monitor",
-      "schedule": "*/30 13-19 * * 1-5"
-    },
-    {
       "path": "/api/cron/scan-prices?checkpoint=12pm",
       "schedule": "0 17 * * 1-5"
     },
@@ -46,10 +42,6 @@
     {
       "path": "/api/cron/futuros-close",
       "schedule": "45 19 * * 1-5"
-    },
-    {
-      "path": "/api/cron/monitor-signals",
-      "schedule": "*/15 13-19 * * 1-5"
     }
   ]
 }

@@ -35,7 +35,7 @@ const LOT_MULT: Record<string, number> = {
  * Called every 15 min during market hours via GitHub Actions.
  */
 export async function GET(req: NextRequest) {
-  const secret = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || ''
+  const secret = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || new URL(req.url).searchParams.get('secret') || ''
   if (!CRON_SECRET || secret !== CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
