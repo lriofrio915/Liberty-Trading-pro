@@ -100,6 +100,11 @@ function vixInterpretation(vixPrice: number): { label: string; color: string; de
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
+  const [video, setVideo]           = useState<{ youtubeUrl: string; title: string | null }>({ youtubeUrl: '', title: null })
+  const [editMode, setEditMode]     = useState(false)
+  const [editUrl, setEditUrl]       = useState('')
+  const [editTitle, setEditTitle]   = useState('')
+  const [saving, setSaving]         = useState(false)
   const [phase, setPhase]           = useState<'idle'|'running'|'done'|'error'>('idle')
   const [idxBias, setIdxBias]       = useState<IndexAsset[]>([])
   const [metodologia, setMetodologia] = useState<string>('')
@@ -113,6 +118,38 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
   const [priceChecking, setPriceChecking]   = useState(false)
   const [countdown, setCountdown]   = useState(marketCloseCountdown())
   const priceMapRef = useRef<Record<string, number>>({})
+
+  const getYouTubeId = (url: string) => {
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/)
+    return match?.[1] || ''
+  }
+
+  const loadVideo = useCallback(async () => {
+    try {
+      const res = await fetch('/api/section-video?section=futuros')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.youtubeUrl) setVideo(data)
+      }
+    } catch {}
+  }, [])
+
+  useEffect(() => { loadVideo() }, [loadVideo])
+
+  const saveVideo = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/section-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section: 'futuros', youtubeUrl: editUrl, title: editTitle }),
+      })
+      if (res.ok) {
+        setVideo({ youtubeUrl: editUrl, title: editTitle })
+        setEditMode(false)
+      }
+    } catch {} finally { setSaving(false) }
+  }
 
   const addLog = (msg: string) => setLog(prev => [...prev, msg])
 
@@ -529,6 +566,60 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
           </div>
         </div>
       )}
+
+      {/* Video del profesional */}
+      <div className="rounded-xl border p-5" style={{ borderColor: 'rgba(201,168,76,0.18)', background: 'linear-gradient(135deg, rgba(201,168,76,0.04) 0%, transparent 70%)' }}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>VIDEO DEL PROFESIONAL</p>
+          {isAdmin && (
+            <button
+              onClick={() => { setEditMode(!editMode); if (!editMode) { setEditUrl(video.youtubeUrl); setEditTitle(video.title || '') } }}
+              className="text-[10px] font-mono tracking-widest px-3 py-1 rounded border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--gold)]"
+            >
+              {editMode ? 'CANCELAR' : 'EDITAR'}
+            </button>
+          )}
+        </div>
+
+        {editMode && (
+          <div className="space-y-3 mb-4">
+            <input
+              value={editUrl}
+              onChange={(e) => setEditUrl(e.target.value)}
+              placeholder="URL de YouTube"
+              className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] text-xs px-4 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)] font-mono"
+            />
+            <input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="Título del video (opcional)"
+              className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] text-xs px-4 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)] font-mono"
+            />
+            <button
+              onClick={saveVideo}
+              disabled={!editUrl || saving}
+              className="px-4 py-2 text-xs font-mono tracking-widest rounded-lg bg-[var(--gold)] text-black disabled:opacity-50"
+            >
+              {saving ? 'GUARDANDO…' : 'GUARDAR'}
+            </button>
+          </div>
+        )}
+
+        {video.youtubeUrl ? (
+          <div className="aspect-video rounded-lg overflow-hidden">
+            <iframe
+              src={`https://www.youtube.com/embed/${getYouTubeId(video.youtubeUrl)}`}
+              title={video.title || 'Video de Futuros'}
+              className="w-full h-full"
+              allowFullScreen
+            />
+          </div>
+        ) : (
+          <div className="text-center py-12 border border-dashed rounded-lg" style={{ borderColor: 'var(--border)' }}>
+            <p className="text-xs text-[var(--text-muted)]">El administrador aún no ha publicado un video para esta sección.</p>
+          </div>
+        )}
+      </div>
 
       {/* Track Record */}
       <div className="space-y-3">
