@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { computeFuturesLevels, FUTURES_SPECS } from '@/lib/futures-specs'
 import { prisma } from '@/lib/prisma'
 import { notifyFuturosOpen } from '@/lib/notify-nexus'
+import { fetchBrokers } from '@/lib/brokers-client'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -64,6 +65,81 @@ function get930ETTimestamp(now: Date): number {
   return (etHour === 9 ? edtCandidate : Date.UTC(year, month - 1, day, 14, 30)) / 1000
 }
 
+interface FuturosSignalForMT5 {
+  id: string
+  simbolo: string
+  sesgo: string
+  confianza: number
+  precioEntrada: number
+  stopLoss: number
+  takeProfit: number
+  lotaje: number
+}
+
+async function queueFuturosToMT5(
+  signals: FuturosSignalForMT5[],
+  symbolMap: Record<string, string>,
+) {
+  if (signals.length === 0) return
+  try {
+    const connections = await prisma.brokerConnection.findMany({
+      where: { isActive: true, brokerType: 'mt5' },
+    })
+    if (connections.length === 0) return
+
+    for (const conn of connections) {
+      for (const sig of signals) {
+        const mt5Symbol = symbolMap[sig.simbolo] ?? sig.simbolo
+        const side = sig.sesgo === 'COMPRA' ? 'BUY' : 'SELL'
+
+        const queued = await prisma.signalQueue.create({
+          data: {
+            brokerConnectionId: conn.id,
+            symbol:      mt5Symbol,
+            symbolRaw:   sig.simbolo,
+            type:        side,
+            volume:      sig.lotaje,
+            entryPrice:  sig.precioEntrada,
+            sl:          sig.stopLoss,
+            tp:          sig.takeProfit,
+            status:      'PENDING',
+            comment:     `Auto:futuros=${sig.id.slice(-8)},conf=${sig.confianza}%`,
+          },
+        })
+
+        try {
+          const res = await fetchBrokers('/api/mt5/order', {
+            method: 'POST',
+            body: JSON.stringify({
+              user_id:       conn.userId,
+              symbol:        mt5Symbol,
+              side,
+              volume:        sig.lotaje,
+              order_type:    'market',
+              stop_loss:     sig.stopLoss,
+              take_profit:   sig.takeProfit,
+              signal_source: 'futuros_sesgo',
+              signal_data:   { cfdSignalId: sig.id, confianza: sig.confianza },
+            }),
+          })
+          const errorMsg = res.ok ? null : await res.text()
+          await prisma.signalQueue.update({
+            where: { id: queued.id },
+            data: { status: res.ok ? 'SENT' : 'FAILED', errorMsg },
+          })
+        } catch (err) {
+          await prisma.signalQueue.update({
+            where: { id: queued.id },
+            data: { status: 'FAILED', errorMsg: String(err) },
+          })
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[futuros-open] queueFuturosToMT5 error:', err)
+  }
+}
+
 export async function POST(req: NextRequest) {
   if (!validateCron(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -103,7 +179,15 @@ export async function POST(req: NextRequest) {
       candlesBySymbol[sym] = await fetch1minCandles(ticker)
     }))
 
+    const FUTUROS_MT5_MAP: Record<string, string> = {
+      NQ:      'NQ100',
+      SP500:   'SPX500',
+      RUSSELL: 'US2000',
+    }
+
     const updated: string[] = []
+    const updatedSignals: FuturosSignalForMT5[] = []
+
     for (const sig of signals) {
       const candles = candlesBySymbol[sig.simbolo]
       if (!candles || candles.length === 0) continue
@@ -127,9 +211,22 @@ export async function POST(req: NextRequest) {
         },
       })
       updated.push(sig.id)
+      updatedSignals.push({
+        id:            sig.id,
+        simbolo:       sig.simbolo,
+        sesgo:         sig.sesgo,
+        confianza:     sig.confianza,
+        precioEntrada: entryPrice,
+        stopLoss:      levels.stopLoss,
+        takeProfit:    levels.takeProfit,
+        lotaje:        levels.lotaje,
+      })
     }
 
     void notifyFuturosOpen(updated.length)
+
+    // Encolar señales Futuros en MT5 (fail-silent — no rompe el cron si no hay conexiones)
+    void queueFuturosToMT5(updatedSignals, FUTUROS_MT5_MAP)
 
     return NextResponse.json({
       updated: updated.length,
