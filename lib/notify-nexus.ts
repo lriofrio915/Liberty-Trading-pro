@@ -334,12 +334,7 @@ export function notifyFuturosSesgo(
     }
     const badge = sesgoBadge(a.sesgo)
     const precio = `$${a.precio.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
-    const base = `${badge} *${a.simbolo}:* ${a.sesgo} (${a.confianza}%) — ${precio} | ${a.razon}`
-    const lvl = levelsMap.get(a.simbolo.toUpperCase())
-    if (!lvl) return base
-    const sl  = `$${lvl.stopLoss.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
-    const tp  = `$${lvl.takeProfit.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
-    return `${base}\n   📍 SL: ${sl} | TP: ${tp} | RR: 1:${lvl.rrRatio.toFixed(1)}`
+    return `${badge} *${a.simbolo}:* ${a.sesgo} (${a.confianza}%) — ${precio} | ${a.razon}`
   })
 
   const resumen = [
