@@ -1,8 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { fetchYahoo, runAgent, repairJSON, PRICE_LOOKUP } from '@/lib/analisis-engine'
+import { fetchYahoo, repairJSON, PRICE_LOOKUP } from '@/lib/analisis-engine'
 import { computeFuturesLevels, FUTURES_SPECS } from '@/lib/futures-specs'
 import { prisma } from '@/lib/prisma'
 import { notifyFuturosSesgo } from '@/lib/notify-nexus'
+
+async function runSesgoAgent(system: string, user: string): Promise<string> {
+  const apiKey = process.env.GROQ_API_KEY
+  if (!apiKey) throw new Error('GROQ_API_KEY not configured')
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+      temperature: 0.2,
+      max_tokens: 700,
+    }),
+    signal: AbortSignal.timeout(20_000),
+  })
+  if (!res.ok) throw new Error(`Groq error: ${res.status}`)
+  const data = await res.json()
+  return data.choices?.[0]?.message?.content ?? ''
+}
 
 export const runtime = 'nodejs'
 export const maxDuration = 90
@@ -46,7 +65,7 @@ VIX COMPRA = miedo (>25), VENTA = complacencia (<13).`
 
     const user_msg = `Fecha: ${today}. Precios actuales:\n${pricesCtx}\n\nAnaliza el sesgo intradía para operar futuros de índices (velas de 1 minuto, apertura 9:30 AM ET).`
 
-    const raw = await runAgent(system, user_msg, 600)
+    const raw = await runSesgoAgent(system, user_msg)
     const json = repairJSON(raw)
     const data = JSON.parse(json)
 
