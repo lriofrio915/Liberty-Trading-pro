@@ -486,22 +486,54 @@ export function notifyFuturosClose(results: { id: string; resultado: string; pnl
 
 // ── Morning News 6:30am ───────────────────────────────────────────────────────
 
-export function notifyMorningNews(articles: { title: string; description: string; source: string }[]) {
+type MorningNewsRegion = 'asia' | 'europa' | 'eeuu'
+
+export function notifyMorningNews(articles: {
+  title: string
+  description: string
+  source: string
+  link?: string
+  region?: MorningNewsRegion
+}[]) {
   const fecha = new Date().toLocaleDateString('es-EC', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     timeZone: 'America/Guayaquil',
   })
 
-  const lineas = articles.map((a, i) =>
-    `${i + 1}. *${a.title}* (${a.source})\n   ${a.description}`
-  )
+  const regionConfig: Record<MorningNewsRegion, { emoji: string; label: string; sub?: string }> = {
+    asia:   { emoji: '🌏', label: 'ASIA',   sub: '_(mientras dormías)_' },
+    europa: { emoji: '🌍', label: 'EUROPA',  sub: undefined },
+    eeuu:   { emoji: '🌎', label: 'EEUU & AMÉRICAS', sub: undefined },
+  }
+
+  const grouped: Record<MorningNewsRegion, typeof articles> = { asia: [], europa: [], eeuu: [] }
+  for (const a of articles) {
+    const r = (a.region ?? 'eeuu') as MorningNewsRegion
+    grouped[r].push(a)
+  }
+
+  const sections: string[] = []
+  for (const region of (['asia', 'europa', 'eeuu'] as MorningNewsRegion[])) {
+    const items = grouped[region]
+    if (items.length === 0) continue
+    const { emoji, label, sub } = regionConfig[region]
+    const header = sub ? `${emoji} *${label}* ${sub}` : `${emoji} *${label}*`
+    const lines: string[] = [header, '']
+    for (const a of items) {
+      lines.push(`🔹 *${a.title}*`)
+      lines.push(`_${a.source}_ — ${a.description}`)
+      if (a.link) lines.push(a.link)
+      lines.push('')
+    }
+    sections.push(lines.join('\n'))
+  }
 
   const resumen = [
     `📰 *Noticias Matutinas — ${fecha}*`,
     '',
-    ...lineas,
-    '',
-    `${articles.length} noticias financieras del día.`,
+    ...sections,
+    `━━━`,
+    `📊 _${articles.length} noticias | Liberty Trading Club_`,
   ].join('\n')
 
   return notifyNexus('morning_news', { resumen, count: articles.length })

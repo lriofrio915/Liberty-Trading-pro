@@ -3,12 +3,21 @@ import { notifyMorningNews } from '@/lib/notify-nexus'
 
 export const maxDuration = 60
 
+type Region = 'asia' | 'europa' | 'eeuu'
+
 interface NewsItem {
   title: string
   description: string
   link: string
   pubDate: string
   source: string
+  region: Region
+}
+
+interface FeedDef {
+  url: string
+  source: string
+  region: Region
 }
 
 function stripHTML(str: string): string {
@@ -26,29 +35,39 @@ function parseTag(xml: string, tag: string): string {
   return stripHTML(extractCDATA(m[1]))
 }
 
-function parseRSS(xml: string, source: string): NewsItem[] {
+function parseRSS(xml: string, source: string, region: Region): NewsItem[] {
   const items = xml.match(/<item>([\s\S]*?)<\/item>/g) || []
-  return items.slice(0, 6).map(item => ({
+  return items.slice(0, 5).map(item => ({
     title: parseTag(item, 'title'),
-    description: parseTag(item, 'description').slice(0, 160),
+    description: parseTag(item, 'description').slice(0, 180),
     link: parseTag(item, 'link') || parseTag(item, 'guid'),
     pubDate: parseTag(item, 'pubDate'),
     source,
+    region,
   })).filter(i => i.title)
 }
 
-const FEEDS = [
-  { url: 'https://feeds.reuters.com/reuters/businessNews', source: 'Reuters' },
-  { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', source: 'CNBC' },
-  { url: 'https://feeds.marketwatch.com/marketwatch/topstories/', source: 'MarketWatch' },
-  { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
+const FEEDS: FeedDef[] = [
+  // Asia — pasó mientras Ecuador dormía (UTC-5)
+  { url: 'https://www.scmp.com/rss/5/feed',          source: 'SCMP',           region: 'asia' },
+  { url: 'https://asia.nikkei.com/rss/feed/nar',     source: 'Nikkei Asia',    region: 'asia' },
+  // Europa
+  { url: 'https://feeds.bbci.co.uk/news/business/rss.xml',          source: 'BBC Business',  region: 'europa' },
+  { url: 'https://www.ft.com/rss/home',                             source: 'Financial Times', region: 'europa' },
+  // EEUU / Américas
+  { url: 'https://feeds.reuters.com/reuters/businessNews',          source: 'Reuters',       region: 'eeuu' },
+  { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html',   source: 'CNBC',          region: 'eeuu' },
+  { url: 'https://feeds.marketwatch.com/marketwatch/topstories/',   source: 'MarketWatch',   region: 'eeuu' },
+  { url: 'https://finance.yahoo.com/news/rssindex',                 source: 'Yahoo Finance', region: 'eeuu' },
+  { url: 'https://www.barrons.com/xml/rss/3_7016.xml',              source: "Barron's",      region: 'eeuu' },
 ]
 
 async function translateNews(items: NewsItem[]): Promise<NewsItem[]> {
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) return items
   try {
-    const prompt = `Translate ONLY the "title" and "description" fields from English to Spanish. Keep "link", "pubDate", "source" unchanged. Return ONLY a valid JSON array with the same structure, no extra text.\nNews: ${JSON.stringify(items)}`
+    const toTranslate = items.map(({ title, description, link, pubDate, source, region }) => ({ title, description, link, pubDate, source, region }))
+    const prompt = `Translate ONLY the "title" and "description" fields from English to Spanish. Keep "link", "pubDate", "source", "region" unchanged. Return ONLY a valid JSON array with the same structure, no extra text.\nNews: ${JSON.stringify(toTranslate)}`
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
@@ -56,9 +75,9 @@ async function translateNews(items: NewsItem[]): Promise<NewsItem[]> {
         model: 'llama-3.1-8b-instant',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1,
-        max_tokens: 3000,
+        max_tokens: 4000,
       }),
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(20_000),
     })
     if (!res.ok) return items
     const data = await res.json()
@@ -79,32 +98,41 @@ export async function GET(req: NextRequest) {
   }
 
   const results = await Promise.allSettled(
-    FEEDS.map(async ({ url, source }) => {
+    FEEDS.map(async ({ url, source, region }) => {
       const res = await fetch(url, {
         headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/rss+xml,application/xml' },
-        signal: AbortSignal.timeout(6000),
+        signal: AbortSignal.timeout(7000),
       })
       const xml = await res.text()
-      return parseRSS(xml, source)
+      return parseRSS(xml, source, region)
     })
   )
 
-  const news: NewsItem[] = []
+  const allNews: NewsItem[] = []
   for (const r of results) {
-    if (r.status === 'fulfilled') news.push(...r.value)
+    if (r.status === 'fulfilled') allNews.push(...r.value)
   }
 
-  const sorted = news
-    .sort((a, b) => {
-      const da = a.pubDate ? new Date(a.pubDate).getTime() : 0
-      const db = b.pubDate ? new Date(b.pubDate).getTime() : 0
-      return db - da
-    })
-    .slice(0, 5)
+  // Sort by date descending, then take top 3 per region
+  allNews.sort((a, b) => {
+    const da = a.pubDate ? new Date(a.pubDate).getTime() : 0
+    const db = b.pubDate ? new Date(b.pubDate).getTime() : 0
+    return db - da
+  })
 
-  const translated = await translateNews(sorted).catch(() => sorted)
+  const byRegion: Record<Region, NewsItem[]> = { asia: [], europa: [], eeuu: [] }
+  for (const item of allNews) {
+    if (byRegion[item.region].length < 3) byRegion[item.region].push(item)
+  }
+
+  const selected = [...byRegion.asia, ...byRegion.europa, ...byRegion.eeuu]
+  const translated = await translateNews(selected).catch(() => selected)
 
   void notifyMorningNews(translated)
 
-  return NextResponse.json({ ok: true, count: translated.length })
+  return NextResponse.json({
+    ok: true,
+    count: translated.length,
+    byRegion: { asia: byRegion.asia.length, europa: byRegion.europa.length, eeuu: byRegion.eeuu.length },
+  })
 }
