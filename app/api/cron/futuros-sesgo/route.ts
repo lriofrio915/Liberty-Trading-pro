@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       fetchYahoo('NQ=F',   'NQ Futures'),
       fetchYahoo('ES=F',   'S&P 500 E-mini Futures'),
       fetchYahoo('RTY=F',  'Russell 2000 E-mini Futures'),
-      fetchYahoo('^DJI',   'Dow Jones Industrial'),
+      fetchYahoo('%5EDJI', 'Dow Jones Industrial'),
       fetchYahoo('%5EVIX', 'VIX'),
     ])
 
@@ -51,7 +51,7 @@ VIX COMPRA = miedo (>25), VENTA = complacencia (<13).`
     const data = JSON.parse(json)
 
     const priceMap: Record<string, typeof nq> = {
-      'NQ=F': nq, 'ES=F': sp, 'RTY=F': rut, '^DJI': dow, '%5EVIX': vix,
+      'NQ=F': nq, 'ES=F': sp, 'RTY=F': rut, '^DJI': dow, '%5EDJI': dow, '%5EVIX': vix,
     }
     for (const a of (data.activos ?? []) as Array<{ simbolo: string; precio: number; cambio24h: number }>) {
       const lookup = PRICE_LOOKUP[a.simbolo.toUpperCase()]
