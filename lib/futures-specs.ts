@@ -2,9 +2,10 @@
 // pointValue = USD per index point for 1 micro contract
 // SL/TP in USD fixed for now — will be tuned per asset later
 export const FUTURES_SPECS = {
-  NQ:      { contract: 'MNQ', yahoo: 'NQ=F',  pointValue: 2, slUsd: 1000, tpUsd: 300 },
-  SP500:   { contract: 'MES', yahoo: 'ES=F',  pointValue: 5, slUsd: 1000, tpUsd: 300 },
-  RUSSELL: { contract: 'M2K', yahoo: 'RTY=F', pointValue: 5, slUsd: 1000, tpUsd: 300 },
+  NQ:      { contract: 'MNQ', yahoo: 'NQ=F',  pointValue: 2,   slUsd: 1000, tpUsd: 300 },
+  SP500:   { contract: 'MES', yahoo: 'ES=F',  pointValue: 5,   slUsd: 1000, tpUsd: 300 },
+  RUSSELL: { contract: 'M2K', yahoo: 'RTY=F', pointValue: 5,   slUsd: 1000, tpUsd: 300 },
+  DOW:     { contract: 'MYM', yahoo: '^DJI',  pointValue: 0.5, slUsd: 500,  tpUsd: 200 },
 } as const
 
 export type FuturesSymbol = keyof typeof FUTURES_SPECS

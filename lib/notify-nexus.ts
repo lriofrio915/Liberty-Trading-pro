@@ -314,20 +314,32 @@ export function notifyMorningAgents(results: MorningAgentResult[]) {
 
 // ── Futuros sesgo ─────────────────────────────────────────────────────────────
 
-export function notifyFuturosSesgo(activos: ActivoSesgo[], saved: number) {
+export function notifyFuturosSesgo(
+  activos: ActivoSesgo[],
+  saved: number,
+  savedLevels: { simbolo: string; sesgo: string; precioEntrada: number; stopLoss: number; takeProfit: number; rrRatio: number }[] = [],
+) {
   const fecha = new Date().toLocaleDateString('es-EC', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     timeZone: 'America/Guayaquil',
   })
 
   const sesgoBadge = (s: string) => s === 'COMPRA' ? '✅' : s === 'VENTA' ? '🔴' : '⚪'
+  const levelsMap = new Map(savedLevels.map(l => [l.simbolo.toUpperCase(), l]))
 
   const lineas = activos.map(a => {
     if (a.simbolo === 'VIX') {
       const dir = a.cambio24h >= 0 ? '+' : ''
-      return `📈 VIX: $${a.precio.toFixed(2)} (${dir}${a.cambio24h.toFixed(2)}%)`
+      return `📈 *VIX:* $${a.precio.toFixed(2)} (${dir}${a.cambio24h.toFixed(2)}%) — ${a.sesgo === 'COMPRA' ? 'miedo' : 'complacencia'}`
     }
-    return `${sesgoBadge(a.sesgo)} ${a.simbolo}: ${a.sesgo} (${a.confianza}%) — ${a.razon}`
+    const badge = sesgoBadge(a.sesgo)
+    const precio = `$${a.precio.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+    const base = `${badge} *${a.simbolo}:* ${a.sesgo} (${a.confianza}%) — ${precio} | ${a.razon}`
+    const lvl = levelsMap.get(a.simbolo.toUpperCase())
+    if (!lvl) return base
+    const sl  = `$${lvl.stopLoss.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+    const tp  = `$${lvl.takeProfit.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+    return `${base}\n   📍 SL: ${sl} | TP: ${tp} | RR: 1:${lvl.rrRatio.toFixed(1)}`
   })
 
   const resumen = [
@@ -336,7 +348,7 @@ export function notifyFuturosSesgo(activos: ActivoSesgo[], saved: number) {
     ...lineas,
     '',
     saved > 0
-      ? `Señales guardadas: ${saved}. Entrada se confirma a las 9:30am ET.`
+      ? `✅ ${saved} señal(es) guardada(s). Entrada se confirma a las 9:30am ET.`
       : 'Sin señales direccionales hoy.',
   ].join('\n')
 

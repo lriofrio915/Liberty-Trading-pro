@@ -22,14 +22,15 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const [nq, sp, rut, vix] = await Promise.all([
+    const [nq, sp, rut, dow, vix] = await Promise.all([
       fetchYahoo('NQ=F',   'NQ Futures'),
       fetchYahoo('ES=F',   'S&P 500 E-mini Futures'),
       fetchYahoo('RTY=F',  'Russell 2000 E-mini Futures'),
+      fetchYahoo('^DJI',   'Dow Jones Industrial'),
       fetchYahoo('%5EVIX', 'VIX'),
     ])
 
-    const prices = [nq, sp, rut, vix].filter(Boolean)
+    const prices = [nq, sp, rut, dow, vix].filter(Boolean)
     const today = new Date().toLocaleDateString('es-MX', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     })
@@ -37,10 +38,10 @@ export async function POST(req: NextRequest) {
       .map(p => `${p!.name} (${p!.symbol}): $${p!.price.toFixed(2)} | 24h: ${p!.changePct >= 0 ? '+' : ''}${p!.changePct.toFixed(2)}% | ${p!.up ? 'SUBIENDO' : 'BAJANDO'}`)
       .join('\n')
 
-    const system = `Eres analista de índices bursátiles para trading de futuros intradía (Micro Nasdaq MNQ, Micro S&P500 MES, Micro Russell M2K).
+    const system = `Eres analista de índices bursátiles para trading de futuros intradía (Micro Nasdaq MNQ, Micro S&P500 MES, Micro Russell M2K, Micro Dow MYM).
 RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
-{"activos":[{"simbolo":"NQ","nombre":"Nasdaq 100 Futures","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":75,"razon":"tendencia alcista fuerte","riesgo":"medio","sector":"Índices"},{"simbolo":"SP500","nombre":"S&P 500","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":70,"razon":"soporte en medias móviles","riesgo":"medio","sector":"Índices"},{"simbolo":"RUSSELL","nombre":"Russell 2000","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":58,"razon":"sin dirección clara","riesgo":"medio","sector":"Índices"},{"simbolo":"VIX","nombre":"VIX Volatilidad","precio":0,"cambio24h":0,"sesgo":"VENTA","confianza":65,"razon":"complacencia de mercado","riesgo":"bajo","sector":"Índices"}]}
-Reglas ESTRICTAS: sesgo solo COMPRA, VENTA o NEUTRAL. confianza 55-92. razon máximo 8 palabras. sector siempre "Índices". Incluye EXACTAMENTE: NQ, SP500, RUSSELL, VIX.
+{"activos":[{"simbolo":"NQ","nombre":"Nasdaq 100 Futures","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":75,"razon":"tendencia alcista fuerte","riesgo":"medio","sector":"Índices"},{"simbolo":"SP500","nombre":"S&P 500","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":70,"razon":"soporte en medias móviles","riesgo":"medio","sector":"Índices"},{"simbolo":"RUSSELL","nombre":"Russell 2000","precio":0,"cambio24h":0,"sesgo":"NEUTRAL","confianza":58,"razon":"sin dirección clara","riesgo":"medio","sector":"Índices"},{"simbolo":"DOW","nombre":"Dow Jones Industrial","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":65,"razon":"blue chips con momentum","riesgo":"bajo","sector":"Índices"},{"simbolo":"VIX","nombre":"VIX Volatilidad","precio":0,"cambio24h":0,"sesgo":"VENTA","confianza":65,"razon":"complacencia de mercado","riesgo":"bajo","sector":"Índices"}]}
+Reglas ESTRICTAS: sesgo solo COMPRA, VENTA o NEUTRAL. confianza 55-92. razon máximo 8 palabras. sector siempre "Índices". Incluye EXACTAMENTE: NQ, SP500, RUSSELL, DOW, VIX.
 VIX COMPRA = miedo (>25), VENTA = complacencia (<13).`
 
     const user_msg = `Fecha: ${today}. Precios actuales:\n${pricesCtx}\n\nAnaliza el sesgo intradía para operar futuros de índices (velas de 1 minuto, apertura 9:30 AM ET).`
@@ -50,7 +51,7 @@ VIX COMPRA = miedo (>25), VENTA = complacencia (<13).`
     const data = JSON.parse(json)
 
     const priceMap: Record<string, typeof nq> = {
-      'NQ=F': nq, 'ES=F': sp, 'RTY=F': rut, '%5EVIX': vix,
+      'NQ=F': nq, 'ES=F': sp, 'RTY=F': rut, '^DJI': dow, '%5EVIX': vix,
     }
     for (const a of (data.activos ?? []) as Array<{ simbolo: string; precio: number; cambio24h: number }>) {
       const lookup = PRICE_LOOKUP[a.simbolo.toUpperCase()]
@@ -96,6 +97,7 @@ VIX COMPRA = miedo (>25), VENTA = complacencia (<13).`
     }
 
     const created: string[] = []
+    const savedLevels: { simbolo: string; sesgo: string; precioEntrada: number; stopLoss: number; takeProfit: number; rrRatio: number }[] = []
     for (const a of toSave) {
       const sesgo = a.sesgo as 'COMPRA' | 'VENTA'
       const levels = computeFuturesLevels(sesgo, a.precio, a.simbolo)
@@ -119,9 +121,10 @@ VIX COMPRA = miedo (>25), VENTA = complacencia (<13).`
         },
       })
       created.push(signal.id)
+      savedLevels.push({ simbolo: a.simbolo, sesgo, precioEntrada: a.precio, stopLoss: levels.stopLoss, takeProfit: levels.takeProfit, rrRatio: levels.rrRatio })
     }
 
-    void notifyFuturosSesgo(data.activos ?? [], created.length)
+    void notifyFuturosSesgo(data.activos ?? [], created.length, savedLevels)
 
     return NextResponse.json({
       saved: created.length,
