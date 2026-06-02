@@ -80,7 +80,7 @@ const eventLabels: Record<string, string> = {
   futuros_sesgo: '📊 Sesgo Futuros 8:15am Ecuador',
   acciones_daily_scanner: '📈 Daily Scanner Acciones',
   morning_agents_intraday: '⚡ Picks Intraday 9am Ecuador',
-  market_scan_morning: '📊 Market Scan 8:00am Ecuador',
+  market_scan_morning: '📊 Market Scan 8:35am Ecuador',
   scan_prices_close: '📉 Cierre de Día — Resumen de Señales',
   futuros_open: '📍 Entradas Futuros 9:30am ET',
   futuros_close: '🏁 Cierre Futuros 3:45pm ET',
@@ -245,7 +245,7 @@ function signalEmoji(advice?: string): string {
 export function notifyAccionesDailyScanner(signals: DailyScanSignal[], tickers: string[], isAuto: boolean) {
   const fecha = new Date().toLocaleDateString('es-EC', {
     weekday: 'long', day: 'numeric', month: 'long',
-    timeZone: 'America/New_York',
+    timeZone: 'America/Guayaquil',
   })
 
   const lineas = signals.map(s => {
@@ -383,7 +383,7 @@ export function notifyMarketScan(data: {
   )
 
   const resumen = [
-    `📊 *Market Scan 8:05am Ecuador — ${fecha}*`,
+    `📊 *Market Scan 8:35am Ecuador — ${fecha}*`,
     `Sesgo general: ${data.sesgogeneral}`,
     '',
     ...(lineas.length ? lineas : ['Sin oportunidades destacadas hoy.']),
