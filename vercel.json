@@ -10,5 +10,18 @@
       ]
     }
   ],
-  "crons": []
+  "crons": [
+    { "path": "/api/screener/lynch?refresh=true", "schedule": "0 10 * * 1-5" },
+    { "path": "/api/cron/morning-news",            "schedule": "30 11 * * 1-5" },
+    { "path": "/api/cron/futuros-sesgo",           "schedule": "15 13 * * 1-5" },
+    { "path": "/api/cron/futuros-open",            "schedule": "30 13 * * 1-5" },
+    { "path": "/api/cron/market-scan",             "schedule": "35 13 * * 1-5" },
+    { "path": "/api/cron/daily-scanner",           "schedule": "35 13 * * 1-5" },
+    { "path": "/api/cron/morning-agents",          "schedule": "0 14 * * 1-5" },
+    { "path": "/api/cron/scan-prices?checkpoint=12pm",   "schedule": "0 17 * * 1-5" },
+    { "path": "/api/cron/scan-prices?checkpoint=1445pm", "schedule": "45 19 * * 1-5" },
+    { "path": "/api/cron/futuros-close",           "schedule": "45 19 * * 1-5" },
+    { "path": "/api/cron/bias-monitor",            "schedule": "0,30 13-19 * * 1-5" },
+    { "path": "/api/cron/monitor-signals",         "schedule": "*/15 13-19 * * 1-5" }
+  ]
 }
