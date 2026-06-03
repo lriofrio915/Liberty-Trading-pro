@@ -1,8 +1,6 @@
 name: Cron — Daily Scanner Acciones 9:30am ET
 
 on:
-  schedule:
-    - cron: '35 13 * * 1-5'  # 13:35 UTC = 8:35am Ecuador (UTC-5, lun-vie)
   workflow_dispatch:
 
 jobs:

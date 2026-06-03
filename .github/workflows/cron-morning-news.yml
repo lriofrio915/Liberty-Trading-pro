@@ -1,8 +1,6 @@
 name: Cron — Morning News 6:30am Ecuador
 
 on:
-  schedule:
-    - cron: '30 11 * * 1-5'  # 11:30 UTC = 6:30am Ecuador (UTC-5, lun-vie)
   workflow_dispatch:
 
 jobs:

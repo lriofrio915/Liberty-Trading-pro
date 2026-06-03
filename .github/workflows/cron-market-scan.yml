@@ -1,8 +1,6 @@
 name: Cron — Market Scan 8:35am Ecuador
 
 on:
-  schedule:
-    - cron: '35 13 * * 1-5'  # 13:35 UTC = 8:35am Ecuador (UTC-5, Mon-Fri)
   workflow_dispatch:
 
 jobs:

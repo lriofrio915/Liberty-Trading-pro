@@ -1,8 +1,6 @@
 name: Cron — Futuros Close Audit 3:45pm ET
 
 on:
-  schedule:
-    - cron: '45 19 * * 1-5'  # 19:45 UTC = 3:45pm EDT (UTC-4, Mar-Nov)
   workflow_dispatch:
 
 jobs:

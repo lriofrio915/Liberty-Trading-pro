@@ -1,8 +1,6 @@
 name: Cron — Scan Price Update 2:45pm Ecuador
 
 on:
-  schedule:
-    - cron: '45 19 * * 1-5'  # 19:45 UTC = 2:45pm Ecuador (UTC-5, Mon-Fri)
   workflow_dispatch:
 
 jobs:

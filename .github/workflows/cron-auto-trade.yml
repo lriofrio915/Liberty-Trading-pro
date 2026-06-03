@@ -1,8 +1,6 @@
 name: Cron — MT5 Queue Signals 09:05am ET
 
 on:
-  schedule:
-    - cron: '5 14 * * 1-5'  # 14:05 UTC = 09:05am EST / 10:05am EDT (Mon-Fri)
   workflow_dispatch:
 
 jobs:

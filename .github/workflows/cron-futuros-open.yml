@@ -1,8 +1,6 @@
 name: Cron — Futuros Open Entry 9:30am ET
 
 on:
-  schedule:
-    - cron: '30 13 * * 1-5'  # 13:30 UTC = 9:30am EDT (UTC-4, Mar-Nov)
   workflow_dispatch:
 
 jobs:

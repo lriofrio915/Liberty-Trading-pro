@@ -1,8 +1,6 @@
 name: Cron — Futuros Sesgo 9:15am ET
 
 on:
-  schedule:
-    - cron: '15 13 * * 1-5'  # 13:15 UTC = 8:15am Ecuador (UTC-5, lun-vie)
   workflow_dispatch:
 
 jobs:

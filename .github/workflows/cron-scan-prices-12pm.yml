@@ -1,8 +1,6 @@
 name: Cron — Scan Prices Checkpoint 12pm Ecuador
 
 on:
-  schedule:
-    - cron: '0 17 * * 1-5'  # 17:00 UTC = 12pm Ecuador (UTC-5, lun-vie)
   workflow_dispatch:
 
 jobs:
