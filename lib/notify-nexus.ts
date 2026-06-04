@@ -323,6 +323,10 @@ export function notifyFuturosSesgo(
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     timeZone: 'America/Guayaquil',
   })
+  const horaEcuador = new Date().toLocaleTimeString('es-EC', {
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Guayaquil',
+  })
 
   const sesgoBadge = (s: string) => s === 'COMPRA' ? '✅' : s === 'VENTA' ? '🔴' : '⚪'
   const levelsMap = new Map(savedLevels.map(l => [l.simbolo.toUpperCase(), l]))
@@ -338,7 +342,7 @@ export function notifyFuturosSesgo(
   })
 
   const resumen = [
-    `📊 *Sesgo Futuros 8:15am Ecuador — ${fecha}*`,
+    `📊 *Sesgo Futuros ${horaEcuador} Ecuador — ${fecha}*`,
     '',
     ...lineas,
     '',
@@ -371,6 +375,10 @@ export function notifyMarketScan(data: {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     timeZone: 'America/Guayaquil',
   })
+  const horaEcuador = new Date().toLocaleTimeString('es-EC', {
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Guayaquil',
+  })
 
   const sesgoBadge = (s: string) => s === 'COMPRA' ? '✅' : s === 'VENTA' ? '🔴' : '⚪'
 
@@ -383,7 +391,7 @@ export function notifyMarketScan(data: {
   )
 
   const resumen = [
-    `📊 *Market Scan 8:35am Ecuador — ${fecha}*`,
+    `📊 *Market Scan ${horaEcuador} Ecuador — ${fecha}*`,
     `Sesgo general: ${data.sesgogeneral}`,
     '',
     ...(lineas.length ? lineas : ['Sin oportunidades destacadas hoy.']),
