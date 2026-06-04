@@ -72,20 +72,28 @@ async function translateNews(items: NewsItem[]): Promise<NewsItem[]> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+        model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1,
         max_tokens: 4000,
       }),
       signal: AbortSignal.timeout(20_000),
     })
-    if (!res.ok) return items
+    if (!res.ok) {
+      console.error('[morning-news] Groq translate failed:', res.status, await res.text().catch(() => ''))
+      return items
+    }
     const data = await res.json()
     const text: string = data.choices?.[0]?.message?.content ?? ''
-    const match = text.match(/\[[\s\S]*\]/)
-    if (!match) return items
+    const cleaned = text.replace(/```[\w]*\n?/g, '').replace(/```/g, '')
+    const match = cleaned.match(/\[[\s\S]*\]/)
+    if (!match) {
+      console.error('[morning-news] Groq translate: no JSON array in response:', text.slice(0, 200))
+      return items
+    }
     return JSON.parse(match[0]) as NewsItem[]
-  } catch {
+  } catch (err) {
+    console.error('[morning-news] Groq translate error:', err)
     return items
   }
 }
