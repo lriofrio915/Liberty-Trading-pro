@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { computeFuturesLevels, getFuturesSpec } from '@/lib/futures-specs'
+import { computeFuturesLevels } from '@/lib/futures-specs'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -38,15 +38,8 @@ interface TrackRec {
   nombre: string
   sesgo: string
   confianza: number
-  precioEntrada: number
-  stopLoss: number
-  takeProfit: number
-  lotaje: number
-  resultado: string
-  pnlUsd: number | null
-  closedPrice: number | null
+  razon: string
   createdAt: string
-  openEntry: boolean
   openEntryAt: string | null
 }
 
@@ -74,12 +67,6 @@ function getETMinutes(): { mins: number; day: number } {
   const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
   const day = dayNames.indexOf(etDateStr)
   return { mins: hour * 60 + minute, day }
-}
-
-function isEODCloseWindow(): boolean {
-  const { mins, day } = getETMinutes()
-  if (day === 0 || day === 6) return false
-  return mins >= 15 * 60 + 43 && mins <= 15 * 60 + 48
 }
 
 function marketCloseCountdown(): string {
@@ -111,13 +98,8 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
   const [confirmed, setConfirmed]   = useState<FuturesSignal[]>([])
   const [savedCount, setSavedCount] = useState<number | null>(null)
   const [trackRecs, setTrackRecs]   = useState<TrackRec[]>([])
-  const [rowEdits, setRowEdits]     = useState<Record<string, { resultado: string; pnlUsd: string; closedPrice: string }>>({})
-  const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [log, setLog]               = useState<string[]>([])
-  const [lastPriceCheck, setLastPriceCheck] = useState<Date | null>(null)
-  const [priceChecking, setPriceChecking]   = useState(false)
   const [countdown, setCountdown]   = useState(marketCloseCountdown())
-  const priceMapRef = useRef<Record<string, number>>({})
 
   const getYouTubeId = (url: string) => {
     const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/)
@@ -160,7 +142,7 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
 
   const loadTrackRecs = useCallback(async () => {
     try {
-      const res = await fetch('/api/cfds/signals?sector=Futuros&openEntry=true')
+      const res = await fetch('/api/cfds/signals?sector=Futuros')
       if (res.ok) {
         const data = await res.json()
         setTrackRecs(Array.isArray(data) ? data : data.recommendations ?? [])
@@ -169,88 +151,6 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
   }, [])
 
   useEffect(() => { loadTrackRecs() }, [loadTrackRecs])
-
-  // ── Auto TP/SL price check ─────────────────────────────────────────────────
-
-  const checkPriceLevels = useCallback(async (pm: Record<string, number>, forceEOD = false) => {
-    setPriceChecking(true)
-    try {
-      const pending = trackRecs.filter(r => r.resultado === 'PENDIENTE')
-      let changed = false
-      for (const sig of pending) {
-        const currentPrice = pm[sig.simbolo]
-        if (!currentPrice || currentPrice <= 0) continue
-        const isCompra = sig.sesgo === 'COMPRA'
-        const spec = getFuturesSpec(sig.simbolo)
-
-        let resultado: string
-        let rawPnl: number
-        if (forceEOD) {
-          const priceDiff = isCompra
-            ? currentPrice - sig.precioEntrada
-            : sig.precioEntrada - currentPrice
-          rawPnl = priceDiff * spec.pointValue
-          if (rawPnl > 0) resultado = 'GANADA'
-          else if (rawPnl < 0) resultado = 'PERDIDA'
-          else resultado = 'BREAKEVEN'
-        } else {
-          const hitTP = isCompra ? currentPrice >= sig.takeProfit : currentPrice <= sig.takeProfit
-          const hitSL = isCompra ? currentPrice <= sig.stopLoss  : currentPrice >= sig.stopLoss
-          if (!hitTP && !hitSL) continue
-          resultado = hitTP ? 'GANADA' : 'PERDIDA'
-          rawPnl = hitTP ? spec.tpUsd : -spec.slUsd
-        }
-        await fetch(`/api/cfds/signals/${sig.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resultado, closedPrice: currentPrice, pnlUsd: parseFloat(rawPnl.toFixed(2)) }),
-        })
-        changed = true
-      }
-      if (changed) await loadTrackRecs()
-      setLastPriceCheck(new Date())
-    } catch {} finally {
-      setPriceChecking(false)
-    }
-  }, [trackRecs, loadTrackRecs])
-
-  // EOD auto-close
-  const eodTriggeredRef = useRef(false)
-  useEffect(() => {
-    const tick = async () => {
-      if (!isEODCloseWindow()) { eodTriggeredRef.current = false; return }
-      if (eodTriggeredRef.current) return
-      eodTriggeredRef.current = true
-      try {
-        const res = await fetch('/api/futures/analyze', { method: 'POST' })
-        if (!res.ok) return
-        const data = await res.json()
-        const pm: Record<string, number> = {}
-        for (const a of (data.activos ?? []) as IndexAsset[]) {
-          if (a.precio > 0) pm[a.simbolo] = a.precio
-        }
-        priceMapRef.current = pm
-        await checkPriceLevels(pm, true)
-      } catch {}
-    }
-    const id = setInterval(tick, 60000)
-    return () => clearInterval(id)
-  }, [checkPriceLevels])
-
-  const handlePriceRefresh = async () => {
-    setPriceChecking(true)
-    try {
-      const res = await fetch('/api/futures/analyze', { method: 'POST' })
-      if (!res.ok) return
-      const data = await res.json()
-      const pm: Record<string, number> = {}
-      for (const a of (data.activos ?? []) as IndexAsset[]) {
-        if (a.precio > 0) pm[a.simbolo] = a.precio
-      }
-      priceMapRef.current = pm
-      await checkPriceLevels(pm)
-    } catch {} finally { setPriceChecking(false) }
-  }
 
   // ── Auto-save ──────────────────────────────────────────────────────────────
 
@@ -274,10 +174,8 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
   useEffect(() => {
     if (phase !== 'done' || idxBias.length === 0) return
     const final: FuturesSignal[] = []
-    const pm: Record<string, number> = {}
 
     for (const idx of idxBias) {
-      if (idx.precio > 0) pm[idx.simbolo] = idx.precio
       if (idx.simbolo === 'VIX' || idx.simbolo === 'DOW') continue
       if (idx.sesgo === 'NEUTRAL' || idx.confianza < 65) continue
       const levels = computeFuturesLevels(idx.sesgo, idx.precio, idx.simbolo)
@@ -298,11 +196,9 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
       })
     }
 
-    priceMapRef.current = pm
     setConfirmed(final)
     if (final.length > 0) autoSaveSignals(final)
-    if (Object.keys(pm).length > 0) checkPriceLevels(pm)
-  }, [phase, idxBias, autoSaveSignals, checkPriceLevels])
+  }, [phase, idxBias, autoSaveSignals])
 
   // ── Main analysis runner ───────────────────────────────────────────────────
 
@@ -332,31 +228,6 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
     }
   }
 
-  // ── Row editing ────────────────────────────────────────────────────────────
-
-  const handleSaveRow = async (id: string) => {
-    const edit = rowEdits[id]
-    if (!edit) return
-    setUpdatingId(id)
-    try {
-      await fetch(`/api/cfds/signals/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          resultado: edit.resultado,
-          pnlUsd: edit.pnlUsd ? parseFloat(edit.pnlUsd) : undefined,
-          closedPrice: edit.closedPrice ? parseFloat(edit.closedPrice) : undefined,
-        }),
-      })
-      setTrackRecs(prev => prev.map(r => r.id === id ? {
-        ...r, resultado: edit.resultado,
-        pnlUsd: edit.pnlUsd ? parseFloat(edit.pnlUsd) : r.pnlUsd,
-        closedPrice: edit.closedPrice ? parseFloat(edit.closedPrice) : r.closedPrice,
-      } : r))
-      setRowEdits(prev => { const n = { ...prev }; delete n[id]; return n })
-    } catch {} finally { setUpdatingId(null) }
-  }
-
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   const fmt = (n: number, d = 0) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })
@@ -368,10 +239,6 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
     return                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-red-500/40 bg-red-500/10 text-red-400">✗ ERROR</span>
   }
 
-  const ganadas  = trackRecs.filter(r => r.resultado === 'GANADA').length
-  const cerradas = trackRecs.filter(r => r.resultado !== 'PENDIENTE').length
-  const totalPnl = trackRecs.reduce((s, r) => s + (r.pnlUsd ?? 0), 0)
-  const winRate  = cerradas > 0 ? Math.round((ganadas / cerradas) * 100) : null
   const isRunning = phase === 'running'
 
   const vixAsset = idxBias.find(a => a.simbolo === 'VIX')
@@ -405,19 +272,6 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
           >
             {isRunning ? '⟳ ANALIZANDO...' : '▶ INICIAR ANÁLISIS'}
           </button>
-          <button
-            onClick={handlePriceRefresh}
-            disabled={priceChecking}
-            className="px-4 py-2 rounded-xl text-xs font-mono border transition-all disabled:opacity-50"
-            style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-          >
-            {priceChecking ? '⟳ Verificando...' : '🔄 Actualizar precios'}
-          </button>
-          {lastPriceCheck && (
-            <span className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>
-              Última verificación: {lastPriceCheck.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          )}
           {savedCount !== null && (
             <span className="text-[10px] font-mono text-green-400">✓ {savedCount} auto-guardadas</span>
           )}
@@ -625,13 +479,9 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-3">
-            <p className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>TRACK RECORD — FUTUROS INTRADÍA (entrada 9:30am ET)</p>
+            <p className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>TRACK RECORD — FUTUROS INTRADÍA</p>
             {trackRecs.length > 0 && (
-              <div className="flex gap-3 text-[9px] font-mono">
-                <span style={{ color: 'var(--text-muted)' }}>{trackRecs.length} ops</span>
-                {winRate !== null && <span className={winRate >= 50 ? 'text-green-400' : 'text-red-400'}>{winRate}% WR</span>}
-                <span className={totalPnl >= 0 ? 'text-green-400' : 'text-red-400'}>{totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(0)}</span>
-              </div>
+              <span className="text-[9px] font-mono" style={{ color: 'var(--text-muted)' }}>{trackRecs.length} ops</span>
             )}
           </div>
           <button onClick={loadTrackRecs} className="label-mono text-[9px] px-2 py-1 rounded border" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
@@ -649,77 +499,32 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
               <table className="w-full text-[10px] font-mono">
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.3)' }}>
-                    {['Fecha', 'Índice', 'Dir', 'Entrada', 'SL', 'TP', 'Resultado', 'P&L', ...(isAdmin ? ['Acc.'] : [])].map(h => (
+                    {['Fecha', 'Índice', 'Dir', 'Conf.', 'Razón'].map(h => (
                       <th key={h} className="px-3 py-2 text-left whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {trackRecs.map(rec => {
-                    const isClosed = rec.resultado !== 'PENDIENTE'
-                    const edit = rowEdits[rec.id]
-                    return (
-                      <tr key={rec.id} className="border-b border-[var(--border)]"
-                        style={{
-                          opacity: isClosed ? 0.6 : 1,
-                          filter: isClosed ? 'saturate(0.5)' : undefined,
-                          borderLeft: `3px solid ${rec.sesgo === 'COMPRA' ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}`,
-                        }}>
-                        <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
-                          <div>{new Date(rec.openEntryAt ?? rec.createdAt).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'America/New_York' })}</div>
-                          <div className="text-[8px]" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>9:30am ET</div>
-                        </td>
-                        <td className="px-3 py-2 font-bold whitespace-nowrap" style={{ color: 'var(--gold)' }}>{rec.simbolo}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${rec.sesgo === 'COMPRA' ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}`}>
-                            {rec.sesgo}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>{fmt(rec.precioEntrada)}</td>
-                        <td className="px-3 py-2 whitespace-nowrap text-red-400">{fmt(rec.stopLoss)}</td>
-                        <td className="px-3 py-2 whitespace-nowrap text-green-400">{fmt(rec.takeProfit)}</td>
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          {isAdmin ? (
-                            <select value={edit?.resultado ?? rec.resultado}
-                              onChange={e => setRowEdits(prev => ({ ...prev, [rec.id]: { resultado: e.target.value, pnlUsd: String(edit?.pnlUsd ?? rec.pnlUsd ?? ''), closedPrice: String(edit?.closedPrice ?? rec.closedPrice ?? '') } }))}
-                              className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5"
-                              style={{ color: rec.resultado === 'GANADA' ? '#4ade80' : rec.resultado === 'PERDIDA' ? '#f87171' : rec.resultado === 'BREAKEVEN' ? '#facc15' : 'var(--text-muted)' }}>
-                              {['PENDIENTE','GANADA','PERDIDA','BREAKEVEN'].map(r => <option key={r} value={r}>{r}</option>)}
-                            </select>
-                          ) : (
-                            <span className={`text-[9px] font-bold ${rec.resultado === 'GANADA' ? 'text-green-400' : rec.resultado === 'PERDIDA' ? 'text-red-400' : rec.resultado === 'BREAKEVEN' ? 'text-yellow-400' : ''}`}
-                              style={rec.resultado === 'PENDIENTE' ? { color: 'var(--text-muted)' } : {}}>
-                              {rec.resultado}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          {isAdmin ? (
-                            <input type="number" step="0.01" placeholder="0.00"
-                              value={edit?.pnlUsd ?? (rec.pnlUsd != null ? String(rec.pnlUsd) : '')}
-                              onChange={e => setRowEdits(prev => ({ ...prev, [rec.id]: { resultado: edit?.resultado ?? rec.resultado, pnlUsd: e.target.value, closedPrice: String(edit?.closedPrice ?? rec.closedPrice ?? '') } }))}
-                              className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5 w-16"
-                              style={{ color: 'var(--text-secondary)' }} />
-                          ) : (
-                            <span className={rec.pnlUsd != null ? (rec.pnlUsd >= 0 ? 'text-green-400' : 'text-red-400') : ''} style={rec.pnlUsd == null ? { color: 'var(--text-muted)' } : {}}>
-                              {rec.pnlUsd != null ? `${rec.pnlUsd >= 0 ? '+' : ''}$${Math.abs(rec.pnlUsd).toFixed(2)}` : '—'}
-                            </span>
-                          )}
-                        </td>
-                        {isAdmin && (
-                          <td className="px-3 py-2 whitespace-nowrap">
-                            {!!edit && (
-                              <button onClick={() => handleSaveRow(rec.id)} disabled={updatingId === rec.id}
-                                className="text-[9px] px-1.5 py-0.5 rounded border font-semibold"
-                                style={{ borderColor: 'rgba(234,179,8,0.5)', color: 'rgb(234,179,8)' }}>
-                                {updatingId === rec.id ? '...' : 'Guardar'}
-                              </button>
-                            )}
-                          </td>
-                        )}
-                      </tr>
-                    )
-                  })}
+                  {trackRecs.map(rec => (
+                    <tr key={rec.id} className="border-b border-[var(--border)]"
+                      style={{
+                        borderLeft: `3px solid ${rec.sesgo === 'COMPRA' ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}`,
+                      }}>
+                      <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
+                        {new Date(rec.openEntryAt ?? rec.createdAt).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'America/New_York' })}
+                      </td>
+                      <td className="px-3 py-2 font-bold whitespace-nowrap" style={{ color: 'var(--gold)' }}>{rec.simbolo}</td>
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${rec.sesgo === 'COMPRA' ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}`}>
+                          {rec.sesgo}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap" style={{ color: rec.confianza >= 75 ? 'var(--gold)' : 'var(--text-secondary)' }}>
+                        {rec.confianza}%
+                      </td>
+                      <td className="px-3 py-2" style={{ color: 'var(--text-muted)' }}>{rec.razon}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
