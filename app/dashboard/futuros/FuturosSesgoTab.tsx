@@ -96,7 +96,6 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
   const [idxBias, setIdxBias]       = useState<IndexAsset[]>([])
   const [metodologia, setMetodologia] = useState<string>('')
   const [confirmed, setConfirmed]   = useState<FuturesSignal[]>([])
-  const [savedCount, setSavedCount] = useState<number | null>(null)
   const [trackRecs, setTrackRecs]   = useState<TrackRec[]>([])
   const [log, setLog]               = useState<string[]>([])
   const [countdown, setCountdown]   = useState(marketCloseCountdown())
@@ -152,25 +151,13 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
 
   useEffect(() => { loadTrackRecs() }, [loadTrackRecs])
 
-  // ── Auto-save ──────────────────────────────────────────────────────────────
-
-  const autoSaveSignals = useCallback(async (sigs: FuturesSignal[]) => {
-    if (sigs.length === 0) return
-    try {
-      const res = await fetch('/api/cfds/signals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ signals: sigs }),
-      })
-      if (res.ok) {
-        const d = await res.json()
-        if (d.saved > 0) setSavedCount(d.saved)
-        await loadTrackRecs()
-      }
-    } catch {}
+  // Auto-refresh cada 5 min para capturar nuevas señales del cron de 8:15am
+  useEffect(() => {
+    const id = setInterval(() => loadTrackRecs(), 5 * 60 * 1000)
+    return () => clearInterval(id)
   }, [loadTrackRecs])
 
-  // Reconcile + auto-save
+  // Reconcile — solo muestra resultados, NO guarda a DB (el cron de 8:15am guarda)
   useEffect(() => {
     if (phase !== 'done' || idxBias.length === 0) return
     const final: FuturesSignal[] = []
@@ -197,14 +184,13 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
     }
 
     setConfirmed(final)
-    if (final.length > 0) autoSaveSignals(final)
-  }, [phase, idxBias, autoSaveSignals])
+  }, [phase, idxBias])
 
   // ── Main analysis runner ───────────────────────────────────────────────────
 
   const runAnalysis = async () => {
     setPhase('running')
-    setIdxBias([]); setConfirmed([]); setSavedCount(null); setLog([]); setMetodologia('')
+    setIdxBias([]); setConfirmed([]); setLog([]); setMetodologia('')
 
     try {
       addLog('🔍 Iniciando análisis MAIA de índices...')
@@ -272,9 +258,6 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
           >
             {isRunning ? '⟳ ANALIZANDO...' : '▶ INICIAR ANÁLISIS'}
           </button>
-          {savedCount !== null && (
-            <span className="text-[10px] font-mono text-green-400">✓ {savedCount} auto-guardadas</span>
-          )}
         </div>
       </div>
 
@@ -387,7 +370,7 @@ export default function FuturosSesgoTab({ isAdmin }: { isAdmin: boolean }) {
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(201,168,76,0.3)' }}>
           <div className="flex items-center justify-between px-4 py-2" style={{ background: 'rgba(201,168,76,0.08)', borderBottom: '1px solid rgba(201,168,76,0.2)' }}>
             <span className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>SEÑALES DEL ANÁLISIS</span>
-            <span className="text-[9px] font-mono px-2 py-0.5 rounded-full border border-green-500/40 text-green-400">✓ Auto-guardadas</span>
+            <span className="text-[9px] font-mono px-2 py-0.5 rounded-full border border-[var(--border)]" style={{ color: 'var(--text-muted)' }}>Vista del momento</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-[10px] font-mono">
