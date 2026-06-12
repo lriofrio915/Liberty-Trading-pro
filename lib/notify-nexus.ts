@@ -78,6 +78,7 @@ const eventLabels: Record<string, string> = {
   lead_vendido: '✅ Lead convertido — ¡venta!',
   morning_news: '📰 Noticias Matutinas 6:30am Ecuador',
   futuros_sesgo: '📊 Sesgo Futuros 8:15am Ecuador',
+  sesgo_intraday: '📊 Sesgo Intradía — Monitor de Mercado',
   acciones_daily_scanner: '📈 Daily Scanner Acciones',
   morning_agents_intraday: '⚡ Picks Intraday 9am Ecuador',
   market_scan_morning: '📊 Market Scan 8:35am Ecuador',
@@ -352,6 +353,50 @@ export function notifyFuturosSesgo(
   ].join('\n')
 
   return notifyNexus('futuros_sesgo', { resumen, saved })
+}
+
+// ── Sesgo Intradía (monitor c/30min 8:30am–3pm Ecuador) ──────────────────────
+
+export function notifySesgoIntraday(
+  activos: ActivoSesgo[],
+  changed: Set<string> = new Set(),
+  morningBias: Map<string, string> = new Map(),
+) {
+  const fecha = new Date().toLocaleDateString('es-EC', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    timeZone: 'America/Guayaquil',
+  })
+  const horaEcuador = new Date().toLocaleTimeString('es-EC', {
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Guayaquil',
+  })
+
+  const sesgoBadge = (s: string) => s === 'COMPRA' ? '✅' : s === 'VENTA' ? '🔴' : '⚪'
+
+  const lineas = activos.map(a => {
+    if (a.simbolo === 'VIX') {
+      const dir = a.cambio24h >= 0 ? '+' : ''
+      return `📈 *VIX:* $${a.precio.toFixed(2)} (${dir}${a.cambio24h.toFixed(2)}%) — ${a.sesgo === 'COMPRA' ? 'miedo' : 'complacencia'}`
+    }
+    const sym = a.simbolo.toUpperCase()
+    const isChanged = changed.has(sym)
+    const badge = isChanged ? '⚡' : sesgoBadge(a.sesgo)
+    const prev = morningBias.get(sym)
+    const sesgoPart = isChanged && prev
+      ? `${prev} → ${a.sesgo} (${a.confianza}%)`
+      : `${a.sesgo} (${a.confianza}%)`
+    return `${badge} *${a.simbolo}:* ${sesgoPart} — ${a.razon}`
+  })
+
+  const resumen = [
+    `📊 *Sesgo Intradía ${horaEcuador} Ecuador — ${fecha}*`,
+    '',
+    ...lineas,
+    '',
+    '_Próxima actualización en 30 min_',
+  ].join('\n')
+
+  return notifyNexus('sesgo_intraday', { resumen })
 }
 
 // ── Market Scan 8:05am ───────────────────────────────────────────────────────
