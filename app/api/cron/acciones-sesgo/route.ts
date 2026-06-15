@@ -1,37 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { fetchYahoo, repairJSON } from '@/lib/analisis-engine'
+import { runFullAnalysis } from '@/lib/analisis-engine'
 import { prisma } from '@/lib/prisma'
 import { notifyAccionesSesgo } from '@/lib/notify-nexus'
 
 type Recomendacion = 'MANTENER' | 'AJUSTAR_STOP' | 'CERRAR'
-
-// MAIA Stocks universe: core 12 (analisis-engine) + 6 high-volatility intraday
-const STOCKS = [
-  { ticker: 'AAPL',  nombre: 'Apple' },
-  { ticker: 'MSFT',  nombre: 'Microsoft' },
-  { ticker: 'AMZN',  nombre: 'Amazon' },
-  { ticker: 'NVDA',  nombre: 'Nvidia' },
-  { ticker: 'META',  nombre: 'Meta' },
-  { ticker: 'GOOGL', nombre: 'Alphabet' },
-  { ticker: 'TSLA',  nombre: 'Tesla' },
-  { ticker: 'AMD',   nombre: 'AMD' },
-  { ticker: 'JPM',   nombre: 'JPMorgan' },
-  { ticker: 'V',     nombre: 'Visa' },
-  { ticker: 'NFLX',  nombre: 'Netflix' },
-  { ticker: 'XOM',   nombre: 'ExxonMobil' },
-  { ticker: 'COIN',  nombre: 'Coinbase' },
-  { ticker: 'MSTR',  nombre: 'MicroStrategy' },
-  { ticker: 'PLTR',  nombre: 'Palantir' },
-  { ticker: 'HOOD',  nombre: 'Robinhood' },
-  { ticker: 'CRWD',  nombre: 'CrowdStrike' },
-  { ticker: 'SOFI',  nombre: 'SoFi' },
-]
-
-function chunk<T>(arr: T[], size: number): T[][] {
-  const chunks: T[][] = []
-  for (let i = 0; i < arr.length; i += size) chunks.push(arr.slice(i, i + size))
-  return chunks
-}
 
 function getRecomendacion(
   currentSesgo: string,
@@ -44,25 +16,6 @@ function getRecomendacion(
   if (prev.sesgo !== currentSesgo) return 'AJUSTAR_STOP'
   if (prev.confianza - currentConf >= 8) return 'AJUSTAR_STOP'
   return 'MANTENER'
-}
-
-async function runSesgoAgent(system: string, user: string): Promise<string> {
-  const apiKey = process.env.GROQ_API_KEY
-  if (!apiKey) throw new Error('GROQ_API_KEY not configured')
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
-      temperature: 0.2,
-      max_tokens: 700,
-    }),
-    signal: AbortSignal.timeout(20_000),
-  })
-  if (!res.ok) throw new Error(`Groq error: ${res.status}`)
-  const data = await res.json()
-  return data.choices?.[0]?.message?.content ?? ''
 }
 
 export const runtime = 'nodejs'
@@ -93,85 +46,15 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Fetch macro context for LLM user message
-    const [nq, sp, vix] = await Promise.all([
-      fetchYahoo('NQ=F',   'NQ Futures'),
-      fetchYahoo('ES=F',   'S&P 500'),
-      fetchYahoo('%5EVIX', 'VIX'),
-    ])
-
-    // Fetch all stock prices in parallel
-    const priceResults = await Promise.allSettled(
-      STOCKS.map(s => fetchYahoo(s.ticker, s.nombre))
-    )
-    const priceMap = new Map<string, { price: number; changePct: number; up: boolean }>()
-    priceResults.forEach((r, i) => {
-      if (r.status === 'fulfilled' && r.value) {
-        priceMap.set(STOCKS[i].ticker, r.value)
-      }
-    })
-
-    const today = new Date().toLocaleDateString('es-MX', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-    })
-    const macroCtx = [
-      nq  ? `NQ: $${nq.price.toFixed(0)} (${nq.changePct >= 0 ? '+' : ''}${nq.changePct.toFixed(2)}%)`   : '',
-      sp  ? `SP500: $${sp.price.toFixed(0)} (${sp.changePct >= 0 ? '+' : ''}${sp.changePct.toFixed(2)}%)` : '',
-      vix ? `VIX: $${vix.price.toFixed(2)} (${vix.changePct >= 0 ? '+' : ''}${vix.changePct.toFixed(2)}%)` : '',
-    ].filter(Boolean).join(' | ')
-
-    const SYSTEM = `Eres un agente analista de acciones (MAIA). Analiza exactamente las acciones indicadas para sesgo intradía.
-RESPONDE ÚNICAMENTE con JSON válido, sin texto extra ni markdown:
-{"activos":[{"simbolo":"NVDA","nombre":"Nvidia","precio":0,"cambio24h":0,"sesgo":"COMPRA","confianza":80,"razon":"momentum alcista fuerte","riesgo":"alto","sector":"Acciones"}]}
-Reglas ESTRICTAS: "sesgo" solo COMPRA, VENTA o NEUTRAL. "confianza" entero 55-92. "riesgo" solo bajo, medio o alto. "sector" SIEMPRE "Acciones". "razon" máximo 8 palabras. Sé selectivo para trading intradía.`
-
-    // Run LLM analysis in batches of 6 (keeps prompt within 700 tokens)
-    const batches = chunk(STOCKS, 6)
-    const batchResults = await Promise.allSettled(
-      batches.map(batch => {
-        const stocksCtx = batch
-          .map(s => {
-            const p = priceMap.get(s.ticker)
-            if (!p) return `${s.nombre} (${s.ticker}): precio no disponible`
-            return `${s.nombre} (${s.ticker}): $${p.price.toFixed(2)} | 24h: ${p.changePct >= 0 ? '+' : ''}${p.changePct.toFixed(2)}% | ${p.up ? 'SUBIENDO' : 'BAJANDO'}`
-          })
-          .join('\n')
-        const user_msg = `Fecha: ${today}
-Contexto macro: ${macroCtx}
-
-${stocksCtx}
-
-Analiza el sesgo intradía. Incluye EXACTAMENTE: ${batch.map(s => s.ticker).join(', ')}.`
-        return runSesgoAgent(SYSTEM, user_msg)
-      })
-    )
-
-    // Merge all batch results
-    const allActivos: Array<{
-      simbolo: string; nombre: string; precio: number; cambio24h: number
-      sesgo: string; confianza: number; razon: string; riesgo: string
-    }> = []
-    for (const result of batchResults) {
-      if (result.status === 'fulfilled') {
-        try {
-          const json = repairJSON(result.value)
-          const parsed = JSON.parse(json)
-          if (Array.isArray(parsed.activos)) allActivos.push(...parsed.activos)
-        } catch { /* skip malformed batch */ }
-      }
-    }
-
-    // Inject real prices
-    for (const a of allActivos) {
-      const real = priceMap.get(a.simbolo.toUpperCase())
-      if (real) { a.precio = real.price; a.cambio24h = real.changePct }
-    }
+    // Run full MAIA analysis (6 agents via OpenRouter) and extract stocks
+    const result = await runFullAnalysis()
+    const allActivos = result.activos.filter(a => a.sector === 'Acciones')
 
     // Query DB: previous snapshot (30min ago ±15min) and morning baseline
     const prevCutoff = new Date(Date.now() - 45 * 60 * 1000)
     const prevFloor  = new Date(Date.now() - 20 * 60 * 1000)
     const today0 = new Date(); today0.setUTCHours(0, 0, 0, 0)
-    const stockTickers = STOCKS.map(s => s.ticker)
+    const stockTickers = allActivos.map(a => a.simbolo)
 
     const [prevLogs, morningLogs] = await Promise.all([
       prisma.sesgoIntradayLog.findMany({
