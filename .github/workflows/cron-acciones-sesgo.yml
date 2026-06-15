@@ -1,0 +1,22 @@
+name: Cron — Acciones Sesgo Intradía (MAIA)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  acciones-sesgo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Analisis sesgo intradía acciones MAIA
+        run: |
+          HTTP=$(curl -sSL -o /tmp/response.txt -w "%{http_code}" \
+            --max-time 120 \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/acciones-sesgo")
+          echo "HTTP status: $HTTP"
+          cat /tmp/response.txt || true
+          if [ "$HTTP" != "200" ]; then
+            echo "Error: expected 200, got $HTTP"
+            exit 1
+          fi

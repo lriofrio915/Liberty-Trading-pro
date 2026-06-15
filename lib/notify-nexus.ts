@@ -485,6 +485,106 @@ export function notifySesgoIntraday(
   return notifyNexus('sesgo_intraday', { resumen })
 }
 
+// ── Acciones Sesgo Intradía (monitor c/30min 8:30am–3pm Ecuador) ─────────────
+
+export function notifyAccionesSesgo(
+  activos: ActivoSesgo[],
+  changed: Set<string> = new Set(),
+  morningBias: Map<string, string> = new Map(),
+  prevMap: Map<string, { sesgo: string; confianza: number }> = new Map(),
+  recomendaciones: Map<string, Recomendacion> = new Map(),
+  isPreApertura = false,
+) {
+  const fecha = new Date().toLocaleDateString('es-EC', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    timeZone: 'America/Guayaquil',
+  })
+  const horaEcuador = new Date().toLocaleTimeString('es-EC', {
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Guayaquil',
+  })
+
+  const fmtActivo = (a: ActivoSesgo) => {
+    const sym = a.simbolo.toUpperCase()
+    const intradayPrev = prevMap.get(sym)
+    const delta = intradayPrev ? a.confianza - intradayPrev.confianza : 0
+    const deltaPart = !isPreApertura && Math.abs(delta) >= 5
+      ? ` ${delta > 0 ? '▲' : '▼'}${Math.abs(delta)}pts`
+      : ''
+    const changedMark = changed.has(sym) ? ' ⚡' : ''
+    return `  • ${a.simbolo} ${a.confianza}%${deltaPart}${changedMark} — ${a.razon}`
+  }
+
+  const compra = activos
+    .filter(a => a.sesgo === 'COMPRA' && a.confianza >= 65)
+    .sort((a, b) => b.confianza - a.confianza)
+    .slice(0, 5)
+
+  const venta = activos
+    .filter(a => a.sesgo === 'VENTA' && a.confianza >= 65)
+    .sort((a, b) => b.confianza - a.confianza)
+    .slice(0, 5)
+
+  const neutralCount = activos.filter(a => a.sesgo === 'NEUTRAL' || a.confianza < 65).length
+
+  const lineas: string[] = [
+    `📈 *Acciones MAIA ${horaEcuador} Ecuador — ${fecha}*`,
+    '',
+  ]
+
+  if (compra.length === 0 && venta.length === 0) {
+    lineas.push('⚪ Sin señales claras — mercado en rango o consolidación')
+  } else {
+    if (compra.length > 0) {
+      lineas.push('🟢 *COMPRA* (confianza ≥65%)')
+      lineas.push(...compra.map(fmtActivo))
+    }
+    if (venta.length > 0) {
+      if (compra.length > 0) lineas.push('')
+      lineas.push('🔴 *VENTA* (confianza ≥65%)')
+      lineas.push(...venta.map(fmtActivo))
+    }
+  }
+
+  if (neutralCount > 0) {
+    lineas.push('')
+    lineas.push(`⚪ _${neutralCount} acciones en NEUTRAL o sin convicción_`)
+  }
+
+  if (!isPreApertura && changed.size > 0) {
+    lineas.push('')
+    lineas.push(`⚡ *Cambios de sesgo:* ${[...changed].join(', ')}`)
+  }
+
+  lineas.push('')
+  lineas.push('━━━━━━━━━━━━━━━')
+
+  if (isPreApertura) {
+    if (compra.length >= 3) {
+      lineas.push(`🟢 *APERTURA ALCISTA* — ${compra.length} acciones con COMPRA ≥65%`)
+      lineas.push('_Busca entradas largas en la primera vela_')
+    } else if (venta.length >= 3) {
+      lineas.push(`🔴 *APERTURA BAJISTA* — ${venta.length} acciones con VENTA ≥65%`)
+      lineas.push('_Busca entradas cortas en la primera vela_')
+    } else {
+      lineas.push('🟡 *APERTURA MIXTA* — sesgo dividido')
+      lineas.push('_Espera confirmación antes de entrar_')
+    }
+  } else {
+    if (recomendaciones.size > 0) {
+      const cerrar = [...recomendaciones.entries()].filter(([, r]) => r === 'CERRAR').map(([s]) => s)
+      const ajustar = [...recomendaciones.entries()].filter(([, r]) => r === 'AJUSTAR_STOP').map(([s]) => s)
+      if (cerrar.length > 0) lineas.push(`🚨 *CERRAR posición:* ${cerrar.join(', ')}`)
+      if (ajustar.length > 0) lineas.push(`⚠️ *AJUSTAR stop:* ${ajustar.join(', ')}`)
+    }
+    lineas.push('')
+    lineas.push('_Próxima actualización en 30 min_')
+  }
+
+  const resumen = lineas.join('\n')
+  return notifyNexus('acciones_sesgo', { resumen })
+}
+
 // ── Market Scan 8:05am ───────────────────────────────────────────────────────
 
 interface MarketScanOportunidad {
