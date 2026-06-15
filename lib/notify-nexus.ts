@@ -419,8 +419,53 @@ export function notifySesgoIntraday(
       return `• ${a.simbolo} ${posicion} → ${recoBadge(r)} ${recoLabel(r)}${recoExtra(sym, a, r)}`
     })
 
+  // PRE-APERTURA decision block (8:15am only)
+  const buildAperturaDecision = () => {
+    const equity = activos.filter(a => a.simbolo !== 'VIX')
+    const vix = activos.find(a => a.simbolo === 'VIX')
+    const confAlta = { COMPRA: 0, VENTA: 0 }
+    const total    = { COMPRA: 0, VENTA: 0 }
+    for (const a of equity) {
+      if (a.sesgo === 'COMPRA' || a.sesgo === 'VENTA') {
+        total[a.sesgo]++
+        if (a.confianza >= 75) confAlta[a.sesgo]++
+      }
+    }
+    const dom: 'COMPRA' | 'VENTA' = confAlta.COMPRA >= confAlta.VENTA ? 'COMPRA' : 'VENTA'
+    const n = confAlta[dom]
+    const vixOK = vix
+      ? (dom === 'COMPRA' && vix.sesgo === 'VENTA') || (dom === 'VENTA' && vix.sesgo === 'COMPRA')
+      : true
+    const vixWarn = !vixOK ? ' ⚠️ VIX en contra' : ''
+    if (n >= 3) {
+      const badge = dom === 'COMPRA' ? '🟢' : '🔴'
+      return [
+        '',
+        '━━━━━━━━━━━━━━━',
+        `${badge} *ABRIR POSICIÓN ${dom}*`,
+        `${n}/4 índices con confianza ≥75%${vixWarn}`,
+        '_Confirma en vela de apertura 9:30am ET_',
+      ]
+    }
+    if (n === 2) {
+      return [
+        '',
+        '━━━━━━━━━━━━━━━',
+        `🟡 *ESPERAR CONFIRMACIÓN (sesgo ${dom})*`,
+        `Solo ${n}/4 índices ≥75% — espera primera vela${vixWarn}`,
+        '_Confirma en vela de apertura 9:30am ET_',
+      ]
+    }
+    return [
+      '',
+      '━━━━━━━━━━━━━━━',
+      '⛔ *NO OPERAR HOY*',
+      'Sesgo sin convicción — riesgo alto de chop',
+    ]
+  }
+
   const footerSection = isPreApertura
-    ? ['', '_PRE-APERTURA — Usa este sesgo para tu decisión de apertura 8:30am_']
+    ? buildAperturaDecision()
     : [
         '',
         '━━━━━━━━━━━━━━━',
