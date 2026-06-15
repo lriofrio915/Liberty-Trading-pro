@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
   // Only run 8:15am–3:00pm Ecuador = 13:15–20:00 UTC
   const now = new Date()
   const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes()
-  if (utcMinutes < 795 || utcMinutes >= 1200) {
+  const isForced = new URL(req.url).searchParams.get('force') === 'true'
+  if (!isForced && (utcMinutes < 795 || utcMinutes >= 1200)) {
     return NextResponse.json({
       skipped: 'outside market hours',
       utc: `${now.getUTCHours()}:${now.getUTCMinutes().toString().padStart(2, '0')}`,
