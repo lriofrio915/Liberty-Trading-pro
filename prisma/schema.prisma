@@ -607,3 +607,15 @@ model SignalQueue {
   @@index([brokerConnectionId, status])
   @@index([createdAt])
 }
+
+model SesgoIntradayLog {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  simbolo   String
+  sesgo     String
+  confianza Int
+  cambio24h Float
+  precio    Float
+
+  @@index([simbolo, timestamp])
+}

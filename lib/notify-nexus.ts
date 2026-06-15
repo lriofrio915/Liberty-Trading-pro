@@ -355,12 +355,16 @@ export function notifyFuturosSesgo(
   return notifyNexus('futuros_sesgo', { resumen, saved })
 }
 
-// ── Sesgo Intradía (monitor c/30min 8:30am–3pm Ecuador) ──────────────────────
+// ── Sesgo Intradía (monitor c/30min 8:15am–3pm Ecuador) ──────────────────────
+
+type Recomendacion = 'MANTENER' | 'AJUSTAR_STOP' | 'CERRAR'
 
 export function notifySesgoIntraday(
   activos: ActivoSesgo[],
   changed: Set<string> = new Set(),
   morningBias: Map<string, string> = new Map(),
+  prevMap: Map<string, { sesgo: string; confianza: number }> = new Map(),
+  recomendaciones: Map<string, Recomendacion> = new Map(),
 ) {
   const fecha = new Date().toLocaleDateString('es-EC', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -372,28 +376,65 @@ export function notifySesgoIntraday(
   })
 
   const sesgoBadge = (s: string) => s === 'COMPRA' ? '✅' : s === 'VENTA' ? '🔴' : '⚪'
+  const isPreApertura = prevMap.size === 0
 
   const lineas = activos.map(a => {
     if (a.simbolo === 'VIX') {
       const dir = a.cambio24h >= 0 ? '+' : ''
-      return `📈 *VIX:* $${a.precio.toFixed(2)} (${dir}${a.cambio24h.toFixed(2)}%) — ${a.sesgo === 'COMPRA' ? 'miedo' : 'complacencia'}`
+      return `📉 *VIX:* $${a.precio.toFixed(2)} (${dir}${a.cambio24h.toFixed(2)}%) — ${a.sesgo === 'COMPRA' ? 'miedo' : 'complacencia'}`
     }
     const sym = a.simbolo.toUpperCase()
     const isChanged = changed.has(sym)
     const badge = isChanged ? '⚡' : sesgoBadge(a.sesgo)
-    const prev = morningBias.get(sym)
-    const sesgoPart = isChanged && prev
-      ? `${prev} → ${a.sesgo} (${a.confianza}%)`
+    const mornPrev = morningBias.get(sym)
+    const intradayPrev = prevMap.get(sym)
+    const sesgoPart = isChanged && mornPrev
+      ? `${mornPrev} → ${a.sesgo} (${a.confianza}%)`
       : `${a.sesgo} (${a.confianza}%)`
-    return `${badge} *${a.simbolo}:* ${sesgoPart} — ${a.razon}`
+    const delta = intradayPrev ? a.confianza - intradayPrev.confianza : 0
+    const deltaPart = !isPreApertura && Math.abs(delta) >= 3
+      ? ` ${delta > 0 ? '▲' : '▼'}${Math.abs(delta)}pts`
+      : ''
+    return `${badge} *${a.simbolo}:* ${sesgoPart}${deltaPart} — ${a.razon}`
   })
+
+  const recoBadge = (r: Recomendacion) =>
+    r === 'MANTENER' ? '✅' : r === 'AJUSTAR_STOP' ? '⚠️' : '🚨'
+  const recoLabel = (r: Recomendacion) =>
+    r === 'MANTENER' ? 'MANTENER' : r === 'AJUSTAR_STOP' ? 'AJUSTAR STOP' : 'CERRAR POSICIÓN'
+  const recoExtra = (sym: string, a: ActivoSesgo, r: Recomendacion) => {
+    if (r === 'CERRAR') return ' (sesgo invertido desde apertura)'
+    const p = prevMap.get(sym)
+    if (r === 'AJUSTAR_STOP' && p && p.sesgo !== a.sesgo) return ' (cambio de dirección)'
+    if (r === 'AJUSTAR_STOP') return ' (confianza bajando)'
+    return ''
+  }
+
+  const recoLineas = activos
+    .filter(a => a.simbolo !== 'VIX')
+    .map(a => {
+      const sym = a.simbolo.toUpperCase()
+      const r = recomendaciones.get(sym) ?? 'MANTENER'
+      const posicion = morningBias.get(sym) ?? a.sesgo
+      return `• ${a.simbolo} ${posicion} → ${recoBadge(r)} ${recoLabel(r)}${recoExtra(sym, a, r)}`
+    })
+
+  const footerSection = isPreApertura
+    ? ['', '_PRE-APERTURA — Usa este sesgo para tu decisión de apertura 8:30am_']
+    : [
+        '',
+        '━━━━━━━━━━━━━━━',
+        '🔔 *Recomendación para tu posición:*',
+        ...recoLineas,
+        '',
+        '_Próxima actualización en 30 min_',
+      ]
 
   const resumen = [
     `📊 *Sesgo Intradía ${horaEcuador} Ecuador — ${fecha}*`,
     '',
     ...lineas,
-    '',
-    '_Próxima actualización en 30 min_',
+    ...footerSection,
   ].join('\n')
 
   return notifyNexus('sesgo_intraday', { resumen })
