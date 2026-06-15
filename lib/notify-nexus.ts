@@ -585,6 +585,111 @@ export function notifyAccionesSesgo(
   return notifyNexus('acciones_sesgo', { resumen })
 }
 
+// ── Divisas Sesgo Intradía (monitor c/30min vía maia-intraday) ───────────────
+
+export function notifyDivisasSesgo(
+  activos: ActivoSesgo[],
+  changed: Set<string> = new Set(),
+  morningBias: Map<string, string> = new Map(),
+  prevMap: Map<string, { sesgo: string; confianza: number }> = new Map(),
+  recomendaciones: Map<string, Recomendacion> = new Map(),
+  isPreApertura = false,
+) {
+  const fecha = new Date().toLocaleDateString('es-EC', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    timeZone: 'America/Guayaquil',
+  })
+  const horaEcuador = new Date().toLocaleTimeString('es-EC', {
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Guayaquil',
+  })
+
+  const dxy  = activos.find(a => a.simbolo === 'DXY')
+  const pairs = activos.filter(a => a.simbolo !== 'DXY')
+
+  const fmtActivo = (a: ActivoSesgo) => {
+    const sym = a.simbolo.toUpperCase()
+    const intradayPrev = prevMap.get(sym)
+    const delta = intradayPrev ? a.confianza - intradayPrev.confianza : 0
+    const deltaPart = !isPreApertura && Math.abs(delta) >= 5
+      ? ` ${delta > 0 ? '▲' : '▼'}${Math.abs(delta)}pts`
+      : ''
+    const changedMark = changed.has(sym) ? ' ⚡' : ''
+    return `  • ${a.simbolo} ${a.confianza}%${deltaPart}${changedMark} — ${a.razon}`
+  }
+
+  const compra = pairs
+    .filter(a => a.sesgo === 'COMPRA' && a.confianza >= 65)
+    .sort((a, b) => b.confianza - a.confianza)
+    .slice(0, 4)
+
+  const venta = pairs
+    .filter(a => a.sesgo === 'VENTA' && a.confianza >= 65)
+    .sort((a, b) => b.confianza - a.confianza)
+    .slice(0, 4)
+
+  const neutralCount = pairs.filter(a => a.sesgo === 'NEUTRAL' || a.confianza < 65).length
+
+  const lineas: string[] = [
+    `💱 *Divisas MAIA ${horaEcuador} Ecuador — ${fecha}*`,
+    '',
+  ]
+
+  if (dxy) {
+    const dir = dxy.cambio24h >= 0 ? '+' : ''
+    const usdDir = dxy.sesgo === 'COMPRA' ? '💪 USD FUERTE' : dxy.sesgo === 'VENTA' ? '📉 USD DÉBIL' : '〰️ USD NEUTRAL'
+    lineas.push(`📊 *DXY:* $${dxy.precio.toFixed(2)} (${dir}${dxy.cambio24h.toFixed(2)}%) — ${usdDir} ${dxy.confianza}%`)
+    lineas.push('')
+  }
+
+  if (compra.length === 0 && venta.length === 0) {
+    lineas.push('⚪ Sin señales claras — divisas en rango')
+  } else {
+    if (compra.length > 0) {
+      lineas.push('🟢 *COMPRA*')
+      lineas.push(...compra.map(fmtActivo))
+    }
+    if (venta.length > 0) {
+      if (compra.length > 0) lineas.push('')
+      lineas.push('🔴 *VENTA*')
+      lineas.push(...venta.map(fmtActivo))
+    }
+  }
+
+  if (neutralCount > 0) {
+    lineas.push('')
+    lineas.push(`⚪ _${neutralCount} pares en NEUTRAL o sin convicción_`)
+  }
+
+  if (!isPreApertura && changed.size > 0) {
+    lineas.push('')
+    lineas.push(`⚡ *Cambios de sesgo:* ${[...changed].join(', ')}`)
+  }
+
+  lineas.push('')
+  lineas.push('━━━━━━━━━━━━━━━')
+
+  if (isPreApertura) {
+    if (compra.length >= 3) {
+      lineas.push(`🟢 *SESGO APERTURA: COMPRA* — ${compra.length} pares ≥65%`)
+    } else if (venta.length >= 3) {
+      lineas.push(`🔴 *SESGO APERTURA: VENTA* — ${venta.length} pares ≥65%`)
+    } else {
+      lineas.push('🟡 *SESGO APERTURA: MIXTO* — sin dirección dominante')
+    }
+  } else {
+    const cerrar  = [...recomendaciones.entries()].filter(([, r]) => r === 'CERRAR').map(([s]) => s)
+    const ajustar = [...recomendaciones.entries()].filter(([, r]) => r === 'AJUSTAR_STOP').map(([s]) => s)
+    if (cerrar.length > 0)  lineas.push(`🚨 *CERRAR:* ${cerrar.join(', ')}`)
+    if (ajustar.length > 0) lineas.push(`⚠️ *AJUSTAR stop:* ${ajustar.join(', ')}`)
+    lineas.push('')
+    lineas.push('_Próxima actualización en 30 min_')
+  }
+
+  const resumen = lineas.join('\n')
+  return notifyNexus('divisas_sesgo', { resumen })
+}
+
 // ── Market Scan 8:05am ───────────────────────────────────────────────────────
 
 interface MarketScanOportunidad {
