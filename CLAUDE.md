@@ -53,10 +53,11 @@ Gestionados en Prisma (`Plan` enum). Hotmart actualiza el plan via webhook.
 
 Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus.ts` → nexus_claw → WhatsApp.
 
+**Nota scheduling:** servidor en CEST (UTC+2). `TZ=UTC` en cron.d solo afecta el entorno del comando, no el scheduling. Tiempos en cron.d expresados en CEST.
+
 | Hora Ecuador | Ruta API | GH Action | Qué hace | Notifica WA |
 |---|---|---|---|---|
 | 5:00am | `/api/screener/lynch?refresh=true` | `cron-lynch-screener` | Refresca cache Peter Lynch para morning-agents | No |
-| 8:15am | `/api/cron/futuros-sesgo` | `cron-futuros-sesgo` | Sesgo NQ/SP500/RUSSELL, guarda CfdSignal con SL/TP | Sí |
 | 8:30am | `/api/cron/futuros-open` | `cron-futuros-open` | Registra precio entrada 9:30am ET desde vela apertura | Sí |
 | 8:35am | `/api/cron/market-scan` | `cron-market-scan` | Escaneo mercado, guarda señales ≥80% confianza | Sí |
 | 8:35am | `/api/cron/daily-scanner` | `cron-daily-scanner` | Escaneo acciones via API externa (async polling) | Sí |
