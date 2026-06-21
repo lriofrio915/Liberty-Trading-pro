@@ -44,17 +44,30 @@ export default function SidebarNav({ email, canAccessClub }: { email: string; ca
                 )
               })}
               {gi === navGroups.length - 1 && isAdmin && (
-                <Link
-                  href="/dashboard/leads"
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-sm ${
-                    pathname === '/dashboard/leads'
-                      ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-400'
-                      : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                  }`}
-                >
-                  <span className="text-base">⚙️</span>
-                  <span>Administración</span>
-                </Link>
+                <>
+                  <Link
+                    href="/dashboard/leads"
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-sm ${
+                      pathname === '/dashboard/leads'
+                        ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-400'
+                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <span className="text-base">⚙️</span>
+                    <span>Administración</span>
+                  </Link>
+                  <Link
+                    href="/dashboard/clientes"
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-sm ${
+                      pathname === '/dashboard/clientes'
+                        ? 'bg-yellow-500/20 text-yellow-400 border-l-2 border-yellow-400'
+                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <span className="text-base">🤝</span>
+                    <span>Clientes KYC</span>
+                  </Link>
+                </>
               )}
             </div>
           </div>

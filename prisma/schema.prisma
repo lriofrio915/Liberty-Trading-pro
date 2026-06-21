@@ -59,6 +59,7 @@ model User {
   notifications         Notification[]
   notificationsActed    Notification[] @relation("NotifActor")
   vibeMessages          VibeMessage[]
+  kycClient             KycClient?
 }
 
 model TradingPlan {
@@ -605,6 +606,54 @@ model SignalQueue {
   createdAt     DateTime    @default(now())
 
   @@index([brokerConnectionId, status])
+  @@index([createdAt])
+}
+
+model KycClient {
+  id                String    @id @default(cuid())
+  status            String    @default("PENDIENTE") // PENDIENTE | REVISANDO | APROBADO | RECHAZADO
+
+  // Datos personales
+  fullName          String
+  email             String?
+  phone             String?
+  dateOfBirth       String?
+  nationality       String?
+  country           String
+  city              String?
+
+  // Perfil de inversión
+  tier              String?   // A | B
+  capitalDisponible Float?
+  horizonte         String?   // CORTO | MEDIO | LARGO
+  toleranciaRiesgo  String?   // BAJO | MEDIO | ALTO
+  experiencia       String?
+  fuenteCapital     String?   // AHORROS | NEGOCIO | SALARIO | HERENCIA | OTRO
+  objetivo          String?   // PRESERVAR | CRECER | INGRESO_PASIVO
+
+  // Cumplimiento
+  tieneIbkr         Boolean   @default(false)
+  ibkrAccount       String?
+  esPep             Boolean   @default(false)
+  documentType      String?   // PASAPORTE | CEDULA | LICENCIA
+  documentNumber    String?
+
+  // Gestión admin
+  capitalAsignado   Float?
+  notas             String?
+  reviewedBy        String?
+  reviewedAt        DateTime?
+  rejectionReason   String?
+
+  // Vínculo opcional a User de Liberty
+  userId            String?   @unique
+  user              User?     @relation(fields: [userId], references: [id])
+
+  submittedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([status])
   @@index([createdAt])
 }
 
