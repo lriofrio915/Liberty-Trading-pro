@@ -125,12 +125,16 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    // await obligatorio: con fire-and-forget la lambda se congela al responder
+    // y el fetch al gateway muere sin enviarse (visto en logs de Vercel)
+    const notifications: Promise<void>[] = []
     if (buyAlert) {
-      void notifyP2PBinance({ tipo: 'COMPRA', oferta: bestBuy, umbral: BUY_THRESHOLD })
+      notifications.push(notifyP2PBinance({ tipo: 'COMPRA', oferta: bestBuy, umbral: BUY_THRESHOLD }))
     }
     if (sellAlert) {
-      void notifyP2PBinance({ tipo: 'VENTA', oferta: bestSell, umbral: SELL_THRESHOLD })
+      notifications.push(notifyP2PBinance({ tipo: 'VENTA', oferta: bestSell, umbral: SELL_THRESHOLD }))
     }
+    if (notifications.length > 0) await Promise.allSettled(notifications)
 
     return NextResponse.json({
       buyPrice: bestBuy.price,
