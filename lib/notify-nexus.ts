@@ -86,6 +86,7 @@ const eventLabels: Record<string, string> = {
   futuros_open: '📍 Entradas Futuros 9:30am ET',
   futuros_close: '🏁 Cierre Futuros 3:45pm ET',
   monitor_signals: '🔍 Monitor Señales TP/SL',
+  p2p_binance: '💱 Alerta Precio P2P Binance',
 }
 
 function formatEmailBody(event: string, data: Record<string, unknown>): string {
@@ -905,4 +906,49 @@ export function notifyMonitorSignals(checked: number, closed: number) {
   ].join('\n')
 
   return notifyNexus('monitor_signals', { resumen, checked, closed })
+}
+
+// ── P2P Binance — alertas de precio USDT/USD ─────────────────────────────────
+
+export interface P2PBestOffer {
+  price: number
+  banks: string[]
+  minAmount: string
+  maxAmount: string
+  nickName: string
+}
+
+export function notifyP2PBinance(params: {
+  tipo: 'COMPRA' | 'VENTA'
+  oferta: P2PBestOffer
+  umbral: number
+}) {
+  const { tipo, oferta, umbral } = params
+  const hora = new Date().toLocaleTimeString('es-EC', {
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Guayaquil',
+  })
+
+  const esCompra = tipo === 'COMPRA'
+  const titulo = esCompra
+    ? '🟢 *OPORTUNIDAD DE COMPRA USDT*'
+    : '🔴 *OPORTUNIDAD DE VENTA USDT*'
+  const accion = esCompra
+    ? `Compra USDT a *$${oferta.price.toFixed(3)}* (umbral ≤ $${umbral.toFixed(3)})`
+    : `Vende USDT a *$${oferta.price.toFixed(3)}* (umbral ≥ $${umbral.toFixed(3)})`
+
+  const resumen = [
+    `💱 *P2P Binance ${hora} Ecuador*`,
+    '',
+    titulo,
+    accion,
+    '',
+    `👤 Anunciante: ${oferta.nickName}`,
+    `🏦 Bancos: ${oferta.banks.join(', ')}`,
+    `💵 Rango: $${oferta.minAmount} – $${oferta.maxAmount}`,
+    '',
+    '_Verifica la oferta en Binance P2P antes de operar_',
+  ].join('\n')
+
+  return notifyNexus('p2p_binance', { resumen, tipo, precio: oferta.price })
 }

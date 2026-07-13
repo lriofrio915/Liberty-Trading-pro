@@ -668,3 +668,46 @@ model SesgoIntradayLog {
 
   @@index([simbolo, timestamp])
 }
+
+// Tabla creada fuera de Prisma (drift detectado 2026-07-13) — mapeada aquí
+// para que `prisma db push` no intente borrarla.
+model Series65Question {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  section     String   @db.VarChar(5)
+  text        String
+  options     Json
+  answer      String   @db.Char(1)
+  explanation String
+  seedId      String?  @unique(map: "series65_questions_seed_id_key") @map("seed_id") @db.VarChar(10)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  progress    Series65Progress[]
+
+  @@index([section], map: "idx_s65q_section")
+  @@map("series65_questions")
+}
+
+model Series65Progress {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId  String           @map("question_id") @db.Uuid
+  section     String           @db.VarChar(5)
+  correct     Boolean
+  attemptedAt DateTime         @default(now()) @map("attempted_at") @db.Timestamptz(6)
+  question    Series65Question @relation(fields: [questionId], references: [id], onDelete: Cascade, map: "series65_progress_question_id_fkey")
+
+  @@index([section], map: "idx_s65p_section")
+  @@index([questionId], map: "idx_s65p_question_id")
+  @@index([attemptedAt], map: "idx_s65p_attempted_at")
+  @@map("series65_progress")
+}
+
+model P2PPriceLog {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  buyPrice  Float // mejor precio para comprar USDT (tradeType=BUY, anuncios de vendedores)
+  sellPrice Float // mejor precio para vender USDT (tradeType=SELL, anuncios de compradores)
+  buyAlert  Boolean @default(false)
+  sellAlert Boolean @default(false)
+  detalle   Json? // top ofertas por lado: precio, bancos, rango, nickName
+
+  @@index([timestamp])
+}
