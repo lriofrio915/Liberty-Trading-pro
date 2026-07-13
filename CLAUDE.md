@@ -61,6 +61,7 @@ Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus
 | 8:36am | `/api/cron/daily-scanner` | Escaneo acciones via API externa (async polling) | No |
 | 8am-2pm c/30min | `/api/cron/bias-monitor` | Detecta flips de sesgo en ScanOpportunity | No |
 | 8:15am-3:45pm c/30min | `/api/cron/sesgo-intraday` | Monitor sesgo índices — MANTENER/AJUSTAR/CERRAR | **Sí** |
+| c/15min, 24/7 | `/api/cron/p2p-binance` | Monitor P2P Binance USDT/USD Ecuador. Fetch en VPS (`scripts/p2p-binance-cron.sh` — Binance bloqueado desde Vercel) y POST al route. Alerta compra ≤0.995 / venta ≥1.005 (env `P2P_BUY_THRESHOLD`/`P2P_SELL_THRESHOLD`), cooldown 2h, log en `P2PPriceLog` | **Sí** |
 
 **Arquitectura de notificaciones:** `lib/notify-nexus.ts` → OpenClaw Gateway webhook → nexus_claw → WhatsApp Luis. Fallback: email via Resend.
 
