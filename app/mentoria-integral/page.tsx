@@ -88,10 +88,10 @@ export default function MentoriaIntegralPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { icon: '📊', title: 'Sistema de Trading Manual', desc: 'Aprende el método de Luis en NQ Futures: rompimiento, gestión de riesgo y consistencia.' },
-              { icon: '💻', title: 'Estrategia → Algoritmo', desc: 'Conviertes tu estrategia manual en un bot con código NinjaScript entregado y funcional.' },
-              { icon: '🤖', title: 'NinjaTrader 8 + Backtesting', desc: 'Strategy Analyzer para optimizar y validar tu bot con datos históricos reales.' },
-              { icon: '🧠', title: 'Crea tus propios bots', desc: 'Aprende a programar estrategias algorítmicas propias en NinjaScript desde cero.' },
+              { icon: '📊', title: 'Trading NQ Futures + Algorítmico', desc: 'Estrategia manual en NQ/MNQ, conversión a bot NinjaScript y uso de Strategy Analyzer.' },
+              { icon: '🏦', title: 'Acciones y ETFs vía IBKR', desc: 'Apertura de cuenta en Interactive Brokers y acceso al grupo privado de recomendaciones de Luis.' },
+              { icon: '🤖', title: 'Vinces IA — coaching diario', desc: 'El asistente IA de Luis registra tus trades, calcula métricas y genera reportes personalizados.' },
+              { icon: '🌍', title: 'Comunidad + Monitor de mercados', desc: 'Comunidad privada activa y monitor de oportunidades cuantitativas en tiempo real.' },
             ].map((f) => (
               <div key={f.title} className="card text-center py-7">
                 <div className="text-3xl mb-3">{f.icon}</div>
@@ -191,28 +191,28 @@ export default function MentoriaIntegralPage() {
               },
               {
                 n: '02',
-                title: 'Gestión de riesgo cuantitativa',
-                desc: 'Stop loss, take profit, tamaño de posición y métricas de rendimiento: win rate, profit factor, drawdown.',
+                title: 'NinjaTrader 8 + Strategy Analyzer',
+                desc: 'Configura la plataforma, usa el backtester y valida tu estrategia con datos históricos reales antes de operar en vivo.',
               },
               {
                 n: '03',
-                title: 'NinjaTrader 8 y Strategy Analyzer',
-                desc: 'Domina la plataforma, configura tu entorno y usa el backtester para validar estrategias con datos reales.',
+                title: 'De estrategia manual a bot NinjaScript',
+                desc: 'Conviertes las reglas de tu sistema en código. Luis te entrega el bot NinjaScript funcional y te enseña a crear los tuyos.',
               },
               {
                 n: '04',
-                title: 'De estrategia manual a algoritmo',
-                desc: 'Conviertes las reglas de tu sistema en lógica de programación: condiciones, entradas, salidas y filtros.',
+                title: 'Apertura de cuenta IBKR',
+                desc: 'Paso a paso para abrir tu cuenta en Interactive Brokers desde Ecuador o Latinoamérica y hacer tus primeras operaciones.',
               },
               {
                 n: '05',
-                title: 'NinjaScript — tu primer bot',
-                desc: 'Escribes en NinjaScript el código de tu estrategia. Luis te entrega el bot funcional y lo revisamos juntos.',
+                title: 'Acciones y ETFs — portafolio con método',
+                desc: 'Cómo seleccionar acciones sólidas y ETFs. Luis asesora y comparte recomendaciones en el grupo privado de WhatsApp.',
               },
               {
                 n: '06',
-                title: 'Crea tus propios bots desde cero',
-                desc: 'Aprende la lógica algorítmica para diseñar, programar y optimizar estrategias automatizadas por tu cuenta.',
+                title: 'Gestión de capital y riesgo',
+                desc: 'Cómo distribuir tu capital entre futuros y acciones, diversificar y proteger tu portafolio en todo momento.',
               },
             ].map((m) => (
               <div key={m.n} className="card hover:border-[var(--gold-dark)] transition-all group">
@@ -290,16 +290,16 @@ export default function MentoriaIntegralPage() {
                 a: '$79 al mes, sin contratos ni permanencia. Puedes cancelar en cualquier momento desde tu cuenta de Hotmart.',
               },
               {
-                q: '¿Necesito saber programar para aprender a hacer bots?',
-                a: 'No. Luis te lleva paso a paso desde la estrategia manual hasta el código. Aprenderás NinjaScript desde cero y recibirás el bot funcional entregado.',
+                q: '¿Qué incluye exactamente la mentoría?',
+                a: 'Trading algorítmico en NQ Futures con NinjaTrader 8 (te entregamos el código NinjaScript), más asesoría en acciones y ETFs vía IBKR con acceso al grupo privado de recomendaciones de Luis.',
               },
               {
-                q: '¿Qué plataforma usamos?',
-                a: 'NinjaTrader 8 con Strategy Analyzer. Es la plataforma de futuros preferida para trading algorítmico. Luis te guía en la configuración completa.',
+                q: '¿Necesito saber programar para hacer bots?',
+                a: 'No. Luis te lleva paso a paso desde la estrategia manual hasta el código NinjaScript. Recibirás el bot funcional y aprenderás a crear los tuyos desde cero.',
               },
               {
-                q: '¿Recibiré el código NinjaScript de la estrategia?',
-                a: 'Sí. Una parte clave del programa es que Luis te entrega el código NinjaScript de la estrategia aprendida, listo para operar y optimizar.',
+                q: '¿Cómo funciona el grupo de acciones de WhatsApp?',
+                a: 'Al unirte a la mentoría te añaden al grupo privado de WhatsApp donde Luis comparte sus recomendaciones de acciones y ETFs y cobra una comisión de gestión por el portafolio asesorado.',
               },
               {
                 q: '¿Cuánto tiempo necesito dedicarle por semana?',

@@ -12,10 +12,10 @@ const CLUB_FEATURES = [
   { icon: '🤖', label: 'NinjaTrader 8 + Strategy Analyzer — backtesting real' },
   { icon: '💻', label: 'Código NinjaScript entregado — bot listo para operar' },
   { icon: '🧠', label: 'Aprende a crear tus propios bots algorítmicos' },
+  { icon: '🏦', label: 'Acciones y ETFs vía IBKR — asesoría y grupo privado' },
   { icon: '🤖', label: 'Vinces — IA asistente cuantitativo de trading' },
   { icon: '📈', label: 'Track record verificable — resultados reales de Luis' },
-  { icon: '🌍', label: 'Monitor de mercados y oportunidades cuantitativas' },
-  { icon: '🏘', label: 'Comunidad privada de traders algorítmicos' },
+  { icon: '🏘', label: 'Comunidad privada activa' },
 ]
 
 export default async function UpgradePage() {

@@ -29,14 +29,14 @@ interface TrackRecord {
 // ─── Features ─────────────────────────────────────────────────────────────────
 
 const FEATURES = [
-  { icon: '📊', title: 'Estrategia manual → algoritmo', desc: 'Aprendes el sistema de trading manual de Luis y luego lo conviertes en un bot automatizado' },
-  { icon: '🤖', title: 'NinjaTrader 8 + Strategy Analyzer', desc: 'Backtesting y optimización de estrategias cuantitativas con la plataforma profesional' },
+  { icon: '📊', title: 'Estrategia manual → bot algorítmico', desc: 'Aprendes el sistema en NQ Futures, lo conviertes en algoritmo y recibes el código NinjaScript' },
+  { icon: '🤖', title: 'NinjaTrader 8 + Strategy Analyzer', desc: 'Backtesting y optimización de estrategias con datos históricos reales antes de operar en vivo' },
   { icon: '💻', title: 'Código NinjaScript entregado', desc: 'Recibes el código del bot completo y funcionando, listo para conectar a tu cuenta' },
   { icon: '🧠', title: 'Crea tus propios bots', desc: 'Aprende a programar tus propias estrategias algorítmicas en NinjaScript desde cero' },
-  { icon: '🤖', title: 'Vinces IA 24/7', desc: 'Coaching cuantitativo personalizado con inteligencia artificial' },
-  { icon: '📈', title: 'Day Trading NQ Futures', desc: 'El mercado más líquido del mundo, operado con método cuantitativo y rigor estadístico' },
-  { icon: '📊', title: 'Track record verificable', desc: 'Operaciones reales de Luis sin filtros — resultados reales, incluidas las pérdidas' },
-  { icon: '🏘', title: 'Comunidad de traders cuantitativos', desc: 'Comparte estrategias, código y análisis con traders algorítmicos reales' },
+  { icon: '🏦', title: 'Acciones y ETFs vía IBKR', desc: 'Luis te asesora para abrir tu cuenta en Interactive Brokers y gestiona un portafolio de acciones' },
+  { icon: '🤖', title: 'Vinces IA 24/7', desc: 'Coaching cuantitativo personalizado, métricas de trading y reportes semanales con inteligencia artificial' },
+  { icon: '📈', title: 'Track record verificable', desc: 'Operaciones reales de Luis sin filtros — resultados reales incluidas las pérdidas' },
+  { icon: '🏘', title: 'Comunidad privada activa', desc: 'Comparte estrategias, código y análisis con otros traders del club' },
 ]
 
 const FAQS = [

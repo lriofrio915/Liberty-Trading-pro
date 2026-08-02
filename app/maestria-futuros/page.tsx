@@ -105,11 +105,11 @@ export default function MaestriaFuturosPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { icon: '📊', title: 'Sistema NQ/MNQ completo', desc: 'El sistema manual de Luis: rompimiento, gestión de riesgo y consistencia en Futuros Nasdaq.' },
-              { icon: '💻', title: 'Código NinjaScript entregado', desc: 'Conviertes la estrategia manual en un bot algorítmico. Luis te entrega el código listo para operar.' },
-              { icon: '🔬', title: 'NinjaTrader 8 + Strategy Analyzer', desc: 'Backtesting real con datos históricos para validar y optimizar tu bot antes de operar en vivo.' },
-              { icon: '🧠', title: 'Crea tus propios bots', desc: 'Aprende NinjaScript desde cero para diseñar y programar tus propias estrategias algorítmicas.' },
+              { icon: '📊', title: 'Sistema NQ/MNQ + Algorítmico', desc: 'Estrategia manual en NQ Futures, conversión a bot NinjaScript y uso de Strategy Analyzer.' },
+              { icon: '🏦', title: 'Acciones y ETFs vía IBKR', desc: 'Apertura de cuenta en Interactive Brokers y acceso al grupo privado de recomendaciones de Luis.' },
               { icon: '🤖', title: 'Vinces IA como coach diario', desc: 'Registra tus trades, calcula métricas y genera reportes de coaching personalizados cada semana.' },
+              { icon: '👥', title: 'Mentoring 1:1 con Luis', desc: 'Sesiones personalizadas de revisión de operaciones, ajuste de estrategia y seguimiento continuo.' },
+              { icon: '🌐', title: 'Comunidad + Monitor Mundial', desc: 'Acceso a la comunidad privada activa y al monitor de mercados y oportunidades cuantitativas.' },
               { icon: '💰', title: 'Máximo ahorro', desc: 'Pagas $649/año en vez de $948 (12 × $79). Ahorras $299 con el mismo acceso completo.' },
             ].map((f) => (
               <div key={f.title} className="card py-7">
@@ -234,18 +234,18 @@ export default function MaestriaFuturosPage() {
               },
               {
                 n: '07',
-                title: 'De manual a algorítmico',
-                desc: 'Conviertes las reglas de tu sistema en código NinjaScript: condiciones, entradas, salidas y filtros.',
+                title: 'De estrategia manual a bot NinjaScript',
+                desc: 'Conviertes las reglas de tu sistema en código. Luis te entrega el bot funcional y te enseña a crear los tuyos propios.',
               },
               {
                 n: '08',
-                title: 'Backtesting y optimización',
-                desc: 'Strategy Analyzer para validar tu bot con datos históricos reales y afinar parámetros antes de operar en vivo.',
+                title: 'Apertura de cuenta IBKR y primeras inversiones',
+                desc: 'Abre tu cuenta en Interactive Brokers desde Latinoamérica y accede al grupo privado de recomendaciones de Luis.',
               },
               {
                 n: '09',
-                title: 'Crea tus propios bots desde cero',
-                desc: 'Aprende la lógica algorítmica para diseñar, programar y optimizar estrategias automatizadas por tu cuenta.',
+                title: 'Acciones, ETFs y gestión de portafolio',
+                desc: 'Selección de acciones y ETFs, Dollar Cost Average y cómo complementar el trading con inversión a largo plazo.',
               },
             ].map((m) => (
               <div key={m.n} className="card hover:border-[var(--gold-dark)] transition-all group">

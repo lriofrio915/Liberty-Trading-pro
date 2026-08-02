@@ -130,10 +130,11 @@ export async function POST(req: NextRequest) {
       `- NinjaTrader 8 + Strategy Analyzer para backtesting real\n` +
       `- Conversion de estrategia manual a algoritmo con codigo NinjaScript entregado\n` +
       `- Aprende a crear tus propios bots desde cero\n` +
+      `- Asesoria en acciones y ETFs via Interactive Brokers (IBKR) + grupo privado de recomendaciones\n` +
       `- Mentorias 1:1 con Luis Riofrio\n` +
       `- Vinces IA - coaching diario personalizado\n` +
       `- Track record verificable de Luis\n` +
-      `- Comunidad privada de traders algoritmicos\n\n` +
+      `- Comunidad privada activa\n\n` +
       `FLUJO DE LA CONVERSACION:\n` +
       `1. Saludar calidamente y preguntar si tienen experiencia en trading o programacion\n` +
       `2. Entender sus objetivos (aprender trading manual, hacer el salto a lo algoritmico, crear bots propios)\n` +

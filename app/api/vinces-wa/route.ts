@@ -42,11 +42,11 @@ QUÉ INCLUYE EL CLUB (ambos planes tienen TODO):
 - NinjaTrader 8 + Strategy Analyzer — plataforma profesional de futuros y backtesting
 - Conversión de estrategia manual a algoritmo con código NinjaScript entregado
 - Aprende a crear tus propios bots algorítmicos desde cero
+- Asesoría en acciones y ETFs vía Interactive Brokers (IBKR) + grupo privado de recomendaciones
 - Mentorías 1:1 personalizadas con Luis
 - Vinces IA — coaching diario con inteligencia artificial (24/7)
 - Track record verificable — operaciones reales de Luis publicadas
-- Comunidad privada de traders algorítmicos
-- Monitor de mercados y oportunidades cuantitativas
+- Comunidad privada activa
 
 CLAVE DE RECOMENDACIÓN DE PLAN:
 - ¿Quiere probar primero o tiene presupuesto ajustado? → Plan Mensual ($79/mes)
