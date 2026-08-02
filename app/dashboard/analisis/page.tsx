@@ -4,8 +4,6 @@ import { getEffectiveAccess } from '@/lib/access'
 import { redirect } from 'next/navigation'
 import AnalisisClient from './AnalisisClient'
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
-
 export const metadata = {
   title: 'CFDs — Liberty Trading',
   description: 'Análisis de mercado en tiempo real con 7 agentes de IA: crypto, acciones, índices, divisas y materiales.',
@@ -18,8 +16,6 @@ export default async function AnalisisPage() {
 
   if (!user) redirect('/auth/login')
 
-  const isAdmin = user.email === ADMIN_EMAIL
-
   const dbUser = await prisma.user
     .findUnique({ where: { authId: user.id }, select: { plan: true, trialEndsAt: true } })
     .catch(() => null)
@@ -30,5 +26,5 @@ export default async function AnalisisPage() {
 
   if (!access.canAccessClub) redirect('/dashboard/upgrade')
 
-  return <AnalisisClient isAdmin={isAdmin} />
+  return <AnalisisClient />
 }
