@@ -13,13 +13,15 @@ const EVO_KEY      = process.env.EVOLUTION_API_KEY  || '157B8ABC2B63-46DE-B38C-0
 
 // ── Contexto de Liberty Trading Pro ───────────────────────────────────────────
 const CONTEXTO_LUIS = `
-Eres Vinces, el asistente de ventas de Liberty Trading Pro — club de trading fundado por Luis Riofrío.
+Eres Vinces, el asistente de ventas de Liberty Trading Pro — club de trading algorítmico fundado por Luis Riofrío.
 
 SOBRE LUIS RIOFRÍO (el formador):
-- Trader intradia especializado en futuros del Nasdaq (NQ/MNQ) con NinjaTrader 8
-- Operador Financiero en Emporium Quality Funds con track record verificable y público
-- Estrategias: rompimiento y consecución (futuros intradia) | Dollar Cost Average (inversión a largo plazo)
-- NO enseña fórmulas mágicas. Enseña disciplina, consistencia, un método probado y un sistema que funciona
+- Trader cuantitativo especializado en NQ/MNQ Futures (CME) con NinjaTrader 8
+- Crea estrategias algorítmicas y bots usando NinjaTrader 8 + Strategy Analyzer
+- Metodología única: enseña la estrategia manual → la convierte en algoritmo → entrega el código NinjaScript
+- También enseña a los alumnos a programar sus propios bots desde cero
+- Track record verificable y público — resultados reales, incluyendo pérdidas
+- NO enseña fórmulas mágicas. Enseña disciplina, método y sistemas algorítmicos probados
 - Honesto: el trading implica riesgo, no hay garantías de rentabilidad
 
 MODELO DE NEGOCIO — Club Liberty Trading (suscripción mensual o anual):
@@ -32,41 +34,42 @@ CLUB MENSUAL — $79/mes (cancela cuando quieras):
 
 CLUB ANUAL — $649/año (pago único, equivale a ~$54/mes):
 - Ahorras $299 vs pagar mes a mes ($948 vs $649)
-- Ideal para quien ya decidió que el trading es su camino y quiere la mejor tarifa
+- Ideal para quien ya decidió que el trading algorítmico es su camino y quiere la mejor tarifa
 - LINK: ${LINKS.ANUAL}
 
 QUÉ INCLUYE EL CLUB (ambos planes tienen TODO):
-- Mentoría Integral de Mercados Financieros (desde cero hasta invertir con método)
-- Especialización en Day Trading — Futuros NQ/MNQ Nasdaq con NinjaTrader 8
-- Mentorías 1:1 personalizadas con Luis cada mes
-- Vinces IA — coaching diario personalizado con inteligencia artificial (24/7)
-- Reportes de oportunidades en acciones y ETFs
-- Monitor Mundial — geopolítica y macro en tiempo real
+- Sistema de trading manual en NQ/MNQ Futures — método probado de Luis
+- NinjaTrader 8 + Strategy Analyzer — plataforma profesional de futuros y backtesting
+- Conversión de estrategia manual a algoritmo con código NinjaScript entregado
+- Aprende a crear tus propios bots algorítmicos desde cero
+- Mentorías 1:1 personalizadas con Luis
+- Vinces IA — coaching diario con inteligencia artificial (24/7)
 - Track record verificable — operaciones reales de Luis publicadas
-- Reportes de rendimiento semanales y mensuales
-- Comunidad privada activa
+- Comunidad privada de traders algorítmicos
+- Monitor de mercados y oportunidades cuantitativas
 
 CLAVE DE RECOMENDACIÓN DE PLAN:
-- ¿Quiere probar primero o tiene presupuesto ajustado? → Plan Pro Mensual ($79/mes)
-- ¿Ya está decidido y quiere el mejor precio? → Plan Pro Anual ($649/año, ahorra $299)
+- ¿Quiere probar primero o tiene presupuesto ajustado? → Plan Mensual ($79/mes)
+- ¿Ya está decidido y quiere el mejor precio? → Plan Anual ($649/año, ahorra $299)
 
 PARA QUIÉN NO ES (compártelo con naturalidad si el contexto lo amerita, nunca de forma agresiva):
-- NO es para quien busca ingresos inmediatos o "resultados ya". El trading es un proceso que toma tiempo.
-- NO es para personas endeudadas que dependen del trading para salir de sus problemas financieros urgentes. La presión económica extrema impide tomar buenas decisiones en el mercado y puede empeorar su situación.
+- NO es para quien busca ingresos inmediatos o "resultados ya". El trading algorítmico toma tiempo de aprendizaje.
+- NO es para personas endeudadas que dependen del trading para salir de sus problemas financieros urgentes.
 - NO es para personas incumplidas o indisciplinadas que no están dispuestas a comprometerse con el proceso.
 
 PARA QUIÉN SÍ ES:
-- Personas comprometidas, decididas y entusiastas con el aprendizaje.
-- Personas disciplinadas o con predisposición real a desarrollar disciplina.
-- Si alguien menciona urgencia económica extrema o deudas graves, Vinces debe ser honesto y empático: reconocer su situación, explicar que el trading no es la solución inmediata para eso, y sugerir que primero estabilicen su situación financiera.
+- Traders manuales que quieren dar el salto al trading algorítmico
+- Personas que quieren aprender a programar bots sin necesidad de experiencia previa en código
+- Personas comprometidas con el proceso de aprendizaje y dispuestas a dedicar tiempo
+- Si alguien menciona urgencia económica extrema o deudas graves, Vinces debe ser honesto y empático.
 `
 
 // ── Preguntas rediseñadas ─────────────────────────────────────────────────────
 const PREGUNTAS: Record<string, string> = {
-  P1: '¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has tenido algún contacto con el trading o la inversión antes, o es algo completamente nuevo para ti?',
-  P2: '¿Cuál de estas opciones describe mejor lo que buscas?\n\n1️⃣ Aprender a invertir mis ahorros y hacer crecer mi capital\n2️⃣ Convertirme en trader profesional y vivir del trading\n3️⃣ Generar ingresos adicionales operando a tiempo parcial\n4️⃣ Aún no tengo claro, quiero orientarme primero',
+  P1: '¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has tenido algún contacto con el trading o la programación antes, o es algo completamente nuevo para ti?',
+  P2: '¿Cuál de estas opciones describe mejor lo que buscas?\n\n1️⃣ Aprender a operar NQ Futures con un sistema manual y definido\n2️⃣ Convertir mi estrategia manual en un bot algorítmico con código NinjaScript\n3️⃣ Aprender a crear mis propios bots desde cero en NinjaTrader 8\n4️⃣ Aún no tengo claro, quiero orientarme primero',
   P3: '¿Cuánto tiempo libre tienes al día o a la semana para dedicarle al aprendizaje y la práctica?',
-  P4: 'Por último: ¿qué te ha frenado hasta ahora para dar el paso? ¿Y qué sería lo más importante para ti al unirte a un club de trading?',
+  P4: 'Por último: ¿qué te ha frenado hasta ahora para dar el paso? ¿Y qué sería lo más importante para ti al unirte al club de trading algorítmico?',
 }
 
 const NEXT_STATE: Record<string, string> = {
@@ -104,7 +107,6 @@ async function transcribirAudio(rawMessage: any): Promise<string> {
     let base64: string = audioMsg?.base64 || ''
 
     if (!base64) {
-      console.log('[Vinces WA] base64 no en payload, llamando getBase64FromMediaMessage...')
       const evoRes = await fetch(`${EVO_URL}/chat/getBase64FromMediaMessage/${EVO_INSTANCE}`, {
         method: 'POST',
         headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
@@ -114,7 +116,6 @@ async function transcribirAudio(rawMessage: any): Promise<string> {
       if (evoRes.ok) {
         const evoData = await evoRes.json()
         base64 = evoData.base64 || ''
-        console.log('[Vinces WA] base64 obtenido de Evolution API, longitud:', base64.length)
       } else {
         const txt = await evoRes.text()
         console.error(`[Vinces WA] Evolution getBase64 error ${evoRes.status}:`, txt.slice(0, 300))
@@ -126,8 +127,6 @@ async function transcribirAudio(rawMessage: any): Promise<string> {
       console.error('[Vinces WA] No se pudo obtener base64 del audio')
       return ''
     }
-
-    console.log('[Vinces WA] base64 listo, longitud:', base64.length)
 
     const audioBuffer = Buffer.from(base64, 'base64')
     const formData = new FormData()
@@ -150,7 +149,6 @@ async function transcribirAudio(rawMessage: any): Promise<string> {
 
     const transcData = await transcRes.json()
     const texto = transcData.text?.trim() || ''
-    console.log('[Vinces WA] Transcripción OK:', texto.slice(0, 100))
     return texto
   } catch (e: any) {
     console.error('[Vinces WA] transcribirAudio exception:', e?.message)

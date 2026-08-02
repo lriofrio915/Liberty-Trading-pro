@@ -30,14 +30,14 @@ export default function MaestriaFuturosPage() {
             </div>
 
             <h1 className="headline text-6xl sm:text-7xl text-[var(--text-primary)] mb-6">
-              Conviértete en<br />
-              <span className="gradient-gold">trader profesional</span>
+              De trader manual<br />
+              <span className="gradient-gold">a trader algorítmico</span>
             </h1>
 
             <p className="text-lg text-[var(--text-secondary)] max-w-2xl mb-10 leading-relaxed">
               Accede al Club Liberty Trading Pro con el <strong className="text-[var(--text-primary)]">Plan Pro Anual</strong> —
-              el sistema completo de Luis para operar Futuros Nasdaq (NQ/MNQ), mentoría 1 a 1,
-              Vinces IA y todo el contenido de inversión. Un pago al año, acceso a todo.
+              el sistema completo de Luis en NQ Futures, NinjaTrader 8 + Strategy Analyzer,
+              código NinjaScript entregado y aprende a crear tus propios bots. Un pago al año, acceso a todo.
             </p>
 
             {/* Stats */}
@@ -105,11 +105,11 @@ export default function MaestriaFuturosPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { icon: '📈', title: 'Sistema NQ/MNQ completo', desc: 'El sistema real de Luis: rompimiento y consecución en Futuros Nasdaq. Clases 1 a 1.' },
-              { icon: '🎓', title: 'Mentoría Integral incluida', desc: 'Portafolio en acciones, ETFs y cripto. Todo el contenido de inversión sin costo adicional.' },
+              { icon: '📊', title: 'Sistema NQ/MNQ completo', desc: 'El sistema manual de Luis: rompimiento, gestión de riesgo y consistencia en Futuros Nasdaq.' },
+              { icon: '💻', title: 'Código NinjaScript entregado', desc: 'Conviertes la estrategia manual en un bot algorítmico. Luis te entrega el código listo para operar.' },
+              { icon: '🔬', title: 'NinjaTrader 8 + Strategy Analyzer', desc: 'Backtesting real con datos históricos para validar y optimizar tu bot antes de operar en vivo.' },
+              { icon: '🧠', title: 'Crea tus propios bots', desc: 'Aprende NinjaScript desde cero para diseñar y programar tus propias estrategias algorítmicas.' },
               { icon: '🤖', title: 'Vinces IA como coach diario', desc: 'Registra tus trades, calcula métricas y genera reportes de coaching personalizados cada semana.' },
-              { icon: '👥', title: 'Mentoring grupal + 1a1', desc: 'Sesiones grupales de análisis de mercado y revisiones 1 a 1 con Luis cada mes.' },
-              { icon: '🌐', title: 'Comunidad + Monitor Mundial', desc: 'Acceso a la comunidad privada activa y al monitor geopolítico y macro de Luis.' },
               { icon: '💰', title: 'Máximo ahorro', desc: 'Pagas $649/año en vez de $948 (12 × $79). Ahorras $299 con el mismo acceso completo.' },
             ].map((f) => (
               <div key={f.title} className="card py-7">
@@ -234,18 +234,18 @@ export default function MaestriaFuturosPage() {
               },
               {
                 n: '07',
-                title: 'Vinces IA — coaching diario',
-                desc: 'El agente IA registra tus operaciones, detecta patrones y genera reportes semanales de coaching personalizados.',
+                title: 'De manual a algorítmico',
+                desc: 'Conviertes las reglas de tu sistema en código NinjaScript: condiciones, entradas, salidas y filtros.',
               },
               {
                 n: '08',
-                title: 'Revisión semanal con Luis',
-                desc: 'Cada semana revisas tus operaciones con Luis: qué hiciste bien, qué mejorar, ajustes al sistema.',
+                title: 'Backtesting y optimización',
+                desc: 'Strategy Analyzer para validar tu bot con datos históricos reales y afinar parámetros antes de operar en vivo.',
               },
               {
                 n: '09',
-                title: 'Mentoría Integral incluida',
-                desc: 'Todo el contenido de inversión (DCA, IBKR, portafolio) está incluido en tu suscripción sin costo adicional.',
+                title: 'Crea tus propios bots desde cero',
+                desc: 'Aprende la lógica algorítmica para diseñar, programar y optimizar estrategias automatizadas por tu cuenta.',
               },
             ].map((m) => (
               <div key={m.n} className="card hover:border-[var(--gold-dark)] transition-all group">
@@ -265,19 +265,19 @@ export default function MaestriaFuturosPage() {
             <div>
               <div className="label-mono mb-3">Tu mentor</div>
               <h2 className="headline text-5xl text-[var(--text-primary)] mb-5">
-                Luis Riofrio —<br /><span className="gradient-gold">Trader Profesional</span>
+                Luis Riofrio —<br /><span className="gradient-gold">Trader Cuantitativo</span>
               </h2>
               <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
-                Trader intradia especializado en futuros del Nasdaq (NQ/MNQ) con NinjaTrader 8.
-                Estrategias de rompimiento y consecución. Resultados documentados con capturas reales,
-                incluyendo las pérdidas. No hay filtros.
+                Trader cuantitativo especializado en NQ/MNQ Futures. Luis crea estrategias algorítmicas
+                y bots en NinjaTrader 8, enseña el sistema manual y luego entrega el código NinjaScript funcional.
+                Resultados documentados, incluyendo las pérdidas. Sin filtros.
               </p>
               <div className="space-y-2.5 mb-8">
                 {[
-                  '🏛 Operador Financiero en Emporium Quality Funds',
-                  '📈 Trader intradia NQ/MNQ — apertura mercado americano (9:30 NY)',
-                  '🤖 Creador de Vinces IA — mentor de métricas y track record',
-                  '🏦 Gestión de portafolios vía IBKR + NinjaTrader 8',
+                  '📊 Trader cuantitativo — NQ/MNQ Futures (CME)',
+                  '🤖 Crea estrategias algorítmicas y bots en NinjaTrader 8',
+                  '🔬 Strategy Analyzer para backtesting y optimización real',
+                  '💻 Entrega código NinjaScript funcional a sus alumnos',
                   '🎓 Fundador de Liberty Trading Pro',
                 ].map((c) => (
                   <div key={c} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
@@ -337,8 +337,8 @@ export default function MaestriaFuturosPage() {
                 a: '$649 al año, un único pago. Equivale a ~$54/mes. Frente al Plan Mensual ($79 × 12 = $948), ahorras $299.',
               },
               {
-                q: '¿Necesito experiencia previa en trading?',
-                a: 'No necesariamente. La suscripción incluye el contenido de Mentoría Integral, así que empieza desde bases sólidas y avanza hasta trading intradia profesional.',
+                q: '¿Necesito saber programar para aprender a hacer bots?',
+                a: 'No. Luis te lleva paso a paso desde la estrategia manual hasta el código NinjaScript. Recibirás el bot funcional entregado y aprenderás a crear los tuyos propios desde cero.',
               },
               {
                 q: '¿Qué horario necesito tener disponible?',
@@ -410,8 +410,8 @@ export default function MaestriaFuturosPage() {
             <span className="gradient-gold">$649/año</span>
           </h2>
           <p className="text-[var(--text-secondary)] mb-4 max-w-lg mx-auto leading-relaxed">
-            El sistema real de Luis. Clases 1 a 1. Vinces IA como mentor de métricas.
-            Track record verificable desde el primer día.
+            Del sistema manual al bot algorítmico. Código NinjaScript entregado.
+            Strategy Analyzer para backtesting real. Aprende a crear tus propios bots.
           </p>
           <p className="text-sm text-[var(--text-muted)] mb-10">
             ~$54/mes · Ahorras $299 frente al Plan Mensual

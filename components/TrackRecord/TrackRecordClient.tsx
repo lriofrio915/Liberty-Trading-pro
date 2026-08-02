@@ -169,6 +169,11 @@ export default function TrackRecordClient({
     const file = e.target.files?.[0]
     if (!file) return
     setImportError('')
+    if (file.size > 5 * 1024 * 1024) {
+      setImportError('El archivo no puede superar 5 MB.')
+      e.target.value = ''
+      return
+    }
     const reader = new FileReader()
     reader.onload = (ev) => {
       try {

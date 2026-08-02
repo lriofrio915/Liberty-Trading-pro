@@ -29,20 +29,20 @@ interface TrackRecord {
 // ─── Features ─────────────────────────────────────────────────────────────────
 
 const FEATURES = [
-  { icon: '🎓', title: 'Academia completa', desc: 'Formación desde cero hasta operar con disciplina' },
-  { icon: '📈', title: 'Day Trading en NQ/MNQ', desc: 'Futuros del Nasdaq con NinjaTrader 8' },
-  { icon: '🤖', title: 'Vinces IA', desc: 'Coaching personalizado 24/7 con inteligencia artificial' },
-  { icon: '🎯', title: 'Oportunidades de mercado', desc: 'Análisis en acciones, ETFs y futuros' },
-  { icon: '🤝', title: 'Comunidad privada', desc: 'Traders reales compartiendo operativas y análisis' },
-  { icon: '📊', title: 'Track record verificable', desc: 'Operaciones reales de Luis, sin filtros' },
-  { icon: '🌍', title: 'Monitor de mercados', desc: 'Geopolítica, macro y volatilidad en tiempo real' },
-  { icon: '📄', title: 'Reportes semanales', desc: 'Análisis de rendimiento y métricas clave' },
+  { icon: '📊', title: 'Estrategia manual → algoritmo', desc: 'Aprendes el sistema de trading manual de Luis y luego lo conviertes en un bot automatizado' },
+  { icon: '🤖', title: 'NinjaTrader 8 + Strategy Analyzer', desc: 'Backtesting y optimización de estrategias cuantitativas con la plataforma profesional' },
+  { icon: '💻', title: 'Código NinjaScript entregado', desc: 'Recibes el código del bot completo y funcionando, listo para conectar a tu cuenta' },
+  { icon: '🧠', title: 'Crea tus propios bots', desc: 'Aprende a programar tus propias estrategias algorítmicas en NinjaScript desde cero' },
+  { icon: '🤖', title: 'Vinces IA 24/7', desc: 'Coaching cuantitativo personalizado con inteligencia artificial' },
+  { icon: '📈', title: 'Day Trading NQ Futures', desc: 'El mercado más líquido del mundo, operado con método cuantitativo y rigor estadístico' },
+  { icon: '📊', title: 'Track record verificable', desc: 'Operaciones reales de Luis sin filtros — resultados reales, incluidas las pérdidas' },
+  { icon: '🏘', title: 'Comunidad de traders cuantitativos', desc: 'Comparte estrategias, código y análisis con traders algorítmicos reales' },
 ]
 
 const FAQS = [
   {
-    q: '¿Sirve si soy principiante?',
-    a: 'Sí. La Academia empieza desde cero — cómo instalar la plataforma, configurar gráficas, y aprender el método paso a paso. No necesitas experiencia previa.',
+    q: '¿Necesito saber programar para hacer bots?',
+    a: 'No. Empezamos desde cero con la estrategia manual. Luego te guío paso a paso en NinjaTrader 8 y recibes el código NinjaScript del bot completamente funcional.',
   },
   {
     q: '¿Tengo que pagar hoy?',
@@ -54,7 +54,7 @@ const FAQS = [
   },
   {
     q: '¿Cuándo tengo acceso?',
-    a: 'Inmediatamente después de suscribirte. Tienes acceso completo al software, la Academia, la Comunidad y Vinces desde el primer día.',
+    a: 'Inmediatamente después de suscribirte. Tienes acceso completo a la Academia, el código, la Comunidad y Vinces desde el primer día.',
   },
 ]
 
@@ -302,13 +302,13 @@ export default function UnirsePage() {
         </div>
 
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-5">
-          Aprende a operar el Nasdaq<br />
-          <span style={{ color: '#C9A84C', fontFamily: 'Georgia, serif' }}>y genera ingresos reales.</span>
+          Trading algorítmico en NQ Futures —<br />
+          <span style={{ color: '#C9A84C', fontFamily: 'Georgia, serif' }}>de la estrategia manual al bot.</span>
         </h1>
 
         <p className="text-base sm:text-lg max-w-xl mx-auto leading-relaxed mb-10" style={{ color: '#999' }}>
-          Con Luis Riofrío — trader con <strong className="text-white">track record público verificable</strong>.
-          Formación completa, herramientas reales, comunidad activa.
+          Con Luis Riofrío — trader cuantitativo con <strong className="text-white">track record público verificable</strong>.
+          Aprende el sistema, conviértelo en algoritmo y recibe el código NinjaScript listo para operar.
         </p>
 
         {/* Live stats */}

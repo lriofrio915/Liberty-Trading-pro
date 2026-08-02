@@ -8,14 +8,14 @@ const HOTMART_MENSUAL = process.env.HOTMART_LINK_MENSUAL || 'https://pay.hotmart
 const HOTMART_ANUAL   = process.env.HOTMART_LINK_ANUAL   || 'https://pay.hotmart.com/L104900408S?checkoutMode=2'
 
 const CLUB_FEATURES = [
-  { icon: '📈', label: 'Track Record verificable' },
-  { icon: '🎯', label: 'Oportunidades de mercado en tiempo real' },
-  { icon: '🎓', label: 'Academia completa (17+ lecciones)' },
-  { icon: '🤝', label: 'Comunidad exclusiva de traders' },
-  { icon: '🤖', label: 'Vinces — IA asistente de trading' },
-  { icon: '📊', label: 'Reportes avanzados y análisis' },
-  { icon: '🎬', label: 'Video de la semana — entradas en vivo' },
-  { icon: '💰', label: 'Historial de retiros' },
+  { icon: '📊', label: 'Sistema de trading NQ Futures — manual y algorítmico' },
+  { icon: '🤖', label: 'NinjaTrader 8 + Strategy Analyzer — backtesting real' },
+  { icon: '💻', label: 'Código NinjaScript entregado — bot listo para operar' },
+  { icon: '🧠', label: 'Aprende a crear tus propios bots algorítmicos' },
+  { icon: '🤖', label: 'Vinces — IA asistente cuantitativo de trading' },
+  { icon: '📈', label: 'Track record verificable — resultados reales de Luis' },
+  { icon: '🌍', label: 'Monitor de mercados y oportunidades cuantitativas' },
+  { icon: '🏘', label: 'Comunidad privada de traders algorítmicos' },
 ]
 
 export default async function UpgradePage() {
