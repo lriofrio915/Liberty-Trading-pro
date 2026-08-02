@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import MT5OrderModal from './MT5OrderModal'
 import IBKROrderModal from './IBKROrderModal'
 
 export interface SignalPayload {
@@ -15,7 +14,6 @@ export interface SignalPayload {
 interface BrokerConn {
   id: string
   brokerType: string
-  mt5AccountNumber: string | null
   ibkrAccountId: string | null
   isActive: boolean
   lastStatus: string
@@ -31,7 +29,7 @@ export default function BrokerExecuteDropdown({ signal }: { signal: SignalPayloa
   const [open, setOpen] = useState(false)
   const [connections, setConnections] = useState<BrokerConn[]>([])
   const [loading, setLoading] = useState(false)
-  const [activeBroker, setActiveBroker] = useState<'mt5' | 'ibkr' | null>(null)
+  const [showModal, setShowModal] = useState(false)
   const [success, setSuccess] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -56,10 +54,7 @@ export default function BrokerExecuteDropdown({ signal }: { signal: SignalPayloa
     }
   }
 
-  const mt5 = connections.find(c => c.brokerType === 'mt5' && c.isActive && c.lastStatus === 'connected')
   const ibkr = connections.find(c => c.brokerType === 'ibkr' && c.isActive && c.lastStatus === 'connected')
-  const anyConnected = !!(mt5 || ibkr)
-
   const side = normalizeSide(signal.direction)
 
   return (
@@ -81,7 +76,7 @@ export default function BrokerExecuteDropdown({ signal }: { signal: SignalPayloa
         >
           {loading ? (
             <div className="px-4 py-3 text-xs" style={{ color: 'var(--text-muted)' }}>Cargando...</div>
-          ) : !anyConnected ? (
+          ) : !ibkr ? (
             <div className="px-4 py-3">
               <div className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>Sin brokers conectados</div>
               <Link
@@ -98,43 +93,23 @@ export default function BrokerExecuteDropdown({ signal }: { signal: SignalPayloa
               <div className="px-3 py-1.5 text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>
                 {signal.ticker} — {side}
               </div>
-              {mt5 && (
-                <button
-                  onClick={() => { setOpen(false); setActiveBroker('mt5') }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/5 transition-colors text-left"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
-                  MT5 {mt5.mt5AccountNumber ? `— ${mt5.mt5AccountNumber}` : ''}
-                </button>
-              )}
-              {ibkr && (
-                <button
-                  onClick={() => { setOpen(false); setActiveBroker('ibkr') }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/5 transition-colors text-left"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
-                  IBKR {ibkr.ibkrAccountId ? `— ${ibkr.ibkrAccountId}` : ''}
-                </button>
-              )}
+              <button
+                onClick={() => { setOpen(false); setShowModal(true) }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/5 transition-colors text-left"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+                IBKR {ibkr.ibkrAccountId ? `— ${ibkr.ibkrAccountId}` : ''}
+              </button>
             </div>
           )}
         </div>
       )}
 
-      {activeBroker === 'mt5' && (
-        <MT5OrderModal
-          onClose={() => setActiveBroker(null)}
-          onSuccess={() => { setActiveBroker(null); setSuccess(true); setTimeout(() => setSuccess(false), 3000) }}
-          prefill={{ symbol: signal.ticker, side, signalSource: signal.source, signalData: signal.signalData }}
-        />
-      )}
-
-      {activeBroker === 'ibkr' && (
+      {showModal && (
         <IBKROrderModal
-          onClose={() => setActiveBroker(null)}
-          onSuccess={() => { setActiveBroker(null); setSuccess(true); setTimeout(() => setSuccess(false), 3000) }}
+          onClose={() => setShowModal(null)}
+          onSuccess={() => { setShowModal(null); setSuccess(true); setTimeout(() => setSuccess(false), 3000) }}
           prefill={{ symbol: signal.ticker, side, signalSource: signal.source, signalData: signal.signalData }}
         />
       )}

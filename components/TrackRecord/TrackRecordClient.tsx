@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useRef, useCallback } from 'react'
 import Image from 'next/image'
+import * as XLSX from 'xlsx'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -127,62 +128,27 @@ export default function TrackRecordClient({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  // ── Export CSV (sesiones + métricas) ─────────────────────────────────────────
+  // ── Export CSV ───────────────────────────────────────────────────────────────
 
   function exportCSV() {
-    const wins = filtered.filter(s => s.resultado === 'WIN')
-    const losses = filtered.filter(s => s.resultado === 'LOSS')
-    const totalPnl = filtered.reduce((acc, s) => acc + s.pnlNeto, 0)
-    const totalComisiones = filtered.reduce((acc, s) => acc + s.comisiones, 0)
-    const sumWins = wins.reduce((acc, s) => acc + Math.abs(s.pnlNeto), 0)
-    const sumLosses = losses.reduce((acc, s) => acc + Math.abs(s.pnlNeto), 0)
-    const avgGanador = wins.length ? sumWins / wins.length : 0
-    const avgPerdedor = losses.length ? sumLosses / losses.length : 0
-    const rrProm = avgPerdedor > 0 ? avgGanador / avgPerdedor : 0
-    const profitFactor = sumLosses > 0 ? sumWins / sumLosses : sumWins > 0 ? Infinity : 0
-    const pnls = filtered.map(s => s.pnlNeto)
-    const bestTrade = pnls.length ? Math.max(...pnls) : 0
-    const worstTrade = pnls.length ? Math.min(...pnls) : 0
-    const dates = filtered.map(s => new Date(s.date).toLocaleDateString('en-CA', { timeZone: TZ })).sort()
-    const periodo = dates.length ? `${dates[0]} → ${dates[dates.length - 1]}` : '—'
-    const fmt = (n: number) => parseFloat(n.toFixed(2))
-    const q = (v: unknown) => `"${String(v).replace(/"/g, '""')}"`
-
-    const sesHeaders = ['fecha', 'instrumento', 'direccion', 'resultado', 'pnl_neto', 'pnl_bruto', 'comisiones', 'contratos', 'entry_price', 'exit_price', 'siguio_plan', 'sentimiento', 'notas']
-    const sesRows = filtered.map(s => [
-      new Date(s.date).toLocaleDateString('en-CA', { timeZone: TZ }),
-      s.instrumento, s.direccion, s.resultado,
-      s.pnlNeto, s.pnlBruto, s.comisiones, s.contratos,
-      s.entryPrice ?? '', s.exitPrice ?? '',
-      s.siguioPlan ? 'Sí' : 'No',
-      s.sentimiento ?? '', s.notas ?? '',
+    const headers = ['fecha', 'instrumento', 'direccion', 'resultado', 'pnl_neto', 'pnl_bruto', 'comisiones', 'contratos', 'entry_price', 'exit_price', 'siguio_plan', 'sentimiento', 'notas']
+    const rows = filtered.map(s => [
+      new Date(s.date).toLocaleDateString('en-CA', { timeZone: 'America/Guayaquil' }),
+      s.instrumento,
+      s.direccion,
+      s.resultado,
+      s.pnlNeto,
+      s.pnlBruto,
+      s.comisiones,
+      s.contratos,
+      s.entryPrice ?? '',
+      s.exitPrice ?? '',
+      s.siguioPlan,
+      s.sentimiento ?? '',
+      s.notas ?? '',
     ])
-    const sessionsCsv = [sesHeaders, ...sesRows].map(r => r.map(q).join(',')).join('\n')
-
-    const metricsRows: (string | number)[][] = [
-      ['MÉTRICAS DEL TRACK RECORD', ''],
-      ['Período', periodo],
-      ['', ''],
-      ['Total operaciones', filtered.length],
-      ['Ganadoras (WIN)', wins.length],
-      ['Perdedoras (LOSS)', losses.length],
-      ['Breakeven', filtered.length - wins.length - losses.length],
-      ['Win Rate %', fmt(filtered.length ? (wins.length / filtered.length) * 100 : 0)],
-      ['', ''],
-      ['PnL Neto Total', fmt(totalPnl)],
-      ['PnL Bruto Total', fmt(filtered.reduce((a, s) => a + s.pnlBruto, 0))],
-      ['Total Comisiones', fmt(totalComisiones)],
-      ['Mejor Operación', fmt(bestTrade)],
-      ['Peor Operación', fmt(worstTrade)],
-      ['', ''],
-      ['Promedio Ganadora', fmt(avgGanador)],
-      ['Promedio Perdedora', fmt(avgPerdedor)],
-      ['R:R Promedio', fmt(rrProm)],
-      ['Profit Factor', profitFactor === Infinity ? '∞' : fmt(profitFactor)],
-    ]
-    const metricsCsv = metricsRows.map(r => r.map(q).join(',')).join('\n')
-
-    const blob = new Blob(['﻿' + sessionsCsv + '\n\n' + metricsCsv], { type: 'text/csv;charset=utf-8;' })
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -203,46 +169,25 @@ export default function TrackRecordClient({
     const file = e.target.files?.[0]
     if (!file) return
     setImportError('')
+    if (file.size > 5 * 1024 * 1024) {
+      setImportError('El archivo no puede superar 5 MB.')
+      e.target.value = ''
+      return
+    }
     const reader = new FileReader()
     reader.onload = (ev) => {
       try {
-        const text = (ev.target!.result as string).replace(/^﻿/, '')
-        const allLines = text.split(/\r?\n/)
-        // Stop at first blank line after row 1 (metrics section separator)
-        const blankIdx = allLines.findIndex((l, i) => i > 0 && l.trim() === '')
-        const dataLines = blankIdx > 0 ? allLines.slice(0, blankIdx) : allLines
-        const nonEmpty = dataLines.filter(l => l.trim())
-        if (nonEmpty.length < 2) { setImportError('El archivo está vacío o no tiene filas.'); return }
-
-        const parseCSVLine = (line: string): string[] => {
-          const result: string[] = []
-          let cur = '', inQuote = false
-          for (let i = 0; i < line.length; i++) {
-            const ch = line[i]
-            if (ch === '"') {
-              if (inQuote && line[i + 1] === '"') { cur += '"'; i++ }
-              else inQuote = !inQuote
-            } else if (ch === ',' && !inQuote) { result.push(cur); cur = '' }
-            else cur += ch
-          }
-          result.push(cur)
-          return result
-        }
-
-        const headers = parseCSVLine(nonEmpty[0]).map(h => h.trim().toLowerCase())
-        const json: Record<string, string>[] = nonEmpty.slice(1).map(line => {
-          const cols = parseCSVLine(line)
-          const obj: Record<string, string> = {}
-          headers.forEach((h, i) => { obj[h] = cols[i]?.trim() ?? '' })
-          return obj
-        })
+        const data = new Uint8Array(ev.target!.result as ArrayBuffer)
+        const wb = XLSX.read(data, { type: 'array', cellDates: true })
+        const ws = wb.Sheets[wb.SheetNames[0]]
+        const json: Record<string, string>[] = XLSX.utils.sheet_to_json(ws, { defval: '' })
         if (json.length === 0) { setImportError('El archivo está vacío o no tiene filas.'); return }
         setImportRows(json)
       } catch {
-        setImportError('No se pudo leer el archivo. Verifica que sea CSV válido.')
+        setImportError('No se pudo leer el archivo. Verifica que sea CSV o Excel válido.')
       }
     }
-    reader.readAsText(file, 'utf-8')
+    reader.readAsArrayBuffer(file)
     e.target.value = ''
   }
 
@@ -544,25 +489,22 @@ export default function TrackRecordClient({
           <p className="text-[var(--text-secondary)] text-sm">Historial completo de operaciones</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Export */}
           <button
             onClick={exportCSV}
-            className="text-[var(--gold)] font-mono text-xs font-semibold px-4 py-2.5 hover:bg-[rgba(201,168,76,0.08)] transition-colors rounded-lg border border-[rgba(201,168,76,0.4)]"
-            title="Exportar sesiones + métricas como CSV"
+            className="btn-outline py-2.5 px-4 rounded-lg text-sm"
           >
-            ↑ CSV
+            ⬆ Exportar CSV
           </button>
           <button
             onClick={() => importRef.current?.click()}
             className="btn-outline py-2.5 px-4 rounded-lg text-sm"
-            title="Importar operaciones desde CSV"
           >
-            ↓ Importar CSV
+            ⬇ Importar
           </button>
           <input
             ref={importRef}
             type="file"
-            accept=".csv"
+            accept=".csv,.xlsx,.xls"
             className="hidden"
             onChange={handleImportFile}
           />

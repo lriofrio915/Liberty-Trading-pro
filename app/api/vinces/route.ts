@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { prisma } from '@/lib/prisma'
-import { callAI } from '@/lib/ai-providers'
 
 // Strip characters that cannot be encoded as ByteString in HTTP headers
 // and normalize common Unicode punctuation in text content
@@ -20,6 +19,13 @@ function sanitizeText(text: string): string {
 export async function POST(req: NextRequest) {
   try {
     const { messages } = await req.json()
+
+    const apiKey = process.env.OPENROUTER_API_KEY
+    const model = process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat-v3-0324'
+
+    if (!apiKey) {
+      return NextResponse.json({ error: 'API key not configured' }, { status: 500 })
+    }
 
     // Get authenticated user
     const supabase = await createSupabaseServerClient()
@@ -159,6 +165,8 @@ export async function POST(req: NextRequest) {
     const systemPrompt = sanitizeText(
       `Eres Vinces, el coach de trading personal de ${userName}. ` +
       `Eres directo, analitico y honesto. No das senales de trading. ` +
+      `El contexto de este club es trading cuantitativo y algoritmico en NQ/MNQ Futures (CME) con NinjaTrader 8. ` +
+      `Luis ensena la estrategia manual, la convierte en algoritmo en NinjaScript y el alumno aprende a crear sus propios bots. ` +
       `Tu rol es coaching de ejecucion, disciplina y mejora continua. ` +
       `Tienes acceso al plan de trading real del usuario, sus reglas, parametros y todas sus sesiones registradas. ` +
       `Cuando evalues operaciones, compara siempre contra las reglas y parametros del plan activo. ` +
@@ -185,18 +193,32 @@ export async function POST(req: NextRequest) {
       content: sanitizeText(String(m.content ?? '')),
     }))
 
-    const result = await callAI({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...mensajesSanitizados,
-      ],
-      maxTokens: 1500,
-      temperature: 0.7,
-      httpReferer: process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
-      xTitle: 'Liberty Trading Club -- Vinces AI',
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
+        'X-Title': 'Liberty Trading Pro -- Vinces AI', // ASCII only — no em dash
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...mensajesSanitizados,
+        ],
+        max_tokens: 1500,
+        temperature: 0.7,
+      }),
     })
 
-    const content = result.content
+    if (!response.ok) {
+      const error = await response.text()
+      return NextResponse.json({ error }, { status: response.status })
+    }
+
+    const data = await response.json()
+    const content = data.choices?.[0]?.message?.content
 
     if (!content) {
       return NextResponse.json({ error: 'No response from AI' }, { status: 500 })

@@ -1,7 +1,6 @@
 import os
 import asyncpg
 from typing import Optional
-from services.crypto_service import encrypt, decrypt
 
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 
@@ -15,8 +14,8 @@ async def get_broker_connection(user_id: str, broker_type: str) -> Optional[dict
     try:
         row = await conn.fetchrow(
             """
-            SELECT id, "userId", "brokerType", "mt5TunnelUrl", "mt5AuthToken",
-                   "mt5AccountNumber", "ibkrHost", "ibkrPort", "ibkrClientId",
+            SELECT id, "userId", "brokerType",
+                   "ibkrHost", "ibkrPort", "ibkrClientId",
                    "ibkrAccountId", "isActive", "lastStatus", "maxOrderValueUsd"
             FROM "BrokerConnection"
             WHERE "userId" = $1 AND "brokerType" = $2
@@ -26,14 +25,7 @@ async def get_broker_connection(user_id: str, broker_type: str) -> Optional[dict
         )
         if row is None:
             return None
-        data = dict(row)
-        # Decrypt token if present
-        if data.get("mt5AuthToken"):
-            try:
-                data["mt5AuthToken"] = decrypt(data["mt5AuthToken"])
-            except Exception:
-                data["mt5AuthToken"] = None
-        return data
+        return dict(row)
     finally:
         await conn.close()
 
@@ -41,22 +33,15 @@ async def get_broker_connection(user_id: str, broker_type: str) -> Optional[dict
 async def save_broker_connection(user_id: str, broker_type: str, data: dict) -> dict:
     conn = await _get_conn()
     try:
-        # Encrypt token before storing
-        raw_token = data.get("mt5AuthToken")
-        encrypted_token = encrypt(raw_token) if raw_token else None
-
         row = await conn.fetchrow(
             """
             INSERT INTO "BrokerConnection"
-              (id, "userId", "brokerType", "mt5TunnelUrl", "mt5AuthToken", "mt5AccountNumber",
+              (id, "userId", "brokerType",
                "ibkrHost", "ibkrPort", "ibkrClientId", "ibkrAccountId",
                "isActive", "lastStatus", "maxOrderValueUsd", "createdAt", "updatedAt")
-            VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
+            VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
             ON CONFLICT ("userId", "brokerType")
             DO UPDATE SET
-              "mt5TunnelUrl" = EXCLUDED."mt5TunnelUrl",
-              "mt5AuthToken" = COALESCE(EXCLUDED."mt5AuthToken", "BrokerConnection"."mt5AuthToken"),
-              "mt5AccountNumber" = EXCLUDED."mt5AccountNumber",
               "ibkrHost" = EXCLUDED."ibkrHost",
               "ibkrPort" = EXCLUDED."ibkrPort",
               "ibkrClientId" = EXCLUDED."ibkrClientId",
@@ -68,9 +53,6 @@ async def save_broker_connection(user_id: str, broker_type: str, data: dict) -> 
             """,
             user_id,
             broker_type,
-            data.get("mt5TunnelUrl"),
-            encrypted_token,
-            data.get("mt5AccountNumber"),
             data.get("ibkrHost"),
             data.get("ibkrPort"),
             data.get("ibkrClientId", 1),
@@ -85,7 +67,7 @@ async def save_broker_connection(user_id: str, broker_type: str, data: dict) -> 
 
 
 async def update_broker_status(
-    user_id: str, broker_type: str, status: str, account_number: Optional[str] = None
+    user_id: str, broker_type: str, status: str, account_id: Optional[str] = None
 ) -> None:
     conn = await _get_conn()
     try:
@@ -95,14 +77,14 @@ async def update_broker_status(
             SET "lastStatus" = $3,
                 "isActive" = ($3 = 'connected'),
                 "lastConnectedAt" = CASE WHEN $3 = 'connected' THEN NOW() ELSE "lastConnectedAt" END,
-                "mt5AccountNumber" = COALESCE($4, "mt5AccountNumber"),
+                "ibkrAccountId" = COALESCE($4, "ibkrAccountId"),
                 "updatedAt" = NOW()
             WHERE "userId" = $1 AND "brokerType" = $2
             """,
             user_id,
             broker_type,
             status,
-            account_number,
+            account_id,
         )
     finally:
         await conn.close()

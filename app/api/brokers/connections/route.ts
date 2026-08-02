@@ -18,8 +18,6 @@ export async function GET() {
       select: {
         id: true,
         brokerType: true,
-        mt5TunnelUrl: true,
-        mt5AccountNumber: true,
         ibkrHost: true,
         ibkrPort: true,
         ibkrClientId: true,

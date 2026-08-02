@@ -1,32 +1,15 @@
-import type { Metadata } from 'next'
 import Navbar from '@/components/Navbar/Navbar'
 import Footer from '@/components/Footer/Footer'
 import LeadCaptureForm from '@/components/LeadCaptureForm/LeadCaptureForm'
 import PersonalContactForm from '@/components/PersonalContactForm/PersonalContactForm'
 import VincesWidget from '@/components/VincesWidget/VincesWidget'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
 
-export const metadata: Metadata = {
-  title: 'Mentoría Integral de Trading | Liberty Trading Club — $29/mes',
-  description:
-    'Aprende a invertir sin dejar tu trabajo. Acciones, ETFs, cripto y futuros con Luis Riofrio. Clases 1 a 1, Vinces IA y comunidad privada. Plan Pro desde $29/mes, cancela cuando quieras.',
-  keywords: 'mentoría trading, inversión acciones ETFs, aprender trading Ecuador, Luis Riofrio, plan mensual 29 dólares',
-  openGraph: {
-    title: 'Mentoría Integral de Trading — $29/mes | Liberty Trading Club',
-    description: 'Aprende a invertir en acciones, ETFs y cripto con Luis Riofrio. Sin dejar tu trabajo, sin permanencia. $29/mes.',
-    url: 'https://libertytrading.pro/mentoria-integral',
-  },
-}
+const HOTMART_MENSUAL = 'https://pay.hotmart.com/R104900326X?checkoutMode=2'
 
-const HOTMART_MENSUAL = process.env.HOTMART_LINK_MENSUAL || ''
-
-export default async function MentoriaIntegralPage() {
-  const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
+export default function MentoriaIntegralPage() {
   return (
     <main className="relative noise">
-      <Navbar initialUser={session?.user ?? null} />
+      <Navbar />
 
       {/* ─── HERO ───────────────────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center overflow-hidden grid-bg pt-16">
@@ -42,28 +25,28 @@ export default async function MentoriaIntegralPage() {
               style={{ background: 'rgba(201,168,76,0.06)' }}>
               <span className="w-2 h-2 rounded-full bg-[var(--green)] pulse-dot" />
               <span className="font-mono-custom text-[11px] text-[var(--gold)] tracking-wider uppercase">
-                Plan Pro Mensual · Sin permanencia · Cancela cuando quieras
+                Mentoría Mensual · Trading Algorítmico · NinjaTrader 8
               </span>
             </div>
 
             <h1 className="headline text-6xl sm:text-7xl text-[var(--text-primary)] mb-6">
-              Aprende a invertir<br />
-              <span className="gradient-gold">sin dejar tu trabajo</span>
+              De trader manual<br />
+              <span className="gradient-gold">a trader algorítmico</span>
             </h1>
 
             <p className="text-lg text-[var(--text-secondary)] max-w-2xl mb-10 leading-relaxed">
-              Accede al Club Liberty Trading Club con el <strong className="text-[var(--text-primary)]">Plan Pro Mensual</strong> —
-              mentoría de inversión en acciones, ETFs y cripto, clases 1 a 1 con Luis,
-              Vinces IA 24/7 y comunidad activa. Sin contratos. Cancela cuando quieras.
+              Aprende el sistema de trading de Luis en NQ Futures, conviértelo en un algoritmo
+              y <strong className="text-[var(--text-primary)]">recibe el código NinjaScript listo para operar</strong>.
+              Sin contratos. Cancela cuando quieras.
             </p>
 
             {/* Stats rápidas */}
             <div className="flex flex-wrap gap-8 mb-12">
               {[
-                { val: '$29', lbl: 'por mes' },
-                { val: 'Mensual', lbl: 'Sin permanencia' },
-                { val: '1 a 1', lbl: 'Con Luis' },
-                { val: 'Acceso total', lbl: 'Todo incluido' },
+                { val: '$79', lbl: 'por mes' },
+                { val: 'NinjaTrader 8', lbl: 'Plataforma' },
+                { val: 'Código', lbl: 'NinjaScript entregado' },
+                { val: 'Bot propio', lbl: 'Lo construyes tú' },
               ].map((s) => (
                 <div key={s.lbl}>
                   <div className="text-2xl font-bold text-[var(--gold)]" style={{ fontFamily: 'var(--font-serif)' }}>
@@ -77,7 +60,7 @@ export default async function MentoriaIntegralPage() {
             <div className="flex flex-col sm:flex-row gap-3">
               <a href={HOTMART_MENSUAL} target="_blank" rel="noopener noreferrer"
                 className="btn-gold text-sm py-4 px-8 rounded-lg">
-                Empezar ahora — $29/mes →
+                Empezar ahora — $79/mes →
               </a>
               <a href="#contacto-vinces"
                 className="btn-outline text-sm py-4 px-8 rounded-lg inline-flex items-center justify-center gap-2">
@@ -98,17 +81,17 @@ export default async function MentoriaIntegralPage() {
         style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
-            <div className="label-mono mb-2">Plan Pro Mensual — $29/mes</div>
+            <div className="label-mono mb-2">Plan Pro Mensual — $79/mes</div>
             <h2 className="headline text-4xl text-[var(--text-primary)]">
               Todo lo que incluye<br /><span className="gradient-gold">tu membresía</span>
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { icon: '🎓', title: 'Mentoría Integral', desc: 'Portafolio en acciones, ETFs y cripto con método. Clases 1 a 1 con Luis.' },
-              { icon: '📈', title: 'Day Trading Futuros', desc: 'Acceso al programa de Futuros NQ/MNQ de Luis y su sistema completo.' },
-              { icon: '🤖', title: 'Vinces IA 24/7', desc: 'Agente IA que analiza tu operativa, métricas y genera reportes semanales.' },
-              { icon: '🌐', title: 'Comunidad + Monitor', desc: 'Comunidad privada activa, monitor geopolítico y oportunidades de mercado.' },
+              { icon: '📊', title: 'Trading NQ Futures + Algorítmico', desc: 'Estrategia manual en NQ/MNQ, conversión a bot NinjaScript y uso de Strategy Analyzer.' },
+              { icon: '🏦', title: 'Acciones y ETFs vía IBKR', desc: 'Apertura de cuenta en Interactive Brokers y acceso al grupo privado de recomendaciones de Luis.' },
+              { icon: '🤖', title: 'Vinces IA — coaching diario', desc: 'El asistente IA de Luis registra tus trades, calcula métricas y genera reportes personalizados.' },
+              { icon: '🌍', title: 'Comunidad + Monitor de mercados', desc: 'Comunidad privada activa y monitor de oportunidades cuantitativas en tiempo real.' },
             ].map((f) => (
               <div key={f.title} className="card text-center py-7">
                 <div className="text-3xl mb-3">{f.icon}</div>
@@ -121,10 +104,11 @@ export default async function MentoriaIntegralPage() {
           <div className="mt-8 p-6 rounded-xl border border-[var(--gold-dark)] text-center"
             style={{ background: 'rgba(201,168,76,0.04)' }}>
             <p className="text-sm text-[var(--text-secondary)]">
-              ¿Quieres especializarte en futuros NQ/MNQ?{' '}
+              ¿Quieres el máximo valor? El{' '}
               <a href="/maestria-futuros" className="text-[var(--gold)] hover:underline font-semibold">
-                Ver el programa Maestría en Futuros →
-              </a>
+                Plan Pro Anual ($649/año)
+              </a>{' '}
+              te da todo esto más ahorras $299 vs pagar mes a mes.
             </p>
           </div>
         </div>
@@ -138,16 +122,16 @@ export default async function MentoriaIntegralPage() {
             <div>
               <div className="label-mono mb-3 text-[var(--gold)]">Este plan es para ti si…</div>
               <h2 className="headline text-4xl text-[var(--text-primary)] mb-8">
-                Tienes ingresos estables<br />y quieres hacer crecer<br />tu capital
+                Quieres automatizar<br />tu trading con<br />un bot propio
               </h2>
               <div className="space-y-3">
                 {[
-                  'Tienes trabajo o negocio y no quieres dejarlo para invertir',
-                  'Nunca has invertido o tienes conocimientos básicos',
-                  'Quieres diversificar tus ahorros con método y seguridad',
-                  'Tienes poco tiempo libre pero te comprometes a aprender',
-                  'Buscas un mentor real que te guíe paso a paso, no un curso grabado',
-                  'Quieres flexibilidad: empezar, pausar o cancelar cuando quieras',
+                  'Quieres operar NQ Futures con un sistema definido y replicable',
+                  'Nunca has programado pero quieres entender cómo funciona un bot',
+                  'Eres trader manual y quieres dar el salto a lo algorítmico',
+                  'Buscas un mentor que te entregue el código, no solo teoría',
+                  'Quieres construir tu propio bot y no depender de señales externas',
+                  'Buscas flexibilidad: empezar, pausar o cancelar cuando quieras',
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
                     <span className="text-[var(--gold)] mt-0.5 flex-shrink-0 text-base">✓</span>
@@ -202,33 +186,33 @@ export default async function MentoriaIntegralPage() {
             {[
               {
                 n: '01',
-                title: 'Bases del mercado financiero',
-                desc: 'Cómo funcionan las bolsas, brokers, tipos de activos y cómo leer los mercados sin perderte.',
+                title: 'Trading manual en NQ Futures',
+                desc: 'El sistema de Luis: lectura de precio, zonas clave, rompimientos y ejecución en NQ/MNQ con disciplina.',
               },
               {
                 n: '02',
-                title: 'Apertura de cuenta IBKR',
-                desc: 'Paso a paso para abrir tu cuenta en Interactive Brokers desde Ecuador o Latinoamérica.',
+                title: 'NinjaTrader 8 + Strategy Analyzer',
+                desc: 'Configura la plataforma, usa el backtester y valida tu estrategia con datos históricos reales antes de operar en vivo.',
               },
               {
                 n: '03',
-                title: 'Acciones y ETFs',
-                desc: 'Cómo seleccionar empresas sólidas y ETFs diversificados para construir tu portafolio.',
+                title: 'De estrategia manual a bot NinjaScript',
+                desc: 'Conviertes las reglas de tu sistema en código. Luis te entrega el bot NinjaScript funcional y te enseña a crear los tuyos.',
               },
               {
                 n: '04',
-                title: 'Estrategia Dollar Cost Average',
-                desc: 'El método que usan los grandes inversores para acumular capital con bajo riesgo en el tiempo.',
+                title: 'Apertura de cuenta IBKR',
+                desc: 'Paso a paso para abrir tu cuenta en Interactive Brokers desde Ecuador o Latinoamérica y hacer tus primeras operaciones.',
               },
               {
                 n: '05',
-                title: 'Cripto: exchanges y custodia',
-                desc: 'Cómo operar en exchanges, custodiar tus activos digitales y convertir USD/cripto.',
+                title: 'Acciones y ETFs — portafolio con método',
+                desc: 'Cómo seleccionar acciones sólidas y ETFs. Luis asesora y comparte recomendaciones en el grupo privado de WhatsApp.',
               },
               {
                 n: '06',
-                title: 'Gestión de capital y portafolio',
-                desc: 'Cómo distribuir tu capital entre activos, diversificar y gestionar el riesgo de tu portafolio.',
+                title: 'Gestión de capital y riesgo',
+                desc: 'Cómo distribuir tu capital entre futuros y acciones, diversificar y proteger tu portafolio en todo momento.',
               },
             ].map((m) => (
               <div key={m.n} className="card hover:border-[var(--gold-dark)] transition-all group">
@@ -248,20 +232,20 @@ export default async function MentoriaIntegralPage() {
             <div>
               <div className="label-mono mb-3">Tu mentor</div>
               <h2 className="headline text-5xl text-[var(--text-primary)] mb-5">
-                Luis Riofrio —<br /><span className="gradient-gold">Operador Financiero</span>
+                Luis Riofrio —<br /><span className="gradient-gold">Trader Cuantitativo</span>
               </h2>
               <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
-                Trader de Futuros Nasdaq (NQ/MNQ) con resultados verificables y transparentes.
-                Luis no enseña desde la teoría — enseña desde la operativa diaria real,
-                con capturas, datos y track record públicos.
+                Trader cuantitativo especializado en NQ/MNQ Futures. Luis crea estrategias algorítmicas
+                y bots en NinjaTrader 8 — no enseña desde la teoría, entrega el código funcional
+                y te enseña a construir el tuyo propio.
               </p>
               <div className="space-y-2.5 mb-8">
                 {[
-                  '🏛 Operador Financiero en Emporium Quality Funds',
-                  '📈 Trader de Futuros NQ/MNQ, Acciones y Opciones Financieras',
-                  '🏦 Gestión de portafolios de acciones y opciones en IBKR',
-                  '🎓 Fundador de Liberty Trading Club',
-                  '💱 Operador P2P USDT/BTC — Ecuador y Latinoamérica',
+                  '📊 Trader cuantitativo — NQ/MNQ Futures (CME)',
+                  '🤖 Crea estrategias algorítmicas y bots en NinjaTrader 8',
+                  '🔬 Strategy Analyzer para backtesting y optimización real',
+                  '💻 Entrega código NinjaScript funcional a sus alumnos',
+                  '🎓 Fundador de Liberty Trading Pro',
                 ].map((c) => (
                   <div key={c} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
                     <span>{c}</span>
@@ -302,32 +286,32 @@ export default async function MentoriaIntegralPage() {
           <div className="space-y-4">
             {[
               {
-                q: '¿Cuánto cuesta el Plan Pro Mensual?',
-                a: '$29 al mes, sin contratos ni permanencia. Puedes cancelar en cualquier momento desde tu cuenta de Hotmart.',
+                q: '¿Cuánto cuesta la mentoría mensual?',
+                a: '$79 al mes, sin contratos ni permanencia. Puedes cancelar en cualquier momento desde tu cuenta de Hotmart.',
               },
               {
-                q: '¿Necesito experiencia previa?',
-                a: 'No. El programa está diseñado desde cero. Luis adapta el contenido y el ritmo según tu nivel de conocimiento.',
+                q: '¿Qué incluye exactamente la mentoría?',
+                a: 'Trading algorítmico en NQ Futures con NinjaTrader 8 (te entregamos el código NinjaScript), más asesoría en acciones y ETFs vía IBKR con acceso al grupo privado de recomendaciones de Luis.',
+              },
+              {
+                q: '¿Necesito saber programar para hacer bots?',
+                a: 'No. Luis te lleva paso a paso desde la estrategia manual hasta el código NinjaScript. Recibirás el bot funcional y aprenderás a crear los tuyos desde cero.',
+              },
+              {
+                q: '¿Cómo funciona el grupo de acciones de WhatsApp?',
+                a: 'Al unirte a la mentoría te añaden al grupo privado de WhatsApp donde Luis comparte sus recomendaciones de acciones y ETFs y cobra una comisión de gestión por el portafolio asesorado.',
               },
               {
                 q: '¿Cuánto tiempo necesito dedicarle por semana?',
-                a: 'Con 2-4 horas semanales es suficiente para avanzar bien. Las clases 1 a 1 se agendan según tu disponibilidad.',
-              },
-              {
-                q: '¿Cuánto capital necesito para empezar a invertir?',
-                a: 'Puedes empezar con cualquier monto. Interactive Brokers no tiene mínimo. Lo importante es aprender el método antes de invertir capital importante.',
-              },
-              {
-                q: '¿Esto funciona desde cualquier país?',
-                a: 'Sí. Las clases son online y el programa funciona para cualquier país de Latinoamérica. IBKR acepta clientes de la región.',
+                a: 'Con 3-5 horas semanales avanzas bien. Las sesiones con Luis se agendan según tu disponibilidad y el ritmo lo marcas tú.',
               },
               {
                 q: '¿Hay algún compromiso de permanencia?',
                 a: 'Ninguno. Es mes a mes. Si decides cancelar, pierdes el acceso al terminar el período ya pagado. Sin penalizaciones.',
               },
               {
-                q: '¿Hay algún período mínimo de permanencia?',
-                a: 'No. Es mes a mes, sin compromiso. Cancelas cuando quieras desde tu cuenta de Hotmart sin ninguna penalización.',
+                q: '¿Cuál es la diferencia con el Plan Anual?',
+                a: 'El contenido es el mismo. El Plan Anual ($649/año) te sale a ~$54/mes y te ahorras $299 frente al pago mensual. Ideal si ya sabes que esto es para ti.',
               },
             ].map((faq) => (
               <div key={faq.q} className="card">
@@ -377,20 +361,20 @@ export default async function MentoriaIntegralPage() {
       <section className="py-24 px-4 border-y border-[var(--border)]"
         style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-3xl mx-auto text-center">
-          <div className="label-mono mb-4 text-[var(--gold)]">Plan Pro Mensual · Liberty Trading Club</div>
+          <div className="label-mono mb-4 text-[var(--gold)]">Plan Pro Mensual · Liberty Trading Pro</div>
           <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)] mb-6">
             Empieza hoy<br />por solo<br />
-            <span className="gradient-gold">$29/mes</span>
+            <span className="gradient-gold">$79/mes</span>
           </h2>
           <p className="text-[var(--text-secondary)] mb-10 max-w-lg mx-auto leading-relaxed">
-            Clases 1 a 1 con Luis. Vinces IA como tu mentor de métricas.
-            Comunidad activa y acceso a todo el contenido. Sin contratos. Cancela cuando quieras.
+            De la estrategia manual al bot algorítmico. Código NinjaScript entregado.
+            Aprende a crear tus propios bots en NinjaTrader 8. Sin contratos, cancela cuando quieras.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
             <a href={HOTMART_MENSUAL} target="_blank" rel="noopener noreferrer"
               className="btn-gold text-sm py-4 px-10 rounded-xl">
-              Suscribirme ahora — $29/mes →
+              Suscribirme ahora — $79/mes →
             </a>
             <a href="#contacto-luis"
               className="btn-outline text-sm py-4 px-8 rounded-xl">
