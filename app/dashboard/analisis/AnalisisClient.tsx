@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState } from 'react'
 import {
   PieChart,
   Pie,
@@ -9,8 +9,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
-import BrokerExecuteDropdown from '@/app/dashboard/brokers/components/BrokerExecuteDropdown'
-
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 interface AssetAnalysis {
@@ -39,16 +37,28 @@ interface EstrategiaResult {
   alerta_riesgo: string
 }
 
-// FAROS types kept for dead-code component functions — not used in new pipeline
 interface FarosAssetItem {
-  symbol: string; zScore: number; thermodynamicState: string; reynoldsPercentile: number
-  entropy: number; alphaFlow: number; psiScore: number; marketRegime: string
-  governanceSignal: string; killSwitch: boolean; trendStrength5d: number
+  symbol: string
+  zScore: number
+  thermodynamicState: string
+  reynoldsPercentile: number
+  entropy: number
+  alphaFlow: number
+  psiScore: number
+  marketRegime: string
+  governanceSignal: string
+  killSwitch: boolean
+  trendStrength5d: number
 }
+
 interface FarosAgentResult {
-  sesgo_faros: 'ALCISTA' | 'BAJISTA' | 'NEUTRAL' | 'KILL_SWITCH'; regimen_dominante: string
-  activos_faros: FarosAssetItem[]; resumen_faros: string; kill_switch_activos: string[]
-  oportunidades_faros: string; advertencias_faros: string
+  sesgo_faros: 'ALCISTA' | 'BAJISTA' | 'NEUTRAL' | 'KILL_SWITCH'
+  regimen_dominante: string
+  activos_faros: FarosAssetItem[]
+  resumen_faros: string
+  kill_switch_activos: string[]
+  oportunidades_faros: string
+  advertencias_faros: string
 }
 
 interface AnalysisResult {
@@ -56,74 +66,27 @@ interface AnalysisResult {
   riskProfile: string
   activos: AssetAnalysis[]
   estrategia: EstrategiaResult | null
-}
-
-interface MT5AccountData {
-  id: string
-  accountName: string | null
-  broker: string | null
-  login: string
-  server: string | null
-  isConnected: boolean
-  lastSyncAt: string | null
-}
-
-interface MT5Position {
-  id: string
-  symbol: string
-  type: string
-  volume: number
-  openPrice: number
-  currentPrice: number
-  profit: number
-  swap: number
-  time: string
-  comment?: string
-}
-
-interface TradeModalState {
-  symbol: string
-  direction: 'BUY' | 'SELL'
+  faros?: FarosAgentResult
 }
 
 type RiskProfile = 'conservador' | 'moderado' | 'agresivo'
-type ActiveTab = 'analisis' | 'senales'
-
-// ── CFD Signal types ────────────────────────────────────────────────────────────
-
-interface CfdSignalCalc {
-  simbolo: string
-  nombre: string
-  sector: string
-  sesgo: string
-  confianza: number
-  razon: string
-  precioEntrada: number
-  stopLoss: number
-  takeProfit: number
-  lotaje: number
-  riesgoUsd: number
-  rrRatio: number
-  riskProfile: string
-}
-
-interface CfdSignalRecord extends CfdSignalCalc {
-  id: string
-  createdAt: string
-  resultado: string
-  pnlUsd?: number | null
-  closedPrice?: number | null
-}
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
+const RISK_PROFILES: { id: RiskProfile; label: string; icon: string; desc: string }[] = [
+  { id: 'conservador', label: 'Conservador', icon: '🛡️', desc: 'Estabilidad y activos refugio' },
+  { id: 'moderado', label: 'Moderado', icon: '⚖️', desc: 'Balance riesgo-oportunidad' },
+  { id: 'agresivo', label: 'Agresivo', icon: '🚀', desc: 'Máximo potencial de ganancia' },
+]
+
 const AGENTS = [
   { key: 'crypto',     label: 'Crypto',     icon: '₿',  desc: 'BTC, ETH, BNB, XRP' },
-  { key: 'acciones',   label: 'Acciones',   icon: '📈', desc: 'S&P 500 top picks' },
+  { key: 'acciones',   label: 'Acciones',   icon: '📈', desc: '7 Magnificas' },
   { key: 'indices',    label: 'Índices',    icon: '📊', desc: 'Nasdaq, SP500, Russell, Dow, VIX' },
   { key: 'divisas',    label: 'Divisas',    icon: '💱', desc: 'DXY, EUR/USD, JPY, CAD, GBP' },
   { key: 'materiales', label: 'Materias',   icon: '🏗️', desc: 'Oro, Petróleo, Plata' },
   { key: 'estrategia', label: 'Estrategia', icon: '🎯', desc: 'Portafolio global' },
+  { key: 'faros',      label: 'FAROS v7',   icon: '🔭', desc: 'TAI-ACF — Física de fluidos' },
 ]
 
 const SECTOR_ORDER = ['Crypto', 'Acciones', 'Índices', 'Divisas', 'Materiales']
@@ -191,8 +154,7 @@ function formatPriceNum(price: number): string {
   return price.toFixed(6)
 }
 
-// ── FAROS helpers REMOVED ─────────────────────────────────────────────────────
-// (TAI-ACF Framework removed — using 6 MAIA agents only)
+// ── FAROS helpers ─────────────────────────────────────────────────────────────
 
 const REGIME_STYLES: Record<string, { bg: string; text: string; border: string; label: string }> = {
   INSTITUTIONAL_ACCUMULATION: { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/25', label: 'Acumulación Institucional' },
@@ -353,90 +315,10 @@ function FarosPanel({ faros }: { faros: FarosAgentResult }) {
   )
 }
 
-// ── AssetCard helpers ──────────────────────────────────────────────────────────
+// ── AssetCard ──────────────────────────────────────────────────────────────────
 
-const FAROS_SYMBOL_ALIASES: Record<string, string> = {
-  'EUR/USD': 'EURUSD', 'GBP/USD': 'GBPUSD', 'USD/JPY': 'USDJPY', 'USD/CAD': 'USDCAD',
-  'DXY': 'DXY', 'SP500': 'SP500', 'RUSSELL': 'RUSSELL',
-}
-
-function findFarosAsset(simbolo: string, activos: FarosAssetItem[]): FarosAssetItem | undefined {
-  const s = simbolo.toUpperCase()
-  const direct = activos.find(f => f.symbol === s)
-  if (direct) return direct
-  const mapped = FAROS_SYMBOL_ALIASES[s]
-  if (mapped) return activos.find(f => f.symbol === mapped)
-  return activos.find(f => f.symbol.includes(s) || s.includes(f.symbol))
-}
-
-function FarosAnnotation({ fa }: { fa: FarosAssetItem }) {
-  const govColor: Record<string, string> = {
-    BUY: 'text-green-400', BUY_CAUTION: 'text-blue-400',
-    HOLD: 'text-yellow-400', SELL: 'text-red-400', CASH: 'text-orange-400',
-  }
-  const obs = fa.killSwitch
-    ? 'FAROS veta esta señal — turbulencia extrema, evitar posición'
-    : fa.psiScore > 0.65 && fa.alphaFlow > 0.55
-      ? 'FAROS confirma — flujo orgánico con régimen estable'
-      : fa.psiScore > 0.40
-        ? 'FAROS neutral — señal operable, confirmar en gráfico'
-        : 'FAROS débil — presión vendedora o liquidez sintética'
-  const obsColor = fa.killSwitch ? 'bg-red-500/10 text-red-400 border-red-500/25'
-    : fa.psiScore > 0.65 ? 'bg-green-500/10 text-green-400 border-green-500/20'
-    : fa.psiScore > 0.40 ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-    : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
-
-  return (
-    <div className="mt-3 pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-      <div className="text-[9px] font-bold uppercase tracking-widest mb-2 opacity-60" style={{ color: 'var(--gold)' }}>
-        FAROS v7.0
-      </div>
-      {fa.killSwitch && (
-        <div className="text-[10px] font-bold text-red-400 bg-red-500/10 border border-red-500/25 rounded-lg px-2 py-1 mb-2 flex items-center gap-1.5">
-          ✕ KILL SWITCH ACTIVO
-        </div>
-      )}
-      <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px] mb-2">
-        <div>
-          <span style={{ color: 'var(--text-muted)' }}>Ψ Score: </span>
-          <span className={`font-mono font-bold ${fa.psiScore > 0.6 ? 'text-green-400' : fa.psiScore > 0.35 ? 'text-yellow-400' : 'text-red-400'}`}>
-            {(fa.psiScore * 100).toFixed(0)}%
-          </span>
-        </div>
-        <div>
-          <span style={{ color: 'var(--text-muted)' }}>Señal: </span>
-          <span className={`font-mono font-bold ${govColor[fa.governanceSignal] ?? 'text-gray-400'}`}>
-            {fa.governanceSignal}
-          </span>
-        </div>
-        <div>
-          <span style={{ color: 'var(--text-muted)' }}>αflow: </span>
-          <span className="font-mono font-bold" style={{ color: fa.alphaFlow > 0.6 ? '#4ade80' : fa.alphaFlow < 0.35 ? '#f87171' : '#facc15' }}>
-            {fa.alphaFlow.toFixed(2)}
-          </span>
-        </div>
-        <div>
-          <span style={{ color: 'var(--text-muted)' }}>Estado: </span>
-          <span className="font-mono text-[9px]" style={{ color: 'var(--text-secondary)' }}>{fa.thermodynamicState}</span>
-        </div>
-      </div>
-      <div className={`text-[10px] font-medium px-2 py-1 rounded-lg border leading-snug ${obsColor}`}>
-        {obs}
-      </div>
-    </div>
-  )
-}
-
-// ── AssetCard (with BrokerExecuteDropdown + FAROS annotation) ──────────────
-
-function AssetCard({ asset, farosActivos }: {
-  asset: AssetAnalysis
-  farosActivos?: FarosAssetItem[]
-}) {
+function AssetCard({ asset }: { asset: AssetAnalysis }) {
   const s = SESGO_STYLES[asset.sesgo] ?? SESGO_STYLES.NEUTRAL
-  const tradeDirection: 'BUY' | 'SELL' | null =
-    asset.sesgo === 'COMPRA' ? 'BUY' : asset.sesgo === 'VENTA' ? 'SELL' : null
-  const fa = farosActivos ? findFarosAsset(asset.simbolo, farosActivos) : undefined
 
   return (
     <div className={`rounded-xl border p-4 transition-transform hover:scale-[1.02] ${s.bg} ${s.border}`}>
@@ -479,128 +361,11 @@ function AssetCard({ asset, farosActivos }: {
         {asset.razon}
       </p>
 
-      <div className="mt-2.5 flex items-center justify-between gap-1.5">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Riesgo:</span>
-          <span className={`text-[10px] font-semibold ${RIESGO_COLOR[asset.riesgo] ?? 'text-gray-400'}`}>
-            {asset.riesgo?.toUpperCase() ?? '—'}
-          </span>
-        </div>
-
-        {tradeDirection && (
-          <BrokerExecuteDropdown signal={{
-            ticker: asset.simbolo,
-            direction: tradeDirection,
-            source: 'cfd_signal',
-            signalData: { simbolo: asset.simbolo, sesgo: asset.sesgo, confianza: asset.confianza, precio: asset.precio },
-          }} />
-        )}
-      </div>
-
-      {fa && <FarosAnnotation fa={fa} />}
-    </div>
-  )
-}
-
-// ── SectorTable ────────────────────────────────────────────────────────────────
-
-const SECTOR_TITLES: Record<string, string> = {
-  Crypto:     'RECOMENDACIONES CRYPTO',
-  Acciones:   'RECOMENDACIONES ACCIONES',
-  'Índices':  'RECOMENDACIONES ÍNDICES',
-  Divisas:    'RECOMENDACIONES DIVISAS',
-  Materiales: 'RECOMENDACIONES MATERIALES',
-}
-
-function SectorTable({ sector, activos }: { sector: string; activos: AssetAnalysis[] }) {
-  const title = SECTOR_TITLES[sector] ?? `RECOMENDACIONES ${sector.toUpperCase()}`
-  const signals = activos.filter(a => a.sesgo !== 'NEUTRAL' && a.confianza >= 70)
-  const sorted = [...activos].sort((a, b) => b.confianza - a.confianza)
-  const fmtP = (n: number) =>
-    n >= 10000 ? n.toLocaleString('en-US', { minimumFractionDigits: 0 })
-    : n >= 100  ? n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : n.toFixed(5)
-
-  return (
-    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5" style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid var(--border)' }}>
-        <span className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>{title}</span>
-        {signals.length > 0 && (
-          <span className="text-[9px] font-mono px-2 py-0.5 rounded-full border border-[var(--gold)]/30 text-[var(--gold)]">
-            {signals.length} señal{signals.length !== 1 ? 'es' : ''}
-          </span>
-        )}
-      </div>
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-[10px] font-mono">
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)' }}>
-              {['Símbolo', 'Nombre', 'Dir', 'Conf', 'Entrada', 'Stop Loss', 'Take Profit', 'Razón'].map(h => (
-                <th key={h} className="px-3 py-1.5 text-left whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map(asset => {
-              const isSignal = asset.sesgo !== 'NEUTRAL' && asset.confianza >= 70
-              const isCompra = asset.sesgo === 'COMPRA'
-              const isVenta  = asset.sesgo === 'VENTA'
-              // Compute estimated SL/TP
-              const SL_PCT: Record<string, number> = { Crypto: 0.02, Acciones: 0.02, 'Índices': 0.005, Divisas: 0.003, Materiales: 0.01 }
-              const slPct = SL_PCT[asset.sector] ?? 0.01
-              const slDist = asset.precio * slPct
-              const tpDist = slDist * 2
-              const sl = isCompra ? asset.precio - slDist : asset.precio + slDist
-              const tp = isCompra ? asset.precio + tpDist : asset.precio - tpDist
-
-              return (
-                <tr
-                  key={asset.simbolo}
-                  className="border-b border-[var(--border)] transition-colors hover:bg-white/5"
-                  style={{
-                    opacity: !isSignal ? 0.45 : 1,
-                    borderLeft: isSignal ? `3px solid ${isCompra ? 'rgba(34,197,94,0.5)' : 'rgba(239,68,68,0.5)'}` : undefined,
-                  }}
-                >
-                  <td className="px-3 py-2 font-bold whitespace-nowrap" style={{ color: isSignal ? 'var(--gold)' : 'var(--text-muted)' }}>
-                    {asset.simbolo}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-[10px]" style={{ color: 'var(--text-secondary)', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {asset.nombre}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap">
-                    {asset.sesgo !== 'NEUTRAL' ? (
-                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${isCompra ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}`}>
-                        {asset.sesgo}
-                      </span>
-                    ) : (
-                      <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>—</span>
-                    )}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: asset.confianza >= 80 ? 'var(--gold)' : asset.confianza >= 70 ? 'var(--text-secondary)' : 'var(--text-muted)' }}>
-                    {asset.confianza}%
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>
-                    {isSignal ? fmtP(asset.precio) : '—'}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-red-400">
-                    {isSignal ? fmtP(sl) : '—'}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-green-400">
-                    {isSignal ? fmtP(tp) : '—'}
-                  </td>
-                  <td className="px-3 py-2" style={{ color: 'var(--text-muted)', maxWidth: '200px' }}>
-                    <span title={asset.razon}>
-                      {asset.razon.length > 65 ? asset.razon.slice(0, 65) + '…' : asset.razon}
-                    </span>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+      <div className="mt-2.5 flex items-center gap-1.5">
+        <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Riesgo:</span>
+        <span className={`text-[10px] font-semibold ${RIESGO_COLOR[asset.riesgo] ?? 'text-gray-400'}`}>
+          {asset.riesgo?.toUpperCase() ?? '—'}
+        </span>
       </div>
     </div>
   )
@@ -643,522 +408,61 @@ function AgentRow({ agent, step, index }: { agent: (typeof AGENTS)[0]; step: num
   )
 }
 
-// ── MT5 Positions ─────────────────────────────────────────────────────────────
-
-function MT5PositionsList({ positions, loading }: { positions: MT5Position[]; loading: boolean }) {
-  if (loading) {
-    return (
-      <div className="flex items-center gap-2 py-6 justify-center text-sm" style={{ color: 'var(--text-muted)' }}>
-        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
-        Cargando posiciones...
-      </div>
-    )
-  }
-
-  if (positions.length === 0) {
-    return (
-      <div className="text-center py-8 text-sm" style={{ color: 'var(--text-muted)' }}>
-        No hay posiciones abiertas en este momento.
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-2">
-      {positions.map(pos => {
-        const isLong = pos.type === 'POSITION_TYPE_BUY'
-        const pnlColor = pos.profit >= 0 ? 'text-green-400' : 'text-red-400'
-        return (
-          <div key={pos.id} className="card p-3.5 flex items-center gap-3">
-            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg flex-shrink-0 ${isLong ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
-              {isLong ? '▲ LONG' : '▼ SHORT'}
-            </span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-mono font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{pos.symbol}</span>
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{pos.volume} lotes</span>
-              </div>
-              <div className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
-                Entrada: ${pos.openPrice?.toFixed(5)} → Actual: ${pos.currentPrice?.toFixed(5)}
-              </div>
-            </div>
-            <div className={`text-sm font-mono font-bold flex-shrink-0 ${pnlColor}`}>
-              {pos.profit >= 0 ? '+' : ''}{pos.profit?.toFixed(2)}
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// ── Portfolio Tooltip ──────────────────────────────────────────────────────────
-
-function PortfolioTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number }> }) {
-  if (!active || !payload?.length) return null
-  return (
-    <div style={{
-      background: '#1c1917',
-      border: '1px solid #292524',
-      borderRadius: 10,
-      padding: '8px 12px',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
-    }}>
-      <p style={{ color: '#C9A84C', fontWeight: 700, fontSize: 12, marginBottom: 2 }}>
-        {payload[0]?.name}
-      </p>
-      <p style={{ color: '#f0ece4', fontSize: 14, fontWeight: 800 }}>
-        {payload[0]?.value}%
-      </p>
-    </div>
-  )
-}
-
-// ── CFD Signal calculation ─────────────────────────────────────────────────────
-
-const RISK_USD = 10
-const RR_RATIO = 2.0
-
-const SL_PCT: Record<string, number> = {
-  Crypto:     0.020,
-  Acciones:   0.020,
-  'Índices':  0.005,
-  Divisas:    0.003,
-  Materiales: 0.010,
-}
-
-const LOT_MULTIPLIER: Record<string, number> = {
-  'EUR/USD': 100000, 'GBP/USD': 100000, 'USD/CAD': 100000, 'USD/JPY': 100000,
-  'DXY': 10000,
-  'ORO': 100, 'PLATA': 5000, 'WTI': 1000,
-  'NQ': 2, 'SP500': 0.5, 'RUSSELL': 1, 'DOW': 1,
-  'BTC': 1, 'ETH': 10, 'BNB': 10, 'XRP': 10000,
-}
-
-function calcSignal(asset: AssetAnalysis, riskProfile: string): CfdSignalCalc {
-  const entry = asset.precio
-  const slPct = SL_PCT[asset.sector] ?? 0.010
-  const slDist = entry * slPct
-  const tpDist = slDist * RR_RATIO
-  const isCompra = asset.sesgo === 'COMPRA'
-  const stopLoss = parseFloat((isCompra ? entry - slDist : entry + slDist).toFixed(5))
-  const takeProfit = parseFloat((isCompra ? entry + tpDist : entry - tpDist).toFixed(5))
-  const mult = LOT_MULTIPLIER[asset.simbolo] ?? 1
-  const rawLot = RISK_USD / (slDist * mult)
-  const lotaje = parseFloat(Math.max(0.01, rawLot).toFixed(2))
-
-  return {
-    simbolo:       asset.simbolo,
-    nombre:        asset.nombre,
-    sector:        asset.sector,
-    sesgo:         asset.sesgo,
-    confianza:     asset.confianza,
-    razon:         asset.razon,
-    precioEntrada: entry,
-    stopLoss,
-    takeProfit,
-    lotaje,
-    riesgoUsd:     RISK_USD,
-    rrRatio:       RR_RATIO,
-    riskProfile,
-  }
-}
-
-function formatSignalText(s: CfdSignalCalc): string {
-  const dir = s.sesgo === 'COMPRA' ? '▲ COMPRA' : '▼ VENTA'
-  const slDist = Math.abs(s.precioEntrada - s.stopLoss)
-  const tpDist = Math.abs(s.takeProfit - s.precioEntrada)
-  const formatP = (n: number) =>
-    n >= 1000 ? n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : n.toFixed(5)
-  return [
-    `${dir} ${s.simbolo}`,
-    `Entrada:     ${formatP(s.precioEntrada)}`,
-    `Stop Loss:   ${formatP(s.stopLoss)}  (-${formatP(slDist)})`,
-    `Take Profit: ${formatP(s.takeProfit)}  (+${formatP(tpDist)})`,
-    `Lotaje:      ${s.lotaje} lotes`,
-    `RR: 1:${s.rrRatio}  |  Riesgo: $${s.riesgoUsd.toFixed(2)}`,
-    `Confianza: ${s.confianza}%`,
-  ].join('\n')
-}
-
-// ── SignalCard ─────────────────────────────────────────────────────────────────
-
-function SignalCard({ signal, onCopy }: { signal: CfdSignalCalc; onCopy: (text: string) => void }) {
-  const isCompra = signal.sesgo === 'COMPRA'
-  const accent = isCompra ? 'text-green-400' : 'text-red-400'
-  const bg = isCompra ? 'bg-green-500/10 border-green-500/25' : 'bg-red-500/10 border-red-500/25'
-  const formatP = (n: number) =>
-    n >= 1000 ? n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : n.toFixed(5)
-  const slDist = Math.abs(signal.precioEntrada - signal.stopLoss)
-  const tpDist = Math.abs(signal.takeProfit - signal.precioEntrada)
-
-  return (
-    <div className={`rounded-xl border p-4 space-y-3 ${bg}`}>
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className={`text-sm font-black ${accent}`}>{isCompra ? '▲' : '▼'} {signal.simbolo}</span>
-          </div>
-          <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{signal.nombre} · {signal.sector}</div>
-        </div>
-        <div className="text-right flex-shrink-0">
-          <div className={`text-xs font-bold ${accent}`}>{signal.confianza}% confianza</div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2 font-mono text-xs">
-        <div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Entrada</div>
-          <div className="font-bold mt-0.5" style={{ color: 'var(--text-primary)' }}>{formatP(signal.precioEntrada)}</div>
-        </div>
-        <div>
-          <div className="text-red-400" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stop Loss</div>
-          <div className="font-bold text-red-400 mt-0.5">{formatP(signal.stopLoss)}</div>
-          <div className="text-[10px] text-red-400 opacity-70">-{formatP(slDist)}</div>
-        </div>
-        <div>
-          <div className="text-green-400" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Take Profit</div>
-          <div className="font-bold text-green-400 mt-0.5">{formatP(signal.takeProfit)}</div>
-          <div className="text-[10px] text-green-400 opacity-70">+{formatP(tpDist)}</div>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-        <div className="flex items-center gap-3 text-xs font-mono">
-          <span>
-            <span style={{ color: 'var(--text-muted)' }}>Lotaje: </span>
-            <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{signal.lotaje}</span>
-          </span>
-          <span>
-            <span style={{ color: 'var(--text-muted)' }}>RR: </span>
-            <span className="font-bold" style={{ color: 'var(--text-primary)' }}>1:{signal.rrRatio}</span>
-          </span>
-          <span>
-            <span style={{ color: 'var(--text-muted)' }}>Riesgo: </span>
-            <span className="font-bold text-yellow-400">${signal.riesgoUsd}</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <BrokerExecuteDropdown signal={{
-            ticker: signal.simbolo,
-            direction: signal.sesgo as 'COMPRA' | 'VENTA',
-            source: 'cfd_signal',
-            signalData: { simbolo: signal.simbolo, sesgo: signal.sesgo, precioEntrada: signal.precioEntrada, stopLoss: signal.stopLoss, takeProfit: signal.takeProfit, lotaje: signal.lotaje },
-          }} />
-          <button
-            onClick={() => onCopy(formatSignalText(signal))}
-            className="text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all hover:scale-105"
-            style={{ background: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-          >
-            Copiar
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
-  const riskProfile: RiskProfile = 'agresivo'
+export default function AnalisisClient() {
+  const [riskProfile, setRiskProfile] = useState<RiskProfile>('moderado')
+  const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AnalysisResult | null>(null)
-  const [activeTab, setActiveTab] = useState<ActiveTab>('analisis')
+  const [error, setError] = useState<string | null>(null)
+  const [agentStep, setAgentStep] = useState(0)
 
-  const [tradeSuccess, setTradeSuccess] = useState<string | null>(null)
+  const runAnalysis = async () => {
+    setLoading(true)
+    setError(null)
+    setResult(null)
+    setAgentStep(0)
 
-  // Signals state
-  const [copiedSignal, setCopiedSignal] = useState<string | null>(null)
-  const [savingSignals, setSavingSignals] = useState(false)
-  const [savedCount, setSavedCount] = useState<number | null>(null)
-  const [signalHistory, setSignalHistory] = useState<CfdSignalRecord[]>([])
-  const [updatingResultado, setUpdatingResultado] = useState<string | null>(null)
-  const [clearingSignals, setClearingSignals] = useState(false)
-  const [rowEdits, setRowEdits] = useState<Record<string, { resultado: string; pnlUsd: string; closedPrice: string }>>({})
-  const [skippedSignals, setSkippedSignals] = useState<{ skipped: string[]; updated: string[] } | null>(null)
-
-
-  // History table state
-  const [refreshing, setRefreshing] = useState(false)
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [adminViewMode, setAdminViewMode] = useState<'admin' | 'user'>('admin')
-  const [confirmModal, setConfirmModal] = useState<{
-    type: 'all' | 'selected' | 'single'
-    ids?: string[]
-    count: number
-    onConfirm: () => void
-  } | null>(null)
-
-  const [video, setVideo] = useState<{ youtubeUrl: string; title: string | null }>({ youtubeUrl: '', title: null })
-  const [editMode, setEditMode] = useState(false)
-  const [editUrl, setEditUrl] = useState('')
-  const [editTitle, setEditTitle] = useState('')
-  const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/api/section-video?section=cfds')
-        if (res.ok) { const d = await res.json(); if (d.youtubeUrl) setVideo(d) }
-      } catch {}
-    })()
-  }, [])
-
-  // Load today's MarketScan from cron (market-scan 8:35am ET) as default display
-  useEffect(() => {
-    ;(async () => {
-      try {
-        const res = await fetch('/api/scan-today')
-        if (!res.ok) return
-        const data = await res.json()
-        if (!data.scan || !data.oportunidades?.length) return
-        setResult({
-          timestamp: data.scan.fecha,
-          riskProfile: 'agresivo',
-          activos: data.oportunidades.map((o: any) => ({
-            simbolo:   o.simbolo,
-            nombre:    o.nombre,
-            precio:    o.precio9am ?? 0,
-            cambio24h: 0,
-            sesgo:     o.sesgo as 'COMPRA' | 'VENTA' | 'NEUTRAL',
-            confianza: o.confianza,
-            razon:     o.razon ?? '',
-            riesgo:    'bajo' as const,
-            sector:    o.sector ?? '',
-          })),
-          estrategia: {
-            sesgo_general: data.scan.sesgogeneral as 'ALCISTA' | 'BAJISTA' | 'NEUTRAL',
-            resumen:       data.scan.resumen ?? '',
-            distribucion:  [],
-            oportunidad_destacada: '',
-            alerta_riesgo: '',
-          },
-        })
-      } catch {}
-    })()
-  }, [])
-
-
-
-  const loadSignalHistory = useCallback(async () => {
-    setRefreshing(true)
-    try {
-      const res = await fetch('/api/cfds/signals')
-      if (res.ok) setSignalHistory(await res.json())
-      else setTradeSuccess('Error al cargar historial de señales')
-    } catch {
-      setTradeSuccess('Error de red al cargar historial')
-    } finally {
-      setRefreshing(false)
-    }
-  }, [])
-
-  useEffect(() => { loadSignalHistory() }, [loadSignalHistory])
-
-  // Auto-refresh every 30s when signals tab is active
-  useEffect(() => {
-    if (activeTab !== 'senales') return
-    const id = setInterval(loadSignalHistory, 30_000)
-    return () => clearInterval(id)
-  }, [activeTab, loadSignalHistory])
-
-  useEffect(() => {
-    if (activeTab === 'senales') loadSignalHistory()
-  }, [activeTab, loadSignalHistory])
-
-  const handleCopySignal = (text: string) => {
-    navigator.clipboard.writeText(text).catch(() => {})
-    setCopiedSignal(text.split('\n')[0])
-    setTimeout(() => setCopiedSignal(null), 2500)
-  }
-
-  const handleSaveSignals = async (signals: CfdSignalCalc[], analysisActivos?: AssetAnalysis[]) => {
-    setSavingSignals(true)
-    setSavedCount(null)
-    setSkippedSignals(null)
-
-    // ── Step 1: Auto-close PENDIENTE signals that hit TP or SL ──
-    const activos = analysisActivos ?? result?.activos ?? []
-    const priceMap: Record<string, number> = {}
-    for (const a of activos) priceMap[a.simbolo] = a.precio
-
-    const pendingSignals = signalHistory.filter(s => s.resultado === 'PENDIENTE')
-    for (const sig of pendingSignals) {
-      const currentPrice = priceMap[sig.simbolo]
-      if (currentPrice == null || currentPrice <= 0) continue
-      const isCompra = sig.sesgo === 'COMPRA'
-      const hitTP = isCompra ? currentPrice >= sig.takeProfit : currentPrice <= sig.takeProfit
-      const hitSL = isCompra ? currentPrice <= sig.stopLoss  : currentPrice >= sig.stopLoss
-      if (!hitTP && !hitSL) continue
-      const resultado = hitTP ? 'GANADA' : 'PERDIDA'
-      const slDist = Math.abs(sig.precioEntrada - sig.stopLoss)
-      const pnlUsd = isCompra
-        ? ((currentPrice - sig.precioEntrada) / slDist) * 10
-        : ((sig.precioEntrada - currentPrice) / slDist) * 10
-      try {
-        await fetch(`/api/cfds/signals/${sig.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resultado, closedPrice: currentPrice, pnlUsd: parseFloat(pnlUsd.toFixed(2)) }),
-        })
-      } catch {}
-    }
-    if (pendingSignals.length > 0) await loadSignalHistory()
-
-    // ── Step 2: Build map of still-PENDIENTE signals (after auto-close) ──
-    // Fetch fresh list to know which are still blocked
-    let freshHistory = signalHistory
-    try {
-      const fr = await fetch('/api/cfds/signals')
-      if (fr.ok) {
-        const json = await fr.json()
-        freshHistory = json.recommendations ?? json ?? signalHistory
-        setSignalHistory(freshHistory)
-      }
-    } catch {}
-
-    const pendingMap = new Map(
-      freshHistory
-        .filter((s: CfdSignalRecord) => s.resultado === 'PENDIENTE')
-        .map((s: CfdSignalRecord) => [s.simbolo, s]),
-    )
-
-    const toSave: CfdSignalCalc[] = []
-    const skipped: string[] = []
-    const updated: string[] = []
-
-    for (const sig of signals) {
-      const existing = pendingMap.get(sig.simbolo)
-      if (!existing) {
-        toSave.push(sig)
-      } else {
-        const dirChanged = existing.sesgo !== sig.sesgo
-        const confDiff = Math.abs(sig.confianza - existing.confianza)
-        if (dirChanged || confDiff >= 10) {
-          updated.push(
-            dirChanged
-              ? `${sig.simbolo} (dirección: ${existing.sesgo}→${sig.sesgo})`
-              : `${sig.simbolo} (confianza: ${existing.confianza}%→${sig.confianza}%)`,
-          )
-          toSave.push(sig)
-        } else {
-          skipped.push(sig.simbolo)
-        }
-      }
-    }
-
-    if (skipped.length > 0 || updated.length > 0) {
-      setSkippedSignals({ skipped, updated })
-    }
-
-    if (toSave.length === 0) {
-      setSavingSignals(false)
-      return
-    }
+    let step = 0
+    const stepInterval = setInterval(() => {
+      step++
+      setAgentStep(step)
+      if (step >= AGENTS.length) clearInterval(stepInterval)
+    }, 3000)
 
     try {
-      const res = await fetch('/api/cfds/signals', {
+      const res = await fetch('/api/analisis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ signals: toSave }),
+        body: JSON.stringify({ riskProfile }),
+        signal: AbortSignal.timeout(70000),
       })
-      if (res.ok) {
-        const d = await res.json()
-        setSavedCount(d.saved ?? toSave.length)
-        await loadSignalHistory()
+
+      clearInterval(stepInterval)
+      setAgentStep(AGENTS.length)
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body?.error ?? `Error ${res.status}`)
       }
-    } catch {} finally {
-      setSavingSignals(false)
+
+      const data: AnalysisResult = await res.json()
+      setResult(data)
+    } catch (err) {
+      clearInterval(stepInterval)
+      const msg =
+        err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError')
+          ? 'El análisis tardó demasiado. Los mercados están lentos, intenta nuevamente en unos momentos.'
+          : err instanceof Error
+            ? err.message
+            : 'Error al ejecutar el análisis. Intenta nuevamente.'
+      setError(msg)
+    } finally {
+      setLoading(false)
     }
-  }
-
-  const handleUpdateResultado = async (id: string, resultado: string) => {
-    setUpdatingResultado(id)
-    try {
-      await fetch(`/api/cfds/signals/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resultado }),
-      })
-      await loadSignalHistory()
-    } catch {} finally {
-      setUpdatingResultado(null)
-    }
-  }
-
-  const handleSaveRow = async (id: string) => {
-    const edit = rowEdits[id]
-    if (!edit) return
-    setUpdatingResultado(id)
-    try {
-      await fetch(`/api/cfds/signals/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          resultado: edit.resultado,
-          pnlUsd: edit.pnlUsd !== '' ? Number(edit.pnlUsd) : undefined,
-          closedPrice: edit.closedPrice !== '' ? Number(edit.closedPrice) : undefined,
-        }),
-      })
-      setRowEdits(prev => { const n = { ...prev }; delete n[id]; return n })
-      await loadSignalHistory()
-    } catch {} finally {
-      setUpdatingResultado(null)
-    }
-  }
-
-  const handleClearSignals = () => {
-    setConfirmModal({
-      type: 'all',
-      count: signalHistory.length,
-      onConfirm: async () => {
-        setClearingSignals(true)
-        try {
-          await fetch('/api/cfds/signals', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
-          setSelectedIds(new Set())
-          await loadSignalHistory()
-        } catch {} finally {
-          setClearingSignals(false)
-        }
-      },
-    })
-  }
-
-  const handleDeleteSelected = () => {
-    const ids = [...selectedIds]
-    setConfirmModal({
-      type: 'selected',
-      ids,
-      count: ids.length,
-      onConfirm: async () => {
-        setClearingSignals(true)
-        try {
-          await fetch('/api/cfds/signals', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ids }),
-          })
-          setSelectedIds(new Set())
-          await loadSignalHistory()
-        } catch {} finally {
-          setClearingSignals(false)
-        }
-      },
-    })
   }
 
   const activosByRanking = result?.activos ? [...result.activos].sort((a, b) => b.confianza - a.confianza) : []
-
-  // Candidates from manual analysis (for signals tab history reference)
-  const allCandidates: CfdSignalCalc[] = result
-    ? result.activos
-        .filter(a => a.confianza >= 70 && a.sesgo !== 'NEUTRAL')
-        .map(a => calcSignal(a, riskProfile))
-    : []
-
   const sesgoGeneral = result?.estrategia?.sesgo_general ?? 'NEUTRAL'
   const gs = GENERAL_STYLES[sesgoGeneral] ?? GENERAL_STYLES.NEUTRAL
 
@@ -1166,314 +470,77 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
     <div className="max-w-6xl mx-auto space-y-6">
       {/* ── Page header ── */}
       <div>
-        <h1 className="text-2xl font-black gradient-gold mb-1">CFDs</h1>
+        <h1 className="text-2xl font-black gradient-gold mb-1">Análisis de Mercado</h1>
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-          7 agentes de IA determinan el sesgo intradía del mercado — conecta MT5 para ejecutar operaciones directamente
+          7 agentes de IA analizan el mercado en paralelo — crypto, acciones, índices, divisas y materias primas
         </p>
       </div>
 
-      {/* Video admin */}
-      <div className="rounded-xl border p-5 mb-4" style={{ borderColor: 'rgba(201,168,76,0.18)', background: 'linear-gradient(135deg, rgba(201,168,76,0.04) 0%, transparent 70%)' }}>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>VIDEO DEL PROFESIONAL</p>
-          {isAdmin && (
-            <button
-              onClick={() => { setEditMode(!editMode); if (!editMode) { setEditUrl(video.youtubeUrl); setEditTitle(video.title || '') } }}
-              className="text-[10px] font-mono tracking-widest px-3 py-1 rounded border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--gold)]"
-            >
-              {editMode ? 'CANCELAR' : 'EDITAR'}
-            </button>
-          )}
-        </div>
-        {editMode && (
-          <div className="space-y-3 mb-4">
-            <input value={editUrl} onChange={(e) => setEditUrl(e.target.value)} placeholder="URL de YouTube" className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] text-xs px-4 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)] font-mono" />
-            <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Título (opcional)" className="w-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] text-xs px-4 py-2 rounded-lg focus:outline-none focus:border-[var(--gold-dark)] font-mono" />
-            <button onClick={async () => { setSaving(true); try { const r = await fetch('/api/section-video', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'cfds', youtubeUrl: editUrl, title: editTitle }) }); if (r.ok) { setVideo({ youtubeUrl: editUrl, title: editTitle }); setEditMode(false) } } catch {} finally { setSaving(false) } }} disabled={!editUrl || saving} className="px-4 py-2 text-xs font-mono tracking-widest rounded-lg bg-[var(--gold)] text-black disabled:opacity-50">{saving ? 'GUARDANDO…' : 'GUARDAR'}</button>
-          </div>
-        )}
-        {video.youtubeUrl ? (
-          <div className="aspect-video rounded-lg overflow-hidden">
-            <iframe src={`https://www.youtube.com/embed/${(video.youtubeUrl.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/)||[])[1] || ''}`} title={video.title || 'Video'} className="w-full h-full" allowFullScreen />
-          </div>
-        ) : (
-          <div className="text-center py-8 border border-dashed rounded-lg" style={{ borderColor: 'var(--border)' }}>
-            <p className="text-xs text-[var(--text-muted)]">El administrador aún no ha publicado un video para esta sección.</p>
-          </div>
-        )}
-      </div>
-
-      {/* ── Tabs ── */}
-      <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-        {[
-          { id: 'analisis' as ActiveTab, label: '🔍 Análisis de Mercado' },
-          { id: 'senales' as ActiveTab, label: `📊 Track Record${signalHistory.filter(s => s.confianza >= 80).length > 0 ? ` (${signalHistory.filter(s => s.confianza >= 80).length})` : ''}` },
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
-              activeTab === tab.id
-                ? 'bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/30'
-                : 'hover:bg-white/5'
-            }`}
-            style={activeTab !== tab.id ? { color: 'var(--text-muted)' } : {}}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Copy toast ── */}
-      {copiedSignal && (
-        <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2.5 text-sm text-green-400 flex items-center gap-2">
-          ✓ Señal copiada: {copiedSignal}
-        </div>
-      )}
-
-      {/* ── Track Record Tab ── */}
-      {activeTab === 'senales' && (
-        <div className="space-y-4">
-          {/* Header with stats */}
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
-              <p className="text-[10px] font-mono tracking-widest font-bold" style={{ color: 'var(--gold)' }}>TRACK RECORD CFD</p>
-              {signalHistory.filter(s => s.confianza >= 80).length > 0 && (() => {
-                const filtered = signalHistory.filter(s => s.confianza >= 80)
-                const ganadas = filtered.filter(s => s.resultado === 'GANADA').length
-                const cerradas = filtered.filter(s => s.resultado !== 'PENDIENTE').length
-                const totalPnl = filtered.reduce((sum, s) => sum + (s.pnlUsd ?? 0), 0)
-                const wr = cerradas > 0 ? Math.round((ganadas / cerradas) * 100) : null
-                return (
-                  <div className="flex items-center gap-3 text-[9px] font-mono flex-wrap">
-                    <span style={{ color: 'var(--text-muted)' }}>{filtered.length} ops ≥80%</span>
-                    {wr !== null && <span className={wr >= 50 ? 'text-green-400' : 'text-red-400'}>{wr}% WR</span>}
-                    <span className={totalPnl >= 0 ? 'text-green-400' : 'text-red-400'}>{totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(0)} USD</span>
-                  </div>
-                )
-              })()}
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {isAdmin && (
-                <>
+      <div className="space-y-6">
+          {/* Risk selector + CTA */}
+          <div className="card p-6 space-y-5">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+                Perfil de riesgo
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {RISK_PROFILES.map(rp => (
                   <button
-                    onClick={() => setAdminViewMode(m => m === 'admin' ? 'user' : 'admin')}
-                    className="label-mono text-[9px] px-2 py-1 rounded-lg border"
-                    style={{ borderColor: adminViewMode !== 'admin' ? 'rgba(201,168,76,0.5)' : 'var(--border)', color: adminViewMode !== 'admin' ? 'var(--gold)' : 'var(--text-muted)' }}
+                    key={rp.id}
+                    onClick={() => setRiskProfile(rp.id)}
+                    className={`p-4 rounded-xl border text-left transition-all duration-200 ${
+                      riskProfile === rp.id
+                        ? 'border-[var(--gold)] bg-[var(--gold)]/10'
+                        : 'border-[var(--border)] hover:border-[var(--gold)]/40 hover:bg-white/3'
+                    }`}
                   >
-                    {adminViewMode === 'admin' ? '👁 Usuario' : '⚙ Admin'}
+                    <div className="text-2xl mb-1.5">{rp.icon}</div>
+                    <div className="text-sm font-semibold" style={{ color: riskProfile === rp.id ? 'var(--gold)' : 'var(--text-primary)' }}>
+                      {rp.label}
+                    </div>
+                    <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{rp.desc}</div>
                   </button>
-                  {selectedIds.size > 0 && (
-                    <button onClick={handleDeleteSelected} disabled={clearingSignals} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'rgba(239,68,68,0.4)', color: 'rgb(239,68,68)' }}>
-                      Borrar sel. ({selectedIds.size})
-                    </button>
-                  )}
-                  {signalHistory.length > 0 && (
-                    <button onClick={handleClearSignals} disabled={clearingSignals} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'rgba(239,68,68,0.3)', color: 'rgba(239,68,68,0.7)' }}>
-                      {clearingSignals ? 'Borrando...' : 'Borrar todo'}
-                    </button>
-                  )}
-                </>
-              )}
-              <button onClick={loadSignalHistory} disabled={refreshing} className="label-mono text-[9px] px-2 py-1 rounded-lg border" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-                {refreshing ? '...' : '↺'}
-              </button>
+                ))}
+              </div>
             </div>
+
+            <button
+              onClick={runAnalysis}
+              disabled={loading}
+              className="w-full py-3.5 rounded-xl font-bold text-sm transition-all btn-gold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Analizando mercados...
+                </span>
+              ) : (
+                '🔍 Analizar Mercados'
+              )}
+            </button>
           </div>
 
-          {/* Auto-save info */}
-          <p className="text-[10px] font-mono mb-3" style={{ color: 'var(--text-muted)' }}>
-            Las señales con confianza ≥ 80% se guardan automáticamente cada día a las 10am ET desde el análisis de mercado.
-          </p>
-
-          {/* Table filtered ≥80% */}
-          {signalHistory.filter(s => s.confianza >= 80).length === 0 ? (
-            <div className="rounded-xl border p-8 text-center" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)' }}>
-              <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>Sin señales con confianza ≥ 80%.</p>
-              <p className="text-xs" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>Las señales se guardan automáticamente al ejecutar el análisis.</p>
-            </div>
-          ) : (
-            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-              <div className="overflow-x-auto">
-                <table className="w-full text-[10px] font-mono">
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.3)' }}>
-                      {['Fecha', 'Par', 'Dir', 'Entrada', 'SL', 'TP', 'Lotes', 'Conf', 'Resultado', 'P&L USD', ...(isAdmin && adminViewMode === 'admin' ? ['Acc.'] : [])].map(h => (
-                        <th key={h} className="px-2.5 py-2 text-left whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {signalHistory.filter(s => s.confianza >= 80).map(sig => {
-                      const isDirty = rowEdits[sig.id] !== undefined
-                      const edit = rowEdits[sig.id]
-                      const isClosed = sig.resultado !== 'PENDIENTE'
-                      return (
-                        <tr
-                          key={sig.id}
-                          className="border-b border-[var(--border)]"
-                          style={{
-                            opacity: isClosed ? 0.6 : 1,
-                            filter: isClosed ? 'saturate(0.5)' : undefined,
-                          }}
-                        >
-                          <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
-                            {new Date(sig.createdAt).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', timeZone: 'America/Guayaquil' })}
-                          </td>
-                          <td className="px-2.5 py-2 font-bold whitespace-nowrap" style={{ color: 'var(--gold)' }}>
-                            {sig.simbolo}
-                            {sig.razon?.startsWith('[Auto 10am ET]') && (
-                              <span className="ml-1.5 text-[8px] font-mono px-1 py-0.5 rounded align-middle"
-                                style={{ background: 'rgba(201,168,76,0.15)', color: 'var(--gold)', border: '1px solid rgba(201,168,76,0.3)' }}>
-                                AUTO 10AM
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-2.5 py-2 whitespace-nowrap">
-                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${sig.sesgo === 'COMPRA' ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}`}>
-                              {sig.sesgo}
-                            </span>
-                          </td>
-                          <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>{sig.precioEntrada.toFixed(sig.precioEntrada > 100 ? 2 : 5)}</td>
-                          <td className="px-2.5 py-2 whitespace-nowrap text-red-400">{sig.stopLoss.toFixed(sig.stopLoss > 100 ? 2 : 5)}</td>
-                          <td className="px-2.5 py-2 whitespace-nowrap text-green-400">{sig.takeProfit.toFixed(sig.takeProfit > 100 ? 2 : 5)}</td>
-                          <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{sig.lotaje}</td>
-                          <td className="px-2.5 py-2 whitespace-nowrap" style={{ color: 'var(--gold)' }}>{sig.confianza}%</td>
-                          <td className="px-2.5 py-2 whitespace-nowrap">
-                            {isAdmin && adminViewMode === 'admin' ? (
-                              <select
-                                value={edit?.resultado ?? sig.resultado}
-                                onChange={e => setRowEdits(prev => ({ ...prev, [sig.id]: { resultado: e.target.value, pnlUsd: String(edit?.pnlUsd ?? sig.pnlUsd ?? ''), closedPrice: String(edit?.closedPrice ?? sig.closedPrice ?? '') } }))}
-                                className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5"
-                                style={{ color: sig.resultado === 'GANADA' ? '#4ade80' : sig.resultado === 'PERDIDA' ? '#f87171' : sig.resultado === 'BREAKEVEN' ? '#facc15' : 'var(--text-muted)' }}
-                              >
-                                {['PENDIENTE','GANADA','PERDIDA','BREAKEVEN'].map(r => <option key={r} value={r}>{r}</option>)}
-                              </select>
-                            ) : (
-                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${sig.resultado === 'GANADA' ? 'text-green-400' : sig.resultado === 'PERDIDA' ? 'text-red-400' : sig.resultado === 'BREAKEVEN' ? 'text-yellow-400' : ''}`} style={sig.resultado === 'PENDIENTE' ? { color: 'var(--text-muted)' } : {}}>
-                                {sig.resultado}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-2.5 py-2 whitespace-nowrap">
-                            {isAdmin && adminViewMode === 'admin' ? (
-                              <input
-                                type="number"
-                                step="0.01"
-                                className="text-[9px] font-mono bg-transparent border border-[var(--border)] rounded px-1 py-0.5 w-14"
-                                value={edit?.pnlUsd ?? (sig.pnlUsd != null ? String(sig.pnlUsd) : '')}
-                                placeholder="0.00"
-                                onChange={e => setRowEdits(prev => ({ ...prev, [sig.id]: { resultado: edit?.resultado ?? sig.resultado, pnlUsd: e.target.value, closedPrice: String(edit?.closedPrice ?? sig.closedPrice ?? '') } }))}
-                                style={{ color: 'var(--text-secondary)' }}
-                              />
-                            ) : (
-                              <span className={sig.pnlUsd != null ? (sig.pnlUsd >= 0 ? 'text-green-400' : 'text-red-400') : ''} style={sig.pnlUsd == null ? { color: 'var(--text-muted)' } : {}}>
-                                {sig.pnlUsd != null ? `${sig.pnlUsd >= 0 ? '+' : ''}$${sig.pnlUsd.toFixed(2)}` : '—'}
-                              </span>
-                            )}
-                          </td>
-                          {isAdmin && adminViewMode === 'admin' && (
-                            <td className="px-2.5 py-2 whitespace-nowrap">
-                              {isDirty && (
-                                <button
-                                  onClick={() => handleSaveRow(sig.id)}
-                                  disabled={updatingResultado === sig.id}
-                                  className="text-[9px] px-1.5 py-0.5 rounded border font-semibold"
-                                  style={{ borderColor: 'rgba(234,179,8,0.5)', color: 'rgb(234,179,8)' }}
-                                >
-                                  {updatingResultado === sig.id ? '...' : 'Guardar'}
-                                </button>
-                              )}
-                            </td>
-                          )}
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+          {/* Agent status */}
+          {loading && (
+            <div className="card p-5">
+              <p className="text-[10px] font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
+                Agentes trabajando en paralelo
+              </p>
+              <div className="space-y-3.5">
+                {AGENTS.map((agent, i) => (
+                  <AgentRow key={agent.key} agent={agent} step={agentStep} index={i} />
+                ))}
               </div>
             </div>
           )}
-        </div>
-      )}
 
-      {/* ── Confirm Delete Modal ── */}
-      {confirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
-          <div className="w-full max-w-sm rounded-2xl border p-6 space-y-5" style={{ background: '#0d0d0d', borderColor: 'rgba(239,68,68,0.35)' }}>
-            <div className="flex items-center gap-3">
-              <span className="text-red-400 text-lg">⚠</span>
-              <span className="text-sm font-bold text-red-400">Confirmar eliminación</span>
-            </div>
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-              {confirmModal.type === 'all'
-                ? `¿Borrar TODAS las señales (${confirmModal.count} registros)? Esta acción no se puede deshacer.`
-                : `¿Borrar ${confirmModal.count} señal${confirmModal.count !== 1 ? 'es' : ''} seleccionada${confirmModal.count !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setConfirmModal(null)}
-                className="label-mono text-xs px-4 py-2 rounded-lg border transition-colors hover:bg-white/5"
-                style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => { confirmModal.onConfirm(); setConfirmModal(null) }}
-                className="label-mono text-xs px-4 py-2 rounded-lg border font-bold transition-colors"
-                style={{ background: 'rgba(239,68,68,0.12)', borderColor: 'rgba(239,68,68,0.4)', color: 'rgb(239,68,68)' }}
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Trade success toast ── */}
-      {tradeSuccess && (
-        <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400 flex items-center gap-2">
-          ✓ {tradeSuccess}
-        </div>
-      )}
-
-
-      {/* ── Analysis Tab ── */}
-      {activeTab === 'analisis' && (
-        <div className="space-y-6">
-          {/* Info banner */}
-          <div className="rounded-xl px-5 py-4 text-xs" style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)' }}>
-            <p className="text-[10px] font-mono tracking-widest mb-1" style={{ color: 'var(--gold)' }}>
-              ANÁLISIS AUTOMÁTICO DIARIO
-            </p>
-            <p style={{ color: 'var(--text-muted)' }}>
-              7 agentes de IA analizan más de 40 activos cada día a las 8:35am ET. El análisis se actualiza automáticamente — no requiere ninguna acción de tu parte.
-            </p>
-          </div>
-
-          {/* Fecha del análisis */}
-          {result ? (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)' }}>
-              <span className="text-green-400 text-base">✓</span>
-              <div>
-                <p className="text-[10px] font-mono tracking-widest text-green-400">ANÁLISIS DEL DÍA</p>
-                <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                  {new Date(result.timestamp).toLocaleDateString('es-EC', {
-                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-                    timeZone: 'America/Guayaquil',
-                  })}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)' }}>
-              <span style={{ color: 'var(--gold)' }}>🕐</span>
-              <div>
-                <p className="text-[10px] font-mono tracking-widest" style={{ color: 'var(--gold)' }}>SIN ANÁLISIS AÚN</p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  El análisis del día se genera automáticamente a las 8:35am ET. Vuelve después de esa hora.
-                </p>
-              </div>
+          {/* Error */}
+          {error && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
+              ⚠️ {error}
             </div>
           )}
 
@@ -1513,16 +580,92 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
                 </div>
               )}
 
-              {(result as any).faros && <FarosPanel faros={(result as any).faros} />}
+              {result.faros && <FarosPanel faros={result.faros} />}
 
-              {/* ── Sector recommendation tables (replaces asset cards) ── */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {result.estrategia?.distribucion && result.estrategia.distribucion.length > 0 && (
+                  <div className="card p-5">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>
+                      Distribución de Portafolio
+                    </p>
+                    <p className="text-xs mb-4" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>
+                      Perfil {riskProfile}
+                    </p>
+                    <ResponsiveContainer width="100%" height={240}>
+                      <PieChart>
+                        <Pie
+                          data={result.estrategia.distribucion}
+                          dataKey="porcentaje"
+                          nameKey="sector"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={95}
+                          paddingAngle={3}
+                          strokeWidth={0}
+                        >
+                          {result.estrategia.distribucion.map((entry, index) => (
+                            <Cell key={index} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value) => [`${value}%`, 'Asignación']}
+                          contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, color: 'var(--text-primary)', fontSize: 12 }}
+                        />
+                        <Legend formatter={(value) => <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{value}</span>} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                <div className="card p-5">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
+                    Rankings por Confianza
+                  </p>
+                  <div className="space-y-3">
+                    {activosByRanking.slice(0, 10).map((asset, i) => {
+                      const s = SESGO_STYLES[asset.sesgo] ?? SESGO_STYLES.NEUTRAL
+                      return (
+                        <div key={`${asset.simbolo}-${i}`} className="flex items-center gap-2.5">
+                          <span className="text-xs font-mono w-4 text-right flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{i + 1}</span>
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg flex-shrink-0 w-14 text-center ${s.bg} ${s.text} border ${s.border}`}>
+                            {asset.simbolo.length > 6 ? asset.simbolo.slice(0, 6) : asset.simbolo}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className={`text-[11px] ${s.text}`}>{s.label}</span>
+                              <span className="text-[11px] font-mono" style={{ color: 'var(--text-muted)' }}>{asset.confianza}%</span>
+                            </div>
+                            <div className="h-1 rounded-full" style={{ background: 'var(--border)' }}>
+                              <div className={`h-1 rounded-full transition-all duration-700 ${s.bar}`} style={{ width: `${asset.confianza}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+
               {SECTOR_ORDER.map(sector => {
-                const sl = sector.toLowerCase()
-                const sectorActivos = result.activos.filter(a => a.sector?.toLowerCase() === sl)
+                const sectorActivos = result.activos.filter(a => a.sector === sector)
                 if (sectorActivos.length === 0) return null
-                return <SectorTable key={sector} sector={sector} activos={sectorActivos} />
+                return (
+                  <div key={sector}>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+                      {sector}
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                      {sectorActivos.map((asset, i) => (
+                        <AssetCard
+                          key={`${asset.simbolo}-${i}`}
+                          asset={asset}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )
               })}
-
 
               <div className="space-y-3">
                 <p className="text-xs text-center" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>
@@ -1538,8 +681,6 @@ export default function AnalisisClient({ isAdmin }: { isAdmin: boolean }) {
             </div>
           )}
         </div>
-      )}
-
     </div>
   )
 }

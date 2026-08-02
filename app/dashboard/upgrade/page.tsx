@@ -5,22 +5,22 @@ import { getEffectiveAccess } from '@/lib/access'
 import { redirect } from 'next/navigation'
 
 const HOTMART_MENSUAL = process.env.HOTMART_LINK_MENSUAL || 'https://pay.hotmart.com/R104900326X?checkoutMode=2'
+const HOTMART_ANUAL   = process.env.HOTMART_LINK_ANUAL   || 'https://pay.hotmart.com/L104900408S?checkoutMode=2'
 
 const CLUB_FEATURES = [
-  { icon: '📈', label: 'Track Record verificable' },
-  { icon: '🎯', label: 'Oportunidades de mercado en tiempo real' },
-  { icon: '🎓', label: 'Academia completa (17+ lecciones)' },
-  { icon: '🤝', label: 'Comunidad exclusiva de traders' },
-  { icon: '🤖', label: 'Vinces — IA asistente de trading' },
-  { icon: '📊', label: 'Reportes avanzados y análisis' },
-  { icon: '🎬', label: 'Video de la semana — entradas en vivo' },
-  { icon: '💰', label: 'Historial de retiros' },
+  { icon: '📊', label: 'Sistema de trading NQ Futures — manual y algorítmico' },
+  { icon: '🤖', label: 'NinjaTrader 8 + Strategy Analyzer — backtesting real' },
+  { icon: '💻', label: 'Código NinjaScript entregado — bot listo para operar' },
+  { icon: '🧠', label: 'Aprende a crear tus propios bots algorítmicos' },
+  { icon: '🏦', label: 'Acciones y ETFs vía IBKR — asesoría y grupo privado' },
+  { icon: '🤖', label: 'Vinces — IA asistente cuantitativo de trading' },
+  { icon: '📈', label: 'Track record verificable — resultados reales de Luis' },
+  { icon: '🏘', label: 'Comunidad privada activa' },
 ]
 
 export default async function UpgradePage() {
   const supabase = await createSupabaseServerClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  const user = session?.user
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
   const dbUser = await prisma.user.findUnique({
@@ -89,22 +89,46 @@ export default async function UpgradePage() {
           ))}
         </div>
 
-        {/* Pricing card */}
-        <div className="max-w-sm mx-auto mb-8">
-          <div className="rounded-2xl border p-6 flex flex-col relative overflow-hidden"
-            style={{ background: 'rgba(201,168,76,0.06)', borderColor: 'rgba(201,168,76,0.3)' }}>
-            <div className="text-[10px] font-mono tracking-widest uppercase mb-2" style={{ color: '#C9A84C' }}>
-              Plan Pro Mensual
+        {/* Pricing cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+
+          {/* Mensual */}
+          <div className="rounded-2xl border p-6 flex flex-col"
+            style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.08)' }}>
+            <div className="text-[10px] font-mono tracking-widest uppercase mb-2" style={{ color: '#555' }}>
+              Plan mensual
             </div>
             <div className="text-4xl font-black text-white mb-1" style={{ fontFamily: 'Georgia, serif' }}>
-              $29
-              <span className="text-base font-normal" style={{ color: '#888' }}>/mes</span>
+              $79
+              <span className="text-base font-normal" style={{ color: '#555' }}>/mes</span>
             </div>
-            <p className="text-xs mb-5" style={{ color: '#666' }}>Sin permanencia · Cancela cuando quieras</p>
+            <p className="text-xs mb-5" style={{ color: '#666' }}>Cancela cuando quieras</p>
             <a href={HOTMART_MENSUAL} target="_blank" rel="noopener noreferrer"
+              className="mt-auto text-center py-3 rounded-xl text-sm font-bold transition-colors hover:opacity-80"
+              style={{ background: 'rgba(201,168,76,0.15)', color: '#C9A84C', border: '1px solid rgba(201,168,76,0.3)' }}>
+              Activar mensual →
+            </a>
+          </div>
+
+          {/* Anual — highlighted */}
+          <div className="rounded-2xl border p-6 flex flex-col relative overflow-hidden"
+            style={{ background: 'rgba(201,168,76,0.06)', borderColor: 'rgba(201,168,76,0.3)' }}>
+            <div className="absolute top-3 right-3 text-[10px] font-mono px-2 py-1 rounded-full"
+              style={{ background: '#C9A84C', color: '#080808' }}>
+              AHORRA 32%
+            </div>
+            <div className="text-[10px] font-mono tracking-widest uppercase mb-2" style={{ color: '#C9A84C' }}>
+              Plan anual
+            </div>
+            <div className="text-4xl font-black text-white mb-1" style={{ fontFamily: 'Georgia, serif' }}>
+              $649
+              <span className="text-base font-normal" style={{ color: '#888' }}>/año</span>
+            </div>
+            <p className="text-xs mb-5" style={{ color: '#666' }}>$54/mes · 2 meses gratis</p>
+            <a href={HOTMART_ANUAL} target="_blank" rel="noopener noreferrer"
               className="mt-auto text-center py-3 rounded-xl text-sm font-bold transition-colors hover:opacity-90"
               style={{ background: '#C9A84C', color: '#080808' }}>
-              Activar Plan Pro →
+              Activar anual →
             </a>
           </div>
         </div>

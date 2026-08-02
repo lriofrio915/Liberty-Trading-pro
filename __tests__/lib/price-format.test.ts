@@ -29,27 +29,3 @@ describe('formatPriceNum', () => {
   })
 })
 
-// sesgo → MT5 direction mapping
-function sesgoToDirection(sesgo: string): 'BUY' | 'SELL' | null {
-  if (sesgo === 'COMPRA') return 'BUY'
-  if (sesgo === 'VENTA') return 'SELL'
-  return null
-}
-
-describe('sesgoToDirection', () => {
-  it('maps COMPRA to BUY', () => {
-    expect(sesgoToDirection('COMPRA')).toBe('BUY')
-  })
-
-  it('maps VENTA to SELL', () => {
-    expect(sesgoToDirection('VENTA')).toBe('SELL')
-  })
-
-  it('returns null for NEUTRAL', () => {
-    expect(sesgoToDirection('NEUTRAL')).toBeNull()
-  })
-
-  it('returns null for unknown sesgo', () => {
-    expect(sesgoToDirection('UNKNOWN')).toBeNull()
-  })
-})

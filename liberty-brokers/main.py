@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from routers import mt5, ibkr, trades
+from routers import ibkr, trades
 
 LIBERTY_INTERNAL_TOKEN = os.getenv("LIBERTY_INTERNAL_TOKEN", "")
 VERCEL_URL = os.getenv("VERCEL_URL", "")
@@ -44,7 +44,6 @@ async def verify_token(request: Request):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
-app.include_router(mt5.router, prefix="/api/mt5", tags=["MT5"])
 app.include_router(ibkr.router, prefix="/api/ibkr", tags=["IBKR"])
 app.include_router(trades.router, prefix="/api/trades", tags=["Trades"])
 

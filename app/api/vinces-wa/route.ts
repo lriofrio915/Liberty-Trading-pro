@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { notifyNexus } from '@/lib/notify-nexus'
-import { callAI } from '@/lib/ai-providers'
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const LINKS = {
@@ -9,58 +7,69 @@ const LINKS = {
   ANUAL:   process.env.HOTMART_LINK_ANUAL   || 'https://pay.hotmart.com/L104900408S?checkoutMode=2',
 }
 
-const OPENCLAW_WEBHOOK_SECRET = process.env.OPENCLAW_WEBHOOK_SECRET || ''
+const EVO_URL      = process.env.EVOLUTION_API_URL || 'https://evo.nexus-ia.com.es'
+const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || 'vinces'
+const EVO_KEY      = process.env.EVOLUTION_API_KEY  || '157B8ABC2B63-46DE-B38C-05C3C3ACAA3A'
 
-// ── Contexto de Liberty Trading Club ───────────────────────────────────────────
+// ── Contexto de Liberty Trading Pro ───────────────────────────────────────────
 const CONTEXTO_LUIS = `
-Eres Vinces, el asistente de ventas de Liberty Trading Club — club de trading fundado por Luis Riofrío.
+Eres Vinces, el asistente de ventas de Liberty Trading Pro — club de trading algorítmico fundado por Luis Riofrío.
 
 SOBRE LUIS RIOFRÍO (el formador):
-- Trader activo en futuros del Nasdaq (NQ/MNQ), acciones y opciones financieras
-- Operador Financiero en Emporium Quality Funds con track record verificable y público
-- Estrategias: rompimiento y consecución (futuros intradia) | Dollar Cost Average (inversión a largo plazo)
-- NO enseña fórmulas mágicas. Enseña disciplina, consistencia, un método probado y un sistema que funciona
+- Trader cuantitativo especializado en NQ/MNQ Futures (CME) con NinjaTrader 8
+- Crea estrategias algorítmicas y bots usando NinjaTrader 8 + Strategy Analyzer
+- Metodología única: enseña la estrategia manual → la convierte en algoritmo → entrega el código NinjaScript
+- También enseña a los alumnos a programar sus propios bots desde cero
+- Track record verificable y público — resultados reales, incluyendo pérdidas
+- NO enseña fórmulas mágicas. Enseña disciplina, método y sistemas algorítmicos probados
 - Honesto: el trading implica riesgo, no hay garantías de rentabilidad
 
-MODELO DE NEGOCIO — Club Liberty Trading (suscripción mensual):
-Hay UN solo plan con TODO incluido. Sin contratos, sin compromisos.
+MODELO DE NEGOCIO — Club Liberty Trading (suscripción mensual o anual):
+Hay UN solo club con TODO incluido. El miembro elige cómo pagar:
 
-PLAN PRO — $29/mes (cancela cuando quieras):
+CLUB MENSUAL — $79/mes (cancela cuando quieras):
+- Ideal para quien quiere probar antes de comprometerse largo plazo
 - Sin permanencia ni contratos. Puedes cancelar en cualquier momento.
-- Acceso completo desde el primer día.
 - LINK: ${LINKS.MENSUAL}
 
-QUÉ INCLUYE EL CLUB:
-- Mentoría Integral de Mercados Financieros (desde cero hasta invertir con método)
-- Day Trading — Futuros NQ/MNQ, CFDs, acciones y opciones financieras
-- Mentorías 1:1 personalizadas con Luis cada mes
-- Vinces IA — coaching diario personalizado con inteligencia artificial (24/7)
-- Reportes de oportunidades en acciones y ETFs
-- Monitor Mundial — geopolítica y macro en tiempo real
+CLUB ANUAL — $649/año (pago único, equivale a ~$54/mes):
+- Ahorras $299 vs pagar mes a mes ($948 vs $649)
+- Ideal para quien ya decidió que el trading algorítmico es su camino y quiere la mejor tarifa
+- LINK: ${LINKS.ANUAL}
+
+QUÉ INCLUYE EL CLUB (ambos planes tienen TODO):
+- Sistema de trading manual en NQ/MNQ Futures — método probado de Luis
+- NinjaTrader 8 + Strategy Analyzer — plataforma profesional de futuros y backtesting
+- Conversión de estrategia manual a algoritmo con código NinjaScript entregado
+- Aprende a crear tus propios bots algorítmicos desde cero
+- Asesoría en acciones y ETFs vía Interactive Brokers (IBKR) + grupo privado de recomendaciones
+- Mentorías 1:1 personalizadas con Luis
+- Vinces IA — coaching diario con inteligencia artificial (24/7)
 - Track record verificable — operaciones reales de Luis publicadas
-- Reportes de rendimiento semanales y mensuales
 - Comunidad privada activa
 
-CLAVE DE RECOMENDACIÓN:
-- Solo hay un plan: Plan Pro Mensual ($29/mes) — sin permanencia, cancela cuando quieras
+CLAVE DE RECOMENDACIÓN DE PLAN:
+- ¿Quiere probar primero o tiene presupuesto ajustado? → Plan Mensual ($79/mes)
+- ¿Ya está decidido y quiere el mejor precio? → Plan Anual ($649/año, ahorra $299)
 
 PARA QUIÉN NO ES (compártelo con naturalidad si el contexto lo amerita, nunca de forma agresiva):
-- NO es para quien busca ingresos inmediatos o "resultados ya". El trading es un proceso que toma tiempo.
-- NO es para personas endeudadas que dependen del trading para salir de sus problemas financieros urgentes. La presión económica extrema impide tomar buenas decisiones en el mercado y puede empeorar su situación.
+- NO es para quien busca ingresos inmediatos o "resultados ya". El trading algorítmico toma tiempo de aprendizaje.
+- NO es para personas endeudadas que dependen del trading para salir de sus problemas financieros urgentes.
 - NO es para personas incumplidas o indisciplinadas que no están dispuestas a comprometerse con el proceso.
 
 PARA QUIÉN SÍ ES:
-- Personas comprometidas, decididas y entusiastas con el aprendizaje.
-- Personas disciplinadas o con predisposición real a desarrollar disciplina.
-- Si alguien menciona urgencia económica extrema o deudas graves, Vinces debe ser honesto y empático: reconocer su situación, explicar que el trading no es la solución inmediata para eso, y sugerir que primero estabilicen su situación financiera.
+- Traders manuales que quieren dar el salto al trading algorítmico
+- Personas que quieren aprender a programar bots sin necesidad de experiencia previa en código
+- Personas comprometidas con el proceso de aprendizaje y dispuestas a dedicar tiempo
+- Si alguien menciona urgencia económica extrema o deudas graves, Vinces debe ser honesto y empático.
 `
 
 // ── Preguntas rediseñadas ─────────────────────────────────────────────────────
 const PREGUNTAS: Record<string, string> = {
-  P1: '¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has tenido algún contacto con el trading o la inversión antes, o es algo completamente nuevo para ti?',
-  P2: '¿Cuál de estas opciones describe mejor lo que buscas?\n\n1️⃣ Aprender a invertir mis ahorros y hacer crecer mi capital\n2️⃣ Convertirme en trader profesional y vivir del trading\n3️⃣ Generar ingresos adicionales operando a tiempo parcial\n4️⃣ Aún no tengo claro, quiero orientarme primero',
+  P1: '¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has tenido algún contacto con el trading o la programación antes, o es algo completamente nuevo para ti?',
+  P2: '¿Cuál de estas opciones describe mejor lo que buscas?\n\n1️⃣ Aprender a operar NQ Futures con un sistema manual y definido\n2️⃣ Convertir mi estrategia manual en un bot algorítmico con código NinjaScript\n3️⃣ Aprender a crear mis propios bots desde cero en NinjaTrader 8\n4️⃣ Aún no tengo claro, quiero orientarme primero',
   P3: '¿Cuánto tiempo libre tienes al día o a la semana para dedicarle al aprendizaje y la práctica?',
-  P4: 'Por último: ¿qué te ha frenado hasta ahora para dar el paso? ¿Y qué sería lo más importante para ti al unirte a un club de trading?',
+  P4: 'Por último: ¿qué te ha frenado hasta ahora para dar el paso? ¿Y qué sería lo más importante para ti al unirte al club de trading algorítmico?',
 }
 
 const NEXT_STATE: Record<string, string> = {
@@ -71,12 +80,6 @@ const NEXT_STATE: Record<string, string> = {
 
 function cleanPhone(jid: string): string {
   return jid.replace('@s.whatsapp.net', '').replace('@c.us', '').trim()
-}
-
-/** Sanitiza el nombre antes de inyectarlo en prompts o almacenarlo */
-function sanitizeName(name: string | null | undefined): string {
-  if (!name) return ''
-  return name.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').slice(0, 30).trim()
 }
 
 /** Detecta mensajes de despedida o agradecimiento cortos */
@@ -90,21 +93,41 @@ function primerNombre(fullName: string | null | undefined): string | null {
   return fullName.trim().split(/\s+/)[0]
 }
 
-// ── Transcripción de audio con Groq Whisper (recibe base64 del caller) ────────
+// ── Transcripción de audio con Groq Whisper ───────────────────────────────────
 
-async function transcribirAudioBase64(base64: string): Promise<string> {
+async function transcribirAudio(rawMessage: any): Promise<string> {
   const groqKey = process.env.GROQ_API_KEY
   if (!groqKey) {
     console.error('[Vinces WA] GROQ_API_KEY no configurada')
     return ''
   }
 
-  if (!base64) {
-    console.error('[Vinces WA] No se recibió base64 del audio')
-    return ''
-  }
-
   try {
+    const audioMsg = rawMessage?.message?.audioMessage || rawMessage?.message?.pttMessage
+    let base64: string = audioMsg?.base64 || ''
+
+    if (!base64) {
+      const evoRes = await fetch(`${EVO_URL}/chat/getBase64FromMediaMessage/${EVO_INSTANCE}`, {
+        method: 'POST',
+        headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: rawMessage, convertToMp4: false }),
+        signal: AbortSignal.timeout(30000),
+      })
+      if (evoRes.ok) {
+        const evoData = await evoRes.json()
+        base64 = evoData.base64 || ''
+      } else {
+        const txt = await evoRes.text()
+        console.error(`[Vinces WA] Evolution getBase64 error ${evoRes.status}:`, txt.slice(0, 300))
+        return ''
+      }
+    }
+
+    if (!base64) {
+      console.error('[Vinces WA] No se pudo obtener base64 del audio')
+      return ''
+    }
+
     const audioBuffer = Buffer.from(base64, 'base64')
     const formData = new FormData()
     formData.append('file', new Blob([audioBuffer], { type: 'audio/ogg' }), 'audio.ogg')
@@ -126,7 +149,6 @@ async function transcribirAudioBase64(base64: string): Promise<string> {
 
     const transcData = await transcRes.json()
     const texto = transcData.text?.trim() || ''
-    console.log('[Vinces WA] Transcripción OK:', texto.slice(0, 100))
     return texto
   } catch (e: any) {
     console.error('[Vinces WA] transcribirAudio exception:', e?.message)
@@ -134,46 +156,65 @@ async function transcribirAudioBase64(base64: string): Promise<string> {
   }
 }
 
-// ── AI Provider ──────────────────────────────────────────────────────────────
+// ── OpenRouter AI ─────────────────────────────────────────────────────────────
 
-async function callAIWrapper(messages: { role: string; content: string }[]): Promise<string> {
-  const result = await callAI({
-    messages,
-    maxTokens: 600,
-    temperature: 0.7,
-    httpReferer: process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
-    xTitle: 'Liberty Trading - Vinces WA',
+async function callAI(messages: { role: string; content: string }[]): Promise<string> {
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro',
+      'X-Title': 'Liberty Trading - Vinces WA',
+    },
+    body: JSON.stringify({
+      model: process.env.OPENROUTER_MODEL || 'deepseek/deepseek-chat-v3-0324',
+      messages,
+      max_tokens: 600,
+      temperature: 0.7,
+    }),
   })
-  return result.content
+  const data = await res.json()
+  return data.choices?.[0]?.message?.content || ''
 }
 
-// ── Notificar a Luis cuando un lead llega a CTA (via nexus_claw) ──────────────
+// ── Notificar a Luis cuando un lead llega a CTA ───────────────────────────────
 
-async function notificarLuisCTA(lead: {
+const LUIS_PHONE = process.env.LUIS_PHONE || '593988835806' // formato sin + ni espacios
+
+async function notificarLuis(lead: {
   name: string | null
   phone: string
   perfil: string
   respuestas: Record<string, string>
-  productoUrl: string
 }) {
-  const perfilLabel = 'Plan Pro Mensual ($29/mes)'
-
-  const resumen = Object.entries(lead.respuestas)
-    .map(([k, v]) => `• ${PREGUNTAS[k]}\n  → ${v}`)
-    .join('\n\n')
-
   try {
-    await notifyNexus('lead_cta', {
-      name: lead.name || 'sin nombre',
-      phone: lead.phone,
-      perfil: lead.perfil,
-      perfilLabel,
-      productoUrl: lead.productoUrl,
-      respuestas: resumen,
-      nota: 'Este lead ya recibió el link de pago de Vinces. Puedes hacer seguimiento directo.',
+    const perfilLabel = lead.perfil === 'ANUAL' ? '⭐ Plan Pro Anual ($649/año)' : '📅 Plan Pro Mensual ($79/mes)'
+    const resumen = Object.entries(lead.respuestas)
+      .map(([k, v]) => `• ${PREGUNTAS[k]}\n  → ${v}`)
+      .join('\n\n')
+
+    const msg =
+      `🔔 *Nuevo lead listo para cierre*\n\n` +
+      `👤 *Nombre:* ${lead.name || 'sin nombre'}\n` +
+      `📱 *WhatsApp:* +${lead.phone}\n` +
+      `🎯 *Perfil:* ${perfilLabel}\n\n` +
+      `📋 *Respuestas del formulario:*\n\n${resumen}\n\n` +
+      `_Este lead ya recibió el link de pago de Vinces. Puedes hacer seguimiento directo._`
+
+    await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
+      method: 'POST',
+      headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        number: LUIS_PHONE,
+        text: msg,
+      }),
+      signal: AbortSignal.timeout(15000),
     })
+
+    console.log('[Vinces WA] Notificación enviada a Luis para lead:', lead.phone)
   } catch (e: any) {
-    console.error('[Vinces WA] Error notificando lead CTA:', e?.message)
+    console.error('[Vinces WA] Error notificando a Luis:', e?.message)
   }
 }
 
@@ -190,7 +231,11 @@ Analizaste la conversación con ${name}:
 
 ${resumen}
 
-Solo hay un plan: Plan Pro Mensual ($29/mes) — sin permanencia, todo incluido.
+Basándote en su perfil, recomiéndale el plan de pago más adecuado del Club Liberty Trading:
+- MENSUAL: para quien quiere probar primero, tiene dudas sobre el compromiso, presupuesto más ajustado, o simplemente prefiere ir mes a mes ($79/mes)
+- ANUAL: para quien ya está decidido, quiere el mejor precio, y ve el trading como un camino serio ($649/año, ahorra $299)
+
+Recuerda: ambos planes incluyen exactamente lo mismo. La diferencia es solo el precio y el compromiso.
 
 Responde SOLO este JSON (sin texto adicional):
 {"perfil":"MENSUAL","mensaje":"texto"}
@@ -203,13 +248,13 @@ Reglas del mensaje:
 - Sin links, sin asteriscos, sin markdown, sin emojis en exceso
 - Termina con una invitación a revisar el plan`
 
-  const raw = await callAIWrapper([{ role: 'user', content: prompt }])
+  const raw = await callAI([{ role: 'user', content: prompt }])
 
   try {
     const parsed = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] || '{}')
-    const perfil: 'MENSUAL' | 'ANUAL' = 'MENSUAL'
-    const url = LINKS.MENSUAL
-    const planLabel = 'Plan Pro Mensual — $29/mes (cancela cuando quieras)'
+    const perfil: 'MENSUAL' | 'ANUAL' = parsed.perfil === 'ANUAL' ? 'ANUAL' : 'MENSUAL'
+    const url = LINKS[perfil]
+    const planLabel = perfil === 'ANUAL' ? 'Plan Pro Anual — $649/año (ahorras $299)' : 'Plan Pro Mensual — $79/mes (cancela cuando quieras)'
     const mensajeLimpio = (parsed.mensaje || '')
       .replace(/https?:\/\/\S+/g, '')
       .replace(/\[.*?\]\(.*?\)/g, '')
@@ -218,7 +263,7 @@ Reglas del mensaje:
   } catch {
     return {
       perfil: 'MENSUAL' as const,
-      mensaje: `Basado en lo que me contaste, el mejor punto de partida es el Plan Pro Mensual de Liberty Trading. 🎓\n\n👉 Plan Pro Mensual — $29/mes (cancela cuando quieras):\n${LINKS.MENSUAL}`,
+      mensaje: `Basado en lo que me contaste, el mejor punto de partida es el Plan Pro Mensual de Liberty Trading. 🎓\n\n👉 Plan Pro Mensual — $79/mes (cancela cuando quieras):\n${LINKS.MENSUAL}`,
       productoUrl: LINKS.MENSUAL,
     }
   }
@@ -244,7 +289,7 @@ REGLAS ESTRICTAS:
 6. Usa máximo 1 emoji natural.
 7. Si la persona menciona que no sabe algo (activos, términos), tranquilízala: "eso es exactamente para lo que estamos aquí".`
 
-  return callAIWrapper([
+  return callAI([
     { role: 'system', content: system },
     ...historial.slice(-6),
     { role: 'user', content: ultimoMensaje },
@@ -255,31 +300,29 @@ REGLAS ESTRICTAS:
 
 export async function POST(req: NextRequest) {
   try {
-    // Auth: validate webhook secret if configured
-    if (OPENCLAW_WEBHOOK_SECRET) {
-      const incomingSecret = req.headers.get('x-openclaw-secret') || ''
-      if (incomingSecret !== OPENCLAW_WEBHOOK_SECRET) {
-        return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
-      }
-    }
-
     const body = await req.json()
-    const { phone: rawPhone, pushName: rawPushName, isAudio, audioBase64 } = body as {
+    const { phone: rawPhone, pushName, isAudio, rawMessage } = body as {
       phone: string
       pushName?: string
       isAudio?: boolean
-      audioBase64?: string
+      rawMessage?: any
     }
-    const pushName = sanitizeName(rawPushName)
     let { message } = body as { message?: string }
 
     if (!rawPhone) return NextResponse.json({ ok: false, error: 'Missing phone' })
 
     const phone = cleanPhone(rawPhone)
 
-    // ── Transcribir audio si es nota de voz (nexus_claw envía el base64) ────
-    if (isAudio && audioBase64) {
-      const transcripcion = await transcribirAudioBase64(audioBase64)
+    // ── Typing indicator: fire-and-forget ────────────────────────────────────
+    fetch(`${EVO_URL}/chat/sendPresence/${EVO_INSTANCE}`, {
+      method: 'POST',
+      headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ number: phone, presence: 'composing', delay: 25000 }),
+    }).catch(() => {})
+
+    // ── Transcribir audio si es nota de voz ──────────────────────────────────
+    if (isAudio && rawMessage) {
+      const transcripcion = await transcribirAudio(rawMessage)
       if (!transcripcion || transcripcion.startsWith('[')) {
         const nombreGuardado = primerNombre(
           ((await (prisma as any).whatsappLead.findUnique({ where: { phone } }))?.name) || pushName
@@ -383,14 +426,8 @@ export async function POST(req: NextRequest) {
           },
         })
 
-        // Notificar a Luis via nexus_claw (fire-and-forget)
-        notificarLuisCTA({
-          name,
-          phone,
-          perfil: clasificacion.perfil,
-          respuestas,
-          productoUrl: clasificacion.productoUrl,
-        }).catch(() => {})
+        // Notificar a Luis (fire-and-forget)
+        notificarLuis({ name, phone, perfil: clasificacion.perfil, respuestas }).catch(() => {})
 
         return NextResponse.json({ ok: true, messages: [respuesta, clasificacion.mensaje] })
       }
@@ -399,9 +436,9 @@ export async function POST(req: NextRequest) {
     else if (estado === 'CTA') {
       const system = `${CONTEXTO_LUIS}
 
-Estás hablando con ${name || 'un prospecto'} que ya recibió la recomendación del Plan Pro Mensual. Responde sus dudas con calidez y precisión usando el contexto de Liberty Trading Club. Solo hay un plan: $29/mes, sin contratos, con todo incluido. Si muestra interés en suscribirse, refuerza positivamente. Sin markdown, sin asteriscos, máximo 3 oraciones.`
+Estás hablando con ${name || 'un prospecto'} que ya recibió tu recomendación de plan. Responde sus dudas con calidez y precisión usando el contexto de Liberty Trading Pro. Si pregunta sobre qué incluye el club, recuérdale que ambos planes tienen todo incluido. Si pregunta la diferencia entre mensual y anual, explica que es solo el precio: $79/mes vs $649/año (ahorra $299). Si muestra interés en suscribirse, refuerza positivamente. Sin markdown, sin asteriscos, máximo 3 oraciones.`
 
-      respuesta = await callAIWrapper([
+      respuesta = await callAI([
         { role: 'system', content: system },
         ...historial.slice(-8),
         { role: 'user', content: texto },

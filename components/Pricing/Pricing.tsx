@@ -86,7 +86,7 @@ export default function Pricing() {
                   { icon: '👥', text: 'Comunidad privada activa de traders' },
                   { icon: '🎬', text: 'Video de la semana — entradas en vivo' },
                   { icon: '🤖', text: 'Agentes IA (Peter Lynch y más)' },
-                  { icon: '🏦', text: 'Brokers integrados — MT5 + IBKR' },
+                  { icon: '🏦', text: 'Acciones y ETFs vía IBKR — asesoría y grupo privado' },
                 ].map((f) => (
                   <li key={f.text} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
                     <span className="flex-shrink-0 mt-0.5">{f.icon}</span>
