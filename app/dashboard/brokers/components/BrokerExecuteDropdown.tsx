@@ -108,8 +108,8 @@ export default function BrokerExecuteDropdown({ signal }: { signal: SignalPayloa
 
       {showModal && (
         <IBKROrderModal
-          onClose={() => setShowModal(null)}
-          onSuccess={() => { setShowModal(null); setSuccess(true); setTimeout(() => setSuccess(false), 3000) }}
+          onClose={() => setShowModal(false)}
+          onSuccess={() => { setShowModal(false); setSuccess(true); setTimeout(() => setSuccess(false), 3000) }}
           prefill={{ symbol: signal.ticker, side, signalSource: signal.source, signalData: signal.signalData }}
         />
       )}
