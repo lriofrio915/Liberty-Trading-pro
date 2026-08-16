@@ -602,7 +602,7 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
             Laboratorio <span className="gradient-gold">Quant</span>
           </h1>
           <p className="text-[var(--text-secondary)] text-sm">
-            Laboratorio de estrategias algorítmicas · Backtesting · Indicadores para MT5 y NinjaTrader 8
+            Laboratorio de estrategias algorítmicas · Backtesting · Indicadores para NinjaTrader 8
           </p>
         </div>
         <div className="flex gap-2">
@@ -669,7 +669,7 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
           </div>
           <div>
             <p className="text-xs font-bold text-white mb-1">⚡ Código listo para usar</p>
-            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>Genera indicadores para TradingView (Pine Script), MetaTrader 5 (EA) y Ninja Trader 8 (NinjaScript).</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>Genera indicadores para TradingView (Pine Script) y Ninja Trader 8 (NinjaScript).</p>
           </div>
         </div>
       </div>
@@ -699,7 +699,7 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
               <p className="font-semibold text-white mb-1">Ejemplos de uso:</p>
               <ul className="space-y-1 ml-3 list-disc">
                 <li>«Diseña una estrategia de cruce EMA 9/21 sobre NQ a 1H con stop ATR»</li>
-                <li>«Genera un EA de MetaTrader 5 que opere breakouts de apertura»</li>
+                <li>«Genera una estrategia de NinjaTrader 8 que opere breakouts de apertura»</li>
                 <li>«Explica el indicador RSI divergente con Pine Script de ejemplo»</li>
                 <li>«Backtest momentum top-10 US small-caps, rebalanceo mensual»</li>
               </ul>
@@ -769,7 +769,7 @@ export default function VibeClient({ isAdmin }: { isAdmin: boolean }) {
               <p className="text-[10px] font-mono tracking-widest mb-2" style={{ color: 'var(--gold)' }}>CONSEJOS AVANZADOS</p>
               <ul className="space-y-1 ml-3 list-disc text-[var(--text-muted)]">
                 <li>Usa CHAT para explorar y refinar ideas, luego SWARM para análisis profundo antes de operar</li>
-                <li>El agente genera código Pine Script y MQL5 listo para copiar — pídele que lo adapte a tu setup</li>
+                <li>El agente genera código Pine Script y NinjaScript listo para copiar — pídele que lo adapte a tu setup</li>
                 <li>Después de un SWARM, cambia a CHAT y pídele que explique cualquier parte del reporte</li>
                 <li>Los reportes SWARM salen en inglés (limitación del backend) — pega el texto en el chat y pide traducción</li>
               </ul>

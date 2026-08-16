@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'Laboratorio Quant — Liberty Trading',
-  description: 'Diseña estrategias algorítmicas, backtesting y genera código para MT5 y Ninja Trader 8 con IA.',
+  description: 'Diseña estrategias algorítmicas, backtesting y genera código para Ninja Trader 8 con IA.',
 }
 
 export default async function LaboratorioQuantPage() {

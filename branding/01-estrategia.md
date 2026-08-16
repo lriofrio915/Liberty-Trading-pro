@@ -85,8 +85,9 @@ corriendo cada 15 minutos, así que compites con precio informado, no a ojo.
 ### 04 · Liberty Portfolio — Acciones EEUU
 **Qué es:** asesoría para la compra de acciones en la bolsa de EEUU dentro de la cuenta
 IBKR del propio cliente.
-**Modelo:** sin mensualidad, 30% sobre las ganancias generadas. Capital sugerido desde
-$10.000.
+**Modelo:** sin mensualidad, 20% de comisión de éxito sobre las ganancias generadas.
+$10.000 es el capital ideal, pero se puede armar cartera o comprar acciones desde
+bastante menos — no es un mínimo.
 **El punto que más tranquiliza al cliente:** el capital nunca sale de su cuenta. Esto
 debe decirse siempre, primero, y en voz alta. Es la diferencia entre ser asesor y ser
 custodio — y también la que te mantiene fuera del terreno regulatorio más pesado

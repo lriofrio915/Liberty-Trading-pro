@@ -13,8 +13,8 @@ const CLUB_FEATURES = [
 
 const PORTFOLIO_POINTS = [
   { title: 'Tu cuenta, tu dinero', desc: 'El capital nunca sale de tu cuenta IBKR' },
-  { title: `${BRAND.price.successFee} de éxito`, desc: 'Solo cobro sobre las ganancias generadas' },
-  { title: 'Sin mensualidad', desc: `Capital sugerido desde ${BRAND.price.portfolioMinimum}` },
+  { title: `${BRAND.price.successFee} de éxito`, desc: 'Gano cuando tú ganas, no antes' },
+  { title: 'Sin mensualidad', desc: `Empieza con lo que tengas — ${BRAND.price.portfolioReference} es el punto ideal` },
 ]
 
 export default function Pricing() {
@@ -76,7 +76,7 @@ export default function Pricing() {
               </div>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-6">
                 Te asesoro en la compra de acciones y opciones dentro de tu propia cuenta IBKR.
-                Solo cobro cuando ganas.
+                Mis honorarios salen de tus ganancias: si no las hay, no hay comisión.
               </p>
               <a href={wa('Hola Luis, me interesa la asesoría de acciones en EEUU vía IBKR')}
                 target="_blank" rel="noopener noreferrer"

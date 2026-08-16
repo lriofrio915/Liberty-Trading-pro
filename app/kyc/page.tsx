@@ -222,7 +222,7 @@ export default function KycPage() {
               <Field label="Tier de interés" required>
                 <select className={selectCls} value={form.tier} onChange={e => set('tier', e.target.value)}>
                   <option value="">Selecciona...</option>
-                  <option value="A">Tier A — Gestión de portafolio (mín. USD 10,000)</option>
+                  <option value="A">Tier A — Gestión de portafolio (ideal USD 10,000)</option>
                   <option value="B">Tier B — Ideas de inversión activas</option>
                 </select>
               </Field>

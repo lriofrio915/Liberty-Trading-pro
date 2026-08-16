@@ -9,7 +9,6 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { BRAND, SERVICES, RISK_DISCLAIMER, wa } from '@/lib/brand'
 
 const CREDENTIALS = [
-  'Operador Financiero en Emporium Quality Funds',
   'Trader de Futuros NQ/MNQ, acciones y opciones',
   'Gestor de portafolios en Interactive Brokers',
   'Más de 5 años formando traders en Latinoamérica',

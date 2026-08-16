@@ -28,8 +28,8 @@ tuya. Cobras un porcentaje sobre las ganancias.
 **Cómo describirlo:**
 
 > Te asesoro en la compra de acciones dentro de tu propia cuenta de Interactive
-> Brokers. El capital nunca sale de tu cuenta y mantienes el control total. Cobro 30%
-> sobre las ganancias generadas.
+> Brokers. El capital nunca sale de tu cuenta y mantienes el control total. Mi comisión
+> de éxito es del 20% de las ganancias generadas.
 
 **Cómo NO describirlo:**
 
@@ -62,9 +62,10 @@ hacer es sugerir un registro o licencia que no tienes.
 | Mentor de trading | Corredor de bolsa / Agente de valores |
 | Gestor de portafolios en IBKR | Administrador de fondos |
 
-**Verifica si tu rol en Emporium Quality Funds conlleva alguna credencial registrada.**
-Si la tiene, se puede mencionar con precisión y suma muchísima credibilidad. Si no la
-tiene, no insinúes que sí.
+**No nombrar empresas empleadoras en la comunicación de marca.** Decisión tomada:
+mencionar dónde trabaja Luis abre un conflicto de interés con esa empresa y no aporta
+lo suficiente para justificarlo. La autoridad se construye con el track record propio,
+no con el logo de un tercero. Aplica a la web, redes, materiales de venta y bios.
 
 ## Track record
 
@@ -162,8 +163,8 @@ diferencia parece semántica y no lo es.
 
 - [ ] Consulta legal sobre si Liberty Portfolio requiere registro ante la
       Superintendencia de Compañías, Valores y Seguros.
-- [ ] Verificar qué credenciales conlleva el rol en Emporium Quality Funds y si son
-      mencionables.
+- [x] Credenciales de empleador: resuelto — no se nombran empresas empleadoras
+      (conflicto de interés).
 - [ ] Términos y condiciones del sitio (hoy no existen).
 - [ ] Política de privacidad — obligatoria: capturas leads con nombre, teléfono y
       email vía `/api/leads/capture`.

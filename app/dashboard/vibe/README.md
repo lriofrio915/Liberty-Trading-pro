@@ -1,6 +1,6 @@
 # Vibe Agent (sección dashboard)
 
-UI Next.js que consume **Vibe-Trading** (https://github.com/HKUDS/Vibe-Trading) — un agente Python/FastAPI con 71 skills financieros, 29 swarm presets y export a TradingView/MT5.
+UI Next.js que consume **Vibe-Trading** (https://github.com/HKUDS/Vibe-Trading) — un agente Python/FastAPI con 71 skills financieros, 29 swarm presets y export a TradingView/NinjaTrader 8.
 
 **No reescribe nada en TypeScript.** Solo proxy + UI. El motor sigue siendo el FastAPI Python.
 

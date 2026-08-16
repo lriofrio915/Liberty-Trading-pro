@@ -149,10 +149,11 @@ Lo primero que quiero que tengas claro: el dinero nunca sale de tu cuenta. Abres
 tu propia cuenta en Interactive Brokers, yo te asesoro en las compras, y tú
 mantienes el control total.
 
-No cobro mensualidad. Cobro 30% sobre las ganancias que genere. Si no ganas, no
-pagas.
+No cobro mensualidad. Mi comisión de éxito es del 20% de las ganancias que genere:
+gano cuando tú ganas, no antes.
 
-El capital sugerido para que tenga sentido es desde $10.000.
+$10.000 es el capital ideal para que rinda bien, pero puedes empezar a armar tu
+cartera con bastante menos.
 
 ¿Ya tienes cuenta en IBKR o empezamos por abrirla?
 ```

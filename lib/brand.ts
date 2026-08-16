@@ -37,7 +37,11 @@ export const BRAND = {
   name: 'Luis Riofrio',
   role: 'Asesor de Inversiones',
   tagline: 'Transparencia como método',
-  credential: 'Operador Financiero — Emporium Quality Funds',
+  /**
+   * Línea de autoridad de Luis. Mantener genérica y verificable: no nombrar
+   * empresas empleadoras para evitar conflictos de interés.
+   */
+  credential: 'Trader de futuros, acciones y opciones',
 
   /** Casa de productos. Ver /branding/01-estrategia.md */
   house: 'Liberty',
@@ -76,8 +80,9 @@ export const BRAND = {
   price: {
     monthly: 29,
     monthlyLabel: '$29',
-    successFee: '30%',
-    portfolioMinimum: '$10,000',
+    successFee: '20%',
+    /** Capital de referencia, no un mínimo: se puede empezar con menos. */
+    portfolioReference: '$10,000',
   },
 
   /**
@@ -171,8 +176,8 @@ export const SERVICES = [
       'Te asesoro en la compra de acciones en la bolsa de EEUU dentro de tu propia cuenta IBKR.',
     bullets: [
       'El capital nunca sale de tu cuenta',
-      `Solo cobro ${BRAND.price.successFee} sobre las ganancias`,
-      `Capital sugerido desde ${BRAND.price.portfolioMinimum}`,
+      `Gano ${BRAND.price.successFee} cuando tú ganas`,
+      `Empieza con lo que tengas — ${BRAND.price.portfolioReference} es el punto ideal`,
     ],
     price: `${BRAND.price.successFee} de éxito`,
     priceNote: 'Sin mensualidad',
