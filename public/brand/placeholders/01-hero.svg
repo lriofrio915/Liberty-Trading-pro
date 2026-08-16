@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500" role="img" aria-label="Foto pendiente: retrato principal de Luis Riofrio para el hero">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9A7A30"/>
+      <stop offset="50%" stop-color="#C9A84C"/>
+      <stop offset="100%" stop-color="#E8C96A"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#C9A84C" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#C9A84C" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="1500" fill="#111111"/>
+  <rect width="1200" height="1500" fill="url(#glow)"/>
+
+  <!-- Silueta -->
+  <g fill="#1e1e1e">
+    <circle cx="600" cy="600" r="175"/>
+    <rect x="540" y="730" width="120" height="230" rx="60"/>
+    <path d="M300 1500 C300 1080 420 940 600 940 C780 940 900 1080 900 1500 Z"/>
+  </g>
+
+  <!-- Marco punteado -->
+  <rect x="40" y="40" width="1120" height="1420" fill="none" stroke="#C9A84C" stroke-opacity="0.45" stroke-width="3" stroke-dasharray="18 14" rx="16"/>
+
+  <!-- Etiqueta -->
+  <text x="600" y="1268" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="44" letter-spacing="7" fill="url(#g)">FOTO PENDIENTE</text>
+  <text x="600" y="1330" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="28" letter-spacing="5" fill="#8a8480">01 · HERO · 4:5 · 1200×1500</text>
+</svg>

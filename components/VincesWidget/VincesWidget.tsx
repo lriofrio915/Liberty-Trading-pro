@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import DOMPurify from 'dompurify'
 import type { ChatMessage } from '@/types'
+import { BRAND } from '@/lib/brand'
 
 // ─── Config por modo ─────────────────────────────────────────────────────────
 
@@ -78,7 +79,7 @@ function saveSession(key: string | null, session: LandingSession) {
   } catch {}
 }
 
-const HOTMART_MENSUAL = 'https://pay.hotmart.com/R104900326X?checkoutMode=2'
+const HOTMART_MENSUAL = BRAND.hotmart.mensual
 
 // ─── Component ───────────────────────────────────────────────────────────────
 

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000" role="img" aria-label="Foto pendiente: retrato medio de Luis Riofrio">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9A7A30"/>
+      <stop offset="50%" stop-color="#C9A84C"/>
+      <stop offset="100%" stop-color="#E8C96A"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="62%" cy="38%" r="58%">
+      <stop offset="0%" stop-color="#C9A84C" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#C9A84C" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1000" height="1000" fill="#111111"/>
+  <rect width="1000" height="1000" fill="url(#glow)"/>
+
+  <g fill="#1e1e1e">
+    <circle cx="500" cy="380" r="190"/>
+    <rect x="440" y="520" width="120" height="200" rx="60"/>
+    <path d="M170 1000 C170 780 330 690 500 690 C670 690 830 780 830 1000 Z"/>
+  </g>
+
+  <rect x="32" y="32" width="936" height="936" fill="none" stroke="#C9A84C" stroke-opacity="0.45" stroke-width="3" stroke-dasharray="16 12" rx="16"/>
+
+  <text x="500" y="880" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="38" letter-spacing="6" fill="url(#g)">FOTO PENDIENTE</text>
+  <text x="500" y="930" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="24" letter-spacing="4" fill="#8a8480">02 · RETRATO · 1:1 · 1000×1000</text>
+</svg>

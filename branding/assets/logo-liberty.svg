@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="160" viewBox="0 0 720 160" role="img" aria-label="Liberty — casa de productos de Luis Riofrio">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9A7A30"/>
+      <stop offset="50%" stop-color="#C9A84C"/>
+      <stop offset="100%" stop-color="#E8C96A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Lockup secundario: se usa junto al nombre del producto -->
+  <text x="360" y="78"
+        text-anchor="middle"
+        font-family="'Cormorant Garamond', Georgia, serif"
+        font-style="italic" font-weight="300" font-size="62"
+        letter-spacing="-1"
+        fill="url(#gold)">Liberty</text>
+
+  <rect x="252" y="98" width="216" height="1.5" fill="#C9A84C" opacity="0.45"/>
+
+  <text x="360" y="132"
+        text-anchor="middle"
+        font-family="'DM Mono', ui-monospace, monospace"
+        font-size="16" letter-spacing="6"
+        fill="#8a8480">POR LUIS RIOFRIO</text>
+</svg>

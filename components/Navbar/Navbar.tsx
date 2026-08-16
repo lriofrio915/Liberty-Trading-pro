@@ -4,13 +4,13 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
+import { BRAND } from '@/lib/brand'
 
 const NAV_LINKS = [
   { href: '#servicios', label: 'Servicios' },
   { href: '#track-record', label: 'Track Record' },
-  { href: '#precios', label: 'Planes' },
-  { href: '#sobre-luis', label: 'Luis Riofrio' },
-  { href: '#p2p', label: 'P2P Cripto' },
+  { href: '#sobre-luis', label: 'Sobre Luis' },
+  { href: '#precios', label: 'Precio' },
 ]
 
 interface NavbarProps {
@@ -45,8 +45,9 @@ export default function Navbar({ initialUser = null }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <span className="headline text-lg gradient-gold">Liberty Trading Club</span>
+        <Link href="/" className="flex flex-col leading-none">
+          <span className="headline text-lg gradient-gold">{BRAND.name}</span>
+          <span className="label-mono text-[8px] hidden sm:block">{BRAND.role}</span>
         </Link>
 
         {/* Desktop Nav */}

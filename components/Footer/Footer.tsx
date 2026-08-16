@@ -1,11 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import { BRAND, RISK_DISCLAIMER } from '@/lib/brand'
 
-const WA = 'https://wa.me/+593996691586'
-const VINCES_WA = 'https://wa.me/593996691586'
-const IG = 'https://instagram.com/libertytradingclub'
-const FB = 'https://facebook.com/libertytradingclub'
+const WA = BRAND.social.whatsapp
+const VINCES_WA = BRAND.social.whatsapp
+const IG = BRAND.social.instagram
+const FB = BRAND.social.facebook
 
 export default function Footer() {
   return (
@@ -16,10 +17,11 @@ export default function Footer() {
 
           {/* Brand */}
           <div className="md:col-span-5">
-            <div className="headline text-2xl gradient-gold mb-3">Liberty Trading Club</div>
+            <div className="headline text-2xl gradient-gold mb-1">{BRAND.name}</div>
+            <div className="label-mono text-[10px] mb-3">{BRAND.role}</div>
             <p className="text-sm text-[var(--text-muted)] max-w-xs leading-relaxed mb-5">
-              Oportunidades de inversión en acciones y ETFs, coaching con IA y gestión de portafolio
-              institucional. Luis Riofrio — Operador Financiero, Emporium Quality Funds.
+              Educación en trading, bots para futuros, intercambio cripto y asesoría de acciones
+              en EEUU. {BRAND.credential}.
             </p>
             {/* Socials */}
             <div className="flex items-center gap-3">
@@ -44,7 +46,7 @@ export default function Footer() {
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                 </svg>
               </a>
-              <span className="label-mono ml-1">@libertytradingclub</span>
+              <span className="label-mono ml-1">{BRAND.social.handle}</span>
             </div>
           </div>
 
@@ -54,9 +56,9 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {[
                 { href: '#servicios', label: 'Servicios' },
-                { href: '#para-quien', label: 'Para quién es' },
-                { href: '#precios', label: 'Planes y precios' },
-                { href: '/p2p', label: 'P2P Cripto' },
+                { href: '#track-record', label: 'Track Record' },
+                { href: '#precios', label: 'Precio' },
+                { href: '/p2p', label: 'Intercambio cripto' },
                 { href: '/login', label: 'Ingresar' },
               ].map((link) => (
                 <li key={link.href}>
@@ -72,36 +74,35 @@ export default function Footer() {
           <div className="md:col-span-3">
             <div className="label-mono mb-5">Contacto</div>
             <ul className="space-y-2.5">
-              <li className="text-sm text-[var(--text-muted)]">Ecuador 🇪🇨 · Latinoamérica</li>
+              <li className="text-sm text-[var(--text-muted)]">{BRAND.location}</li>
               <li>
                 <a href={WA} target="_blank" rel="noopener noreferrer"
                   className="text-sm text-[var(--text-muted)] hover:text-[var(--gold)] transition-colors">
-                  Luis: +593 99 669 1586
+                  Luis: {BRAND.phoneDisplay}
                 </a>
               </li>
               <li>
-                <a href="mailto:soporte@libertytrading.pro"
+                <a href={`mailto:${BRAND.email}`}
                   className="text-sm text-[var(--text-muted)] hover:text-[var(--gold)] transition-colors">
-                  soporte@libertytrading.pro
+                  {BRAND.email}
                 </a>
               </li>
               <li>
                 <a href={IG} target="_blank" rel="noopener noreferrer"
                   className="text-sm text-[var(--text-muted)] hover:text-[var(--gold)] transition-colors">
-                  @libertytradingclub
+                  {BRAND.social.handle}
                 </a>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-[var(--border)] pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <p className="label-mono text-[10px]">
-            © {new Date().getFullYear()} Liberty Trading Club — Todos los derechos reservados
+        <div className="border-t border-[var(--border)] pt-6 space-y-3">
+          <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
+            {RISK_DISCLAIMER}
           </p>
-          <p className="label-mono text-[10px] max-w-sm text-right">
-            Las inversiones implican riesgo. Resultados pasados no garantizan rendimientos futuros.
-            No ofrecemos asesoría financiera regulada.
+          <p className="label-mono text-[10px]">
+            © {new Date().getFullYear()} {BRAND.name} — Todos los derechos reservados
           </p>
         </div>
       </div>

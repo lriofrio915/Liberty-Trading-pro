@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Foto pendiente: imagen para compartir en redes">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9A7A30"/>
+      <stop offset="50%" stop-color="#C9A84C"/>
+      <stop offset="100%" stop-color="#E8C96A"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="76%" cy="45%" r="45%">
+      <stop offset="0%" stop-color="#C9A84C" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#C9A84C" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#111111"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Zona reservada para tipografía (dos tercios izquierdos) -->
+  <rect x="60" y="60" width="700" height="510" fill="none" stroke="#C9A84C" stroke-opacity="0.20" stroke-width="2" stroke-dasharray="10 10" rx="10"/>
+  <text x="80" y="300" font-family="'DM Mono', ui-monospace, monospace" font-size="24" letter-spacing="5" fill="#4a4642">ESPACIO RESERVADO</text>
+  <text x="80" y="336" font-family="'DM Mono', ui-monospace, monospace" font-size="24" letter-spacing="5" fill="#4a4642">PARA TIPOGRAFÍA</text>
+
+  <!-- Sujeto en el tercio derecho -->
+  <g fill="#1e1e1e">
+    <circle cx="950" cy="250" r="105"/>
+    <rect x="912" y="330" width="76" height="120" rx="38"/>
+    <path d="M810 630 C810 470 880 400 950 400 C1020 400 1090 470 1090 630 Z"/>
+  </g>
+
+  <rect x="24" y="24" width="1152" height="582" fill="none" stroke="#C9A84C" stroke-opacity="0.45" stroke-width="3" stroke-dasharray="16 12" rx="14"/>
+
+  <text x="600" y="560" text-anchor="middle" font-family="'DM Mono', ui-monospace, monospace" font-size="26" letter-spacing="5" fill="url(#g)">FOTO PENDIENTE · 04 · OG · 1200×630</text>
+</svg>

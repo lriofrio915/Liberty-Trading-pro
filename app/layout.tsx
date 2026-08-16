@@ -4,6 +4,7 @@ import './globals.css'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import ScrollToTop from '@/components/ScrollToTop'
 import Script from 'next/script'
+import { BRAND } from '@/lib/brand'
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -26,16 +27,34 @@ const syne = Syne({
   display: 'swap',
 })
 
+const DESCRIPTION =
+  'Educación en trading de futuros, bots para NinjaTrader, intercambio de cripto a dólares y ' +
+  'asesoría para invertir en acciones de EEUU. Con cada operación publicada — ganadoras y perdedoras.'
+
 export const metadata: Metadata = {
-  title: 'Liberty Trading Club — Club de Trading con Luis Riofrio',
-  description:
-    'Aprende Day Trading en futuros NQ/MNQ, invierte en acciones y ETFs, y opera con Vinces IA como tu coach. Club de trading con Luis Riofrio desde $29/mes. Cancela cuando quieras.',
-  keywords: 'trading, futuros, inversión, acciones, ETFs, Luis Riofrio, Ecuador, IBKR, NinjaTrader, club trading, 29 dólares, plan mensual, NQ MNQ Nasdaq',
+  metadataBase: new URL(BRAND.url),
+  title: {
+    default: `${BRAND.name} — ${BRAND.role}`,
+    template: `%s | ${BRAND.name}`,
+  },
+  description: DESCRIPTION,
+  keywords:
+    'Luis Riofrio, asesor de inversiones, trading futuros, NinjaTrader 8, bots de trading, ' +
+    'pruebas de fondeo, comprar acciones EEUU, IBKR, Interactive Brokers, USDT Ecuador, ' +
+    'intercambio cripto, NQ MNQ Nasdaq, trading algorítmico',
+  alternates: { canonical: '/' },
   openGraph: {
-    title: 'Liberty Trading Club — Club de Trading | $29/mes',
-    description: 'Day Trading NQ/MNQ, inversión en acciones y ETFs, Vinces IA y comunidad privada. Luis Riofrio — $29/mes, cancela cuando quieras.',
-    url: 'https://libertytrading.pro',
-    siteName: 'Liberty Trading Club',
+    type: 'website',
+    locale: 'es_EC',
+    title: `${BRAND.name} — ${BRAND.role}`,
+    description: DESCRIPTION,
+    url: BRAND.url,
+    siteName: BRAND.name,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${BRAND.name} — ${BRAND.role}`,
+    description: DESCRIPTION,
   },
 }
 
