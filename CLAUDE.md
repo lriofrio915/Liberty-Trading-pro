@@ -25,13 +25,18 @@ Monetiza vía Hotmart con 4 productos: academia, club, mensual, anual.
 | Ruta | Descripción |
 |------|-------------|
 | `academia` | Contenido educativo (acceso por plan) |
-| `algolab` | Lab de trading algorítmico — backtesting + generación MQL5 |
-| `analisis` | Análisis de mercado |
+| `acciones` | Acciones — señales diarias, picks intradía, research (Tauric) |
+| `agentes` | Agentes IA por estrategia (Peter Lynch, small caps, intradía, vanilla long/short, monitor) |
+| `analisis` | Análisis de mercado (`lib/analisis-engine.ts`) |
+| `brokers` | Conexión y ejecución vía brokers (IBKR) |
 | `championship` | Competencia de trading entre usuarios |
+| `clientes` | Clientes KYC (solo admin) |
 | `comunidad` | Posts, likes, comentarios |
 | `conocimiento` | Base de conocimiento |
+| `flujo` | Flujo del dinero |
+| `futuros` | Futuros NQ/MNQ — sesgo intradía y estado de la cuenta |
 | `leads` | CRM interno (solo admin) |
-| `monitor` | Monitor de mercado (iframe de worldmonitor.app) |
+| `opciones` | Opciones (`lib/options`) |
 | `oportunidades` | Señales de trading |
 | `planes` | Gestión del plan de trading del usuario |
 | `profile` | Perfil, certificados, configuración |
@@ -39,6 +44,7 @@ Monetiza vía Hotmart con 4 productos: academia, club, mensual, anual.
 | `retiros` | Historial de retiros de cuenta |
 | `track-record` | Historial público de operaciones (`/track-record/[slug]`) |
 | `upgrade` | Página de upgrade de plan |
+| `vibe` | Laboratorio Quant — estrategias algorítmicas vía Vibe-Trading |
 | `vinces` | AI assistant de trading (OpenRouter) |
 
 ## Planes de usuario
@@ -87,16 +93,33 @@ Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus
 | `POST /api/webhook/hotmart` | Recibe eventos de pago Hotmart y actualiza el plan del usuario |
 | `POST /api/vinces-wa` | Webhook del bot WhatsApp de Vinces (responde preguntas de leads) |
 
-## AlgoLab — Módulo Crítico
+## Vibe — Laboratorio Quant
 
-El moat técnico del producto. Flujo:
-1. Usuario sube dataset de precios (`AlgoDataset`)
-2. Crea estrategia con indicadores (`AlgoStrategy`)
-3. Ejecuta backtest (`algolab-backtest.ts`) — analiza patrones de velas
-4. Ve reporte de patrones (`AlgoPatternReport`)
-5. Exporta código MQL5 para MetaTrader 5 (`algolab-mql5.ts`)
+Reemplazó a AlgoLab (eliminado). El módulo `dashboard/vibe` es un proxy a
+[Vibe-Trading](https://github.com/HKUDS/Vibe-Trading), un FastAPI en Python que
+corre aparte y genera estrategias, backtests e indicadores para TradingView
+(Pine Script) y NinjaTrader 8 (NinjaScript).
 
-El generador MQL5 usa `SL_ATR_Mult` y `TP_ATR_Mult` como parámetros de entrada del EA.
+Cliente en `lib/vibe-trading.ts`. Config: `VIBE_TRADING_BASE_URL` (default
+`https://vibe-trading-liberty.fly.dev`) y `VIBE_TRADING_API_KEY`.
+
+## Marca
+
+`lib/brand.ts` es la **fuente única de verdad** de todo dato público de marca:
+nombre, teléfono, links de Hotmart, precios, rutas de fotos. No hardcodear
+ninguno de esos valores en componentes — importar `BRAND` o el helper `wa()`
+para links de WhatsApp.
+
+Los design tokens viven en `app/globals.css` (`:root` y `html.light`) y se
+exponen a Tailwind en `tailwind.config.ts` (`gold`, `ink`, `surface`, `panel`,
+`line`, `profit`, `loss`). Cambiar un color en globals.css actualiza ambos
+sistemas y respeta el modo claro.
+
+Manual completo en `branding/` (estrategia, identidad verbal y visual, design
+tokens, guía de fotografía, aplicaciones, legal y disclaimers).
+
+Las fotos en `public/brand/placeholders/` son SVGs provisionales — reemplazar
+por fotografía real siguiendo `branding/05-guia-fotografia.md`.
 
 ## Variables de Entorno Requeridas
 
@@ -111,6 +134,8 @@ NEXT_PUBLIC_APP_URL               # URL base del app
 RESEND_API_KEY                    # Emails
 HOTMART_WEBHOOK_TOKEN             # Validación de pagos
 HOTMART_LINK_*                    # Links de compra (academia, club, mensual, anual)
+NEXT_PUBLIC_HOTMART_LINK_BOTS     # Checkout de bots. Vacío = el CTA cae a WhatsApp
+VIBE_TRADING_BASE_URL/API_KEY     # Backend Vibe-Trading (laboratorio quant)
 CLOUDINARY_*                      # Media uploads
 N8N_WEBHOOK_*                     # Automatización
 EVOLUTION_API_URL/INSTANCE/KEY    # WhatsApp bot
@@ -133,7 +158,7 @@ npm run dev                # Dev server en puerto 3000
 
 - **Supabase para auth, Prisma para queries:** No usar el cliente de Supabase para queries de datos, solo para auth y storage
 - **Server Components por defecto:** Solo añadir `'use client'` cuando sea necesario (interactividad)
-- **No hay tests actualmente:** El backtest engine (`algolab-backtest.ts`) es prioridad para cobertura
+- **Tests:** solo `__tests__/lib/` (access, analisis-engine, cron-utils, faros-metrics, notifications, options-pricing, price-format, slug). Sin cobertura de rutas API ni componentes
 - **Track Record público:** `/track-record/[slug]` es intencional — sirve como marketing
 
 ## Skill routing
