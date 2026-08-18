@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import TickerBar from '@/components/TickerBar/TickerBar'
 import BrandPhoto from '@/components/BrandPhoto/BrandPhoto'
@@ -8,41 +7,17 @@ import { BRAND, wa } from '@/lib/brand'
 
 const LUIS_WA = wa('Hola Luis, quiero información sobre tus servicios de inversión')
 
-interface TrackRecord {
-  totalTrades: number
-  wins: number
-  losses: number
-  winRate: number
-  profitFactor: number
-  totalNetPnl: number
-  rendimientoYTD: number
-}
+/**
+ * Señales de confianza cualitativas. Sustituyen a los KPI numéricos: la landing
+ * vende criterio y cercanía, las métricas viven en /track-record.
+ */
+const TRUST = [
+  'Cuenta real, no simulador',
+  'Cada operación publicada',
+  'Acompañamiento 1 a 1',
+]
 
 export default function Hero() {
-  const [data, setData] = useState<TrackRecord | null>(null)
-  const fetched = useRef(false)
-
-  useEffect(() => {
-    if (fetched.current) return
-    fetched.current = true
-    fetch('/api/public-track-record')
-      .then((r) => r.json())
-      .then((d) => setData(d))
-      .catch(() => {})
-  }, [])
-
-  const kpis = [
-    {
-      label: 'Rendimiento YTD',
-      value: data ? `${data.rendimientoYTD >= 0 ? '+' : ''}${data.rendimientoYTD.toFixed(1)}%` : '—',
-    },
-    { label: 'Win Rate', value: data ? `${data.winRate}%` : '—' },
-    {
-      label: 'Profit Factor',
-      value: data ? (data.profitFactor >= 999 ? '∞' : data.profitFactor.toFixed(2)) : '—',
-    },
-  ]
-
   return (
     <>
       <div className="pt-16">
@@ -80,15 +55,15 @@ export default function Hero() {
                 publicada — ganadoras y perdedoras.
               </p>
 
-              {/* KPIs en vivo */}
-              <div className="grid grid-cols-3 gap-3 mb-8 max-w-md">
-                {kpis.map((k) => (
-                  <div key={k.label} className="card p-4">
-                    <div className="text-2xl font-bold gradient-gold" style={{ fontFamily: 'var(--font-serif)' }}>
-                      {k.value}
-                    </div>
-                    <div className="label-mono text-[9px] mt-1">{k.label}</div>
-                  </div>
+              {/* Señales de confianza */}
+              <div className="flex flex-wrap gap-2 mb-8 max-w-md">
+                {TRUST.map((t) => (
+                  <span key={t}
+                    className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3.5 py-1.5 text-[12px] text-[var(--text-secondary)]"
+                    style={{ background: 'var(--bg-card)' }}>
+                    <span className="text-[var(--gold)]">✓</span>
+                    {t}
+                  </span>
                 ))}
               </div>
 

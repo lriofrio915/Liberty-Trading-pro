@@ -29,27 +29,28 @@ const FAQS = [
   },
 ]
 
-interface TrackRecordData {
-  totalTrades: number
-  wins: number
-  losses: number
-  winRate: number
-  profitFactor: number
-  totalNetPnl: number
-  rendimientoYTD: number
-  recentSessions: { date: string; instrumento: string; direccion: string; resultado: string; pnlNeto: number }[]
-}
+/**
+ * Cómo trabaja Luis. Reemplaza al bloque de métricas: la landing convence con
+ * método y cercanía; las cifras operación por operación viven en /track-record.
+ */
+const METODO = [
+  {
+    title: 'Opero mi propio capital',
+    desc: 'Lo que enseño es lo que hago cada mañana en cuenta real, no en simulador.',
+  },
+  {
+    title: 'Publico ganadoras y perdedoras',
+    desc: 'Mi historial de operaciones es público y verificable, sin filtros ni recortes.',
+  },
+  {
+    title: 'Te acompaño uno a uno',
+    desc: 'Desde abrir tu cuenta de broker hasta ejecutar tu primera operación.',
+  },
+]
 
 export default async function LandingPage() {
   const supabase = await createSupabaseServerClient()
   const { data: { session } } = await supabase.auth.getSession()
-
-  let trackRecord: TrackRecordData | null = null
-  try {
-    const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const r = await fetch(`${base}/api/public-track-record`, { next: { revalidate: 3600 } })
-    if (r.ok) trackRecord = await r.json()
-  } catch { /* non-critical — page renders without live data */ }
 
   return (
     <main className="relative noise">
@@ -114,8 +115,8 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* ─── 2 · PRUEBA: LUIS + TRACK RECORD ─────────────────── */}
-      <section id="track-record" className="py-20 px-4">
+      {/* ─── 2 · PRUEBA: LUIS + MÉTODO ───────────────────────── */}
+      <section id="metodo" className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-12 items-start">
 
@@ -154,87 +155,39 @@ export default async function LandingPage() {
               </div>
             </div>
 
-            {/* Track record */}
+            {/* Método */}
             <div>
               <div className="label-mono mb-2 text-[var(--gold)]">Transparencia total</div>
               <h3 className="headline text-3xl sm:text-4xl text-[var(--text-primary)] mb-6">
-                Track record en vivo — {new Date().getFullYear()}
+                Así trabajo <span className="gradient-gold">contigo</span>
               </h3>
 
-              {trackRecord ? (
-                <>
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-                    {[
-                      { label: 'Win Rate', value: `${trackRecord.winRate}%`, sub: `${trackRecord.wins}W / ${trackRecord.losses}L` },
-                      { label: 'Profit Factor', value: trackRecord.profitFactor >= 999 ? '∞' : trackRecord.profitFactor.toFixed(2), sub: 'ganancias / pérdidas' },
-                      { label: 'Rendimiento YTD', value: `${trackRecord.rendimientoYTD > 0 ? '+' : ''}${trackRecord.rendimientoYTD.toFixed(1)}%`, sub: 'capital propio' },
-                      { label: 'Operaciones', value: String(trackRecord.totalTrades), sub: `YTD ${new Date().getFullYear()}` },
-                    ].map((s) => (
-                      <div key={s.label} className="card p-4">
-                        <div className="label-mono text-[10px] text-[var(--text-muted)] mb-1">{s.label}</div>
-                        <div className="text-2xl font-black gradient-gold">{s.value}</div>
-                        <div className="text-[11px] text-[var(--text-muted)] mt-1">{s.sub}</div>
-                      </div>
-                    ))}
+              {/* Foto placeholder — reemplazar la ruta en lib/brand.ts (photos.desk) */}
+              <div className="rounded-2xl overflow-hidden border border-[var(--border)] mb-6">
+                <BrandPhoto
+                  src={BRAND.photos.desk}
+                  alt={`${BRAND.name} operando en su escritorio`}
+                  width={1800}
+                  height={1200}
+                  sizes="(max-width: 1024px) 100vw, 640px"
+                  className="w-full h-auto"
+                />
+              </div>
+
+              <div className="space-y-3 mb-6">
+                {METODO.map((m) => (
+                  <div key={m.title} className="card p-5">
+                    <div className="text-sm font-bold text-[var(--text-primary)] mb-1">{m.title}</div>
+                    <div className="text-sm text-[var(--text-secondary)] leading-relaxed">{m.desc}</div>
                   </div>
+                ))}
+              </div>
 
-                  {trackRecord.recentSessions.length > 0 && (
-                    <div className="card p-0 overflow-hidden">
-                      <div className="px-5 py-3.5 border-b border-[var(--border)] flex items-center justify-between">
-                        <span className="label-mono text-[10px] text-[var(--text-muted)]">Últimas operaciones</span>
-                        <Link href={`/track-record/${BRAND.trackRecordSlug}`}
-                          className="label-mono text-[10px] text-[var(--gold)] hover:underline">
-                          Historial completo →
-                        </Link>
-                      </div>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-[var(--border)]">
-                              {['Fecha', 'Instrumento', 'Dirección', 'Resultado', 'PnL'].map(h => (
-                                <th key={h} className="px-5 py-2.5 text-left label-mono text-[10px] text-[var(--text-muted)]">{h}</th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {trackRecord.recentSessions.slice(0, 5).map((s, i) => (
-                              <tr key={i} className="border-b border-[var(--border)] last:border-0 hover:bg-[rgba(201,168,76,0.03)] transition-colors">
-                                <td className="px-5 py-2.5 label-mono text-xs text-[var(--text-muted)] whitespace-nowrap">
-                                  {new Date(s.date).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })}
-                                </td>
-                                <td className="px-5 py-2.5 font-bold text-[var(--text-primary)] text-xs">{s.instrumento}</td>
-                                <td className="px-5 py-2.5 label-mono text-xs text-[var(--text-secondary)]">{s.direccion}</td>
-                                <td className="px-5 py-2.5">
-                                  <span className={`label-mono text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap ${
-                                    s.resultado === 'WIN'
-                                      ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40'
-                                      : s.resultado === 'LOSS'
-                                        ? 'bg-red-950/40 text-red-400 border border-red-800/40'
-                                        : 'text-[var(--text-muted)] border border-[var(--border)]'
-                                  }`}>
-                                    {s.resultado}
-                                  </span>
-                                </td>
-                                <td className={`px-5 py-2.5 label-mono text-xs font-bold ${s.pnlNeto >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                  {s.pnlNeto >= 0 ? '+' : ''}{s.pnlNeto.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
+              <Link href={`/track-record/${BRAND.trackRecordSlug}`}
+                className="btn-outline text-sm py-3 px-6 rounded-lg inline-flex items-center gap-2">
+                Ver mi historial de operaciones →
+              </Link>
 
-                  <p className="label-mono text-[9px] mt-3 leading-relaxed">
-                    Resultados de la cuenta de capital propio de {BRAND.name}. Rendimientos pasados no garantizan resultados futuros.
-                  </p>
-                </>
-              ) : (
-                <div className="card p-8 text-center text-[var(--text-muted)] text-sm">
-                  Track record cargando...
-                </div>
-              )}
             </div>
 
           </div>

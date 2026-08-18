@@ -56,7 +56,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {[
                 { href: '#servicios', label: 'Servicios' },
-                { href: '#track-record', label: 'Track Record' },
+                { href: `/track-record/${BRAND.trackRecordSlug}`, label: 'Track Record' },
                 { href: '#precios', label: 'Precio' },
                 { href: '/p2p', label: 'Intercambio cripto' },
                 { href: '/login', label: 'Ingresar' },

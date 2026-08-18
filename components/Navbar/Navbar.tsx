@@ -8,7 +8,6 @@ import { BRAND } from '@/lib/brand'
 
 const NAV_LINKS = [
   { href: '#servicios', label: 'Servicios' },
-  { href: '#track-record', label: 'Track Record' },
   { href: '#sobre-luis', label: 'Sobre Luis' },
   { href: '#precios', label: 'Precio' },
 ]
