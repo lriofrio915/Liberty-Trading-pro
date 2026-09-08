@@ -1,0 +1,15 @@
+# Secrets: usar env vars de Vercel, no archivos locales
+.env
+.env.local
+.env.*.local
+
+# Build / deps
+node_modules
+.next
+.vercel
+.git
+
+# Ruido local
+*.log
+.DS_Store
+.env.bak.*
