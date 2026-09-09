@@ -64,6 +64,7 @@ Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus
 | Hora Ecuador | Ruta API | Qué hace | Notifica WA |
 |---|---|---|---|
 | 5:00am | `/api/screener/lynch?refresh=true` | Refresca cache Peter Lynch | No |
+| 9:00am ET | `/api/cron/morning-scan` | Escaneo matutino de señales de mercado; guarda oportunidades con confianza ≥70%. Invocado desde VPS (`scripts/morning-scan-cron.sh` — 14:00 UTC en cron.d) | No |
 | 8:36am | `/api/cron/daily-scanner` | Escaneo acciones via API externa (async polling) | No |
 | 8am-2pm c/30min | `/api/cron/bias-monitor` | Detecta flips de sesgo en ScanOpportunity | No |
 | 8:15am-3:45pm c/30min | `/api/cron/sesgo-intraday` | Monitor sesgo índices — MANTENER/AJUSTAR/CERRAR | **Sí** |
