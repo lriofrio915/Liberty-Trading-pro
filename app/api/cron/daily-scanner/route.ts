@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { after } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { dailySignalsJSON, DailySignalsError } from '@/lib/daily-signals'
 import { notifyAccionesDailyScanner } from '@/lib/notify-nexus'
@@ -86,7 +85,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Respond in <1s — DB query + Daily Signals call run in background to avoid Cloudflare 524
-  after(async () => {
+  void (async () => {
     try {
       type AnalyzeResp = {
         accepted?: { task_id: string }[]
@@ -116,7 +115,7 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       console.error('[daily-scanner] background error:', err)
     }
-  })
+  })()
 
   return NextResponse.json({ ok: true, started: true })
 }

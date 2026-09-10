@@ -399,11 +399,7 @@ model BrokerConnection {
   id               String    @id @default(cuid())
   userId           String
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  brokerType       String    // "mt5" | "ibkr"
-  // MT5 direct bridge (DevRico003/mt5-rest-api via cloudflared tunnel)
-  mt5TunnelUrl     String?
-  mt5AuthToken     String?   // stored encrypted via Fernet AES-256 in Python service
-  mt5AccountNumber String?
+  brokerType       String    // "ibkr"
   // IBKR (ib_insync via TWS or IB Gateway)
   ibkrHost         String?
   ibkrPort         Int?
@@ -417,8 +413,7 @@ model BrokerConnection {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  trades      BrokerTrade[]
-  signalQueue SignalQueue[]
+  trades BrokerTrade[]
 
   @@unique([userId, brokerType])
 }
@@ -439,13 +434,12 @@ model BrokerTrade {
   status             String           @default("pending") // pending|filled|rejected|cancelled
   filledPrice        Float?
   errorMessage       String?
-  signalSource       String?          // "cfd_signal" | "scan_opportunity" | "tauric" | "manual"
+  signalSource       String?          // "cfd_signal" | "scan_opportunity" | "manual"
   signalData         Json?
   executedAt         DateTime         @default(now())
 
   @@index([userId, executedAt])
 }
-
 // ─── NOTIFICACIONES ───────────────────────────────────────────────────────────
 
 model Notification {
@@ -573,40 +567,6 @@ model ScanOpportunity {
   rendimiento1445  Float?  // % a favor del sesgo: positivo = ganó, negativo = perdió
 
   createdAt DateTime @default(now())
-
-  signalQueue SignalQueue[]
-}
-
-// ─── AUTO-TRADE SIGNAL QUEUE ─────────────────────────────────────────────────
-
-// Cola de señales generadas por el market-scan 09:00am.
-// Liberty pushes orders via POST /api/brokers/mt5/order for each PENDING signal.
-model SignalQueue {
-  id                 String            @id @default(cuid())
-  brokerConnectionId String?
-  brokerConnection   BrokerConnection? @relation(fields: [brokerConnectionId], references: [id], onDelete: Cascade)
-  scanOpId      String?     // link a ScanOpportunity de donde vino la señal
-  scanOp        ScanOpportunity? @relation(fields: [scanOpId], references: [id])
-
-  symbol        String      // símbolo MT5 (ej: "NQ100", "BTCUSD")
-  symbolRaw     String      // símbolo original del scan (ej: "NQ", "BTC")
-  type          String      // BUY | SELL
-  volume        Float       @default(0.01)
-  entryPrice    Float       // precio9am del scan
-  sl            Float       // entryPrice * (1 ∓ 0.005)
-  tp            Float       // entryPrice * (1 ± 0.010)
-
-  status        String      @default("PENDING")  // PENDING|SENT|EXECUTED|FAILED|CANCELLED
-  mt5Ticket     Int?        // ticket number devuelto por MT5 tras ejecución
-  executedPrice Float?      // precio real de ejecución
-  executedAt    DateTime?
-  comment       String?     // "Auto:scan=xxx,conf=87%"
-  errorMsg      String?
-
-  createdAt     DateTime    @default(now())
-
-  @@index([brokerConnectionId, status])
-  @@index([createdAt])
 }
 
 model KycClient {
