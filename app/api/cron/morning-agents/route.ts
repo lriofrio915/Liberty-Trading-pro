@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { after } from 'next/server'
 import { fetchOHLC, VOLATILITY_UNIVERSE } from '@/app/api/intraday/screen/route'
 import { runAgent, repairJSON } from '@/lib/analisis-engine'
 import { prisma } from '@/lib/prisma'
@@ -463,7 +462,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  after(async () => {
+  void (async () => {
     try {
       const today0 = new Date()
       today0.setUTCHours(0, 0, 0, 0)
@@ -501,7 +500,7 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       console.error('[morning-agents] background error:', err)
     }
-  })
+  })()
 
   return NextResponse.json({ ok: true, started: true })
 }
