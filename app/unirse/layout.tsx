@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Únete al Club Liberty Trading | Plan Pro $29/mes',
+  title: 'Curso gratuito de trading | Liberty Trading Pro',
   description:
-    'Accede a toda la formación, herramientas y comunidad de Liberty Trading Club. Day Trading NQ/MNQ, Vinces IA, Academia completa y track record real. $29/mes, cancela cuando quieras.',
-  keywords: 'club trading, Liberty Trading Club, unirse trading, 29 dólares mensual, Vinces IA, NQ MNQ futuros, Luis Riofrio',
+    'Aprende gratis a abrir tu cuenta en Interactive Brokers, analizar acciones con Claude y entender opciones. Con Luis Riofrio, trader cuantitativo con track record público verificable.',
+  keywords: 'curso gratis trading, Liberty Trading Pro, IBKR, análisis de acciones, opciones, Luis Riofrio',
   openGraph: {
-    title: 'Únete al Club Liberty Trading Club — $29/mes',
-    description: 'Formación completa, señales en vivo, Vinces IA y comunidad privada. $29/mes, sin permanencia.',
+    title: 'Curso gratuito de trading — Liberty Trading Pro',
+    description: 'De cero a tu primera cuenta en acciones y opciones. 100% gratis, sin tarjeta.',
     url: 'https://libertytrading.pro/unirse',
   },
 }

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import DOMPurify from 'dompurify'
 import type { ChatMessage } from '@/types'
-import { BRAND } from '@/lib/brand'
+import { BRAND, wa } from '@/lib/brand'
 
 // ─── Config por modo ─────────────────────────────────────────────────────────
 
@@ -19,7 +19,7 @@ const CONFIG = {
     storageKey: 'vinces_landing_msgs',
     sessionKey: 'vinces_landing_session' as string,
     apiUrl: '/api/vinces-landing',
-    initialMessage: '¡Hola! Soy **Vinces**, el asistente de Liberty Trading Club.\n\n¿Ya tienes experiencia en trading o sería tu primera vez invirtiendo?',
+    initialMessage: '¡Hola! Soy **Vinces**, el asistente de Liberty Trading Pro.\n\n¿Ya tienes experiencia en trading o sería tu primera vez invirtiendo?',
   },
 }
 
@@ -79,7 +79,7 @@ function saveSession(key: string | null, session: LandingSession) {
   } catch {}
 }
 
-const HOTMART_MENSUAL = BRAND.hotmart.mensual
+const QUANT_HREF = BRAND.hotmart.quant || wa('Hola Luis, quiero información sobre Liberty Quant')
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -218,7 +218,8 @@ export default function VincesWidget({ mode = 'dashboard' }: Props) {
     if (sess.captured && msgs.length > 0) {
       const last = msgs[msgs.length - 1]
       if (last.role === 'assistant' && !last.links) {
-        msgs[msgs.length - 1] = { ...last, links: { mensual: HOTMART_MENSUAL } }
+        const plan: 'QUANT' | 'GRATIS' = sess.plan === 'QUANT' ? 'QUANT' : 'GRATIS'
+        msgs[msgs.length - 1] = { ...last, links: { plan, href: plan === 'QUANT' ? QUANT_HREF : '/unirse' } }
       }
     }
 
@@ -403,12 +404,12 @@ export default function VincesWidget({ mode = 'dashboard' }: Props) {
                 {msg.links && (
                   <div className="mt-2 max-w-[85%] w-full">
                     <a
-                      href={msg.links.mensual}
+                      href={msg.links.href}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block text-center text-xs font-bold py-2.5 px-4 rounded-xl btn-gold"
                     >
-                      Plan Pro Mensual — $29/mes →
+                      {msg.links.plan === 'QUANT' ? 'Liberty Quant — $1,000 →' : 'Empezar curso gratuito →'}
                     </a>
                   </div>
                 )}

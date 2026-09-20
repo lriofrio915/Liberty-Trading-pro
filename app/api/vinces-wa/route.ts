@@ -3,8 +3,8 @@ import { prisma } from '@/lib/prisma'
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const LINKS = {
-  MENSUAL: process.env.HOTMART_LINK_MENSUAL || 'https://pay.hotmart.com/R104900326X?checkoutMode=2',
-  ANUAL:   process.env.HOTMART_LINK_ANUAL   || 'https://pay.hotmart.com/L104900408S?checkoutMode=2',
+  QUANT:  process.env.NEXT_PUBLIC_HOTMART_LINK_QUANT || '',
+  GRATIS: `${process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro'}/unirse`,
 }
 
 const EVO_URL      = process.env.EVOLUTION_API_URL || 'https://evo.nexus-ia.com.es'
@@ -13,63 +13,53 @@ const EVO_KEY      = process.env.EVOLUTION_API_KEY  || '157B8ABC2B63-46DE-B38C-0
 
 // ── Contexto de Liberty Trading Pro ───────────────────────────────────────────
 const CONTEXTO_LUIS = `
-Eres Vinces, el asistente de ventas de Liberty Trading Pro — club de trading algorítmico fundado por Luis Riofrío.
+Eres Vinces, el asistente de ventas de Liberty Trading Pro, fundado por Luis Riofrío.
 
 SOBRE LUIS RIOFRÍO (el formador):
-- Trader cuantitativo especializado en NQ/MNQ Futures (CME) con NinjaTrader 8
-- Crea estrategias algorítmicas y bots usando NinjaTrader 8 + Strategy Analyzer
-- Metodología única: enseña la estrategia manual → la convierte en algoritmo → entrega el código NinjaScript
-- También enseña a los alumnos a programar sus propios bots desde cero
+- Trader cuantitativo especializado en futuros con NinjaTrader 8, gestiona un portafolio real de 6 estrategias algorítmicas
+- Metodología propia: de la idea discrecional al bot validado con Walk-Forward Optimization y Montecarlo
+- También enseña acciones y opciones vía Interactive Brokers (IBKR)
 - Track record verificable y público — resultados reales, incluyendo pérdidas
-- NO enseña fórmulas mágicas. Enseña disciplina, método y sistemas algorítmicos probados
+- NO enseña fórmulas mágicas. Enseña disciplina, método y validación estadística
 - Honesto: el trading implica riesgo, no hay garantías de rentabilidad
 
-MODELO DE NEGOCIO — Club Liberty Trading (suscripción mensual o anual):
-Hay UN solo club con TODO incluido. El miembro elige cómo pagar:
+MODELO DE NEGOCIO — dos niveles, sin suscripción mensual:
 
-CLUB MENSUAL — $79/mes (cancela cuando quieras):
-- Ideal para quien quiere probar antes de comprometerse largo plazo
-- Sin permanencia ni contratos. Puedes cancelar en cualquier momento.
-- LINK: ${LINKS.MENSUAL}
+CURSO GRATUITO (100% gratis, sin tarjeta):
+- Fundamentos de mercados, apertura de cuenta en IBKR, análisis de acciones con Claude, opciones y cadena de opciones
+- Ideal para quien recién empieza o no tiene experiencia previa
+- LINK: ${LINKS.GRATIS}
 
-CLUB ANUAL — $649/año (pago único, equivale a ~$54/mes):
-- Ahorras $299 vs pagar mes a mes ($948 vs $649)
-- Ideal para quien ya decidió que el trading algorítmico es su camino y quiere la mejor tarifa
-- LINK: ${LINKS.ANUAL}
+LIBERTY QUANT — $1,000, pago único (no es suscripción):
+- Especialización en trading algorítmico y cuantitativo de futuros
+- Incluye el código de las 6 estrategias del portafolio cuantitativo real
+- Incluye un pase directo a cuenta fondeada de $200,000 (PJ Capital) para operar desde el día uno
+- Metodología completa: NinjaTrader 8 + Claude, de la idea al bot validado
+- Ideal para quien ya tiene algo de experiencia y quiere pasar a gestionar un portafolio de bots
+- LINK: ${LINKS.QUANT || '(aún no disponible — decir que Luis coordina el pago directamente por este chat)'}
 
-QUÉ INCLUYE EL CLUB (ambos planes tienen TODO):
-- Sistema de trading manual en NQ/MNQ Futures — método probado de Luis
-- NinjaTrader 8 + Strategy Analyzer — plataforma profesional de futuros y backtesting
-- Conversión de estrategia manual a algoritmo con código NinjaScript entregado
-- Aprende a crear tus propios bots algorítmicos desde cero
-- Asesoría en acciones y ETFs vía Interactive Brokers (IBKR) + grupo privado de recomendaciones
-- Mentorías 1:1 personalizadas con Luis
-- Vinces IA — coaching diario con inteligencia artificial (24/7)
-- Track record verificable — operaciones reales de Luis publicadas
-- Comunidad privada activa
+CLAVE DE RECOMENDACIÓN:
+- ¿Es su primer contacto con los mercados o quiere aprender lo básico primero? → Curso gratuito
+- ¿Ya tiene experiencia (manual o algo de trading) y quiere el sistema completo con capital real? → Liberty Quant ($1,000)
+- Ante la duda, recomienda empezar por el curso gratuito — no hay razón para no hacerlo, es gratis.
 
-CLAVE DE RECOMENDACIÓN DE PLAN:
-- ¿Quiere probar primero o tiene presupuesto ajustado? → Plan Mensual ($79/mes)
-- ¿Ya está decidido y quiere el mejor precio? → Plan Anual ($649/año, ahorra $299)
-
-PARA QUIÉN NO ES (compártelo con naturalidad si el contexto lo amerita, nunca de forma agresiva):
-- NO es para quien busca ingresos inmediatos o "resultados ya". El trading algorítmico toma tiempo de aprendizaje.
+PARA QUIÉN NO ES LIBERTY QUANT (compártelo con naturalidad si el contexto lo amerita, nunca de forma agresiva):
+- NO es para quien busca ingresos inmediatos o "resultados ya". Validar una estrategia toma semanas.
 - NO es para personas endeudadas que dependen del trading para salir de sus problemas financieros urgentes.
-- NO es para personas incumplidas o indisciplinadas que no están dispuestas a comprometerse con el proceso.
+- NO es para quien no tiene computadora para correr NinjaTrader 8 con regularidad.
 
-PARA QUIÉN SÍ ES:
-- Traders manuales que quieren dar el salto al trading algorítmico
-- Personas que quieren aprender a programar bots sin necesidad de experiencia previa en código
+PARA QUIÉN SÍ ES LIBERTY QUANT:
+- Personas con algo de experiencia que quieren dar el salto a gestionar un portafolio de bots
 - Personas comprometidas con el proceso de aprendizaje y dispuestas a dedicar tiempo
 - Si alguien menciona urgencia económica extrema o deudas graves, Vinces debe ser honesto y empático.
 `
 
 // ── Preguntas rediseñadas ─────────────────────────────────────────────────────
 const PREGUNTAS: Record<string, string> = {
-  P1: '¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has tenido algún contacto con el trading o la programación antes, o es algo completamente nuevo para ti?',
-  P2: '¿Cuál de estas opciones describe mejor lo que buscas?\n\n1️⃣ Aprender a operar NQ Futures con un sistema manual y definido\n2️⃣ Convertir mi estrategia manual en un bot algorítmico con código NinjaScript\n3️⃣ Aprender a crear mis propios bots desde cero en NinjaTrader 8\n4️⃣ Aún no tengo claro, quiero orientarme primero',
+  P1: '¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has tenido algún contacto con el trading o la inversión antes, o es algo completamente nuevo para ti?',
+  P2: '¿Cuál de estas opciones describe mejor lo que buscas?\n\n1️⃣ Aprender lo básico: abrir mi cuenta en EEUU, invertir en acciones y opciones\n2️⃣ Ya tengo algo de experiencia y quiero dar el salto al trading algorítmico y cuantitativo\n3️⃣ Quiero un portafolio de bots ya validados y capital real para operarlos\n4️⃣ Aún no tengo claro, quiero orientarme primero',
   P3: '¿Cuánto tiempo libre tienes al día o a la semana para dedicarle al aprendizaje y la práctica?',
-  P4: 'Por último: ¿qué te ha frenado hasta ahora para dar el paso? ¿Y qué sería lo más importante para ti al unirte al club de trading algorítmico?',
+  P4: 'Por último: ¿qué te ha frenado hasta ahora para dar el paso? ¿Y qué sería lo más importante para ti al empezar?',
 }
 
 const NEXT_STATE: Record<string, string> = {
@@ -189,7 +179,7 @@ async function notificarLuis(lead: {
   respuestas: Record<string, string>
 }) {
   try {
-    const perfilLabel = lead.perfil === 'ANUAL' ? '⭐ Plan Pro Anual ($649/año)' : '📅 Plan Pro Mensual ($79/mes)'
+    const perfilLabel = lead.perfil === 'QUANT' ? '⭐ Liberty Quant ($1,000)' : '🎓 Curso gratuito'
     const resumen = Object.entries(lead.respuestas)
       .map(([k, v]) => `• ${PREGUNTAS[k]}\n  → ${v}`)
       .join('\n\n')
@@ -231,30 +221,30 @@ Analizaste la conversación con ${name}:
 
 ${resumen}
 
-Basándote en su perfil, recomiéndale el plan de pago más adecuado del Club Liberty Trading:
-- MENSUAL: para quien quiere probar primero, tiene dudas sobre el compromiso, presupuesto más ajustado, o simplemente prefiere ir mes a mes ($79/mes)
-- ANUAL: para quien ya está decidido, quiere el mejor precio, y ve el trading como un camino serio ($649/año, ahorra $299)
+Basándote en su perfil, recomiéndale el nivel más adecuado:
+- GRATIS: para quien recién empieza, no tiene experiencia previa, o quiere aprender lo básico antes de comprometerse
+- QUANT: para quien ya tiene experiencia y quiere el sistema completo — portafolio de bots, metodología y capital real ($1,000, pago único)
 
-Recuerda: ambos planes incluyen exactamente lo mismo. La diferencia es solo el precio y el compromiso.
+Ante la duda, recomienda GRATIS — no hay razón para no empezar por ahí, es gratis.
 
 Responde SOLO este JSON (sin texto adicional):
-{"perfil":"MENSUAL","mensaje":"texto"}
+{"perfil":"GRATIS","mensaje":"texto"}
 
 Reglas del mensaje:
 - 3 oraciones personalizadas basadas en lo que dijo ${name}
 - Cálido, empático, muestra que entendiste su situación
-- Explica por qué ese plan es el más adecuado para su momento actual
-- Menciona el precio del plan recomendado
+- Explica por qué ese nivel es el más adecuado para su momento actual
+- Si recomiendas QUANT, menciona que es un pago único de $1,000
 - Sin links, sin asteriscos, sin markdown, sin emojis en exceso
-- Termina con una invitación a revisar el plan`
+- Termina con una invitación a dar el siguiente paso`
 
   const raw = await callAI([{ role: 'user', content: prompt }])
 
   try {
     const parsed = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] || '{}')
-    const perfil: 'MENSUAL' | 'ANUAL' = parsed.perfil === 'ANUAL' ? 'ANUAL' : 'MENSUAL'
+    const perfil: 'QUANT' | 'GRATIS' = parsed.perfil === 'QUANT' ? 'QUANT' : 'GRATIS'
     const url = LINKS[perfil]
-    const planLabel = perfil === 'ANUAL' ? 'Plan Pro Anual — $649/año (ahorras $299)' : 'Plan Pro Mensual — $79/mes (cancela cuando quieras)'
+    const planLabel = perfil === 'QUANT' ? 'Liberty Quant — $1,000 (pago único)' : 'Curso gratuito — empieza ahora'
     const mensajeLimpio = (parsed.mensaje || '')
       .replace(/https?:\/\/\S+/g, '')
       .replace(/\[.*?\]\(.*?\)/g, '')
@@ -262,9 +252,9 @@ Reglas del mensaje:
     return { perfil, mensaje: `${mensajeLimpio}\n\n👉 ${planLabel}:\n${url}`, productoUrl: url }
   } catch {
     return {
-      perfil: 'MENSUAL' as const,
-      mensaje: `Basado en lo que me contaste, el mejor punto de partida es el Plan Pro Mensual de Liberty Trading. 🎓\n\n👉 Plan Pro Mensual — $79/mes (cancela cuando quieras):\n${LINKS.MENSUAL}`,
-      productoUrl: LINKS.MENSUAL,
+      perfil: 'GRATIS' as const,
+      mensaje: `Basado en lo que me contaste, el mejor punto de partida es el curso gratuito de Liberty. 🎓\n\n👉 Curso gratuito — empieza ahora:\n${LINKS.GRATIS}`,
+      productoUrl: LINKS.GRATIS,
     }
   }
 }
@@ -359,10 +349,10 @@ export async function POST(req: NextRequest) {
       name = primerNombre(pushName)
       if (name) {
         estado = 'P1'
-        respuesta = `¡Hola ${name}! 👋 Soy Vinces, el asistente del Club Liberty Trading.\n\nMe alegra que hayas llegado hasta aquí. Para orientarte de la mejor forma, voy a hacerte unas preguntas rápidas 🎯\n\n${PREGUNTAS.P1}`
+        respuesta = `¡Hola ${name}! 👋 Soy Vinces, el asistente de Liberty Trading.\n\nMe alegra que hayas llegado hasta aquí. Para orientarte de la mejor forma, voy a hacerte unas preguntas rápidas 🎯\n\n${PREGUNTAS.P1}`
       } else {
         estado = 'NOMBRE'
-        respuesta = '¡Hola! 👋 Soy Vinces, el asistente del Club Liberty Trading.\n\nEstoy aquí para ayudarte a encontrar tu camino en el mundo del trading y la inversión.\n\n¿Cómo te llamas?'
+        respuesta = '¡Hola! 👋 Soy Vinces, el asistente de Liberty Trading.\n\nEstoy aquí para ayudarte a encontrar tu camino en el mundo del trading y la inversión.\n\n¿Cómo te llamas?'
       }
     }
 
@@ -436,7 +426,7 @@ export async function POST(req: NextRequest) {
     else if (estado === 'CTA') {
       const system = `${CONTEXTO_LUIS}
 
-Estás hablando con ${name || 'un prospecto'} que ya recibió tu recomendación de plan. Responde sus dudas con calidez y precisión usando el contexto de Liberty Trading Pro. Si pregunta sobre qué incluye el club, recuérdale que ambos planes tienen todo incluido. Si pregunta la diferencia entre mensual y anual, explica que es solo el precio: $79/mes vs $649/año (ahorra $299). Si muestra interés en suscribirse, refuerza positivamente. Sin markdown, sin asteriscos, máximo 3 oraciones.`
+Estás hablando con ${name || 'un prospecto'} que ya recibió tu recomendación. Responde sus dudas con calidez y precisión usando el contexto de Liberty Trading Pro. Si pregunta qué incluye Liberty Quant, recuérdale: código de 6 estrategias, cuenta fondeada de $200k, metodología completa — todo por $1,000 pago único, sin mensualidad. Si pregunta por el curso gratuito, recuérdale que es 100% gratis y sin compromiso. Si muestra interés en avanzar, refuerza positivamente. Sin markdown, sin asteriscos, máximo 3 oraciones.`
 
       respuesta = await callAI([
         { role: 'system', content: system },
@@ -448,7 +438,7 @@ Estás hablando con ${name || 'un prospecto'} que ya recibió tu recomendación 
     }
 
     else if (estado === 'VENDIDO') {
-      respuesta = `¡Excelente decisión, ${name}! 🎉 Bienvenido al Club Liberty Trading. Luis estará pendiente y podrás comenzar de inmediato. ¡A operar!`
+      respuesta = `¡Excelente decisión, ${name}! 🎉 Bienvenido a Liberty Trading. Luis estará pendiente y podrás comenzar de inmediato. ¡A operar!`
     }
 
     historial.push({ role: 'user', content: texto })

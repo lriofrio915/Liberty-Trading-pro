@@ -22,10 +22,12 @@ const HOTMART_MENSUAL =
   'https://pay.hotmart.com/R104900326X?checkoutMode=2'
 
 /**
- * Link de checkout de los bots. Aún no existe el producto en Hotmart:
- * mientras esté vacío, el CTA cae a WhatsApp (ver `services.algo.href`).
+ * Link de checkout de Liberty Quant ($1000, pago único). Aún no existe el
+ * producto en Hotmart: mientras esté vacío, el CTA cae a WhatsApp (ver
+ * `services.quant.href`). Cuando Luis cree el producto en Hotmart, setear
+ * NEXT_PUBLIC_HOTMART_LINK_QUANT en Vercel.
  */
-const HOTMART_BOTS = process.env.NEXT_PUBLIC_HOTMART_LINK_BOTS || ''
+const HOTMART_QUANT = process.env.NEXT_PUBLIC_HOTMART_LINK_QUANT || ''
 
 /** Construye un link de WhatsApp a Luis con mensaje precargado. */
 export function wa(message: string): string {
@@ -46,13 +48,17 @@ export const BRAND = {
   /** Casa de productos. Ver /branding/01-estrategia.md */
   house: 'Liberty',
   products: {
-    club: 'Liberty Club',
-    algo: 'Liberty Algo',
+    quant: 'Liberty Quant',
     exchange: 'Liberty Exchange',
     portfolio: 'Liberty Portfolio',
   },
 
-  /** Nombre legal e histórico del producto de suscripción. No usar en titulares. */
+  /**
+   * Nombre legal/histórico. La suscripción mensual/anual que llevaba este
+   * nombre se retiró — Liberty Quant (pago único, $1000) es hoy el único
+   * producto educativo pago. Se mantiene el campo por el dominio y por
+   * referencias legales antiguas; no usar en titulares nuevos.
+   */
   legalName: 'Liberty Trading Club',
 
   domain: 'libertytrading.pro',
@@ -72,14 +78,15 @@ export const BRAND = {
   },
 
   hotmart: {
+    /** @deprecated Suscripción retirada. Se mantiene solo por si el webhook histórico aún la referencia. */
     mensual: HOTMART_MENSUAL,
-    bots: HOTMART_BOTS,
+    quant: HOTMART_QUANT,
   },
 
-  /** Precio ancla de la suscripción. Un solo sitio que tocar si sube. */
+  /** Precio ancla de Liberty Quant. Un solo sitio que tocar si cambia. */
   price: {
-    monthly: 29,
-    monthlyLabel: '$29',
+    quant: 1000,
+    quantLabel: '$1,000',
     successFee: '20%',
     /** Capital de referencia, no un mínimo: se puede empezar con menos. */
     portfolioReference: '$10,000',
@@ -111,47 +118,29 @@ export const RISK_DISCLAIMER =
   'educativo e informativo; no constituye una recomendación personalizada de ' +
   'inversión ni una oferta de valores.'
 
-/** Los cuatro servicios, en el orden en que aparecen en la landing. */
+/** Los tres servicios, en el orden en que aparecen en la landing. */
 export const SERVICES = [
   {
-    id: 'club',
+    id: 'quant',
     num: '01',
-    name: BRAND.products.club,
-    category: 'Educación',
+    name: BRAND.products.quant,
+    category: 'Especialización cuantitativa',
     pitch:
-      'Te enseño uno a uno a operar futuros —discrecional y algorítmico— con NinjaTrader 8 y Claude.',
+      'De la estrategia manual al portafolio cuantitativo: código, metodología completa y una cuenta fondeada de $200k para operar desde el día uno.',
     bullets: [
-      'Trading discrecional y algorítmico en futuros',
-      'Apertura y manejo de tu cuenta IBKR en EEUU',
-      'Análisis y compra de empresas',
+      'Acceso al código de las 6 estrategias del portafolio real',
+      'Metodología NinjaTrader 8 + Claude, de la idea al bot validado',
+      'Pase directo a cuenta fondeada de $200k (PJ Capital)',
     ],
-    price: `${BRAND.price.monthlyLabel}/mes`,
-    priceNote: 'Cancela cuando quieras',
-    cta: 'Suscribirme',
-    href: HOTMART_MENSUAL,
-    hotmart: true,
-  },
-  {
-    id: 'algo',
-    num: '02',
-    name: BRAND.products.algo,
-    category: 'Bots de futuros',
-    pitch:
-      'Bots de trading listos para operar, probados en cuenta real y en pruebas de fondeo.',
-    bullets: [
-      'Compatibles con cuentas reales',
-      'Aptos para pruebas de fondeo',
-      'Instalación y parámetros incluidos',
-    ],
-    price: 'Pago único',
-    priceNote: 'Sin mensualidad',
-    cta: HOTMART_BOTS ? 'Comprar bot' : 'Consultar bots',
-    href: HOTMART_BOTS || wa('Hola Luis, quiero información sobre los bots de trading para futuros'),
-    hotmart: Boolean(HOTMART_BOTS),
+    price: BRAND.price.quantLabel,
+    priceNote: 'Pago único',
+    cta: HOTMART_QUANT ? 'Quiero Liberty Quant' : 'Consultar Liberty Quant',
+    href: HOTMART_QUANT || wa('Hola Luis, quiero información sobre Liberty Quant'),
+    hotmart: Boolean(HOTMART_QUANT),
   },
   {
     id: 'exchange',
-    num: '03',
+    num: '02',
     name: BRAND.products.exchange,
     category: 'Intercambio cripto',
     pitch:
@@ -169,7 +158,7 @@ export const SERVICES = [
   },
   {
     id: 'portfolio',
-    num: '04',
+    num: '03',
     name: BRAND.products.portfolio,
     category: 'Acciones EEUU',
     pitch:

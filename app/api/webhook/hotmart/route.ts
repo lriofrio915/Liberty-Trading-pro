@@ -5,7 +5,10 @@ import { sendWA } from '@/lib/sendWA'
 
 const HOTMART_TOKEN = process.env.HOTMART_WEBHOOK_TOKEN || ''
 
-// Map Hotmart product/offer codes to plans
+// Map Hotmart product/offer codes to plans.
+// 'CLUB' is the existing paid-access value in the Plan enum — it now represents
+// "compró Liberty Quant" (the $1,000 one-time product), not the retired monthly
+// subscription. Kept as-is to avoid a schema migration; see plan doc.
 // Adjust these if Hotmart sends different identifiers
 function planFromHotmart(event: any): 'CLUB' | null {
   const status = event?.data?.purchase?.status
@@ -57,16 +60,16 @@ export async function POST(req: NextRequest) {
   // Send WA confirmation
   if (phone) {
     const firstName = name.split(' ')[0]
-    const msg = `🎉 ¡Bienvenido al *Club Liberty Trading Club*, ${firstName}!
+    const msg = `🎉 ¡Bienvenido a *Liberty Quant*, ${firstName}!
 
-Tu suscripción está activa. Ahora tienes acceso completo a:
+Tu acceso ya está activo. Ahora tienes:
 
-📈 Track Record ilimitado
-🎯 Oportunidades de mercado en tiempo real
+💻 Código de las 6 estrategias del portafolio cuantitativo
+🏦 Pase directo a cuenta fondeada de $200k (PJ Capital)
 🎓 Academia completa con todos los módulos
-🤝 Comunidad exclusiva de traders
+🤝 Comunidad Liberty Quant
 🤖 Vinces (IA asistente personal)
-📊 Reportes avanzados y análisis
+📊 Track Record y reportes avanzados
 
 Ingresa ahora: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard
 

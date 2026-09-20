@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Teléfono inválido' }, { status: 400 })
     }
 
-    const planLabel = 'Plan Pro Mensual ($29/mes)'
+    const planLabel = plan === 'GRATIS' ? 'Curso gratuito' : 'Liberty Quant ($1,000)'
 
     // Store lead — do NOT trigger automated Vinces chat
     await (prisma as any).whatsappLead.upsert({
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         phone: cleanedPhone,
         name: name.trim(),
         estado: 'NUEVO',
-        perfil: plan || 'MENSUAL',
+        perfil: plan || 'QUANT',
         productoUrl: 'contacto-personal',
         respuestas: {
           planInteres: planLabel,

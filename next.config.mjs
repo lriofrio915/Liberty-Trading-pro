@@ -13,6 +13,12 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      { source: '/mentoria-integral', destination: '/liberty-quant', permanent: true },
+      { source: '/maestria-futuros', destination: '/liberty-quant', permanent: true },
+    ]
+  },
   async headers() {
     return [
       {

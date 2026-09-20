@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Teléfono inválido' }, { status: 400 })
     }
 
-    const perfil: 'MENSUAL' | 'ANUAL' = plan === 'ANUAL' ? 'ANUAL' : 'MENSUAL'
+    const perfil: 'QUANT' | 'GRATIS' = plan === 'GRATIS' ? 'GRATIS' : 'QUANT'
 
     const lead = await prisma.whatsappLead.upsert({
       where: { phone: cleanedPhone },

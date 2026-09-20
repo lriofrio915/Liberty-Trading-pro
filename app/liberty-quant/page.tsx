@@ -3,10 +3,21 @@ import Footer from '@/components/Footer/Footer'
 import LeadCaptureForm from '@/components/LeadCaptureForm/LeadCaptureForm'
 import PersonalContactForm from '@/components/PersonalContactForm/PersonalContactForm'
 import VincesWidget from '@/components/VincesWidget/VincesWidget'
+import { BRAND, wa } from '@/lib/brand'
 
-const HOTMART_ANUAL = 'https://pay.hotmart.com/L104900408S?checkoutMode=2'
+const QUANT_HREF = BRAND.hotmart.quant || wa('Hola Luis, quiero información sobre Liberty Quant')
+const QUANT_IS_HOTMART = Boolean(BRAND.hotmart.quant)
 
-export default function MaestriaFuturosPage() {
+const ESTRATEGIAS = [
+  { nombre: 'RSI(2) Reversion', tipo: 'Mean reversion', dato: '68.7% aciertos · PF 2.5' },
+  { nombre: 'Weekend Effect', tipo: 'Estacional', dato: 'PF 1.52 · 443 operaciones' },
+  { nombre: 'Zigzag Breakout', tipo: 'Breakout', dato: '11.5 años de histórico' },
+  { nombre: 'Overnight Drift', tipo: 'Estacional', dato: '2,076 operaciones' },
+  { nombre: 'IBS Reversion', tipo: 'Mean reversion', dato: '10.8 años de histórico' },
+  { nombre: 'Momentum Apertura', tipo: 'Momentum', dato: 'PF 1.59' },
+]
+
+export default function LibertyQuantPage() {
   return (
     <main className="relative noise">
       <Navbar />
@@ -25,28 +36,29 @@ export default function MaestriaFuturosPage() {
               style={{ background: 'rgba(201,168,76,0.06)' }}>
               <span className="w-2 h-2 rounded-full bg-[var(--green)] pulse-dot" />
               <span className="font-mono-custom text-[11px] text-[var(--gold)] tracking-wider uppercase">
-                Plan Pro Anual · Mejor valor · ~$54/mes · Futuros NQ/MNQ
+                Liberty Quant · Pago único · Cuenta fondeada $200k incluida
               </span>
             </div>
 
             <h1 className="headline text-6xl sm:text-7xl text-[var(--text-primary)] mb-6">
-              De trader manual<br />
-              <span className="gradient-gold">a trader algorítmico</span>
+              De la especulación<br />
+              <span className="gradient-gold">al portafolio cuantitativo</span>
             </h1>
 
             <p className="text-lg text-[var(--text-secondary)] max-w-2xl mb-10 leading-relaxed">
-              Accede al Club Liberty Trading Pro con el <strong className="text-[var(--text-primary)]">Plan Pro Anual</strong> —
-              el sistema completo de Luis en NQ Futures, NinjaTrader 8 + Strategy Analyzer,
-              código NinjaScript entregado y aprende a crear tus propios bots. Un pago al año, acceso a todo.
+              Te enseño mi metodología completa —de la idea discrecional al bot validado con
+              Walk-Forward Optimization y Montecarlo— en NinjaTrader 8 con Claude como asistente.
+              Sales con el código de <strong className="text-[var(--text-primary)]">6 estrategias del portafolio cuantitativo real</strong> y
+              un <strong className="text-[var(--text-primary)]">pase directo a cuenta fondeada de $200,000</strong> para operarlas desde el día uno.
             </p>
 
             {/* Stats */}
             <div className="flex flex-wrap gap-8 mb-12">
               {[
-                { val: '$649', lbl: 'por año' },
-                { val: '~$54', lbl: 'al mes' },
-                { val: 'Ahorras $299', lbl: 'vs mensual' },
-                { val: 'NQ/MNQ', lbl: 'Instrumento CME' },
+                { val: '$1,000', lbl: 'pago único' },
+                { val: '11', lbl: 'módulos' },
+                { val: '6', lbl: 'estrategias con código' },
+                { val: '$200k', lbl: 'cuenta fondeada' },
               ].map((s) => (
                 <div key={s.lbl}>
                   <div className="text-2xl font-bold text-[var(--gold)]" style={{ fontFamily: 'var(--font-serif)' }}>
@@ -60,24 +72,24 @@ export default function MaestriaFuturosPage() {
             {/* Track record mini */}
             <div className="flex flex-wrap gap-5 mb-10 p-4 rounded-xl border border-[var(--border)]"
               style={{ background: 'rgba(201,168,76,0.04)' }}>
-              <div className="label-mono text-[10px] w-full mb-1 text-[var(--gold)]">Track Record de Luis — YTD 2026</div>
+              <div className="label-mono text-[10px] w-full mb-1 text-[var(--gold)]">Portafolio cuantitativo — histórico real</div>
               {[
-                { val: '+11.94%', lbl: 'Rendimiento' },
-                { val: '71.4%', lbl: 'Win Rate' },
-                { val: '2.55x', lbl: 'Profit Factor' },
+                { val: '$89,340', lbl: 'Neto desde 2015' },
+                { val: '1.88', lbl: 'Calmar' },
+                { val: '65.7%', lbl: 'Meses en positivo' },
               ].map((s) => (
                 <div key={s.lbl} className="text-center">
                   <div className="text-xl font-bold text-[var(--gold)]" style={{ fontFamily: 'var(--font-serif)' }}>{s.val}</div>
                   <div className="label-mono text-[9px]">{s.lbl}</div>
                 </div>
               ))}
-              <div className="label-mono text-[9px] text-[var(--text-muted)] self-end ml-auto">Datos reales verificados</div>
+              <div className="label-mono text-[9px] text-[var(--text-muted)] self-end ml-auto">Datos reales del portafolio, no una promesa</div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <a href={HOTMART_ANUAL} target="_blank" rel="noopener noreferrer"
+              <a href={QUANT_HREF} target={QUANT_IS_HOTMART ? undefined : '_blank'} rel={QUANT_IS_HOTMART ? undefined : 'noopener noreferrer'}
                 className="btn-gold text-sm py-4 px-8 rounded-lg">
-                Suscribirme al Plan Anual — $649 →
+                {QUANT_IS_HOTMART ? 'Quiero Liberty Quant — $1,000 →' : 'Consultar Liberty Quant →'}
               </a>
               <a href="#contacto-vinces"
                 className="btn-outline text-sm py-4 px-8 rounded-lg inline-flex items-center justify-center gap-2">
@@ -93,24 +105,52 @@ export default function MaestriaFuturosPage() {
         </div>
       </section>
 
-      {/* ─── QUÉ INCLUYE EL PLAN ────────────────────────────────── */}
-      <section className="py-16 px-4 border-y border-[var(--border)]"
-        style={{ background: 'var(--bg-secondary)' }}>
+      {/* ─── MI HISTORIA ────────────────────────────────────────── */}
+      <section className="py-20 px-4 border-y border-[var(--border)]" style={{ background: 'var(--bg-secondary)' }}>
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="label-mono mb-3 text-[var(--gold)]">Por qué te enseño esto</div>
+          <h2 className="headline text-4xl text-[var(--text-primary)] mb-6">
+            Hace 8 años era profesor<br />de química con plaza fija
+          </h2>
+          <div className="card border-l-2 border-[var(--gold)] pl-6 text-left">
+            <p className="text-[var(--text-secondary)] leading-relaxed mb-3">
+              Tenía nombramiento definitivo, ganado por concurso — el puesto asegurado hasta la
+              jubilación. En 2019 descubrí los mercados financieros y el desarrollo de software.
+              A finales de 2024 renuncié, con mi esposa apoyándome: &ldquo;juntos como familia podemos
+              superar cualquier cosa&rdquo;, me dijo.
+            </p>
+            <p className="text-[var(--text-secondary)] leading-relaxed">
+              Hoy trabajo como operador financiero en una fintech, desarrollo los algoritmos que
+              ves en este portafolio, y solo entre mayo y junio de este año retiré cerca de $6,000
+              de trading de futuros — casi lo mismo que ganaba en un año entero de profesor. El
+              éxito no lo mido en dinero. Lo mido en tiempo: desayunar con mi familia, llevar a mis
+              hijos a la escuela, trabajar en lo que amo.
+            </p>
+            <div className="label-mono text-[10px] mt-4">— Luis Riofrio</div>
+          </div>
+          <p className="text-xs mt-6" style={{ color: 'var(--text-muted)' }}>
+            🎬 Historia completa en video — próximamente en el curso gratuito y aquí mismo.
+          </p>
+        </div>
+      </section>
+
+      {/* ─── QUÉ INCLUYE ────────────────────────────────────────── */}
+      <section className="py-16 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
-            <div className="label-mono mb-2">Plan Pro Anual — $649/año · ~$54/mes</div>
+            <div className="label-mono mb-2">Liberty Quant — $1,000 pago único</div>
             <h2 className="headline text-4xl text-[var(--text-primary)]">
-              Todo incluido.<br /><span className="gradient-gold">Sin excepciones.</span>
+              Todo incluido.<br /><span className="gradient-gold">Un solo pago, sin mensualidad.</span>
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { icon: '📊', title: 'Sistema NQ/MNQ + Algorítmico', desc: 'Estrategia manual en NQ Futures, conversión a bot NinjaScript y uso de Strategy Analyzer.' },
-              { icon: '🏦', title: 'Acciones y ETFs vía IBKR', desc: 'Apertura de cuenta en Interactive Brokers y acceso al grupo privado de recomendaciones de Luis.' },
-              { icon: '🤖', title: 'Vinces IA como coach diario', desc: 'Registra tus trades, calcula métricas y genera reportes de coaching personalizados cada semana.' },
-              { icon: '👥', title: 'Mentoring 1:1 con Luis', desc: 'Sesiones personalizadas de revisión de operaciones, ajuste de estrategia y seguimiento continuo.' },
-              { icon: '🌐', title: 'Comunidad + Monitor Mundial', desc: 'Acceso a la comunidad privada activa y al monitor de mercados y oportunidades cuantitativas.' },
-              { icon: '💰', title: 'Máximo ahorro', desc: 'Pagas $649/año en vez de $948 (12 × $79). Ahorras $299 con el mismo acceso completo.' },
+              { icon: '🧠', title: 'Metodología completa', desc: 'De la idea discrecional al bot validado: los 9 pasos, los 4 Mandamientos de fiabilidad, WFO y Montecarlo.' },
+              { icon: '💻', title: 'Código de 6 estrategias', desc: 'Las estrategias del portafolio cuantitativo real, con su tesis, métricas y resultados de Walk-Forward.' },
+              { icon: '🏦', title: 'Cuenta fondeada de $200k', desc: 'Pase directo con PJ Capital para operar los bots en real desde el día uno, sin arriesgar tu propio capital.' },
+              { icon: '🤖', title: 'NinjaTrader 8 + Claude', desc: 'Aprende a programar tus propias estrategias usando Claude como asistente de desarrollo cuantitativo.' },
+              { icon: '🎓', title: 'Curso gratuito incluido', desc: 'Acciones, opciones y apertura de cuenta IBKR — la base antes de llegar a lo cuantitativo.' },
+              { icon: '👥', title: 'Comunidad Liberty Quant', desc: 'El portafolio sigue creciendo: cada alumno aporta su propia estrategia validada.' },
             ].map((f) => (
               <div key={f.title} className="card py-7">
                 <div className="text-3xl mb-3">{f.icon}</div>
@@ -119,17 +159,30 @@ export default function MaestriaFuturosPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
 
-          <div className="mt-8 p-6 rounded-xl border border-[var(--gold-dark)] text-center"
-            style={{ background: 'rgba(201,168,76,0.04)' }}>
-            <p className="text-sm text-[var(--text-secondary)]">
-              ¿Prefieres empezar sin compromisos anuales?{' '}
-              <a href="/mentoria-integral" className="text-[var(--gold)] hover:underline font-semibold">
-                Prueba el Plan Pro Mensual ($79/mes)
-              </a>{' '}
-              y actualiza a anual cuando estés seguro.
-            </p>
+      {/* ─── LAS 6 ESTRATEGIAS ──────────────────────────────────── */}
+      <section className="py-20 px-4 border-y border-[var(--border)]" style={{ background: 'var(--bg-secondary)' }}>
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-10 text-center">
+            <div className="label-mono mb-3">El portafolio que recibes</div>
+            <h2 className="headline text-4xl sm:text-5xl text-[var(--text-primary)]">
+              6 estrategias.<br /><span className="gradient-gold">Código real, no una promesa.</span>
+            </h2>
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {ESTRATEGIAS.map((e) => (
+              <div key={e.nombre} className="card p-5">
+                <div className="label-mono text-[9px] text-[var(--gold)] mb-1">{e.tipo}</div>
+                <h3 className="font-bold text-sm mb-2">{e.nombre}</h3>
+                <p className="text-xs text-[var(--text-secondary)]">{e.dato}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-center mt-6" style={{ color: 'var(--text-muted)' }}>
+            Métricas del portafolio real de Luis. Resultados pasados no garantizan rendimientos futuros.
+          </p>
         </div>
       </section>
 
@@ -138,18 +191,18 @@ export default function MaestriaFuturosPage() {
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14">
             <div>
-              <div className="label-mono mb-3 text-[var(--gold)]">Este plan es para ti si…</div>
+              <div className="label-mono mb-3 text-[var(--gold)]">Liberty Quant es para ti si…</div>
               <h2 className="headline text-4xl text-[var(--text-primary)] mb-8">
-                Quieres vivir del<br />trading como profesión
+                Quieres construir un<br />sistema, no solo operar
               </h2>
               <div className="space-y-3">
                 {[
-                  'Quieres hacer del trading tu medio de vida o cambiar de carrera',
-                  'Tienes tiempo para practicar y operar (al menos en la apertura del mercado)',
-                  'Estás dispuesto a construir un track record profesional verificable',
-                  'Buscas disciplina, método y sistema — no señales ni atajos',
-                  'Quieres ser considerado como operador en fondos o prop trading',
-                  'Ya sabes que esto es tu camino y quieres el mejor precio posible',
+                  'Ya sabes lo básico de mercados (o acabas de terminar el curso gratuito)',
+                  'Quieres pasar de operar manual a gestionar un portafolio de bots',
+                  'Buscas método y validación estadística — no señales ni atajos',
+                  'Quieres operar con capital real desde el día uno, sin arriesgar el tuyo',
+                  'Estás dispuesto a aportar tu propia estrategia a la comunidad',
+                  'Ya sabes que esto es tu camino y quieres el sistema completo',
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
                     <span className="text-[var(--gold)] mt-0.5 flex-shrink-0 text-base">✓</span>
@@ -166,10 +219,10 @@ export default function MaestriaFuturosPage() {
               </h2>
               <div className="space-y-3">
                 {[
-                  'Buscas ingresos inmediatos — el trading profesional toma meses de práctica',
-                  'No puedes dedicar tiempo real a practicar y revisar tus operaciones',
+                  'Buscas ingresos inmediatos — validar una estrategia toma semanas de backtesting',
+                  'No tienes computadora para correr NinjaTrader 8 con regularidad',
                   'Tienes deudas graves y necesitas el trading como solución urgente',
-                  'No estás dispuesto a aceptar pérdidas como parte del aprendizaje',
+                  'No estás dispuesto a que un backtest te diga que tu idea no sirve',
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm text-[var(--text-secondary)]">
                     <span className="text-[var(--red)] mt-0.5 flex-shrink-0 text-base">✗</span>
@@ -180,8 +233,8 @@ export default function MaestriaFuturosPage() {
               <div className="mt-6 p-4 rounded-xl border border-[var(--gold-dark)]"
                 style={{ background: 'rgba(201,168,76,0.05)' }}>
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed italic">
-                  &ldquo;El mercado no miente. Por eso publico mis resultados con pérdidas incluidas.
-                  Eso es lo que te enseño a construir tú también.&rdquo; — Luis Riofrio
+                  &ldquo;Un backtest bonito no es un backtest fiable. Si los números no dan, te lo digo —
+                  no maquillo resultados para venderte una estrategia.&rdquo; — Luis Riofrio
                 </p>
               </div>
             </div>
@@ -194,59 +247,25 @@ export default function MaestriaFuturosPage() {
         style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-5xl mx-auto">
           <div className="mb-14 text-center">
-            <div className="label-mono mb-3">Sistema completo — incluido en tu suscripción</div>
+            <div className="label-mono mb-3">11 módulos — incluidos en tu pago único</div>
             <h2 className="headline text-5xl text-[var(--text-primary)]">
-              Lo que construirás<br />con tu <span className="gradient-gold">membresía anual</span>
+              De la idea<br />al <span className="gradient-gold">portafolio en real</span>
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              {
-                n: '01',
-                title: 'Sistema de trading NQ/MNQ',
-                desc: 'El sistema completo de Luis: rompimiento y consecución en futuros del Nasdaq intradia con reglas claras.',
-              },
-              {
-                n: '02',
-                title: 'NinjaTrader 8 profesional',
-                desc: 'Configuración, indicadores, ejecución de órdenes y uso avanzado de la plataforma que usa Luis.',
-              },
-              {
-                n: '03',
-                title: 'Lectura de mercado',
-                desc: 'Price action, estructura de mercado, niveles clave, volumen y contexto para tomar decisiones con criterio.',
-              },
-              {
-                n: '04',
-                title: 'Gestión de posición y riesgo',
-                desc: 'Tamaño de posición, stops, take profits, gestión de drawdown y protección del capital en todo momento.',
-              },
-              {
-                n: '05',
-                title: 'Psicología y disciplina',
-                desc: 'Los errores cognitivos que destruyen traders buenos. Protocolo mental para operar con consistencia bajo presión.',
-              },
-              {
-                n: '06',
-                title: 'Track record verificable',
-                desc: 'Métricas reales: win rate, profit factor, RR promedio, drawdown máximo. Tu historial como activo profesional.',
-              },
-              {
-                n: '07',
-                title: 'De estrategia manual a bot NinjaScript',
-                desc: 'Conviertes las reglas de tu sistema en código. Luis te entrega el bot funcional y te enseña a crear los tuyos propios.',
-              },
-              {
-                n: '08',
-                title: 'Apertura de cuenta IBKR y primeras inversiones',
-                desc: 'Abre tu cuenta en Interactive Brokers desde Latinoamérica y accede al grupo privado de recomendaciones de Luis.',
-              },
-              {
-                n: '09',
-                title: 'Acciones, ETFs y gestión de portafolio',
-                desc: 'Selección de acciones y ETFs, Dollar Cost Average y cómo complementar el trading con inversión a largo plazo.',
-              },
+              { n: '01', title: 'Fundamentos quant', desc: 'De discrecional a sistemático, anatomía de un edge (momentum, mean reversion, estacional, breakout), instalación de NinjaTrader 8.' },
+              { n: '02', title: 'El proceso de 9 pasos', desc: 'El checklist de especificación obligatorio: instrumento, sesión RTH/ETH, zona horaria, Calculate mode.' },
+              { n: '03', title: 'Bot #1 — Apertura + EMA200', desc: 'De la regla manual al código con Claude como asistente: plantilla, logging, stop loss obligatorio.' },
+              { n: '04', title: 'Los 4 Mandamientos', desc: 'El gate de fiabilidad antes de optimizar: SL, avg bars/trade, velas válidas, entrada sin look-ahead.' },
+              { n: '05', title: 'Optimización', desc: 'Bruto vs fino, elegir la meseta y no el pico, descartar como resultado exitoso del proceso.' },
+              { n: '06', title: 'Walk-Forward y Montecarlo', desc: 'La regla de oro: el número que decide es el del WFO. Drawdown peor caso y riesgo de ruina.' },
+              { n: '07', title: 'Bot #2 — Zigzag Breakout', desc: 'El proceso completo con menos guía — incubación y criterio de paso a cuenta real.' },
+              { n: '08', title: 'El portafolio — 4 estrategias validadas', desc: 'Código completo entregado, taller de interpretación de métricas reales y mejora estadística.' },
+              { n: '09', title: 'Gestión de portafolio', desc: 'Correr múltiples bots sin pisarse: sizing, capital, correlación entre estrategias.' },
+              { n: '10', title: 'Tu cuenta fondeada', desc: 'Activación del pase directo de $200k con PJ Capital, reglas de la cuenta, operar en real.' },
+              { n: '11', title: 'Proyecto final', desc: 'Tu propia estrategia, validada con WFO, evaluada para sumarse al portafolio comunitario.' },
             ].map((m) => (
               <div key={m.n} className="card hover:border-[var(--gold-dark)] transition-all group">
                 <div className="label-mono text-[10px] text-[var(--gold)] mb-2">{m.n}</div>
@@ -268,15 +287,16 @@ export default function MaestriaFuturosPage() {
                 Luis Riofrio —<br /><span className="gradient-gold">Trader Cuantitativo</span>
               </h2>
               <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
-                Trader cuantitativo especializado en NQ/MNQ Futures. Luis crea estrategias algorítmicas
-                y bots en NinjaTrader 8, enseña el sistema manual y luego entrega el código NinjaScript funcional.
-                Resultados documentados, incluyendo las pérdidas. Sin filtros.
+                Trader cuantitativo especializado en futuros. Luis gestiona un portafolio real de
+                6 estrategias algorítmicas en NinjaTrader 8 y desarrolla los algoritmos de una
+                empresa financiera tecnológica. No enseña desde la teoría — entrega el código
+                funcional y la metodología completa para construir el tuyo.
               </p>
               <div className="space-y-2.5 mb-8">
                 {[
-                  '📊 Trader cuantitativo — NQ/MNQ Futures (CME)',
-                  '🤖 Crea estrategias algorítmicas y bots en NinjaTrader 8',
-                  '🔬 Strategy Analyzer para backtesting y optimización real',
+                  '📊 Trader cuantitativo — futuros, acciones y opciones',
+                  '🤖 Gestiona un portafolio real de 6 estrategias algorítmicas',
+                  '🔬 Metodología propia: 9 pasos, WFO y Montecarlo antes de operar real',
                   '💻 Entrega código NinjaScript funcional a sus alumnos',
                   '🎓 Fundador de Liberty Trading Pro',
                 ].map((c) => (
@@ -288,8 +308,7 @@ export default function MaestriaFuturosPage() {
 
               <div className="card border-l-2 border-[var(--gold)] pl-5">
                 <p className="headline text-base text-[var(--text-secondary)] italic mb-2">
-                  &ldquo;El mercado opera en la apertura. Yo también. Y lo que enseño
-                  es exactamente lo que hago — nada más, nada menos.&rdquo;
+                  &ldquo;El éxito no lo mido en dinero. Lo mido en tiempo.&rdquo;
                 </p>
                 <div className="label-mono text-[10px]">— Luis Riofrio</div>
               </div>
@@ -297,10 +316,10 @@ export default function MaestriaFuturosPage() {
 
             <div className="grid grid-cols-2 gap-4">
               {[
-                { value: '+11.94%', label: 'Rendimiento YTD 2026', color: 'var(--gold)' },
-                { value: '71.4%', label: 'Win Rate verificado', color: 'var(--green)' },
-                { value: '2.55x', label: 'Profit Factor', color: 'var(--gold)' },
-                { value: '10/14', label: 'Trades ganados 2026', color: 'var(--green)' },
+                { value: '$89,340', label: 'Neto del portafolio desde 2015', color: 'var(--gold)' },
+                { value: '1.88', label: 'Calmar Ratio', color: 'var(--green)' },
+                { value: '65.7%', label: 'Meses en positivo', color: 'var(--gold)' },
+                { value: '6', label: 'Estrategias activas', color: 'var(--green)' },
               ].map((s) => (
                 <div key={s.label} className="card text-center py-6">
                   <div className="text-3xl font-bold mb-1"
@@ -311,10 +330,10 @@ export default function MaestriaFuturosPage() {
                 </div>
               ))}
               <div className="col-span-2 card text-center py-4">
-                <div className="label-mono text-[10px] mb-1">Instrumento</div>
+                <div className="label-mono text-[10px] mb-1">Reducción de drawdown</div>
                 <div className="text-2xl font-bold text-[var(--text-primary)]"
-                  style={{ fontFamily: 'var(--font-serif)' }}>NQ / MNQ</div>
-                <div className="label-mono text-[10px] mt-1">Futuros Nasdaq CME · Intradia</div>
+                  style={{ fontFamily: 'var(--font-serif)' }}>-74.4%</div>
+                <div className="label-mono text-[10px] mt-1">vs. la suma de los drawdowns individuales — el poder de diversificar edges</div>
               </div>
             </div>
           </div>
@@ -333,28 +352,28 @@ export default function MaestriaFuturosPage() {
           <div className="space-y-4">
             {[
               {
-                q: '¿Cuánto cuesta el Plan Pro Anual?',
-                a: '$649 al año, un único pago. Equivale a ~$54/mes. Frente al Plan Mensual ($79 × 12 = $948), ahorras $299.',
+                q: '¿Cuánto cuesta Liberty Quant?',
+                a: '$1,000, pago único. No es una suscripción — pagas una vez y tienes acceso de por vida al curso, al código del portafolio y a la comunidad.',
               },
               {
-                q: '¿Necesito saber programar para aprender a hacer bots?',
-                a: 'No. Luis te lleva paso a paso desde la estrategia manual hasta el código NinjaScript. Recibirás el bot funcional entregado y aprenderás a crear los tuyos propios desde cero.',
+                q: '¿Necesito saber programar?',
+                a: 'No. Te llevo paso a paso desde la regla manual hasta el código en NinjaScript, usando Claude como asistente. Aprenderás a programar en el proceso, no antes de empezar.',
               },
               {
-                q: '¿Qué horario necesito tener disponible?',
-                a: 'El mercado NQ abre a las 9:30am hora de Nueva York. El sistema opera en esa apertura, pero Luis te enseña a adaptarlo a tu zona horaria y disponibilidad.',
+                q: '¿Cómo funciona la cuenta fondeada de $200k?',
+                a: 'Recibes un pase directo con PJ Capital para operar los bots del portafolio en una cuenta de $200,000, respetando sus reglas de drawdown y consistencia. Es la vía de acceso a capital vigente al momento de tu compra — si en el futuro el proveedor cambia, la alternativa es una prueba de fondeo equivalente.',
               },
               {
-                q: '¿Qué necesito para empezar?',
-                a: 'Computadora, conexión a internet y capital simulado para practicar. NinjaTrader 8 tiene cuenta demo gratuita. No necesitas capital real hasta que estés listo.',
+                q: '¿Qué pasa si mi backtest no da buenos números?',
+                a: 'Es un resultado normal del proceso, no un fracaso. La mayoría de ideas se descartan en la fase de optimización — te enseño a reconocerlo a tiempo en vez de forzar una estrategia que no tiene ventaja estadística real.',
               },
               {
-                q: '¿Qué es Vinces IA y cómo me ayuda?',
-                a: 'Vinces es el agente de IA integrado en la plataforma que registra tus operaciones, calcula métricas (win rate, profit factor, drawdown) y genera reportes de coaching semanales.',
+                q: '¿Necesito el curso gratuito antes?',
+                a: 'No es obligatorio, pero ayuda. Liberty Quant incluye acceso al curso gratuito de acciones y opciones por si quieres repasar los fundamentos primero.',
               },
               {
-                q: '¿Puedo empezar con el Plan Mensual y cambiar al Anual?',
-                a: 'Sí. Puedes empezar con el Plan Mensual ($79/mes) para probar sin compromiso y cuando estés seguro, cambiar al Plan Anual y aprovechar el ahorro.',
+                q: '¿Qué es el proyecto final?',
+                a: 'Construyes tu propia estrategia cuantitativa, validada con Walk-Forward Optimization, siguiendo el mismo proceso de los 2 bots del curso. Si pasa el gate de fiabilidad, se suma al portafolio comunitario.',
               },
             ].map((faq) => (
               <div key={faq.q} className="card">
@@ -378,21 +397,21 @@ export default function MaestriaFuturosPage() {
               </h2>
               <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
                 Deja tu nombre y número. Vinces IA te escribe por WhatsApp,
-                evalúa tu perfil y te dice si el Plan Pro Anual es lo que necesitas —
-                y si no, te redirige al plan correcto.
+                evalúa tu perfil y te dice si Liberty Quant es lo que necesitas —
+                y si no, te recomienda empezar por el curso gratuito.
               </p>
               <div className="space-y-2">
                 {[
                   '✓ Responde en segundos, cualquier hora',
-                  '✓ Evalúa si tienes el perfil para trading profesional',
-                  '✓ Si el Plan Mensual se adapta mejor, te lo dice',
+                  '✓ Evalúa si tienes el perfil para trading cuantitativo',
+                  '✓ Si el curso gratuito se adapta mejor, te lo dice',
                 ].map((item) => (
                   <p key={item} className="text-sm text-[var(--text-secondary)] font-mono">{item}</p>
                 ))}
               </div>
             </div>
             <LeadCaptureForm
-              plan="ANUAL"
+              plan="QUANT"
               title="Habla con Vinces IA ahora"
               subtitle="Deja tus datos y Vinces te contacta por WhatsApp en segundos."
             />
@@ -404,23 +423,23 @@ export default function MaestriaFuturosPage() {
       <section className="py-24 px-4 border-y border-[var(--border)]"
         style={{ background: 'var(--bg-secondary)' }}>
         <div className="max-w-3xl mx-auto text-center">
-          <div className="label-mono mb-4 text-[var(--gold)]">Plan Pro Anual · Liberty Trading Pro</div>
+          <div className="label-mono mb-4 text-[var(--gold)]">Liberty Quant · Liberty Trading Pro</div>
           <h2 className="headline text-5xl sm:text-6xl text-[var(--text-primary)] mb-6">
             Todo el sistema.<br />Un solo pago.<br />
-            <span className="gradient-gold">$649/año</span>
+            <span className="gradient-gold">$1,000</span>
           </h2>
           <p className="text-[var(--text-secondary)] mb-4 max-w-lg mx-auto leading-relaxed">
-            Del sistema manual al bot algorítmico. Código NinjaScript entregado.
-            Strategy Analyzer para backtesting real. Aprende a crear tus propios bots.
+            Metodología completa, código de 6 estrategias y una cuenta fondeada de $200k
+            para operarlas desde el día uno.
           </p>
           <p className="text-sm text-[var(--text-muted)] mb-10">
-            ~$54/mes · Ahorras $299 frente al Plan Mensual
+            Pago único · Sin mensualidad · Acceso de por vida
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-            <a href={HOTMART_ANUAL} target="_blank" rel="noopener noreferrer"
+            <a href={QUANT_HREF} target={QUANT_IS_HOTMART ? undefined : '_blank'} rel={QUANT_IS_HOTMART ? undefined : 'noopener noreferrer'}
               className="btn-gold text-sm py-4 px-10 rounded-xl">
-              Suscribirme al Plan Anual — $649 →
+              {QUANT_IS_HOTMART ? 'Quiero Liberty Quant — $1,000 →' : 'Consultar Liberty Quant →'}
             </a>
             <a href="#contacto-luis"
               className="btn-outline text-sm py-4 px-8 rounded-xl">
@@ -444,7 +463,7 @@ export default function MaestriaFuturosPage() {
                 ¿Prefieres hablar<br />directamente con Luis?
               </h2>
               <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
-                Si tienes preguntas específicas sobre el Plan Pro Anual o quieres
+                Si tienes preguntas específicas sobre Liberty Quant o quieres
                 una orientación personalizada antes de comprometerte,
                 <strong className="text-[var(--text-primary)]"> Luis Riofrio te contactará directamente</strong>{' '}
                 por WhatsApp o email. Sin automatizaciones.
@@ -452,7 +471,7 @@ export default function MaestriaFuturosPage() {
               <div className="space-y-2">
                 {[
                   '✓ Luis revisa tu caso personalmente',
-                  '✓ Te orienta sobre qué plan se adapta mejor a ti',
+                  '✓ Te orienta sobre si estás listo para Liberty Quant',
                   '✓ Respuesta en menos de 24 horas',
                 ].map((item) => (
                   <p key={item} className="text-sm text-[var(--text-secondary)] font-mono">{item}</p>
@@ -460,7 +479,7 @@ export default function MaestriaFuturosPage() {
               </div>
             </div>
             <PersonalContactForm
-              plan="ANUAL"
+              plan="QUANT"
               title="Quiero que Luis me contacte"
               subtitle="Deja tus datos y Luis Riofrio se pondrá en contacto contigo personalmente."
             />

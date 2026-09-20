@@ -3,20 +3,17 @@
 import { useState } from 'react'
 
 interface Props {
-  programa?: 'INTEGRAL' | 'FUTUROS'
-  plan?: 'MENSUAL' | 'ANUAL'
+  plan?: 'QUANT' | 'GRATIS'
   title?: string
   subtitle?: string
 }
 
 export default function LeadCaptureForm({
-  programa,
   plan,
   title = '¿Es este programa para ti?',
   subtitle = 'Déjanos tus datos y Vinces IA te contacta por WhatsApp para orientarte sin compromiso.',
 }: Props) {
-  const planToSend: 'MENSUAL' | 'ANUAL' =
-    plan ?? (programa === 'FUTUROS' ? 'ANUAL' : 'MENSUAL')
+  const planToSend: 'QUANT' | 'GRATIS' = plan ?? 'QUANT'
 
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')

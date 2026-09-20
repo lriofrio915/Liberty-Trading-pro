@@ -2,13 +2,13 @@
 
 import { BRAND, wa } from '@/lib/brand'
 
-const CLUB_FEATURES = [
-  'Mentorías 1:1 con Luis cada mes',
-  'Academia completa — de cero a futuros NQ/MNQ',
+const QUANT_FEATURES = [
+  'Metodología completa: de la idea al bot validado con WFO y Montecarlo',
+  'Código de las 6 estrategias del portafolio cuantitativo real',
+  'Pase directo a cuenta fondeada de $200k (PJ Capital)',
   'Trading algorítmico con NinjaTrader 8 y Claude',
-  'Apertura y manejo de tu cuenta IBKR',
-  'Señales y oportunidades en acciones y opciones',
-  'Vinces IA — coaching diario sobre tu operativa',
+  'Curso gratuito de acciones y opciones vía IBKR incluido',
+  'Comunidad de Liberty Quant — el portafolio sigue creciendo con cada alumno',
 ]
 
 const PORTFOLIO_POINTS = [
@@ -23,31 +23,31 @@ export default function Pricing() {
       <div className="max-w-5xl mx-auto">
 
         <div className="mb-10 text-center">
-          <div className="label-mono mb-3">Suscripción</div>
+          <div className="label-mono mb-3">Especialización</div>
           <h2 className="headline text-4xl sm:text-5xl text-[var(--text-primary)]">
-            Un solo plan, <span className="gradient-gold">todo incluido</span>
+            Un solo pago, <span className="gradient-gold">acceso de por vida</span>
           </h2>
         </div>
 
-        {/* Plan mensual */}
+        {/* Liberty Quant */}
         <div className="relative rounded-2xl overflow-hidden border border-[var(--gold)] glow-gold-sm max-w-2xl mx-auto mb-14"
           style={{ background: 'rgba(201,168,76,0.04)' }}>
           <div className="p-7">
             <div className="flex items-start justify-between mb-5 gap-3">
               <div>
-                <div className="label-mono text-[var(--gold)] mb-1">{BRAND.products.club}</div>
-                <h3 className="headline text-3xl text-[var(--text-primary)]">Educación completa</h3>
+                <div className="label-mono text-[var(--gold)] mb-1">{BRAND.products.quant}</div>
+                <h3 className="headline text-3xl text-[var(--text-primary)]">Trading cuantitativo de futuros</h3>
               </div>
               <div className="flex items-baseline gap-1 flex-shrink-0">
                 <span className="text-5xl font-bold text-white" style={{ fontFamily: 'var(--font-serif)' }}>
-                  {BRAND.price.monthlyLabel}
+                  {BRAND.price.quantLabel}
                 </span>
-                <span className="label-mono text-sm">/mes</span>
+                <span className="label-mono text-sm">pago único</span>
               </div>
             </div>
 
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mb-7">
-              {CLUB_FEATURES.map((f) => (
+              {QUANT_FEATURES.map((f) => (
                 <li key={f} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]">
                   <span className="text-[var(--gold)] mt-0.5 flex-shrink-0">✓</span>
                   <span>{f}</span>
@@ -55,11 +55,13 @@ export default function Pricing() {
               ))}
             </ul>
 
-            <a href={BRAND.hotmart.mensual}
-              className="hotmart-fb hotmart__button-checkout btn-gold text-sm py-3.5 px-6 rounded-lg w-full text-center block">
-              Suscribirme — {BRAND.price.monthlyLabel}/mes →
+            <a href={BRAND.hotmart.quant || wa('Hola Luis, quiero información sobre Liberty Quant')}
+              {...(BRAND.hotmart.quant
+                ? { className: 'hotmart-fb hotmart__button-checkout btn-gold text-sm py-3.5 px-6 rounded-lg w-full text-center block' }
+                : { target: '_blank', rel: 'noopener noreferrer', className: 'btn-gold text-sm py-3.5 px-6 rounded-lg w-full text-center block' })}>
+              {BRAND.hotmart.quant ? `Quiero Liberty Quant — ${BRAND.price.quantLabel} →` : 'Consultar Liberty Quant →'}
             </a>
-            <p className="text-center label-mono text-[10px] mt-3">Sin permanencia · Cancela cuando quieras</p>
+            <p className="text-center label-mono text-[10px] mt-3">Sin mensualidad · Acceso de por vida a la comunidad y el portafolio</p>
           </div>
         </div>
 

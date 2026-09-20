@@ -12,7 +12,7 @@ const N8N_WEBHOOK         = process.env.N8N_WEBHOOK_LEADS   || ''
 const N8N_WEBHOOK_LANDING = process.env.N8N_WEBHOOK_LANDING || ''
 
 const LINKS = {
-  MENSUAL: process.env.HOTMART_LINK_MENSUAL || 'https://pay.hotmart.com/R104900326X?checkoutMode=2',
+  QUANT: process.env.NEXT_PUBLIC_HOTMART_LINK_QUANT || '',
 }
 
 function cleanPhone(phone: string): string {
@@ -29,8 +29,9 @@ async function sendWA(phone: string, text: string) {
 }
 
 async function sendConfirmationEmail(name: string, email: string, plan: string) {
-  const planLabel = 'Plan Pro Mensual ($29/mes)'
-  const planLink  = LINKS.MENSUAL
+  const isGratis = plan === 'GRATIS'
+  const planLabel = isGratis ? 'Curso gratuito Liberty' : 'Liberty Quant ($1,000, pago único)'
+  const planLink  = LINKS.QUANT
 
   await resend.emails.send({
     from: 'Liberty Trading Club <noreply@libertytrading.pro>',
@@ -75,32 +76,49 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
           </div>
         </div>
 
+        ${isGratis ? `
+        <p style="font-size:13px;color:#8a8480;margin:0 0 20px 0;">
+          Tu curso gratuito ya está disponible dentro de tu panel:
+        </p>
+        <div style="text-align:center;margin-bottom:24px;">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro'}/dashboard/academia"
+            style="display:inline-block;background:#C9A84C;color:#000;font-weight:700;font-size:14px;
+                   padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;">
+            Ver el curso gratuito →
+          </a>
+        </div>
+        ` : `
         <p style="font-size:13px;color:#8a8480;margin:0 0 20px 0;">
           Si quieres empezar ahora mismo, puedes hacerlo directamente aquí:
         </p>
-
+        ${planLink ? `
         <div style="text-align:center;margin-bottom:24px;">
           <a href="${planLink}"
             style="display:inline-block;background:#C9A84C;color:#000;font-weight:700;font-size:14px;
                    padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;">
-            Unirme al Plan Pro Mensual →
+            Unirme a Liberty Quant →
           </a>
         </div>
+        ` : ''}
+        `}
 
         <div style="border-top:1px solid #1e1e1e;padding-top:20px;">
           <div style="font-size:11px;color:#4a4642;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">
-            Todo lo que incluye tu membresía
+            ${isGratis ? 'Lo que aprenderás en el curso gratuito' : 'Todo lo que incluye Liberty Quant'}
           </div>
-          ${[
-            '🎓 Mentoría Integral de Mercados Financieros',
-            '📈 Day Trading — Futuros NQ/MNQ Nasdaq',
-            '🤝 Mentorías 1:1 con Luis cada mes',
-            '🤖 Vinces IA — coaching diario 24/7',
-            '💡 Reportes de oportunidades en acciones y ETFs',
-            '🌐 Monitor Mundial de geopolítica y macro',
+          ${(isGratis ? [
+            '🏦 Abrir y fondear tu cuenta en Interactive Brokers',
+            '📊 Analizar acciones con ayuda de Claude',
+            '📈 Entender opciones y leer la cadena de opciones',
+            '🎬 La historia de Luis: de profesor a operador financiero',
+          ] : [
+            '🧠 Metodología completa: idea → algoritmo → WFO → Montecarlo → real',
+            '💻 Código de las 6 estrategias del portafolio cuantitativo',
+            '🏦 Pase directo a cuenta fondeada de $200k (PJ Capital)',
+            '🤖 NinjaTrader 8 + Claude como asistente de desarrollo',
             '📊 Track record verificable de Luis',
-            '👥 Comunidad privada activa',
-          ].map(f => `<div style="font-size:13px;color:#8a8480;padding:4px 0;">${f}</div>`).join('')}
+            '👥 Comunidad Liberty Quant — el portafolio sigue creciendo',
+          ]).map(f => `<div style="font-size:13px;color:#8a8480;padding:4px 0;">${f}</div>`).join('')}
         </div>
       </div>
 
@@ -131,8 +149,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Teléfono inválido' }, { status: 400 })
     }
 
-    const planNorm: 'MENSUAL' = 'MENSUAL'
-    const planLabel = 'Plan Pro Mensual ($29/mes)'
+    const planNorm: 'QUANT' | 'GRATIS' = plan === 'GRATIS' ? 'GRATIS' : 'QUANT'
+    const planLabel = planNorm === 'GRATIS' ? 'Curso gratuito' : 'Liberty Quant ($1,000)'
 
     const existing = await (prisma as any).whatsappLead.findUnique({
       where: { phone: cleanedPhone },
@@ -164,12 +182,14 @@ export async function POST(req: NextRequest) {
     })
 
     // Construir mensajes
-    const planCtx = 'Vi que te interesa el Plan Pro Mensual — perfecto para empezar sin compromisos. '
+    const planCtx = planNorm === 'GRATIS'
+      ? 'Vi que te registraste al curso gratuito — bienvenido. '
+      : 'Vi que te interesa Liberty Quant — la especialización en trading cuantitativo de futuros. '
 
     const mensajeLead =
-      `¡Hola ${name.trim()}! 👋 Soy Vinces, el asistente del Club Liberty Trading.\n\n` +
+      `¡Hola ${name.trim()}! 👋 Soy Vinces, el asistente de Liberty Trading.\n\n` +
       `${planCtx}` +
-      `Te haré unas preguntas rápidas para orientarte y asegurarme de que el club es lo que necesitas 🎯\n\n` +
+      `Te haré unas preguntas rápidas para orientarte 🎯\n\n` +
       `¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has tenido algún contacto con el trading o la inversión antes, o es algo completamente nuevo para ti?`
 
     const tipoLead = yaConvertido ? '♻️ Lead ya convertido (recontacto)' : existing ? '🔄 Lead conocido (nuevo intento)' : '📥 Nuevo lead'

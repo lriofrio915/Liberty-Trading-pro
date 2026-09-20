@@ -7,16 +7,11 @@ import Link from 'next/link'
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-const HOTMART = {
-  MENSUAL: 'https://pay.hotmart.com/R104900326X?checkoutMode=2',
-  ANUAL:   'https://pay.hotmart.com/L104900408S?checkoutMode=2',
-}
-const VINCES_WA = 'https://wa.me/18287149177?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20el%20Club%20Liberty%20Trading'
+const VINCES_WA = 'https://wa.me/18287149177?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20el%20curso%20gratuito%20de%20Liberty'
 const TRACK_RECORD_URL = '/track-record/luis-riofrio'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Plan = 'MENSUAL' | 'ANUAL'
 type FormState = 'idle' | 'loading' | 'success' | 'error'
 
 interface TrackRecord {
@@ -26,35 +21,33 @@ interface TrackRecord {
   totalTrades: number
 }
 
-// ─── Features ─────────────────────────────────────────────────────────────────
+// ─── Módulos del curso gratuito ────────────────────────────────────────────────
 
-const FEATURES = [
-  { icon: '📊', title: 'Estrategia manual → bot algorítmico', desc: 'Aprendes el sistema en NQ Futures, lo conviertes en algoritmo y recibes el código NinjaScript' },
-  { icon: '🤖', title: 'NinjaTrader 8 + Strategy Analyzer', desc: 'Backtesting y optimización de estrategias con datos históricos reales antes de operar en vivo' },
-  { icon: '💻', title: 'Código NinjaScript entregado', desc: 'Recibes el código del bot completo y funcionando, listo para conectar a tu cuenta' },
-  { icon: '🧠', title: 'Crea tus propios bots', desc: 'Aprende a programar tus propias estrategias algorítmicas en NinjaScript desde cero' },
-  { icon: '🏦', title: 'Acciones y ETFs vía IBKR', desc: 'Luis te asesora para abrir tu cuenta en Interactive Brokers y gestiona un portafolio de acciones' },
-  { icon: '🤖', title: 'Vinces IA 24/7', desc: 'Coaching cuantitativo personalizado, métricas de trading y reportes semanales con inteligencia artificial' },
-  { icon: '📈', title: 'Track record verificable', desc: 'Operaciones reales de Luis sin filtros — resultados reales incluidas las pérdidas' },
-  { icon: '🏘', title: 'Comunidad privada activa', desc: 'Comparte estrategias, código y análisis con otros traders del club' },
+const MODULOS = [
+  { icon: '🎬', title: 'Mi historia', desc: 'De profesor de química con plaza fija a operador financiero en una fintech — por qué hago esto' },
+  { icon: '📊', title: 'Fundamentos de los mercados', desc: 'Qué es la bolsa, y dónde encajan acciones, opciones y futuros' },
+  { icon: '🏦', title: 'Tu cuenta en IBKR', desc: 'Apertura paso a paso en Interactive Brokers desde Latinoamérica' },
+  { icon: '🤖', title: 'Analiza acciones con Claude', desc: 'Mi flujo real de prompts para analizar una empresa antes de invertir' },
+  { icon: '📈', title: 'Opciones desde cero', desc: 'Qué es un contrato de opciones y las griegas explicadas con intuición' },
+  { icon: '🔍', title: 'Lee la cadena de opciones', desc: 'Cómo encontrar oportunidades reales en una cadena de opciones' },
 ]
 
 const FAQS = [
   {
-    q: '¿Necesito saber programar para hacer bots?',
-    a: 'No. Empezamos desde cero con la estrategia manual. Luego te guío paso a paso en NinjaTrader 8 y recibes el código NinjaScript del bot completamente funcional.',
+    q: '¿De verdad es gratis?',
+    a: 'Sí, completamente. Es mi forma de mostrarte cómo trabajo antes de que consideres Liberty Quant, mi especialización pagada en trading cuantitativo de futuros.',
   },
   {
-    q: '¿Tengo que pagar hoy?',
-    a: 'No. Al llenar el formulario, Vinces te contacta por WhatsApp para orientarte antes de que tomes cualquier decisión. Sin presión.',
+    q: '¿Necesito experiencia previa?',
+    a: 'No. Empezamos desde cero: qué es la bolsa, cómo abrir tu cuenta en EEUU y cómo analizar tu primera acción.',
   },
   {
-    q: '¿Puedo cancelar cuando quiera?',
-    a: 'Con el plan mensual sí, cancelas en cualquier momento sin penalidades. El plan anual te da 2 meses gratis a cambio del compromiso.',
+    q: '¿Tengo que pagar algo después?',
+    a: 'No hay ninguna obligación. Al terminar el curso te cuento sobre Liberty Quant por si quieres dar el siguiente paso, pero el curso gratuito se queda contigo de todas formas.',
   },
   {
     q: '¿Cuándo tengo acceso?',
-    a: 'Inmediatamente después de suscribirte. Tienes acceso completo a la Academia, el código, la Comunidad y Vinces desde el primer día.',
+    a: 'Inmediatamente después de registrarte. El curso completo vive en tu panel, disponible cuando quieras verlo.',
   },
 ]
 
@@ -116,7 +109,6 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 export default function UnirsePage() {
   const [stats, setStats] = useState<TrackRecord | null>(null)
-  const [plan, setPlan] = useState<Plan>('ANUAL')
   const [nombre, setNombre] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
@@ -180,7 +172,7 @@ export default function UnirsePage() {
           name: nombre.trim(),
           phone: digits,
           email: email.trim(),
-          plan,
+          plan: 'GRATIS',
           source: 'landing',
         }),
       })
@@ -215,19 +207,19 @@ export default function UnirsePage() {
             ¡Todo listo, {nombre.split(' ')[0]}!
           </div>
           <h1 className="text-3xl font-black text-white mb-4" style={{ fontFamily: 'Georgia, serif' }}>
-            Vinces te escribe en minutos
+            Tu curso gratuito ya está disponible
           </h1>
           <p className="text-sm leading-relaxed mb-8" style={{ color: '#888' }}>
-            Revisa tu WhatsApp — Vinces te va a orientar antes de que tomes cualquier decisión.
-            Sin presión, sin compromisos todavía.
+            Revisa tu WhatsApp — Vinces te escribe en minutos con el acceso.
+            Mientras tanto, ya puedes entrar a tu panel.
           </p>
 
           {/* Steps */}
           <div className="text-left space-y-3 mb-8">
             {[
-              { n: '1', text: 'Vinces te escribe por WhatsApp', done: true },
-              { n: '2', text: 'Responde tus preguntas y te orienta', done: false },
-              { n: '3', text: 'Si quieres proceder, te envía el link de pago', done: false },
+              { n: '1', text: 'Creamos tu acceso gratuito', done: true },
+              { n: '2', text: 'Vinces te escribe por WhatsApp para orientarte', done: false },
+              { n: '3', text: 'Miras el curso a tu ritmo, cuando quieras', done: false },
             ].map(step => (
               <div key={step.n} className="flex items-center gap-3 px-4 py-3 rounded-xl"
                 style={{ background: step.done ? 'rgba(201,168,76,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${step.done ? 'rgba(201,168,76,0.2)' : 'rgba(255,255,255,0.06)'}` }}>
@@ -241,11 +233,11 @@ export default function UnirsePage() {
           </div>
 
           <div className="space-y-3">
-            <a href={plan === 'ANUAL' ? HOTMART.ANUAL : HOTMART.MENSUAL}
+            <Link href="/dashboard/academia"
               className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-80"
               style={{ background: '#C9A84C', color: '#080808' }}>
-              Ir directo al pago · {plan === 'ANUAL' ? '$649/año' : '$79/mes'} →
-            </a>
+              Ver el curso gratuito →
+            </Link>
             <a href={VINCES_WA} target="_blank" rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl text-sm border transition-colors hover:border-white/20"
               style={{ borderColor: 'rgba(255,255,255,0.1)', color: '#888' }}>
@@ -283,7 +275,7 @@ export default function UnirsePage() {
               onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
               className="text-xs font-bold px-4 py-2 rounded-lg transition-opacity hover:opacity-80"
               style={{ background: '#C9A84C', color: '#080808' }}>
-              Unirme →
+              Empezar gratis →
             </button>
           </div>
         </div>
@@ -297,18 +289,18 @@ export default function UnirsePage() {
           style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)' }}>
           <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
           <span className="text-[11px] font-mono tracking-widest uppercase" style={{ color: '#C9A84C' }}>
-            Club activo · plazas disponibles
+            Curso 100% gratuito · Sin tarjeta, sin compromiso
           </span>
         </div>
 
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-5">
-          Trading algorítmico en NQ Futures —<br />
-          <span style={{ color: '#C9A84C', fontFamily: 'Georgia, serif' }}>de la estrategia manual al bot.</span>
+          Hace 8 años era profesor de química.<br />
+          <span style={{ color: '#C9A84C', fontFamily: 'Georgia, serif' }}>Hoy vivo de los mercados financieros.</span>
         </h1>
 
         <p className="text-base sm:text-lg max-w-xl mx-auto leading-relaxed mb-10" style={{ color: '#999' }}>
           Con Luis Riofrío — trader cuantitativo con <strong className="text-white">track record público verificable</strong>.
-          Aprende el sistema, conviértelo en algoritmo y recibe el código NinjaScript listo para operar.
+          Aprende a abrir tu cuenta en EEUU, analizar acciones con Claude y entender opciones — gratis, desde cero.
         </p>
 
         {/* Live stats */}
@@ -339,52 +331,16 @@ export default function UnirsePage() {
       <section className="max-w-5xl mx-auto px-4 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 items-start">
 
-          {/* LEFT — Features + FAQ (on mobile: after form) */}
+          {/* LEFT — Modules + FAQ (on mobile: after form) */}
           <div className="lg:col-span-3 order-2 lg:order-1">
 
-            {/* Plan selector */}
+            {/* Modules */}
             <div className="mb-8">
               <p className="text-[10px] font-mono tracking-widest uppercase mb-4" style={{ color: '#555' }}>
-                Elige tu plan
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                {/* Mensual */}
-                <button type="button" onClick={() => setPlan('MENSUAL')}
-                  className="relative rounded-2xl border p-5 text-left transition-all"
-                  style={{
-                    borderColor: plan === 'MENSUAL' ? '#C9A84C' : 'rgba(255,255,255,0.08)',
-                    background: plan === 'MENSUAL' ? 'rgba(201,168,76,0.07)' : 'rgba(255,255,255,0.02)',
-                  }}>
-                  <div className="text-[10px] font-mono uppercase tracking-widest mb-2" style={{ color: '#555' }}>Mensual</div>
-                  <div className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Georgia, serif' }}>$79</div>
-                  <div className="text-[11px]" style={{ color: '#666' }}>/ mes · cancela cuando quieras</div>
-                </button>
-
-                {/* Anual — recommended */}
-                <button type="button" onClick={() => setPlan('ANUAL')}
-                  className="relative rounded-2xl border p-5 text-left transition-all"
-                  style={{
-                    borderColor: plan === 'ANUAL' ? '#C9A84C' : 'rgba(201,168,76,0.2)',
-                    background: plan === 'ANUAL' ? 'rgba(201,168,76,0.09)' : 'rgba(201,168,76,0.03)',
-                  }}>
-                  <div className="absolute top-3 right-3 text-[9px] font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: '#C9A84C', color: '#080808' }}>
-                    AHORRA 32%
-                  </div>
-                  <div className="text-[10px] font-mono uppercase tracking-widest mb-2" style={{ color: '#C9A84C' }}>Anual</div>
-                  <div className="text-3xl font-black text-white mb-1" style={{ fontFamily: 'Georgia, serif' }}>$649</div>
-                  <div className="text-[11px]" style={{ color: '#888' }}>/ año · ~$54/mes · 2 meses gratis</div>
-                </button>
-              </div>
-            </div>
-
-            {/* Features */}
-            <div className="mb-8">
-              <p className="text-[10px] font-mono tracking-widest uppercase mb-4" style={{ color: '#555' }}>
-                Todo incluido en ambos planes
+                Lo que aprenderás — gratis
               </p>
               <div className="space-y-2.5">
-                {FEATURES.map(f => (
+                {MODULOS.map(f => (
                   <div key={f.title} className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-base"
                       style={{ background: 'rgba(255,255,255,0.04)' }}>
@@ -399,15 +355,15 @@ export default function UnirsePage() {
               </div>
             </div>
 
-            {/* Trial badge */}
+            {/* Upsell badge */}
             <div className="rounded-xl p-4 mb-8 flex items-start gap-3"
-              style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)' }}>
-              <span className="text-lg flex-shrink-0">🎁</span>
+              style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.15)' }}>
+              <span className="text-lg flex-shrink-0">🚀</span>
               <div>
-                <p className="text-sm font-bold text-white mb-0.5">14 días de prueba gratis</p>
+                <p className="text-sm font-bold text-white mb-0.5">¿Quieres ir más allá?</p>
                 <p className="text-xs leading-relaxed" style={{ color: '#888' }}>
-                  Al registrarte tienes acceso completo a todas las funcionalidades durante 14 días.
-                  Sin cargos hasta que decidas continuar.
+                  Al terminar el curso gratuito te cuento sobre <Link href="/liberty-quant" className="underline" style={{ color: '#C9A84C' }}>Liberty Quant</Link>,
+                  mi especialización en trading cuantitativo de futuros — incluye el código del portafolio real y una cuenta fondeada de $200k.
                 </p>
               </div>
             </div>
@@ -429,13 +385,13 @@ export default function UnirsePage() {
               {/* Card header */}
               <div className="px-6 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
                 <div className="text-[10px] font-mono tracking-widest uppercase mb-1" style={{ color: '#C9A84C' }}>
-                  {plan === 'ANUAL' ? 'Plan Pro Anual · $649/año' : 'Plan Pro Mensual · $79/mes'}
+                  Curso gratuito · Acceso inmediato
                 </div>
                 <h2 className="text-xl font-black text-white" style={{ fontFamily: 'Georgia, serif' }}>
-                  Reserva tu lugar
+                  Regístrate gratis
                 </h2>
                 <p className="text-xs mt-1.5 leading-relaxed" style={{ color: '#666' }}>
-                  Vinces te escribe por WhatsApp en minutos para orientarte. Sin pago todavía.
+                  Vinces te escribe por WhatsApp en minutos con tu acceso. Sin pago, nunca.
                 </p>
               </div>
 
@@ -513,26 +469,6 @@ export default function UnirsePage() {
                   />
                 </div>
 
-                {/* Plan toggle in form */}
-                <div>
-                  <label className="text-[10px] font-mono uppercase tracking-widest block mb-2" style={{ color: '#555' }}>
-                    Plan de interés
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(['MENSUAL', 'ANUAL'] as Plan[]).map(p => (
-                      <button key={p} type="button" onClick={() => setPlan(p)}
-                        className="py-2.5 rounded-xl text-xs font-mono font-bold transition-all"
-                        style={{
-                          background: plan === p ? '#C9A84C' : 'rgba(255,255,255,0.04)',
-                          color: plan === p ? '#080808' : '#666',
-                          border: `1px solid ${plan === p ? '#C9A84C' : 'rgba(255,255,255,0.08)'}`,
-                        }}>
-                        {p === 'MENSUAL' ? '$79/mes' : '$649/año ⭐'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 {errorMsg && (
                   <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
                     {errorMsg}
@@ -555,16 +491,16 @@ export default function UnirsePage() {
                       Enviando...
                     </span>
                   ) : (
-                    `Quiero unirme — ${plan === 'ANUAL' ? '$649/año' : '$79/mes'} →`
+                    'Empezar gratis ahora →'
                   )}
                 </button>
 
                 {/* Trust signals */}
                 <div className="grid grid-cols-3 gap-2 pt-1">
                   {[
-                    { icon: '🔒', text: 'Sin pago ahora' },
+                    { icon: '🔒', text: '100% gratis' },
                     { icon: '⚡', text: 'Respuesta en 5 min' },
-                    { icon: '✕', text: 'Cancela siempre' },
+                    { icon: '🎓', text: 'Acceso inmediato' },
                   ].map(t => (
                     <div key={t.text} className="flex flex-col items-center gap-1 text-center">
                       <span className="text-base">{t.icon}</span>

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 interface Props {
-  plan?: 'MENSUAL' | 'ANUAL'
+  plan?: 'QUANT' | 'GRATIS'
   title?: string
   subtitle?: string
 }

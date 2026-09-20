@@ -20,8 +20,8 @@ const FAQS = [
     a: 'Sí. La formación arranca en la apertura de tu primera cuenta de broker y avanza hasta operar futuros.',
   },
   {
-    q: '¿Puedo cancelar cuando quiera?',
-    a: 'Sí. La suscripción se cancela desde tu cuenta de Hotmart, sin penalización.',
+    q: '¿Es una suscripción?',
+    a: 'No. Liberty Quant es un pago único de $1,000 — acceso de por vida al curso, al portafolio cuantitativo y a la comunidad.',
   },
   {
     q: '¿Los bots funcionan en pruebas de fondeo?',

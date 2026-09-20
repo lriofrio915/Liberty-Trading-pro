@@ -8,8 +8,8 @@ const LUIS_PHONE   = process.env.LUIS_PHONE         || '593996691586'
 const N8N_WEBHOOK_LANDING = process.env.N8N_WEBHOOK_LANDING || ''
 
 const LINKS = {
-  MENSUAL: process.env.HOTMART_LINK_MENSUAL || 'https://pay.hotmart.com/R104900326X?checkoutMode=2',
-  ANUAL:   process.env.HOTMART_LINK_ANUAL   || 'https://pay.hotmart.com/L104900408S?checkoutMode=2',
+  QUANT:  process.env.NEXT_PUBLIC_HOTMART_LINK_QUANT || '',
+  GRATIS: `${process.env.NEXT_PUBLIC_APP_URL || 'https://libertytrading.pro'}/unirse`,
 }
 
 function sanitizeText(text: string): string {
@@ -42,8 +42,8 @@ async function captureLead(name: string, phone: string, email: string, plan: str
   const cleanedPhone = phone.replace(/[\s\-\+\(\)]/g, '')
   if (cleanedPhone.length < 7) return false
 
-  const planNorm: 'MENSUAL' | 'ANUAL' = plan === 'ANUAL' ? 'ANUAL' : 'MENSUAL'
-  const planLabel = planNorm === 'ANUAL' ? 'Plan Pro Anual ($649/ano)' : 'Plan Pro Mensual ($79/mes)'
+  const planNorm: 'QUANT' | 'GRATIS' = plan === 'QUANT' ? 'QUANT' : 'GRATIS'
+  const planLabel = planNorm === 'QUANT' ? 'Liberty Quant ($1,000)' : 'Curso gratuito'
 
   try {
     const existing = await (prisma as any).whatsappLead.findUnique({ where: { phone: cleanedPhone } })
@@ -114,33 +114,29 @@ export async function POST(req: NextRequest) {
     if (!apiKey) return NextResponse.json({ error: 'API key not configured' }, { status: 500 })
 
     const systemPrompt = sanitizeText(
-      `Eres Vinces, el asistente de ventas de Liberty Trading Pro, la plataforma de trading algoritmico de Luis Riofrio (Ecuador).\n\n` +
+      `Eres Vinces, el asistente de ventas de Liberty Trading Pro, la plataforma de trading de Luis Riofrio (Ecuador).\n\n` +
       `SOBRE LUIS RIOFRIO:\n` +
-      `- Trader cuantitativo especializado en NQ/MNQ Futures (CME) con NinjaTrader 8\n` +
-      `- Crea estrategias algoritmicas y bots usando NinjaTrader 8 + Strategy Analyzer\n` +
-      `- Metodologia: ensena la estrategia manual, la convierte en algoritmo y entrega el codigo NinjaScript\n` +
-      `- Tambien ensena a los alumnos a programar sus propios bots desde cero\n` +
+      `- Trader cuantitativo especializado en futuros, gestiona un portafolio real de 6 estrategias algoritmicas en NinjaTrader 8\n` +
+      `- Metodologia propia: de la idea discrecional al bot validado con Walk-Forward Optimization y Montecarlo\n` +
+      `- Tambien ensena acciones y opciones via Interactive Brokers (IBKR)\n` +
       `- Track record verificable y publico con resultados reales\n\n` +
-      `TU OBJETIVO: Entender la situacion del visitante, recomendarle el plan ideal y capturar su nombre + telefono para darle seguimiento personalizado.\n\n` +
-      `PLANES DISPONIBLES:\n` +
-      `- Plan Mensual: $79/mes - sin permanencia, cancela cuando quieras\n` +
-      `- Plan Anual: $649/ano - ahorras $299 (~$54/mes) - MEJOR VALOR\n\n` +
-      `QUE INCLUYE (ambos planes):\n` +
-      `- Sistema de trading manual en NQ/MNQ Futures\n` +
-      `- NinjaTrader 8 + Strategy Analyzer para backtesting real\n` +
-      `- Conversion de estrategia manual a algoritmo con codigo NinjaScript entregado\n` +
-      `- Aprende a crear tus propios bots desde cero\n` +
-      `- Asesoria en acciones y ETFs via Interactive Brokers (IBKR) + grupo privado de recomendaciones\n` +
-      `- Mentorias 1:1 con Luis Riofrio\n` +
-      `- Vinces IA - coaching diario personalizado\n` +
-      `- Track record verificable de Luis\n` +
-      `- Comunidad privada activa\n\n` +
+      `TU OBJETIVO: Entender la situacion del visitante, recomendarle el nivel ideal y capturar su nombre + telefono para darle seguimiento personalizado.\n\n` +
+      `DOS NIVELES DISPONIBLES:\n` +
+      `- Curso gratuito: 100% gratis, sin tarjeta. Fundamentos de mercados, cuenta en IBKR, analisis de acciones con Claude, opciones. Ideal para quien recien empieza.\n` +
+      `- Liberty Quant: $1,000, PAGO UNICO (no es suscripcion). Incluye el codigo de las 6 estrategias del portafolio cuantitativo real, un pase directo a cuenta fondeada de $200,000 (PJ Capital), y la metodologia completa. Ideal para quien ya tiene experiencia y quiere gestionar un portafolio de bots con capital real.\n\n` +
+      `QUE INCLUYE LIBERTY QUANT:\n` +
+      `- Metodologia completa: de la idea al bot validado con WFO y Montecarlo\n` +
+      `- Codigo de las 6 estrategias del portafolio cuantitativo\n` +
+      `- Pase directo a cuenta fondeada de $200k (PJ Capital)\n` +
+      `- NinjaTrader 8 + Claude como asistente de desarrollo\n` +
+      `- Curso gratuito de acciones y opciones incluido\n` +
+      `- Comunidad Liberty Quant\n\n` +
       `FLUJO DE LA CONVERSACION:\n` +
-      `1. Saludar calidamente y preguntar si tienen experiencia en trading o programacion\n` +
-      `2. Entender sus objetivos (aprender trading manual, hacer el salto a lo algoritmico, crear bots propios)\n` +
-      `3. Recomendar el plan mas adecuado segun su perfil\n` +
+      `1. Saludar calidamente y preguntar si tienen experiencia en trading o inversion\n` +
+      `2. Entender sus objetivos (aprender lo basico, o dar el salto a lo cuantitativo)\n` +
+      `3. Recomendar el nivel mas adecuado segun su perfil (ante la duda, el curso gratuito - no hay razon para no empezar ahi)\n` +
       `4. Cuando sea natural, pedir su nombre y numero de WhatsApp para seguimiento personalizado\n` +
-      `5. Cuando tengas nombre Y telefono, incluir EXACTAMENTE al final (sin texto despues): <!--LEAD:{"name":"NOMBRE","phone":"TELEFONO","plan":"MENSUAL_O_ANUAL"}-->\n\n` +
+      `5. Cuando tengas nombre Y telefono, incluir EXACTAMENTE al final (sin texto despues): <!--LEAD:{"name":"NOMBRE","phone":"TELEFONO","plan":"QUANT_O_GRATIS"}-->\n\n` +
       `REGLAS:\n` +
       `- Respuestas cortas: maximo 3-4 oraciones\n` +
       `- Maximo 1-2 preguntas por mensaje\n` +
@@ -149,7 +145,7 @@ export async function POST(req: NextRequest) {
       `- El marcador <!--LEAD:--> solo usarlo cuando ya tengas nombre Y telefono confirmados\n` +
       (leadSession?.name  ? `- Ya conoces su nombre: ${leadSession.name} - no vuelvas a pedirlo\n` : '') +
       (leadSession?.phone ? `- Ya tienes su telefono: ${leadSession.phone} - no vuelvas a pedirlo\n` : '') +
-      (leadSession?.captured ? `- Lead ya registrado. Ayudale con dudas sobre los planes y envialo al link de pago.\n` : '')
+      (leadSession?.captured ? `- Lead ya registrado. Ayudale con dudas y envialo al siguiente paso.\n` : '')
     )
 
     const mensajesSanitizados = (messages || []).map((m: any) => ({
@@ -201,7 +197,7 @@ export async function POST(req: NextRequest) {
             extractedData.name,
             extractedData.phone,
             leadSession?.email || '',
-            extractedData.plan || 'MENSUAL',
+            extractedData.plan || 'GRATIS',
           )
         }
       } catch (e) {
@@ -210,11 +206,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const leadPlan: 'QUANT' | 'GRATIS' = extractedData?.plan === 'QUANT' ? 'QUANT' : 'GRATIS'
+
     return NextResponse.json({
       content,
       leadCaptured,
       extractedData,
-      links: leadCaptured ? { mensual: LINKS.MENSUAL, anual: LINKS.ANUAL } : null,
+      links: leadCaptured ? { plan: leadPlan, href: LINKS[leadPlan] } : null,
     })
   } catch (err: any) {
     console.error('[VincesLanding] error:', err?.message)
