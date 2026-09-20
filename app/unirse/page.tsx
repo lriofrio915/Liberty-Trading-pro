@@ -211,16 +211,16 @@ export default function UnirsePage() {
             Tu curso gratuito ya está disponible
           </h1>
           <p className="text-sm leading-relaxed mb-8" style={{ color: '#888' }}>
-            Revisa tu WhatsApp — Vinces te escribe en minutos con el acceso.
-            Mientras tanto, ya puedes entrar a tu panel.
+            Ya puedes entrar a tu panel y ver el curso. Luis revisa cada registro personalmente —
+            si prefieres hablar ya mismo, escríbele directo por WhatsApp.
           </p>
 
           {/* Steps */}
           <div className="text-left space-y-3 mb-8">
             {[
               { n: '1', text: 'Creamos tu acceso gratuito', done: true },
-              { n: '2', text: 'Vinces te escribe por WhatsApp para orientarte', done: false },
-              { n: '3', text: 'Miras el curso a tu ritmo, cuando quieras', done: false },
+              { n: '2', text: 'Miras el curso a tu ritmo, cuando quieras', done: false },
+              { n: '3', text: 'Si tienes dudas, le escribes a Luis directo', done: false },
             ].map(step => (
               <div key={step.n} className="flex items-center gap-3 px-4 py-3 rounded-xl"
                 style={{ background: step.done ? 'rgba(201,168,76,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${step.done ? 'rgba(201,168,76,0.2)' : 'rgba(255,255,255,0.06)'}` }}>
@@ -392,7 +392,7 @@ export default function UnirsePage() {
                   Regístrate gratis
                 </h2>
                 <p className="text-xs mt-1.5 leading-relaxed" style={{ color: '#666' }}>
-                  Vinces te escribe por WhatsApp en minutos con tu acceso. Sin pago, nunca.
+                  Acceso inmediato a tu panel. Sin pago, nunca.
                 </p>
               </div>
 

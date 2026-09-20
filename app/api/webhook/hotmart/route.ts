@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { sendWA } from '@/lib/sendWA'
+import { notifyPurchaseConfirmed } from '@/lib/notify-nexus'
 
 const HOTMART_TOKEN = process.env.HOTMART_WEBHOOK_TOKEN || ''
 
@@ -57,24 +57,16 @@ export async function POST(req: NextRequest) {
     console.log(`[Hotmart] Purchase for unregistered user: ${email}`)
   }
 
-  // Send WA confirmation
+  // Confirmar la compra al comprador vía nexus_claw (no Evolution API directo)
   if (phone) {
     const firstName = name.split(' ')[0]
-    const msg = `🎉 ¡Bienvenido a *Liberty Quant*, ${firstName}!
-
-Tu acceso ya está activo. Ahora tienes:
-
-💻 Código de las 6 estrategias del portafolio cuantitativo
-🏦 Pase directo a cuenta fondeada de $200k (PJ Capital)
-🎓 Academia completa con todos los módulos
-🤝 Comunidad Liberty Quant
-🤖 Vinces (IA asistente personal)
-📊 Track Record y reportes avanzados
-
-Ingresa ahora: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard
-
-¡A operar! 🚀`
-    sendWA(phone, msg).catch(() => {})
+    notifyPurchaseConfirmed({
+      name: firstName,
+      phone,
+      email,
+      product: 'Liberty Quant',
+      dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+    }).catch(() => {})
   }
 
   return NextResponse.json({ ok: true, updated: updated.count })

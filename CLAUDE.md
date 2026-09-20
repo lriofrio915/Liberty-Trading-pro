@@ -13,8 +13,7 @@ Monetiza vía Hotmart con 4 productos: academia, club, mensual, anual.
 - **Auth:** Supabase SSR
 - **AI:** OpenRouter (modelos múltiples) + Groq
 - **Pagos:** Hotmart (webhooks en `/api/webhook`)
-- **WhatsApp:** Evolution API (bot de leads y soporte)
-- **Automatización:** N8N (webhooks de leads y landing)
+- **WhatsApp/notificaciones:** nexus_claw vía OpenClaw Gateway (`lib/notify-nexus.ts`), fallback email con Resend. Todo mensaje de WhatsApp (a Luis o a un lead/comprador, vía `NexusRecipient`) pasa por aquí. Ya no hay bot conversacional por WhatsApp — los leads los atiende Luis personalmente; los CTA de WhatsApp del sitio apuntan directo a su número (`lib/brand.ts` → `wa()`). Evolution API y N8N se retiraron por completo (eran redundantes: el propio Next.js ya crea el lead y notifica en el mismo request).
 - **Media:** Cloudinary (avatares, screenshots de trades, certificados)
 - **Email:** Resend
 - **Charts:** Recharts
@@ -134,13 +133,12 @@ GROQ_API_KEY                      # AI alternativo
 NEXT_PUBLIC_APP_URL               # URL base del app
 RESEND_API_KEY                    # Emails
 HOTMART_WEBHOOK_TOKEN             # Validación de pagos
-HOTMART_LINK_*                    # Links de compra (academia, club, mensual, anual)
-NEXT_PUBLIC_HOTMART_LINK_BOTS     # Checkout de bots. Vacío = el CTA cae a WhatsApp
+NEXT_PUBLIC_HOTMART_LINK_QUANT    # Checkout de Liberty Quant ($1000). Vacío = el CTA cae a WhatsApp
 VIBE_TRADING_BASE_URL/API_KEY     # Backend Vibe-Trading (laboratorio quant)
 CLOUDINARY_*                      # Media uploads
-N8N_WEBHOOK_*                     # Automatización
-EVOLUTION_API_URL/INSTANCE/KEY    # WhatsApp bot
-LUIS_PHONE                        # Notificaciones al admin
+OPENCLAW_GATEWAY_URL/TOKEN        # nexus_claw — WhatsApp a Luis y a leads/compradores
+LUIS_EMAIL / ADMIN_EMAIL          # Fallback por email si nexus_claw falla
+LUIS_PHONE                        # CTA de WhatsApp en /p2p
 CRON_SECRET                       # Autenticación de cron jobs
 ```
 

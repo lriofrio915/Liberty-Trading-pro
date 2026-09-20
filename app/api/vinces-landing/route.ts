@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-
-const EVO_URL      = process.env.EVOLUTION_API_URL  || ''
-const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || 'vinces'
-const EVO_KEY      = process.env.EVOLUTION_API_KEY  || ''
-const LUIS_PHONE   = process.env.LUIS_PHONE         || '593996691586'
-const N8N_WEBHOOK_LANDING = process.env.N8N_WEBHOOK_LANDING || ''
+import { notifyNexus } from '@/lib/notify-nexus'
 
 const LINKS = {
   QUANT:  process.env.NEXT_PUBLIC_HOTMART_LINK_QUANT || '',
@@ -22,20 +17,6 @@ function sanitizeText(text: string): string {
     .replace(/\u201D/g, '"')
     .replace(/\u2026/g, '...')
     .replace(/[^\x00-\x7F]/g, '')
-}
-
-async function sendWA(phone: string, text: string) {
-  if (!EVO_URL || !EVO_KEY) return
-  try {
-    await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
-      method: 'POST',
-      headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ number: phone, text }),
-      signal: AbortSignal.timeout(12000),
-    })
-  } catch (e) {
-    console.error('[VincesLanding] sendWA error:', e)
-  }
 }
 
 async function captureLead(name: string, phone: string, email: string, plan: string) {
@@ -70,33 +51,13 @@ async function captureLead(name: string, phone: string, email: string, plan: str
       },
     })
 
-    const msgLuis =
-      `📥 Nuevo lead *chat web*\n\n` +
-      `👤 *Nombre:* ${name.trim()}\n` +
-      `📱 *WhatsApp:* +${cleanedPhone}\n` +
-      `📧 *Email:* ${email || 'no proporcionado'}\n` +
-      `🎯 *Plan:* ${planLabel}\n\n` +
-      `_Capturado desde el chat de la landing._`
-
-    await Promise.allSettled([
-      sendWA(LUIS_PHONE, msgLuis),
-      N8N_WEBHOOK_LANDING
-        ? fetch(N8N_WEBHOOK_LANDING, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: name.trim(),
-              phone: cleanedPhone,
-              email: email || '',
-              plan: planNorm,
-              planLabel,
-              source: 'chat_landing',
-              ts: new Date().toISOString(),
-            }),
-            signal: AbortSignal.timeout(8000),
-          })
-        : Promise.resolve(),
-    ])
+    await notifyNexus('new_lead', {
+      name: name.trim(),
+      phone: cleanedPhone,
+      email: email || undefined,
+      planInteres: planLabel,
+      nota: 'Capturado desde el chat de la landing',
+    })
 
     return true
   } catch (e) {

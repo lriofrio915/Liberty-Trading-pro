@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { Resend } from 'resend'
+import { notifyNexus } from '@/lib/notify-nexus'
+import { wa } from '@/lib/brand'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-
-const EVO_URL      = process.env.EVOLUTION_API_URL  || ''
-const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || ''
-const EVO_KEY      = process.env.EVOLUTION_API_KEY  || ''
-const LUIS_PHONE   = process.env.LUIS_PHONE         || ''
-const N8N_WEBHOOK         = process.env.N8N_WEBHOOK_LEADS   || ''
-const N8N_WEBHOOK_LANDING = process.env.N8N_WEBHOOK_LANDING || ''
 
 const LINKS = {
   QUANT: process.env.NEXT_PUBLIC_HOTMART_LINK_QUANT || '',
@@ -17,15 +12,6 @@ const LINKS = {
 
 function cleanPhone(phone: string): string {
   return phone.replace(/[\s\-\+\(\)]/g, '')
-}
-
-async function sendWA(phone: string, text: string) {
-  await fetch(`${EVO_URL}/message/sendText/${EVO_INSTANCE}`, {
-    method: 'POST',
-    headers: { apikey: EVO_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ number: phone, text }),
-    signal: AbortSignal.timeout(15000),
-  })
 }
 
 async function sendConfirmationEmail(name: string, email: string, plan: string) {
@@ -36,7 +22,7 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
   await resend.emails.send({
     from: 'Liberty Trading Club <noreply@libertytrading.pro>',
     to: email,
-    subject: `¡Hola ${name}! Vinces te escribe en un momento 👋`,
+    subject: `¡Hola ${name}! Te escribimos en un momento 👋`,
     html: `
 <!DOCTYPE html>
 <html lang="es">
@@ -61,8 +47,15 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
         </p>
         <p style="font-size:14px;color:#8a8480;line-height:1.7;margin:0 0 24px 0;">
           Recibimos tu solicitud para unirte al <strong style="color:#C9A84C;">${planLabel}</strong>.<br>
-          Vinces, nuestro asistente de IA, te escribirá por WhatsApp en los próximos minutos para orientarte y responder tus dudas.
+          Luis revisa cada registro personalmente — si quieres hablar ya mismo, escríbele directo por WhatsApp.
         </p>
+        <div style="text-align:center;margin-bottom:24px;">
+          <a href="${wa(`Hola Luis, me registré en ${planLabel} y tengo algunas preguntas`)}"
+            style="display:inline-block;background:transparent;color:#C9A84C;font-weight:600;font-size:13px;
+                   padding:10px 24px;border:1px solid #C9A84C;border-radius:8px;text-decoration:none;">
+            Escribirle a Luis por WhatsApp →
+          </a>
+        </div>
 
         <div style="background:#0d0d0d;border:1px solid #1e1e1e;border-radius:12px;padding:20px;margin-bottom:24px;">
           <div style="font-size:11px;color:#4a4642;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">
@@ -138,7 +131,7 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, phone, email, plan, source } = await req.json()
+    const { name, phone, email, plan } = await req.json()
 
     if (!name || !phone) {
       return NextResponse.json({ error: 'Nombre y teléfono requeridos' }, { status: 400 })
@@ -181,59 +174,26 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Construir mensajes
-    const planCtx = planNorm === 'GRATIS'
-      ? 'Vi que te registraste al curso gratuito — bienvenido. '
-      : 'Vi que te interesa Liberty Quant — la especialización en trading cuantitativo de futuros. '
-
-    const mensajeLead =
-      `¡Hola ${name.trim()}! 👋 Soy Vinces, el asistente de Liberty Trading.\n\n` +
-      `${planCtx}` +
-      `Te haré unas preguntas rápidas para orientarte 🎯\n\n` +
-      `¿Actualmente tienes trabajo, negocio o alguna fuente de ingresos? ¿Y has tenido algún contacto con el trading o la inversión antes, o es algo completamente nuevo para ti?`
-
     const tipoLead = yaConvertido ? '♻️ Lead ya convertido (recontacto)' : existing ? '🔄 Lead conocido (nuevo intento)' : '📥 Nuevo lead'
-    const msgLuis =
-      `${tipoLead} — *formulario web*\n\n` +
-      `👤 *Nombre:* ${name.trim()}\n` +
-      `📱 *WhatsApp:* +${cleanedPhone}\n` +
-      `📧 *Email:* ${email || 'no proporcionado'}\n` +
-      `🎯 *Plan de interés:* ${planLabel}\n\n` +
-      `_Vinces ya le escribió para iniciar la conversación._`
-
-    // URL de n8n con fallback hardcodeado para que nunca quede vacío
-    const n8nUrl = source === 'landing' ? N8N_WEBHOOK_LANDING : N8N_WEBHOOK
 
     // Ejecutar todas las llamadas externas en paralelo con await antes de responder.
     // En Vercel serverless el contexto se cierra al hacer return — fire-and-forget no garantiza ejecución.
     // Promise.allSettled asegura que todos completen (o fallen) antes de devolver la respuesta.
+    // Nadie le escribe al lead automáticamente — Luis atiende cada registro personalmente.
     await Promise.allSettled([
-      // 1. WA al lead
-      yaConvertido ? Promise.resolve() : sendWA(cleanedPhone, mensajeLead),
-
-      // 2. Email de confirmación
+      // 1. Email de confirmación
       email?.includes('@')
         ? sendConfirmationEmail(name.trim(), email.trim(), planNorm)
         : Promise.resolve(),
 
-      // 3. Notificar a Luis
-      LUIS_PHONE ? sendWA(LUIS_PHONE, msgLuis) : Promise.resolve(),
-
-      // 4. Webhook n8n
-      n8nUrl ? fetch(n8nUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          phone: cleanedPhone,
-          email: email?.trim() || '',
-          plan: planNorm,
-          planLabel,
-          source: source || 'web',
-          ts: new Date().toISOString(),
-        }),
-        signal: AbortSignal.timeout(10000),
-      }) : Promise.resolve(),
+      // 2. Notificar a Luis (nexus_claw → WhatsApp, con fallback a email)
+      notifyNexus('new_lead', {
+        name: name.trim(),
+        phone: cleanedPhone,
+        email: email || undefined,
+        planInteres: planLabel,
+        nota: `${tipoLead} — formulario web`,
+      }),
     ])
 
     return NextResponse.json({ ok: true, status: 'created' })

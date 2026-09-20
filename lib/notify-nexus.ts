@@ -18,11 +18,26 @@ const GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || ''
 const LUIS_EMAIL = process.env.LUIS_EMAIL || process.env.ADMIN_EMAIL || ''
 const RESEND_KEY = process.env.RESEND_API_KEY || ''
 
+/**
+ * A quién va dirigido el mensaje de WhatsApp que nexus_claw termina enviando.
+ * - 'admin' (default si se omite): notifica a Luis — comportamiento de siempre.
+ * - 'lead': el mensaje es PARA el lead/comprador (ej. confirmación de compra).
+ *   Si el Gateway no está configurado o falla, no hay forma de mandarle el
+ *   WhatsApp directo al lead desde aquí — en ese caso el fallback avisa a
+ *   Luis por email para que lo contacte él mismo, en vez de fallar en silencio.
+ */
+export interface NexusRecipient {
+  role: 'lead' | 'admin'
+  phone?: string
+  email?: string
+}
+
 export interface NexusEvent {
   event: string
   source: 'liberty-trading-pro'
   timestamp: string
   data: Record<string, unknown>
+  recipient?: NexusRecipient
 }
 
 // ── Email fallback via Resend ─────────────────────────────────────────────────
@@ -76,6 +91,7 @@ const eventLabels: Record<string, string> = {
   new_lead: '💬 Nuevo lead de WhatsApp',
   lead_cta: '🎯 Lead listo para cierre',
   lead_vendido: '✅ Lead convertido — ¡venta!',
+  purchase_confirmed: '🎉 Compra confirmada — avisar al comprador',
   morning_news: '📰 Noticias Matutinas 6:30am Ecuador',
   futuros_sesgo: '📊 Sesgo Futuros 8:15am Ecuador',
   sesgo_intraday: '📊 Sesgo Intradía — Monitor de Mercado',
@@ -115,6 +131,8 @@ const fieldLabels: Record<string, string> = {
   productoUrl: 'Link de pago',
   respuestas: 'Respuestas',
   nota: 'Nota',
+  product: 'Producto',
+  dashboardUrl: 'Acceso',
 }
 
 // ── Main notify function ──────────────────────────────────────────────────────
@@ -127,12 +145,14 @@ const fieldLabels: Record<string, string> = {
 export async function notifyNexus(
   event: string,
   data: Record<string, unknown>,
+  recipient?: NexusRecipient,
 ): Promise<void> {
   const payload: NexusEvent = {
     event,
     source: 'liberty-trading-pro',
     timestamp: new Date().toISOString(),
     data,
+    ...(recipient ? { recipient } : {}),
   }
 
   let sent = false
@@ -161,9 +181,15 @@ export async function notifyNexus(
     }
   }
 
-  // Email fallback if webhook didn't send or failed
+  // Email fallback if webhook didn't send or failed.
+  // Siempre va a Luis (LUIS_EMAIL) — si el mensaje era para un lead, no hay
+  // forma de mandarle el WhatsApp directo desde aquí, así que se lo pedimos
+  // a Luis en vez de dejar al lead sin ninguna confirmación.
   if (!sent) {
-    await sendEmailFallback(event, data)
+    const fallbackData = recipient?.role === 'lead'
+      ? { ...data, nota: `⚠️ El canal automático a nexus_claw falló — contacta tú mismo por WhatsApp a ${recipient.phone ?? data.phone ?? 'este contacto'}.` }
+      : data
+    await sendEmailFallback(event, fallbackData)
   }
 }
 
@@ -210,6 +236,21 @@ export function notifyLeadVendido(data: {
   phone: string
 }) {
   return notifyNexus('lead_vendido', data)
+}
+
+/**
+ * Confirmación de compra — el mensaje de bienvenida es PARA el comprador,
+ * no para Luis. Ver NexusRecipient: si el Gateway falla, Luis recibe un
+ * email pidiéndole que contacte al comprador manualmente.
+ */
+export function notifyPurchaseConfirmed(data: {
+  name: string
+  phone: string
+  email: string
+  product: string
+  dashboardUrl: string
+}) {
+  return notifyNexus('purchase_confirmed', data, { role: 'lead', phone: data.phone, email: data.email })
 }
 
 // ── Futuros sesgo ─────────────────────────────────────────────────────────────
