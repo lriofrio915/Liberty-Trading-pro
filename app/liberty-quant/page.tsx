@@ -1,6 +1,5 @@
 import Navbar from '@/components/Navbar/Navbar'
 import Footer from '@/components/Footer/Footer'
-import LeadCaptureForm from '@/components/LeadCaptureForm/LeadCaptureForm'
 import PersonalContactForm from '@/components/PersonalContactForm/PersonalContactForm'
 import VincesWidget from '@/components/VincesWidget/VincesWidget'
 import { BRAND, wa } from '@/lib/brand'
@@ -98,7 +97,7 @@ export default function LibertyQuantPage() {
                   <circle cx="13" cy="15" r="2.5" fill="currentColor"/>
                   <circle cx="23" cy="15" r="2.5" fill="currentColor"/>
                 </svg>
-                Hablar con Vinces primero
+                Hablar con Luis primero
               </a>
             </div>
           </div>
@@ -257,12 +256,12 @@ export default function LibertyQuantPage() {
             {[
               { n: '01', title: 'Fundamentos quant', desc: 'De discrecional a sistemático, anatomía de un edge (momentum, mean reversion, estacional, breakout), instalación de NinjaTrader 8.' },
               { n: '02', title: 'El proceso de 9 pasos', desc: 'El checklist de especificación obligatorio: instrumento, sesión RTH/ETH, zona horaria, Calculate mode.' },
-              { n: '03', title: 'Bot #1 — Apertura + EMA200', desc: 'De la regla manual al código con Claude como asistente: plantilla, logging, stop loss obligatorio.' },
+              { n: '03', title: 'Bot #1 — Apertura + EMA200', desc: 'De la regla manual al código con Claude como asistente: plantilla, logging, stop loss obligatorio. Un bot didáctico: el backtest no muestra ventaja estadística real, pero sirve para practicar el proceso completo y es válido para intentar una prueba de fondeo.' },
               { n: '04', title: 'Los 4 Mandamientos', desc: 'El gate de fiabilidad antes de optimizar: SL, avg bars/trade, velas válidas, entrada sin look-ahead.' },
               { n: '05', title: 'Optimización', desc: 'Bruto vs fino, elegir la meseta y no el pico, descartar como resultado exitoso del proceso.' },
               { n: '06', title: 'Walk-Forward y Montecarlo', desc: 'La regla de oro: el número que decide es el del WFO. Drawdown peor caso y riesgo de ruina.' },
-              { n: '07', title: 'Bot #2 — Zigzag Breakout', desc: 'El proceso completo con menos guía — incubación y criterio de paso a cuenta real.' },
-              { n: '08', title: 'El portafolio — 4 estrategias validadas', desc: 'Código completo entregado, taller de interpretación de métricas reales y mejora estadística.' },
+              { n: '07', title: 'Bot #2 — Zigzag Breakout', desc: 'El proceso completo con menos guía — incubación y criterio de paso a cuenta real. Igual que el Bot #1, es didáctico: sigue una lógica válida pero sin ventaja estadística probada en el backtest.' },
+              { n: '08', title: 'El portafolio — 6 estrategias cuantitativas validadas', desc: 'Código completo de las 6 estrategias reales, con ventaja estadística probada — las que uso para capital real y cuentas fondeadas ya en operación. Taller de interpretación de métricas y mejora estadística.' },
               { n: '09', title: 'Gestión de portafolio', desc: 'Correr múltiples bots sin pisarse: sizing, capital, correlación entre estrategias.' },
               { n: '10', title: 'Tu cuenta fondeada', desc: 'Activación del pase directo de $200k con PJ Capital, reglas de la cuenta, operar en real.' },
               { n: '11', title: 'Proyecto final', desc: 'Tu propia estrategia, validada con WFO, evaluada para sumarse al portafolio comunitario.' },
@@ -288,7 +287,7 @@ export default function LibertyQuantPage() {
               </h2>
               <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
                 Trader cuantitativo especializado en futuros. Luis gestiona un portafolio real de
-                6 estrategias algorítmicas en NinjaTrader 8 y desarrolla los algoritmos de una
+                6 estrategias algorítmicas en NinjaTrader 8 y desarrolla algoritmos para una
                 empresa financiera tecnológica. No enseña desde la teoría — entrega el código
                 funcional y la metodología completa para construir el tuyo.
               </p>
@@ -368,6 +367,10 @@ export default function LibertyQuantPage() {
                 a: 'Es un resultado normal del proceso, no un fracaso. La mayoría de ideas se descartan en la fase de optimización — te enseño a reconocerlo a tiempo en vez de forzar una estrategia que no tiene ventaja estadística real.',
               },
               {
+                q: 'Los Bots #1 y #2 del curso — ¿son rentables?',
+                a: 'Con honestidad: no, su backtest no muestra ventaja estadística real. Sirven para aprender el proceso completo de principio a fin y son válidos para intentar pasar una prueba de fondeo (donde la varianza puede jugar a tu favor). Para capital real o cuentas ya fondeadas, uso y recomiendo las 6 estrategias del portafolio cuantitativo — esas sí tienen ventaja estadística validada con Walk-Forward.',
+              },
+              {
                 q: '¿Necesito el curso gratuito antes?',
                 a: 'No es obligatorio, pero ayuda. Liberty Quant incluye acceso al curso gratuito de acciones y opciones por si quieres repasar los fundamentos primero.',
               },
@@ -385,37 +388,27 @@ export default function LibertyQuantPage() {
         </div>
       </section>
 
-      {/* ─── FORMULARIO VINCES ──────────────────────────────────── */}
+      {/* ─── CONTACTO DIRECTO CON LUIS ──────────────────────────── */}
       <section id="contacto-vinces" className="py-24 px-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
-            <div>
-              <div className="label-mono mb-3 text-[var(--gold)]">Sin compromiso</div>
-              <h2 className="headline text-4xl text-[var(--text-primary)] mb-5">
-                ¿Tienes dudas?<br />Vinces IA te orienta<br />
-                <span className="gradient-gold">en segundos</span>
-              </h2>
-              <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
-                Deja tu nombre y número. Vinces IA te escribe por WhatsApp,
-                evalúa tu perfil y te dice si Liberty Quant es lo que necesitas —
-                y si no, te recomienda empezar por el curso gratuito.
-              </p>
-              <div className="space-y-2">
-                {[
-                  '✓ Responde en segundos, cualquier hora',
-                  '✓ Evalúa si tienes el perfil para trading cuantitativo',
-                  '✓ Si el curso gratuito se adapta mejor, te lo dice',
-                ].map((item) => (
-                  <p key={item} className="text-sm text-[var(--text-secondary)] font-mono">{item}</p>
-                ))}
-              </div>
-            </div>
-            <LeadCaptureForm
-              plan="QUANT"
-              title="Habla con Vinces IA ahora"
-              subtitle="Deja tus datos y Vinces te contacta por WhatsApp en segundos."
-            />
-          </div>
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="label-mono mb-3 text-[var(--gold)]">Atención personalizada</div>
+          <h2 className="headline text-4xl text-[var(--text-primary)] mb-5">
+            ¿Tienes dudas?<br />
+            <span className="gradient-gold">Escríbeme directo por WhatsApp</span>
+          </h2>
+          <p className="text-[var(--text-secondary)] leading-relaxed mb-8 max-w-md mx-auto">
+            Yo mismo reviso tu mensaje y te respondo — sin bots, sin automatizaciones.
+            Te digo con honestidad si Liberty Quant es para ti o si es mejor que empieces
+            por el curso gratuito.
+          </p>
+          <a href={wa('Hola Luis, tengo dudas sobre Liberty Quant')} target="_blank" rel="noopener noreferrer"
+            className="btn-gold text-sm py-4 px-10 rounded-xl inline-flex items-center gap-2">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.464 3.488" />
+            </svg>
+            Escribir a Luis por WhatsApp
+          </a>
+          <p className="label-mono mt-3 text-[10px]">{BRAND.phoneDisplay}</p>
         </div>
       </section>
 
