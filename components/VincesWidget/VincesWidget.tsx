@@ -79,7 +79,7 @@ function saveSession(key: string | null, session: LandingSession) {
   } catch {}
 }
 
-const QUANT_HREF = BRAND.hotmart.quant || wa('Hola Luis, quiero información sobre Liberty Quant')
+const QUANT_HREF = BRAND.hotmart.quant || wa('Hola Luis, quiero información sobre Liberty Trading Club')
 
 // ─── Component ───────────────────────────────────────────────────────────────
 

@@ -16,7 +16,7 @@ function cleanPhone(phone: string): string {
 
 async function sendConfirmationEmail(name: string, email: string, plan: string) {
   const isGratis = plan === 'GRATIS'
-  const planLabel = isGratis ? 'Curso gratuito Liberty' : 'Liberty Quant Club ($1,500, pago único)'
+  const planLabel = isGratis ? 'Curso gratuito Liberty' : 'Liberty Trading Club ($1,500, pago único)'
   const planLink  = LINKS.QUANT
 
   await resend.emails.send({
@@ -89,7 +89,7 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
           <a href="${planLink}"
             style="display:inline-block;background:#C9A84C;color:#000;font-weight:700;font-size:14px;
                    padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;">
-            Unirme a Liberty Quant →
+            Unirme a Liberty Trading Club →
           </a>
         </div>
         ` : ''}
@@ -97,7 +97,7 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
 
         <div style="border-top:1px solid #1e1e1e;padding-top:20px;">
           <div style="font-size:11px;color:#4a4642;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">
-            ${isGratis ? 'Lo que aprenderás en el curso gratuito' : 'Todo lo que incluye Liberty Quant Club'}
+            ${isGratis ? 'Lo que aprenderás en el curso gratuito' : 'Todo lo que incluye Liberty Trading Club'}
           </div>
           ${(isGratis ? [
             '🏦 Abrir y fondear tu cuenta en Interactive Brokers',
@@ -110,7 +110,7 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
             '💻 Portafolio comunitario: 6 bots listos para instalar',
             '🏦 Pase directo a cuenta fondeada de $200k en PJ Capital (valor $300)',
             '📊 Track record verificable de Luis',
-            '👥 Comunidad Liberty Quant — el portafolio sigue creciendo',
+            '👥 Comunidad Liberty Trading Club — el portafolio sigue creciendo',
           ]).map(f => `<div style="font-size:13px;color:#8a8480;padding:4px 0;">${f}</div>`).join('')}
         </div>
       </div>
@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
     }
 
     const planNorm: 'QUANT' | 'GRATIS' = plan === 'GRATIS' ? 'GRATIS' : 'QUANT'
-    const planLabel = planNorm === 'GRATIS' ? 'Curso gratuito' : 'Liberty Quant Club ($1,500)'
+    const planLabel = planNorm === 'GRATIS' ? 'Curso gratuito' : 'Liberty Trading Club ($1,500)'
 
     const existing = await (prisma as any).whatsappLead.findUnique({
       where: { phone: cleanedPhone },

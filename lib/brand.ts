@@ -22,7 +22,7 @@ const HOTMART_MENSUAL =
   'https://pay.hotmart.com/R104900326X?checkoutMode=2'
 
 /**
- * Link de checkout de Liberty Quant Club ($1,500, pago único). Aún no existe el
+ * Link de checkout de Liberty Trading Club ($1,500, pago único). Aún no existe el
  * producto en Hotmart: mientras esté vacío, el CTA cae a WhatsApp (ver
  * `services.quant.href`). Cuando Luis cree el producto en Hotmart, setear
  * NEXT_PUBLIC_HOTMART_LINK_QUANT en Vercel.
@@ -48,16 +48,16 @@ export const BRAND = {
   /** Casa de productos. Ver /branding/01-estrategia.md */
   house: 'Liberty',
   products: {
-    quant: 'Liberty Quant Club',
+    /** Id interno `quant` por compatibilidad con Hotmart/leads (plan QUANT). */
+    quant: 'Liberty Trading Club',
     exchange: 'Liberty Exchange',
     portfolio: 'Liberty Portfolio',
   },
 
   /**
-   * Nombre legal/histórico. La suscripción mensual/anual que llevaba este
-   * nombre se retiró — Liberty Quant Club (pago único, $1,500) es hoy el único
-   * producto educativo pago. Se mantiene el campo por el dominio y por
-   * referencias legales antiguas; no usar en titulares nuevos.
+   * Nombre legal. Desde sep-2026 es también el nombre del producto educativo
+   * (pago único, $1,500 lifetime) — la antigua suscripción mensual/anual con
+   * este nombre está retirada.
    */
   legalName: 'Liberty Trading Club',
 
@@ -83,7 +83,7 @@ export const BRAND = {
     quant: HOTMART_QUANT,
   },
 
-  /** Precio ancla de Liberty Quant Club. Un solo sitio que tocar si cambia. */
+  /** Precio ancla de Liberty Trading Club. Un solo sitio que tocar si cambia. */
   price: {
     quant: 1500,
     quantLabel: '$1,500',
@@ -141,8 +141,8 @@ export const SERVICES = [
     ],
     price: BRAND.price.quantLabel,
     priceNote: 'Pago único',
-    cta: HOTMART_QUANT ? 'Quiero entrar al club' : 'Consultar Liberty Quant Club',
-    href: HOTMART_QUANT || wa('Hola Luis, quiero información sobre Liberty Quant Club'),
+    cta: HOTMART_QUANT ? 'Quiero entrar al club' : 'Consultar Liberty Trading Club',
+    href: HOTMART_QUANT || wa('Hola Luis, quiero información sobre Liberty Trading Club'),
     hotmart: Boolean(HOTMART_QUANT),
   },
   {

@@ -28,7 +28,7 @@ const syne = Syne({
 })
 
 const DESCRIPTION =
-  'Liberty Quant Club: trading algorítmico cuantitativo con Claude Code, NinjaTrader 8 y Obsidian. ' +
+  'Liberty Trading Club: trading algorítmico cuantitativo con Claude Code, NinjaTrader 8 y Obsidian. ' +
   '6 bots listos para instalar y cuenta fondeada de $200k incluida. Pago único, acceso de por vida.'
 
 export const metadata: Metadata = {

@@ -7,7 +7,7 @@ import VincesWidget from '@/components/VincesWidget/VincesWidget'
 import { BRAND, RISK_DISCLAIMER, wa } from '@/lib/brand'
 
 /**
- * Landing de venta de Liberty Quant Club — el único producto que empuja la home.
+ * Landing de venta de Liberty Trading Club — el único producto que empuja la home.
  * Se usa en `/` y en `/liberty-quant`. Precio, nombre y link de checkout salen
  * de lib/brand.ts: no hardcodear aquí.
  */
@@ -50,7 +50,7 @@ const PILARES = [
     title: `Tu cuenta fondeada de ${ACCOUNT}`,
     desc: `Te entrego un pase directo a una cuenta fondeada de ${ACCOUNT} en ${PROVIDER}, sin prueba de evaluación. Tienes capital y data para operar las estrategias sin arriesgar tus ahorros.`,
     bullets: [
-      `Pase directo ${PROVIDER} (lo pago yo: ${FUNDING})`,
+      `Pase directo ${PROVIDER} incluido en tu inscripción`,
       'Datos de mercado para NinjaTrader',
       'Los bots respetan los límites de drawdown',
     ],
@@ -109,20 +109,24 @@ const VALOR_TOTAL = '$3,500'
 type Cell = boolean | string
 const COMPARATIVA: { label: string; club: Cell; curso: Cell; software: Cell; workshop: Cell }[] = [
   { label: 'Video clases paso a paso', club: true, curso: true, software: false, workshop: true },
-  { label: 'Claude Code (IA) para programar', club: true, curso: false, software: false, workshop: false },
+  { label: 'Te enseña a programar con Claude Code (IA)*', club: true, curso: false, software: false, workshop: false },
   { label: 'Obsidian como laboratorio de investigación', club: true, curso: false, software: false, workshop: false },
   { label: 'Tu propia app de track record desplegada', club: true, curso: false, software: false, workshop: false },
   { label: 'Bots validados listos para instalar', club: '6 + creciendo', curso: false, software: 'Genéricos', workshop: false },
   { label: 'Cuenta fondeada incluida', club: `${ACCOUNT}`, curso: false, software: false, workshop: false },
   { label: 'Comunidad que comparte estrategias', club: true, curso: false, software: 'Foro', workshop: false },
   { label: 'En español', club: true, curso: true, software: false, workshop: false },
-  { label: 'Precio', club: `${PRICE} único`, curso: '€350–790', software: '$1,290–2,900', workshop: '$3,199+' },
+  { label: 'Precio', club: `${PRICE} único`, curso: '$400–950', software: '$1,290–2,900', workshop: '$3,199+' },
 ]
 
 const FAQS = [
   {
     q: `¿Cuánto cuesta ${NAME}?`,
     a: `${PRICE}, pago único y acceso de por vida. No es una suscripción: pagas una vez y tienes las video clases, el portafolio comunitario, sus actualizaciones y la comunidad.`,
+  },
+  {
+    q: '¿Cuánto voy a ganar al mes con los robots?',
+    a: 'Nadie puede prometerte una cifra mensual, y desconfía de quien lo haga. Lo que ganes depende del capital, del número de contratos, de las reglas de tu cuenta fondeada y de cómo se comporte el mercado. Los bots tienen meses buenos y meses en pérdida: en el histórico del portafolio, alrededor de 2 de cada 3 meses cerraron en positivo, y eso también significa que 1 de cada 3 no. Lo que sí te llevas es el método para medir, validar y ajustar tu portafolio con datos reales, y un track record propio para saber exactamente dónde estás.',
   },
   {
     q: '¿Necesito saber programar?',
@@ -146,7 +150,7 @@ const FAQS = [
   },
   {
     q: '¿Qué necesito para empezar?',
-    a: 'Una computadora con Windows (o una VPS) para correr NinjaTrader 8, una suscripción a Claude para usar Claude Code y ganas de trabajar. Todo lo demás lo montamos juntos.',
+    a: 'Una computadora con Windows (o una VPS) para correr NinjaTrader 8 y tu propia suscripción a Claude para usar Claude Code. No está incluida en el club; el plan Pro de $20/mes es suficiente. Todo lo demás lo montamos juntos en las clases.',
   },
 ]
 
@@ -420,7 +424,8 @@ export default function QuantLanding({ initialUser = null }: { initialUser?: Use
             </table>
           </div>
           <p className="text-[11px] text-center mt-4 text-[var(--text-muted)]">
-            Rangos de precio públicos de productos comparables, septiembre 2026. Referencia orientativa.
+            Rangos de precio públicos de productos comparables, septiembre 2026, en dólares. Referencia orientativa.<br />
+            * El club te enseña a usar Claude Code; la suscripción a Claude es tuya y no está incluida (el plan Pro de $20/mes es suficiente).
           </p>
         </div>
       </section>
@@ -455,6 +460,9 @@ export default function QuantLanding({ initialUser = null }: { initialUser?: Use
               <div className="label-mono text-[10px] text-[var(--gold)] mb-1">Tu inversión hoy</div>
               <div className="text-6xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-serif)' }}>{PRICE}</div>
               <div className="label-mono text-[10px] mt-1">Pago único · Lifetime · Sin mensualidad</div>
+              <p className="text-[11px] text-[var(--text-muted)] mt-3">
+                Requisito aparte: tu propia suscripción a Claude (plan Pro, $20/mes) para usar Claude Code.
+              </p>
             </div>
 
             <CtaButton className="w-full block" />
@@ -529,13 +537,15 @@ export default function QuantLanding({ initialUser = null }: { initialUser?: Use
                 {BRAND.name} —<br /><span className="gradient-gold">Trader Cuantitativo</span>
               </h2>
               <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
-                Hace 8 años era profesor de química con plaza fija. En 2019 descubrí los mercados y el
-                desarrollo de software; a finales de 2024 renuncié para dedicarme a esto.
+                Hace 8 años era profesor de química con un trabajo estable. En 2019 descubrí los mercados
+                financieros y el desarrollo de software. A finales de 2024 renuncié a mi empleo seguro para
+                dedicarme 100% a las finanzas tecnológicas.
               </p>
               <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
-                Hoy opero un portafolio de estrategias algorítmicas en NinjaTrader 8 con el mismo stack
-                que te enseño: Claude Code, Obsidian y un track record público. No enseño desde la teoría —
-                te entrego el código y el método.
+                Hoy trabajo a tiempo completo invirtiendo en acciones, opciones y futuros financieros, y opero
+                un portafolio de estrategias algorítmicas en NinjaTrader 8 con el mismo stack que te enseño:
+                Claude Code, Obsidian y un track record público. No enseño solo desde la teoría: te entrego
+                el código y el método que uso cada día.
               </p>
               <div className="card border-l-2 border-[var(--gold)] pl-5 mb-6">
                 <p className="headline text-base text-[var(--text-secondary)] italic mb-2">

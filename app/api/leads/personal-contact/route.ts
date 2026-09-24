@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Teléfono inválido' }, { status: 400 })
     }
 
-    const planLabel = plan === 'GRATIS' ? 'Curso gratuito' : 'Liberty Quant Club ($1,500)'
+    const planLabel = plan === 'GRATIS' ? 'Curso gratuito' : 'Liberty Trading Club ($1,500)'
 
     // Store lead — do NOT trigger automated Vinces chat
     await (prisma as any).whatsappLead.upsert({

@@ -24,7 +24,7 @@ async function captureLead(name: string, phone: string, email: string, plan: str
   if (cleanedPhone.length < 7) return false
 
   const planNorm: 'QUANT' | 'GRATIS' = plan === 'QUANT' ? 'QUANT' : 'GRATIS'
-  const planLabel = planNorm === 'QUANT' ? 'Liberty Quant Club ($1,500)' : 'Curso gratuito'
+  const planLabel = planNorm === 'QUANT' ? 'Liberty Trading Club ($1,500)' : 'Curso gratuito'
 
   try {
     const existing = await (prisma as any).whatsappLead.findUnique({ where: { phone: cleanedPhone } })
@@ -84,13 +84,15 @@ export async function POST(req: NextRequest) {
       `TU OBJETIVO: Entender la situacion del visitante, recomendarle el nivel ideal y capturar su nombre + telefono para darle seguimiento personalizado.\n\n` +
       `DOS NIVELES DISPONIBLES:\n` +
       `- Curso gratuito: 100% gratis, sin tarjeta. Fundamentos de mercados, cuenta en IBKR, analisis de acciones con Claude, opciones. Ideal para quien recien empieza.\n` +
-      `- Liberty Quant Club: $1,500, PAGO UNICO, acceso de por vida (no es suscripcion). Video clases de trading algoritmico cuantitativo (Claude Code + NinjaTrader 8 + Obsidian, y deploy de su propia app de track record), acceso al portafolio comunitario con 6 bots listos para descargar e instalar en NinjaTrader 8, y un pase directo a una cuenta fondeada de $200,000 en PJ Capital (Luis lo compra y se lo entrega al alumno; ese pase cuesta $300). Proyecto final: crear su propia estrategia y compartirla con la comunidad. Ideal para quien quiere construir un portafolio de bots como negocio.\n\n` +
+      `- Liberty Trading Club: $1,500, PAGO UNICO, acceso de por vida (no es suscripcion). Video clases de trading algoritmico cuantitativo (Claude Code + NinjaTrader 8 + Obsidian, y deploy de su propia app de track record), acceso al portafolio comunitario con 6 bots listos para descargar e instalar en NinjaTrader 8, y un pase directo a una cuenta fondeada de $200,000 en PJ Capital (Luis lo compra y se lo entrega al alumno; ese pase cuesta $300). Proyecto final: crear su propia estrategia y compartirla con la comunidad. Ideal para quien quiere construir un portafolio de bots como negocio.\n\n` +
       `QUE INCLUYE LIBERTY QUANT CLUB:\n` +
       `- Video clases: infraestructura con Claude Code y deploy de su app de track record\n` +
       `- Estrategias desde cero con Claude Code + NinjaTrader 8 + Obsidian (WFO y Montecarlo)\n` +
       `- Portafolio comunitario: codigo de 6 bots listos para instalar\n` +
       `- Pase directo a cuenta fondeada de $200k en PJ Capital (valor $300, incluido)\n` +
-      `- Comunidad y actualizaciones de por vida\n\n` +
+      `- Comunidad y actualizaciones de por vida\n` +
+      `REQUISITO NO INCLUIDO: el alumno necesita su propia suscripcion a Claude para usar Claude Code (el plan Pro de $20/mes es suficiente). El club ensena a usarlo, no incluye la suscripcion ni la API.\n` +
+      `SI PREGUNTAN CUANTO VAN A GANAR AL MES: nunca prometas cifras. Explica que depende del capital, los contratos, las reglas de la cuenta fondeada y el mercado; que en el historico del portafolio cerca de 2 de cada 3 meses fueron positivos (y 1 de cada 3 no), y que el club ensena el metodo para medir y validar con datos reales.\n\n` +
       `FLUJO DE LA CONVERSACION:\n` +
       `1. Saludar calidamente y preguntar si tienen experiencia en trading o inversion\n` +
       `2. Entender sus objetivos (aprender lo basico, o dar el salto a lo cuantitativo)\n` +

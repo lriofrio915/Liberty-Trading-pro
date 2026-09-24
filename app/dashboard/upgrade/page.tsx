@@ -5,7 +5,7 @@ import { getEffectiveAccess } from '@/lib/access'
 import { redirect } from 'next/navigation'
 import { BRAND, wa } from '@/lib/brand'
 
-const QUANT_HREF = BRAND.hotmart.quant || wa('Hola Luis, quiero información sobre Liberty Quant')
+const QUANT_HREF = BRAND.hotmart.quant || wa('Hola Luis, quiero información sobre Liberty Trading Club')
 const QUANT_IS_HOTMART = Boolean(BRAND.hotmart.quant)
 
 const QUANT_FEATURES = [
@@ -15,7 +15,7 @@ const QUANT_FEATURES = [
   { icon: '🤖', label: 'NinjaTrader 8 + Claude como asistente de desarrollo' },
   { icon: '🎓', label: 'Curso gratuito de acciones y opciones vía IBKR incluido' },
   { icon: '📈', label: 'Track record verificable — resultados reales de Luis' },
-  { icon: '👥', label: 'Comunidad Liberty Quant — el portafolio sigue creciendo' },
+  { icon: '👥', label: 'Comunidad Liberty Trading Club — el portafolio sigue creciendo' },
 ]
 
 export default async function UpgradePage() {
@@ -59,20 +59,20 @@ export default async function UpgradePage() {
               </h1>
               <p className="text-sm leading-relaxed" style={{ color: '#888' }}>
                 Tu prueba gratuita de 14 días terminó. Para seguir accediendo a todas las herramientas,
-                activa Liberty Quant.
+                activa Liberty Trading Club.
               </p>
             </>
           ) : (
             <>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-mono mb-4"
                 style={{ background: 'rgba(201,168,76,0.1)', color: '#C9A84C', border: '1px solid rgba(201,168,76,0.2)' }}>
-                🔒 Sección exclusiva Liberty Quant
+                🔒 Sección exclusiva del Liberty Trading Club
               </div>
               <h1 className="text-3xl sm:text-4xl font-black text-white mb-3" style={{ fontFamily: 'Georgia, serif' }}>
                 Acceso exclusivo para miembros
               </h1>
               <p className="text-sm leading-relaxed" style={{ color: '#888' }}>
-                Esta sección requiere Liberty Quant. Únete con un pago único para acceder a todas las herramientas.
+                Esta sección requiere Liberty Trading Club. Únete con un pago único para acceder a todas las herramientas.
               </p>
             </>
           )}
@@ -93,7 +93,7 @@ export default async function UpgradePage() {
         <div className="rounded-2xl border p-6 flex flex-col relative overflow-hidden max-w-sm mx-auto mb-8"
           style={{ background: 'rgba(201,168,76,0.06)', borderColor: 'rgba(201,168,76,0.3)' }}>
           <div className="text-[10px] font-mono tracking-widest uppercase mb-2" style={{ color: '#C9A84C' }}>
-            Liberty Quant
+            Liberty Trading Club
           </div>
           <div className="text-4xl font-black text-white mb-1" style={{ fontFamily: 'Georgia, serif' }}>
             {BRAND.price.quantLabel}
@@ -103,13 +103,13 @@ export default async function UpgradePage() {
           <a href={QUANT_HREF} target={QUANT_IS_HOTMART ? undefined : '_blank'} rel={QUANT_IS_HOTMART ? undefined : 'noopener noreferrer'}
             className="mt-auto text-center py-3 rounded-xl text-sm font-bold transition-colors hover:opacity-90"
             style={{ background: '#C9A84C', color: '#080808' }}>
-            {QUANT_IS_HOTMART ? 'Activar Liberty Quant →' : 'Consultar Liberty Quant →'}
+            {QUANT_IS_HOTMART ? 'Activar Liberty Trading Club →' : 'Consultar Liberty Trading Club →'}
           </a>
         </div>
 
         <div className="text-center mb-8">
           <Link href="/liberty-quant" className="text-sm transition-colors hover:text-[#C9A84C]" style={{ color: '#666' }}>
-            Ver todo lo que incluye Liberty Quant →
+            Ver todo lo que incluye Liberty Trading Club →
           </Link>
         </div>
 

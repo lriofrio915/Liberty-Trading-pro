@@ -36,7 +36,7 @@ const MODULOS = [
 const FAQS = [
   {
     q: '¿De verdad es gratis?',
-    a: 'Sí, completamente. Es mi forma de mostrarte cómo trabajo antes de que consideres Liberty Quant, mi especialización pagada en trading cuantitativo de futuros.',
+    a: 'Sí, completamente. Es mi forma de mostrarte cómo trabajo antes de que consideres Liberty Trading Club, mi especialización pagada en trading cuantitativo de futuros.',
   },
   {
     q: '¿Necesito experiencia previa?',
@@ -44,7 +44,7 @@ const FAQS = [
   },
   {
     q: '¿Tengo que pagar algo después?',
-    a: 'No hay ninguna obligación. Al terminar el curso te cuento sobre Liberty Quant por si quieres dar el siguiente paso, pero el curso gratuito se queda contigo de todas formas.',
+    a: 'No hay ninguna obligación. Al terminar el curso te cuento sobre Liberty Trading Club por si quieres dar el siguiente paso, pero el curso gratuito se queda contigo de todas formas.',
   },
   {
     q: '¿Cuándo tengo acceso?',
@@ -363,7 +363,7 @@ export default function UnirsePage() {
               <div>
                 <p className="text-sm font-bold text-white mb-0.5">¿Quieres ir más allá?</p>
                 <p className="text-xs leading-relaxed" style={{ color: '#888' }}>
-                  Al terminar el curso gratuito te cuento sobre <Link href="/liberty-quant" className="underline" style={{ color: '#C9A84C' }}>Liberty Quant</Link>,
+                  Al terminar el curso gratuito te cuento sobre <Link href="/liberty-quant" className="underline" style={{ color: '#C9A84C' }}>Liberty Trading Club</Link>,
                   mi club de trading algorítmico cuantitativo — incluye 6 bots listos para instalar y una cuenta fondeada de $200k.
                 </p>
               </div>
