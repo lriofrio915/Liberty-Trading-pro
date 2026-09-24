@@ -14,7 +14,9 @@ PRISMA = AQUI.parent
 
 def compactar(html: str) -> str:
     # La Academia convierte '\n' en <br/>: el HTML debe ir en una sola línea.
-    return re.sub(r'>\s+<', '><', ' '.join(l.strip() for l in html.strip().splitlines()))
+    # Se conserva un espacio entre etiquetas para no pegar texto inline
+    # (p. ej. «Calculate:</strong> <code>»); entre bloques el navegador lo ignora.
+    return re.sub(r'\s+', ' ', ' '.join(l.strip() for l in html.strip().splitlines()))
 
 
 def filas():
