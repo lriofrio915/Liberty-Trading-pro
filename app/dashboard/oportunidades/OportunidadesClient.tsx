@@ -681,7 +681,6 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
   const [selected, setSelected]       = useState<Suggestion | null>(null)
   const [precioCompra, setPrecioCompra]   = useState('')
   const [precioObjetivo, setPrecioObjetivo] = useState('')
-  const [category, setCategory] = useState('OPERATOR')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wrapperRef  = useRef<HTMLDivElement>(null)
 
@@ -720,7 +719,6 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
   function reset() {
     setQuery(''); setSelected(null); setSuggestions([])
     setPrecioCompra(''); setPrecioObjetivo('')
-    setCategory('OPERATOR')
     setError(null); setOpen(false)
   }
 
@@ -730,7 +728,7 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
     if (!ticker) return
     setSaving(true); setError(null)
     try {
-      const body: Record<string, unknown> = { ticker, category }
+      const body: Record<string, unknown> = { ticker }
       if (precioCompra && parseFloat(precioCompra) > 0) body.precioEntradaManual = precioCompra
       if (precioObjetivo && parseFloat(precioObjetivo) > 0) body.precioObjetivoManual = precioObjetivo
       const res = await fetch('/api/picks', {
@@ -865,23 +863,6 @@ function AdminForm({ onCreated }: { onCreated: (opp: Opportunity) => void }) {
             </div>
           </div>
 
-          {/* Tabla destino */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>
-              Agregar a tabla
-            </label>
-            <select
-              value={category}
-              onChange={e => setCategory(e.target.value)}
-              disabled={saving}
-              className={inputCls}
-            >
-              <option value="OPERATOR">Recomendaciones del Operador</option>
-              <option value="PETER_LYNCH">Recomendaciones Agente Peter</option>
-              <option value="SMALL_CAPS">Recomendaciones Agente Small</option>
-            </select>
-          </div>
-
           <div className="flex items-center gap-4">
             <button
               type="submit"
@@ -915,7 +896,7 @@ export default function OportunidadesClient({
   const [opportunities, setOpportunities] = useState<Opportunity[]>(initialOpportunities)
   const [previewMode, setPreviewMode] = useState(false)
   const [previewPlan, setPreviewPlan] = useState<'FREE' | 'CLUB' | 'PRO' | 'PORTFOLIO'>('CLUB')
-  const [categoryTab, setCategoryTab] = useState<'OPERATOR' | 'PETER_LYNCH' | 'SMALL_CAPS'>('OPERATOR')
+  const categoryTab = 'PETER_LYNCH'
   const [modalOpp, setModalOpp] = useState<Opportunity | null>(null)
   const [livePrices, setLivePrices] = useState<Record<string, number>>({})
 
@@ -998,9 +979,7 @@ export default function OportunidadesClient({
   const categoryTrackOpps  = trackRecordOpps.filter(o => (o.category ?? 'OPERATOR') === categoryTab)
 
   const CATEGORY_LABELS: Record<string, string> = {
-    OPERATOR:    'Recomendaciones del Operador',
     PETER_LYNCH: 'Recomendaciones Agente Peter',
-    SMALL_CAPS:  'Recomendaciones Agente Small',
   }
 
   const trTotal   = categoryTrackOpps.length
@@ -1060,23 +1039,6 @@ export default function OportunidadesClient({
 
       {/* Admin form */}
       {effectiveAdmin && <AdminForm onCreated={handleCreated} />}
-
-      {/* Category tabs */}
-      <div className="flex gap-2 mb-5 flex-wrap">
-        {(['OPERATOR', 'PETER_LYNCH', 'SMALL_CAPS'] as const).map(cat => (
-          <button
-            key={cat}
-            onClick={() => setCategoryTab(cat)}
-            className={`px-3 py-1.5 text-[10px] font-mono tracking-widest rounded-lg border transition-colors ${
-              categoryTab === cat
-                ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
-                : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--gold-dark)]'
-            }`}
-          >
-            {CATEGORY_LABELS[cat]}
-          </button>
-        ))}
-      </div>
 
       {/* Opportunities table */}
       {activeOpps.length === 0 ? (

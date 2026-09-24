@@ -3,6 +3,8 @@ export interface NavItem {
   icon: string
   label: string
   requiresClub: boolean
+  /** Solo visible para el admin. */
+  adminOnly?: boolean
 }
 
 export interface NavGroup {
@@ -30,10 +32,17 @@ export const navGroups: NavGroup[] = [
   {
     label: 'Agentes IA',
     items: [
-      { href: '/dashboard/agentes', icon: '🤖', label: 'Agentes',  requiresClub: true },
+      { href: '/dashboard/agentes', icon: '🤖', label: 'Agentes',  requiresClub: true, adminOnly: true },
     ],
   },
 ]
 
 // Flat list kept for bottom tabs
 export const navItems = navGroups.flatMap(g => g.items)
+
+/** Grupos visibles para el usuario: quita items adminOnly y grupos vacíos. */
+export function visibleNavGroups(isAdmin: boolean): NavGroup[] {
+  return navGroups
+    .map(g => ({ ...g, items: g.items.filter(i => !i.adminOnly || isAdmin) }))
+    .filter(g => g.items.length > 0)
+}

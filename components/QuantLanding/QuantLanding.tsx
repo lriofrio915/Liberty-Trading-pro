@@ -3,7 +3,6 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar/Navbar'
 import Footer from '@/components/Footer/Footer'
 import PersonalContactForm from '@/components/PersonalContactForm/PersonalContactForm'
-import VincesWidget from '@/components/VincesWidget/VincesWidget'
 import { BRAND, RISK_DISCLAIMER, wa } from '@/lib/brand'
 
 /**
@@ -658,7 +657,6 @@ export default function QuantLanding({ initialUser = null }: { initialUser?: Use
       </section>
 
       <Footer />
-      <VincesWidget mode="landing" />
     </main>
   )
 }

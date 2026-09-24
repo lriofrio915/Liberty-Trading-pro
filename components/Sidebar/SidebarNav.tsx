@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { navGroups } from './navConfig'
+import { visibleNavGroups } from './navConfig'
 
 const ADMIN_EMAIL = 'lriofrio915@gmail.com'
 
@@ -11,6 +11,7 @@ const ADMIN_EMAIL = 'lriofrio915@gmail.com'
 export default function SidebarNav({ email, canAccessClub }: { email: string; canAccessClub: boolean }) {
   const pathname = usePathname()
   const isAdmin = email === ADMIN_EMAIL
+  const navGroups = visibleNavGroups(isAdmin)
 
   return (
     <nav className="flex-1 px-3 py-4 flex flex-col">

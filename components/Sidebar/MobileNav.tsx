@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { navGroups } from './navConfig'
+import { visibleNavGroups } from './navConfig'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 import NotificationBell from '@/components/Notifications/NotificationBell'
 
@@ -50,6 +50,7 @@ export default function MobileNav({ email, canAccessClub, initialNotifCount }: {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const isAdmin = email === ADMIN_EMAIL
+  const navGroups = visibleNavGroups(isAdmin)
 
   // Close drawer on route change
   useEffect(() => { setOpen(false) }, [pathname])
@@ -173,8 +174,6 @@ export default function MobileNav({ email, canAccessClub, initialNotifCount }: {
             <div className="space-y-0.5">
               {[
                 { href: '/dashboard/profile',      icon: '👤', label: 'Mi Perfil'     },
-                { href: '/dashboard/conocimiento',  icon: '📚', label: 'Conocimiento'  },
-                { href: '/dashboard/retiros',       icon: '💸', label: 'Retiros'       },
               ].map(item => {
                 const active = pathname === item.href
                 return (

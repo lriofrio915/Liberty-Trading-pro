@@ -4,17 +4,10 @@ import dynamic from 'next/dynamic'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import TickerBar from '@/components/TickerBar/TickerBar'
 
-// GdeltMap requires browser APIs — no SSR
-const GdeltMap = dynamic(() => import('@/components/GdeltMap'), {
+// Recharts usa APIs del navegador — sin SSR
+const PortafolioQuant = dynamic(() => import('@/components/PortafolioQuant/PortafolioQuant'), {
   ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-[var(--bg-secondary)]">
-      <div className="text-center">
-        <div className="text-3xl mb-2 animate-pulse">🗺️</div>
-        <p className="label-mono text-[10px]">Cargando mapa...</p>
-      </div>
-    </div>
-  ),
+  loading: () => <div className="card h-96 animate-pulse" />,
 })
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -36,16 +29,7 @@ interface Article {
   source: string
 }
 
-type Timespan = '1h' | '6h' | '24h' | '7d'
-
 // ── Constants ──────────────────────────────────────────────────────────────────
-
-const TIMESPANS: { value: Timespan; label: string }[] = [
-  { value: '1h',  label: '1h' },
-  { value: '6h',  label: '6h' },
-  { value: '24h', label: '24h' },
-  { value: '7d',  label: '7d' },
-]
 
 const PRICES_CACHE_KEY = 'monitor-prices-cache'
 const PRICES_CACHE_TTL = 45_000
@@ -113,7 +97,6 @@ export default function DashboardClient({
   const [pricesLoading, setPricesLoading]   = useState(true)
   const [monitorArticles, setMonitorArticles]           = useState<Article[]>([])
   const [monitorNewsLoading, setMonitorNewsLoading]     = useState(true)
-  const [timespan, setTimespan] = useState<Timespan>('24h')
 
   // ── Fetch prices (stress indicators) ──────────────────────────────────────
 
@@ -185,7 +168,7 @@ export default function DashboardClient({
       <div className="mb-8 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-black mb-1">
-            <span className="gradient-gold">Market</span> Intelligence
+            <span className="gradient-gold">Tu panel</span> cuantitativo
           </h1>
           <p className="text-sm text-[var(--text-secondary)]">
             {greeting()},{' '}
@@ -203,6 +186,11 @@ export default function DashboardClient({
             )}
           </p>
         </div>
+      </div>
+
+      {/* ── Portafolio comunitario ───────────────────────────────────────────── */}
+      <div className="mb-10">
+        <PortafolioQuant />
       </div>
 
       {/* ── Indicadores de stress ────────────────────────────────────────────── */}
@@ -240,72 +228,6 @@ export default function DashboardClient({
                   </div>
                 )
               })}
-        </div>
-      </div>
-
-      {/* ── Selector de período ──────────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 mb-3">
-        <span className="label-mono text-[10px] mr-2">Período:</span>
-        {TIMESPANS.map(({ value, label }) => (
-          <button
-            key={value}
-            onClick={() => setTimespan(value)}
-            className={`px-3 py-1 rounded-md text-xs font-mono transition-all border ${
-              timespan === value
-                ? 'border-[var(--gold)] text-[var(--gold)] bg-[rgba(201,168,76,0.08)]'
-                : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--gold-dark)] hover:text-[var(--text-secondary)]'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Mapa geopolítico ─────────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <div
-          className="rounded-xl overflow-hidden border border-[var(--border)]"
-          style={{ height: 500 }}
-        >
-          <GdeltMap timespan={timespan} />
-        </div>
-
-        {/* Banner herramientas externas */}
-        <div className="mt-2 rounded-lg border border-yellow-900/30 bg-yellow-900/10 p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div>
-            <p className="text-yellow-400 text-xs font-mono tracking-widest font-bold">
-              HERRAMIENTAS DE SEGUIMIENTO EN TIEMPO REAL
-            </p>
-            <p className="text-gray-500 text-xs mt-1">
-              Conflictos globales · Tráfico naval · Vuelos militares y comerciales
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 shrink-0">
-            <a
-              href="https://liveuamap.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-yellow-500 text-black text-xs font-bold px-3 py-1.5 rounded hover:bg-yellow-400 transition-colors tracking-widest"
-            >
-              LIVEUAMAP ↗
-            </a>
-            <a
-              href="https://www.marinetraffic.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="border border-yellow-700/50 text-yellow-400 text-xs font-bold px-3 py-1.5 rounded hover:bg-yellow-900/20 transition-colors tracking-widest"
-            >
-              TRÁFICO NAVAL ↗
-            </a>
-            <a
-              href="https://www.flightradar24.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="border border-yellow-700/50 text-yellow-400 text-xs font-bold px-3 py-1.5 rounded hover:bg-yellow-900/20 transition-colors tracking-widest"
-            >
-              FLIGHTRADAR24 ↗
-            </a>
-          </div>
         </div>
       </div>
 
@@ -354,8 +276,7 @@ export default function DashboardClient({
 
       {/* Disclaimer */}
       <div className="label-mono text-[9px] text-[var(--text-muted)] text-center border-t border-[var(--border)] pt-4 pb-2">
-        Información con fines educativos · Fuente: GDELT Project (gdeltproject.org) ·
-        Los eventos geopolíticos impactan la volatilidad de los mercados · No es asesoramiento de inversión
+        Información con fines educativos · No es asesoramiento de inversión
       </div>
 
     </div>

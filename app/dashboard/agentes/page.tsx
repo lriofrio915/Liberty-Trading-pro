@@ -1,6 +1,4 @@
 import { createSupabaseServerClient } from '@/lib/supabase-server'
-import { prisma } from '@/lib/prisma'
-import { getEffectiveAccess } from '@/lib/access'
 import { redirect } from 'next/navigation'
 import AgentesClient from './AgentesClient'
 
@@ -13,13 +11,8 @@ export default async function AgentesPage() {
 
   if (!user) redirect('/login')
 
-  const isAdmin = user.email === ADMIN_EMAIL
+  // Agentes es una herramienta interna: el alumno ve el resultado en Acciones.
+  if (user.email !== ADMIN_EMAIL) redirect('/dashboard/acciones')
 
-  try {
-    const dbUser = await prisma.user.findUnique({ where: { authId: user.id } })
-    const access = getEffectiveAccess({ plan: dbUser?.plan ?? 'FREE', trialEndsAt: dbUser?.trialEndsAt ?? null })
-    if (!isAdmin && !access.canAccessClub) redirect('/dashboard/upgrade')
-  } catch {}
-
-  return <AgentesClient isAdmin={isAdmin} />
+  return <AgentesClient isAdmin />
 }
