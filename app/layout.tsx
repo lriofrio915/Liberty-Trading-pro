@@ -28,8 +28,8 @@ const syne = Syne({
 })
 
 const DESCRIPTION =
-  'Educación en trading de futuros, bots para NinjaTrader, intercambio de cripto a dólares y ' +
-  'asesoría para invertir en acciones de EEUU. Con cada operación publicada — ganadoras y perdedoras.'
+  'Liberty Trading Club: trading algorítmico cuantitativo con Claude Code, NinjaTrader 8 y Obsidian. ' +
+  '6 bots listos para instalar y cuenta fondeada de $200k incluida. Pago único, acceso de por vida.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(BRAND.url),

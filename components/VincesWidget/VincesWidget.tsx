@@ -79,7 +79,7 @@ function saveSession(key: string | null, session: LandingSession) {
   } catch {}
 }
 
-const QUANT_HREF = BRAND.hotmart.quant || wa('Hola Luis, quiero información sobre Liberty Quant')
+const QUANT_HREF = BRAND.hotmart.quant || wa('Hola Luis, quiero información sobre Liberty Trading Club')
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -409,7 +409,7 @@ export default function VincesWidget({ mode = 'dashboard' }: Props) {
                       rel="noopener noreferrer"
                       className="block text-center text-xs font-bold py-2.5 px-4 rounded-xl btn-gold"
                     >
-                      {msg.links.plan === 'QUANT' ? 'Liberty Quant — $1,000 →' : 'Empezar curso gratuito →'}
+                      {msg.links.plan === 'QUANT' ? `${BRAND.products.quant} — ${BRAND.price.quantLabel} →` : 'Empezar curso gratuito →'}
                     </a>
                   </div>
                 )}

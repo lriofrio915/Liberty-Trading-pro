@@ -7,7 +7,7 @@ const HOTMART_TOKEN = process.env.HOTMART_WEBHOOK_TOKEN || ''
 
 // Map Hotmart product/offer codes to plans.
 // 'CLUB' is the existing paid-access value in the Plan enum — it now represents
-// "compró Liberty Quant" (the $1,000 one-time product), not the retired monthly
+// "compró Liberty Trading Club" (the $1,500 one-time product), not the retired monthly
 // subscription. Kept as-is to avoid a schema migration; see plan doc.
 // Adjust these if Hotmart sends different identifiers
 function planFromHotmart(event: any): 'CLUB' | null {
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       name: firstName,
       phone,
       email,
-      product: 'Liberty Quant',
+      product: 'Liberty Trading Club',
       dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
     }).catch(() => {})
   }

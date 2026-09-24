@@ -108,7 +108,7 @@ const PERFIL_LABEL: Record<string, string> = {
   FUTUROS:  'Plan Pro Anual (retirado)',
   MENSUAL:  'Plan Pro Mensual (retirado)',
   ANUAL:    'Plan Pro Anual (retirado)',
-  QUANT:    'Liberty Quant',
+  QUANT:    'Liberty Trading Club',
   GRATIS:   'Curso gratuito',
 }
 
@@ -128,7 +128,7 @@ const PREGUNTAS: Record<string, string> = {
 
 const LANDING_PAGES = [
   { nombre: 'Principal',           slug: '/',                  descripcion: 'Página de inicio Liberty Trading Pro' },
-  { nombre: 'Liberty Quant',       slug: '/liberty-quant',     descripcion: 'Landing de Liberty Quant ($1000, pago único)' },
+  { nombre: 'Liberty Trading Club',       slug: '/liberty-quant',     descripcion: 'Landing de Liberty Trading Club ($1,500, pago único)' },
   { nombre: 'Mentoría Integral',   slug: '/mentoria-integral', descripcion: '(retirada — redirige a /liberty-quant)' },
   { nombre: 'Maestría Futuros',    slug: '/maestria-futuros',  descripcion: '(retirada — redirige a /liberty-quant)' },
   { nombre: 'P2P Trading',         slug: '/p2p',               descripcion: 'Landing de Trading P2P' },
