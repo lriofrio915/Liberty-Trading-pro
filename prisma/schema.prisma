@@ -58,7 +58,6 @@ model User {
   brokerConnections BrokerConnection[]
   notifications         Notification[]
   notificationsActed    Notification[] @relation("NotifActor")
-  vibeMessages          VibeMessage[]
   kycClient             KycClient?
 }
 
@@ -261,40 +260,6 @@ model Opportunity {
   category       String   @default("OPERATOR") // OPERATOR | PETER_LYNCH | SMALL_CAPS
 }
 
-model OptionRecommendation {
-  id              String   @id @default(cuid())
-  ticker          String
-  company         String   @default("")
-  direction       String   // 'ALCISTA' | 'BAJISTA'
-  strategy        String   // 'buy-call' | 'sell-put' | 'buy-put' | 'covered-call'
-  action          String   // 'COMPRAR CALL' | 'VENDER PUT' | etc.
-  contractSymbol  String
-  contractType    String   // 'call' | 'put'
-  strike          Float
-  expiration      String   // 'YYYY-MM-DD'
-  dte             Int
-  score           Int
-  label           String   // 'IDEAL' | 'ACEPTABLE'
-  underlyingPrice Float
-  bid             Float?
-  ask             Float?
-  mid             Float?
-  impliedVolatility Float?
-  delta           Float?
-  breakeven       Float?
-  maxLossHint     String?
-  maxProfitHint   String?
-  publishedAt     DateTime @default(now())
-  status          String   @default("ACTIVA") // 'ACTIVA' | 'CERRADA' | 'EXPIRADA'
-  precioSalida    Float?
-  active          Boolean  @default(true)
-  resultado       String?  // 'GANADA' | 'PERDIDA' | 'BREAKEVEN'
-  pnlPct          Float?   // % sobre prima pagada
-  pnlUsd          Float?   // P&L en dólares
-  closedAt        DateTime? // fecha de cierre real
-  source          String   @default("manual") // 'manual' | 'vanilla_long' | 'vanilla_short'
-}
-
 model KnowledgeDoc {
   id          String   @id @default(cuid())
   userId      String
@@ -471,17 +436,6 @@ model PostShare {
 
 // ─── VIBE AGENT CHAT HISTORY ─────────────────────────────────────────────────
 
-model VibeMessage {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      String   // user | agent
-  text      String   @db.Text
-  createdAt DateTime @default(now())
-
-  @@index([userId, createdAt])
-}
-
 // ─── LABORATORIO DE ESTRATEGIA ────────────────────────────────────────────────
 
 // Escaneo automático diario a las 9am ET (lunes a viernes)
@@ -577,18 +531,6 @@ model KycClient {
 
   @@index([status])
   @@index([createdAt])
-}
-
-model SesgoIntradayLog {
-  id        String   @id @default(cuid())
-  timestamp DateTime @default(now())
-  simbolo   String
-  sesgo     String
-  confianza Int
-  cambio24h Float
-  precio    Float
-
-  @@index([simbolo, timestamp])
 }
 
 // Tabla creada fuera de Prisma (drift detectado 2026-07-13) — mapeada aquí
