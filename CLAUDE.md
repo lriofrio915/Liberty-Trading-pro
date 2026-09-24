@@ -24,18 +24,15 @@ Monetiza vía Hotmart con 4 productos: academia, club, mensual, anual.
 | Ruta | Descripción |
 |------|-------------|
 | `academia` | Contenido educativo (acceso por plan) |
-| `acciones` | Acciones — señales diarias, picks intradía, research (Tauric) |
-| `agentes` | Agentes IA por estrategia (Peter Lynch, small caps, intradía, vanilla long/short, monitor) |
-| `analisis` | Análisis de mercado (`lib/analisis-engine.ts`) |
+| `acciones` | Acciones — señales diarias, research (Tauric), proyección TimesFM (`/api/forecast`) |
+| `agentes` | Agentes IA por estrategia (Peter Lynch, small caps, monitor) |
 | `brokers` | Conexión y ejecución vía brokers (IBKR) |
 | `championship` | Competencia de trading entre usuarios |
 | `clientes` | Clientes KYC (solo admin) |
 | `comunidad` | Posts, likes, comentarios |
 | `conocimiento` | Base de conocimiento |
-| `flujo` | Flujo del dinero |
 | `futuros` | Futuros NQ/MNQ — sesgo intradía y estado de la cuenta |
 | `leads` | CRM interno (solo admin) |
-| `opciones` | Opciones (`lib/options`) |
 | `oportunidades` | Señales de trading |
 | `planes` | Gestión del plan de trading del usuario |
 | `profile` | Perfil, certificados, configuración |
@@ -43,7 +40,6 @@ Monetiza vía Hotmart con 4 productos: academia, club, mensual, anual.
 | `retiros` | Historial de retiros de cuenta |
 | `track-record` | Historial público de operaciones (`/track-record/[slug]`) |
 | `upgrade` | Página de upgrade de plan |
-| `vibe` | Laboratorio Quant — estrategias algorítmicas vía Vibe-Trading |
 | `vinces` | AI assistant de trading (OpenRouter) |
 
 ## Planes de usuario
@@ -93,15 +89,13 @@ Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus
 | `POST /api/webhook/hotmart` | Recibe eventos de pago Hotmart y actualiza el plan del usuario |
 | `POST /api/vinces-wa` | Webhook del bot WhatsApp de Vinces (responde preguntas de leads) |
 
-## Vibe — Laboratorio Quant
+## Secciones retiradas (sep-2026)
 
-Reemplazó a AlgoLab (eliminado). El módulo `dashboard/vibe` es un proxy a
-[Vibe-Trading](https://github.com/HKUDS/Vibe-Trading), un FastAPI en Python que
-corre aparte y genera estrategias, backtests e indicadores para TradingView
-(Pine Script) y NinjaTrader 8 (NinjaScript).
-
-Cliente en `lib/vibe-trading.ts`. Config: `VIBE_TRADING_BASE_URL` (default
-`https://vibe-trading-liberty.fly.dev`) y `VIBE_TRADING_API_KEY`.
+Flujo del Dinero, CFDs (`dashboard/analisis`), Laboratorio Quant (Vibe-Trading),
+Opciones y los agentes Vanilla Long/Short e Intradía se eliminaron del código.
+Los modelos Prisma `OptionRecommendation` y `CfdSignal` siguen en el schema:
+`CfdSignal` lo usan los crons de futuros (`sector: 'Futuros'`, leído por
+`/api/cfds/signals` desde la pestaña de sesgo de Futuros).
 
 ## Marca
 
@@ -133,8 +127,7 @@ GROQ_API_KEY                      # AI alternativo
 NEXT_PUBLIC_APP_URL               # URL base del app
 RESEND_API_KEY                    # Emails
 HOTMART_WEBHOOK_TOKEN             # Validación de pagos
-NEXT_PUBLIC_HOTMART_LINK_QUANT    # Checkout de Liberty Quant ($1000). Vacío = el CTA cae a WhatsApp
-VIBE_TRADING_BASE_URL/API_KEY     # Backend Vibe-Trading (laboratorio quant)
+NEXT_PUBLIC_HOTMART_LINK_QUANT    # Checkout de Liberty Trading Club ($1,500). Vacío = el CTA cae a WhatsApp
 CLOUDINARY_*                      # Media uploads
 OPENCLAW_GATEWAY_URL/TOKEN        # nexus_claw — WhatsApp a Luis y a leads/compradores
 LUIS_EMAIL / ADMIN_EMAIL          # Fallback por email si nexus_claw falla
@@ -157,7 +150,7 @@ npm run dev                # Dev server en puerto 3000
 
 - **Supabase para auth, Prisma para queries:** No usar el cliente de Supabase para queries de datos, solo para auth y storage
 - **Server Components por defecto:** Solo añadir `'use client'` cuando sea necesario (interactividad)
-- **Tests:** solo `__tests__/lib/` (access, analisis-engine, cron-utils, faros-metrics, notifications, options-pricing, price-format, slug). Sin cobertura de rutas API ni componentes
+- **Tests:** solo `__tests__/lib/` (access, analisis-engine, cron-utils, notifications, price-format, slug). Sin cobertura de rutas API ni componentes
 - **Track Record público:** `/track-record/[slug]` es intencional — sirve como marketing
 
 ## Skill routing

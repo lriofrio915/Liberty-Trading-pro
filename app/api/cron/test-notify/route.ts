@@ -72,9 +72,6 @@ export async function GET(req: NextRequest) {
     await notifyMorningAgents([
       { agent: 'Peter',        picks: [{ ticker: 'AAPL', direction: 'COMPRA', precioEntrada: 189.50 }, { ticker: 'NVDA', direction: 'COMPRA', precioEntrada: 875.30 }] },
       { agent: 'SmallCap',     picks: [{ ticker: 'MARA', direction: 'COMPRA', precioEntrada: 22.10 }] },
-      { agent: 'VanillaLong',  picks: [{ ticker: 'MSFT', direction: 'CALL',   precioEntrada: 415.20 }] },
-      { agent: 'VanillaShort', picks: [] },
-      { agent: 'Intraday',     picks: [{ ticker: 'TSLA', direction: 'COMPRA', precioEntrada: 248.75 }, { ticker: 'AMD', direction: 'VENTA', precioEntrada: 155.40 }] },
     ])
     sent.push('morning_agents')
   }

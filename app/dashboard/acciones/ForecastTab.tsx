@@ -205,7 +205,7 @@ export default function ForecastTab() {
     if (q.length < 2) { setSugg([]); setShowDrop(false); return }
     debounceRef.current = setTimeout(async () => {
       try {
-        const r = await fetch(`/api/flujo/search?q=${encodeURIComponent(q)}`)
+        const r = await fetch(`/api/forecast/search?q=${encodeURIComponent(q)}`)
         if (!r.ok) return
         const d = await r.json() as { suggestions?: Suggestion[] }
         const s = d.suggestions ?? []

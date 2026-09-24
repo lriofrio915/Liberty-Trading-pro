@@ -320,7 +320,6 @@ export interface MorningAgentResult {
 const AGENT_EMOJI: Record<string, string> = {
   Peter: '🏛',
   SmallCap: '📦',
-  Intraday: '⚡',
 }
 
 export function notifyMorningAgents(results: MorningAgentResult[]) {
