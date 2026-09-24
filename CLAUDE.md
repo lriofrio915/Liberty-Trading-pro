@@ -95,10 +95,10 @@ pestaña "Sesgo Intradía" de Futuros (con sus crons `futuros-sesgo`,
 `futuros-open`, `futuros-close`, `sesgo-intraday`, `monitor-signals` y
 `/api/futures/analyze`) se eliminaron del código, igual que los crons
 `acciones-sesgo` y `divisas-sesgo` y sus workflows de GitHub Actions. La tabla
-`CfdSignal` se borró (migración `20260923_drop_cfd_signal`).
+`CfdSignal` se borró (migración `20260923_drop_cfd_signal`), igual que
 `OptionRecommendation`, `VibeMessage`, `SesgoIntradayLog` y `SignalQueue`
-siguen en la base sin uso (respaldo JSON en
-`Liberty-Trading-pro-db-backups/2026-09-23`).
+(migración `20260923_drop_obsolete_tables`). Respaldo JSON de todas en
+`Liberty-Trading-pro-db-backups/2026-09-23`.
 
 ## Marca
 
