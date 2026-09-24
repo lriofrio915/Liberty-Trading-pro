@@ -31,7 +31,18 @@ const CURVAS = data.curvasIndividuales as { slug: string; nombre: string; equity
 
 const usd = (v: number, dec = 0) =>
   `${v < 0 ? '−' : ''}$${Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec })}`
-const usdK = (v: number) => `${v < 0 ? '−' : ''}$${(Math.abs(v) / 1000).toFixed(Math.abs(v) >= 10_000 ? 0 : 1)}k`
+const usdK = (v: number) => v === 0 ? '$0' : `${v < 0 ? '−' : ''}$${(Math.abs(v) / 1000).toFixed(Math.abs(v) >= 10_000 ? 0 : 1)}k`
+/** Ticks en múltiplos de `step` desde 0 hasta cubrir `max` (y un tick negativo si `min` < 0). */
+const ticksDesdeCero = (min: number, max: number, step: number) => {
+  const t: number[] = []
+  if (min < 0) t.push(-Math.ceil(-min / step) * step)
+  for (let v = 0; v < max + step; v += step) t.push(v)
+  return t
+}
+
+/** Un tick por año: la primera fecha de cada año presente en la serie. */
+const ticksAnuales = (serie: Punto[]) =>
+  serie.filter((p, i) => i === 0 || p.fecha.slice(0, 4) !== serie[i - 1].fecha.slice(0, 4)).map(p => p.fecha)
 const fechaCorta = (f: string) => {
   const [y, m] = f.split('-')
   return `${['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][Number(m) - 1]} ${y}`
@@ -77,6 +88,9 @@ export default function PortafolioQuant() {
   // Curva y drawdown comparten eje X (sincronizados por syncId), cada una en su gráfica.
   const equity = data.equity as Punto[]
   const drawdown = data.drawdown as Punto[]
+  const ticksEquity = ticksAnuales(equity)
+  const ticksDrawdown = ticksAnuales(drawdown)
+  const ticksY = ticksDesdeCero(0, Math.max(...equity.map(p => p.valor)), 30_000)
   const anual = data.anual.map(a => ({ anio: a.anio, pnl: a.pnl }))
   const maxIndividual = Math.max(...CURVAS.flatMap(c => c.equity.map(p => p.valor)))
   const minIndividual = Math.min(0, ...CURVAS.flatMap(c => c.equity.map(p => p.valor)))
@@ -88,6 +102,10 @@ export default function PortafolioQuant() {
   })), [vista])
 
   const fmtRegimen = (v: number) => (vista === 'neto' ? usdK(v) : v.toFixed(2))
+  const valoresRegimen = regimen.flatMap(r => [r.antes, r.despues])
+  const ticksRegimen = vista === 'neto'
+    ? ticksDesdeCero(Math.min(...valoresRegimen), Math.max(...valoresRegimen), 8_000)
+    : ticksDesdeCero(0, Math.max(...valoresRegimen), 1)
 
   return (
     <div className="space-y-5">
@@ -128,8 +146,9 @@ export default function PortafolioQuant() {
               </defs>
               <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
               <XAxis dataKey="fecha" tick={AXIS} tickLine={false} axisLine={{ stroke: 'var(--chart-grid)' }}
-                minTickGap={48} tickFormatter={f => f.slice(0, 4)} />
-              <YAxis tick={AXIS} tickLine={false} axisLine={false} width={48} tickFormatter={usdK} />
+                ticks={ticksEquity} interval="preserveStartEnd" minTickGap={16} tickFormatter={f => f.slice(0, 4)} />
+              <YAxis tick={AXIS} tickLine={false} axisLine={false} width={48} tickFormatter={usdK}
+                ticks={ticksY} domain={[Math.min(...equity.map(p => p.valor)), ticksY[ticksY.length - 1]]} />
               <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={l => fechaCorta(String(l))}
                 formatter={(v) => [usd(Number(v)), 'Acumulado']}
                 cursor={{ stroke: 'var(--text-muted)', strokeWidth: 1 }} />
@@ -143,7 +162,7 @@ export default function PortafolioQuant() {
             <AreaChart data={drawdown} syncId="portafolio" margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
               <XAxis dataKey="fecha" tick={AXIS} tickLine={false} axisLine={{ stroke: 'var(--chart-grid)' }}
-                minTickGap={48} tickFormatter={f => f.slice(0, 4)} />
+                ticks={ticksDrawdown} interval="preserveStartEnd" minTickGap={16} tickFormatter={f => f.slice(0, 4)} />
               <YAxis tick={AXIS} tickLine={false} axisLine={false} width={48} tickFormatter={usdK}
                 domain={['dataMin', 0]} />
               <Tooltip contentStyle={TOOLTIP_STYLE} labelFormatter={l => fechaCorta(String(l))}
@@ -312,6 +331,12 @@ export default function PortafolioQuant() {
               barCategoryGap={10} barGap={2}>
               <CartesianGrid stroke="var(--chart-grid)" horizontal={false} />
               <XAxis type="number" tick={AXIS} tickLine={false} axisLine={false}
+                ticks={vista === 'neto' ? ticksRegimen.filter(t => t >= 0) : ticksRegimen}
+                domain={[
+                  // margen a la izquierda para que la etiqueta de una barra negativa no pise el eje
+                  Math.min(...valoresRegimen) < 0 ? Math.min(...valoresRegimen) - 1_500 : 0,
+                  ticksRegimen[ticksRegimen.length - 1],
+                ]}
                 tickFormatter={v => fmtRegimen(Number(v))} />
               <YAxis type="category" dataKey="nombre" tick={{ ...AXIS, fontSize: 11, fill: 'var(--text-secondary)' }}
                 tickLine={false} axisLine={false} width={140} />
