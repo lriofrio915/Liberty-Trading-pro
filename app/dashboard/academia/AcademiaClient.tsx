@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 
 interface Leccion {
@@ -68,6 +68,36 @@ export default function AcademiaClient({
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => setMounted(true), [])
+
+  // Botón «Copiar» en cada comando o prompt (<pre>) de la lección abierta.
+  const contenidoRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const root = contenidoRef.current
+    if (!root) return
+    root.querySelectorAll('pre').forEach(pre => {
+      if (pre.querySelector('[data-copiar]')) return
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.dataset.copiar = '1'
+      btn.textContent = 'Copiar'
+      btn.style.cssText =
+        'position:absolute;top:8px;right:8px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;' +
+        'background:#C9A84C;color:#080808;cursor:pointer;border:none'
+      btn.onclick = async () => {
+        const texto = pre.querySelector('code')?.textContent ?? ''
+        try {
+          await navigator.clipboard.writeText(texto)
+          btn.textContent = '✓ Copiado'
+        } catch {
+          btn.textContent = 'Selecciona y copia'
+        }
+        setTimeout(() => { btn.textContent = 'Copiar' }, 2000)
+      }
+      pre.style.position = 'relative'
+      pre.style.paddingRight = '84px'
+      pre.appendChild(btn)
+    })
+  }, [selected, mounted])
 
   const blank = (): FormState => ({
     titulo: '', descripcion: '', contenido: '', videoUrl: '',
@@ -252,7 +282,8 @@ export default function AcademiaClient({
             {/* Contenido */}
             {selected.contenido && (
               <div
-                className="prose prose-invert max-w-none text-sm text-[var(--text-secondary)] leading-relaxed mb-8 whitespace-pre-wrap"
+                ref={contenidoRef}
+                className="leccion-contenido max-w-none text-sm text-[var(--text-secondary)] mb-8"
                 dangerouslySetInnerHTML={{ __html: selected.contenido.replace(/\n/g, '<br/>') }}
               />
             )}

@@ -10,7 +10,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 // Mantener sincronizado con prisma/academia/lecciones.py (MODULOS).
 const CATEGORIAS = [
   '01 · Infraestructura del negocio',
-  '02 · Tu app de track record',
+  '02 · Tu panel de negocio de trading',
   '03 · NinjaTrader 8 y el portafolio comunitario',
   '04 · Obsidian: tu laboratorio quant',
   '05 · Fundamentos cuantitativos',
