@@ -364,7 +364,7 @@ export default function UnirsePage() {
                 <p className="text-sm font-bold text-white mb-0.5">¿Quieres ir más allá?</p>
                 <p className="text-xs leading-relaxed" style={{ color: '#888' }}>
                   Al terminar el curso gratuito te cuento sobre <Link href="/liberty-quant" className="underline" style={{ color: '#C9A84C' }}>Liberty Quant</Link>,
-                  mi especialización en trading cuantitativo de futuros — incluye el código del portafolio real y una cuenta fondeada de $200k.
+                  mi club de trading algorítmico cuantitativo — incluye 6 bots listos para instalar y una cuenta fondeada de $200k.
                 </p>
               </div>
             </div>

@@ -22,7 +22,7 @@ const HOTMART_MENSUAL =
   'https://pay.hotmart.com/R104900326X?checkoutMode=2'
 
 /**
- * Link de checkout de Liberty Quant ($1000, pago único). Aún no existe el
+ * Link de checkout de Liberty Quant Club ($1,500, pago único). Aún no existe el
  * producto en Hotmart: mientras esté vacío, el CTA cae a WhatsApp (ver
  * `services.quant.href`). Cuando Luis cree el producto en Hotmart, setear
  * NEXT_PUBLIC_HOTMART_LINK_QUANT en Vercel.
@@ -48,14 +48,14 @@ export const BRAND = {
   /** Casa de productos. Ver /branding/01-estrategia.md */
   house: 'Liberty',
   products: {
-    quant: 'Liberty Quant',
+    quant: 'Liberty Quant Club',
     exchange: 'Liberty Exchange',
     portfolio: 'Liberty Portfolio',
   },
 
   /**
    * Nombre legal/histórico. La suscripción mensual/anual que llevaba este
-   * nombre se retiró — Liberty Quant (pago único, $1000) es hoy el único
+   * nombre se retiró — Liberty Quant Club (pago único, $1,500) es hoy el único
    * producto educativo pago. Se mantiene el campo por el dominio y por
    * referencias legales antiguas; no usar en titulares nuevos.
    */
@@ -83,10 +83,17 @@ export const BRAND = {
     quant: HOTMART_QUANT,
   },
 
-  /** Precio ancla de Liberty Quant. Un solo sitio que tocar si cambia. */
+  /** Precio ancla de Liberty Quant Club. Un solo sitio que tocar si cambia. */
   price: {
-    quant: 1000,
-    quantLabel: '$1,000',
+    quant: 1500,
+    quantLabel: '$1,500',
+    /**
+     * Cuenta fondeada incluida en el club: pase directo de PJ Capital que Luis
+     * compra y entrega al alumno. `fundingValueLabel` es lo que cuesta ese pase.
+     */
+    fundingAccountLabel: '$200k',
+    fundingProvider: 'PJ Capital',
+    fundingValueLabel: '$300',
     successFee: '20%',
     /** Capital de referencia, no un mínimo: se puede empezar con menos. */
     portfolioReference: '$10,000',
@@ -126,16 +133,16 @@ export const SERVICES = [
     name: BRAND.products.quant,
     category: 'Especialización cuantitativa',
     pitch:
-      'De la estrategia manual al portafolio cuantitativo: código, metodología completa y una cuenta fondeada de $200k para operar desde el día uno.',
+      'Trading algorítmico con enfoque cuantitativo: video clases, 6 bots listos para NinjaTrader 8 y un pase directo a cuenta fondeada de $200k para operar desde el día uno.',
     bullets: [
-      'Acceso al código de las 6 estrategias del portafolio real',
-      'Metodología NinjaTrader 8 + Claude, de la idea al bot validado',
-      'Pase directo a cuenta fondeada de $200k (PJ Capital)',
+      'Video clases: Claude Code + NinjaTrader 8 + Obsidian',
+      'Portafolio comunitario: 6 bots listos para descargar',
+      'Pase directo a cuenta fondeada de $200k (PJ Capital, valor $300)',
     ],
     price: BRAND.price.quantLabel,
     priceNote: 'Pago único',
-    cta: HOTMART_QUANT ? 'Quiero Liberty Quant' : 'Consultar Liberty Quant',
-    href: HOTMART_QUANT || wa('Hola Luis, quiero información sobre Liberty Quant'),
+    cta: HOTMART_QUANT ? 'Quiero entrar al club' : 'Consultar Liberty Quant Club',
+    href: HOTMART_QUANT || wa('Hola Luis, quiero información sobre Liberty Quant Club'),
     hotmart: Boolean(HOTMART_QUANT),
   },
   {

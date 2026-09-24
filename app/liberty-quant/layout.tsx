@@ -1,13 +1,14 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Liberty Quant — Trading Cuantitativo de Futuros | $1,000 pago único',
+  title: 'Liberty Quant Club — Trading algorítmico cuantitativo | $1,500 lifetime',
   description:
-    'Especialización en trading algorítmico y cuantitativo de futuros con NinjaTrader 8 y Claude. Incluye el código de 6 estrategias del portafolio real y un pase directo a cuenta fondeada de $200,000. Pago único, sin mensualidad.',
-  keywords: 'Liberty Quant, trading cuantitativo, NinjaTrader 8, cuenta fondeada, futuros NQ MNQ, Walk-Forward Optimization, Luis Riofrio',
+    'Aprende trading algorítmico cuantitativo con Claude Code, NinjaTrader 8 y Obsidian. Incluye 6 bots del portafolio comunitario listos para instalar y un pase directo a cuenta fondeada de $200k en PJ Capital (valor $300). Pago único, acceso de por vida.',
+  keywords: 'Liberty Quant Club, trading algorítmico, trading cuantitativo, NinjaTrader 8, Claude Code, Obsidian, cuenta fondeada 200k, PJ Capital, bots de trading, Luis Riofrio',
+  alternates: { canonical: '/' },
   openGraph: {
-    title: 'Liberty Quant — De la especulación al portafolio cuantitativo',
-    description: 'Código de 6 estrategias reales + cuenta fondeada de $200k. $1,000, pago único.',
+    title: 'Liberty Quant Club — Convierte el trading algorítmico en tu negocio',
+    description: 'Video clases + 6 bots para NinjaTrader 8 + cuenta fondeada de $200k incluida. $1,500, pago único.',
     url: 'https://libertytrading.pro/liberty-quant',
   },
 }

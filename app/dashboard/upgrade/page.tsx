@@ -11,7 +11,7 @@ const QUANT_IS_HOTMART = Boolean(BRAND.hotmart.quant)
 const QUANT_FEATURES = [
   { icon: '🧠', label: 'Metodología completa — de la idea al bot validado con WFO y Montecarlo' },
   { icon: '💻', label: 'Código de las 6 estrategias del portafolio cuantitativo real' },
-  { icon: '🏦', label: 'Pase directo a cuenta fondeada de $200k (PJ Capital)' },
+  { icon: '🏦', label: 'Pase directo a cuenta fondeada de $200k en PJ Capital (valor $300)' },
   { icon: '🤖', label: 'NinjaTrader 8 + Claude como asistente de desarrollo' },
   { icon: '🎓', label: 'Curso gratuito de acciones y opciones vía IBKR incluido' },
   { icon: '📈', label: 'Track record verificable — resultados reales de Luis' },
@@ -96,7 +96,7 @@ export default async function UpgradePage() {
             Liberty Quant
           </div>
           <div className="text-4xl font-black text-white mb-1" style={{ fontFamily: 'Georgia, serif' }}>
-            $1,000
+            {BRAND.price.quantLabel}
             <span className="text-base font-normal" style={{ color: '#888' }}>pago único</span>
           </div>
           <p className="text-xs mb-5" style={{ color: '#666' }}>Sin mensualidad · Acceso de por vida</p>
