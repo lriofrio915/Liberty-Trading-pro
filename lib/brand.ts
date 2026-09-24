@@ -71,10 +71,11 @@ export const BRAND = {
   location: 'Ecuador · Latinoamérica',
 
   social: {
-    handle: '@libertytradingclub',
-    instagram: 'https://instagram.com/libertytradingclub',
-    facebook: 'https://facebook.com/libertytradingclub',
-    whatsapp: `https://wa.me/${PHONE}`,
+    handle: '@liberty_trading_club',
+    instagram: 'https://www.instagram.com/liberty_trading_club',
+    facebook: 'https://www.facebook.com/share/18LE9Crx9i/',
+    /** Botones genéricos de WhatsApp: abren el chat con un mensaje pidiendo información. */
+    whatsapp: wa('Hola Luis, quiero información sobre el Liberty Trading Club'),
   },
 
   hotmart: {
