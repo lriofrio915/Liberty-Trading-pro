@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import TickerBar from '@/components/TickerBar/TickerBar'
 
 // Recharts usa APIs del navegador — sin SSR
@@ -12,15 +12,6 @@ const PortafolioQuant = dynamic(() => import('@/components/PortafolioQuant/Porta
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-interface PriceItem {
-  symbol: string
-  name: string
-  price: number
-  change: number
-  changePct: number
-  up: boolean
-}
-
 interface Article {
   title: string
   description: string
@@ -30,19 +21,6 @@ interface Article {
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-
-const PRICES_CACHE_KEY = 'monitor-prices-cache'
-const PRICES_CACHE_TTL = 45_000
-
-const STRESS_CONFIG: Record<string, { label: string; desc: string; dangerIfHigh?: boolean }> = {
-  'VIX':          { label: 'VIX',     desc: 'Volatilidad — miedo del mercado' },
-  '^VIX':         { label: 'VIX',     desc: 'Volatilidad — miedo del mercado' },
-  'DXY':          { label: 'DXY',     desc: 'Fortaleza del dólar USD' },
-  'NQ Futures':   { label: 'NQ',      desc: 'Apetito de riesgo tech' },
-  'S&P 500':      { label: 'S&P 500', desc: 'Índice amplio — 500 empresas EE.UU.' },
-  'Russell 2000': { label: 'Russell', desc: 'Small caps — apetito de riesgo' },
-  'Oro':          { label: 'Oro',     desc: 'Refugio seguro — stress global' },
-}
 
 const PLAN_COLORS: Record<string, string> = {
   FREE:      '#6B6560',
@@ -73,13 +51,6 @@ function greeting(): string {
   return 'Buenas noches'
 }
 
-function fmtPrice(price: number, name: string): string {
-  if (!price || isNaN(price)) return '—'
-  if (name === 'VIX') return price.toFixed(2)
-  if (name.includes('/')) return price.toFixed(2)
-  return price.toLocaleString('en-US', { maximumFractionDigits: 2 })
-}
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function DashboardClient({
@@ -93,33 +64,8 @@ export default function DashboardClient({
   sessions?: unknown[]
   plans?: unknown[]
 }) {
-  const [prices, setPrices]                 = useState<PriceItem[]>([])
-  const [pricesLoading, setPricesLoading]   = useState(true)
   const [monitorArticles, setMonitorArticles]           = useState<Article[]>([])
   const [monitorNewsLoading, setMonitorNewsLoading]     = useState(true)
-
-  // ── Fetch prices (stress indicators) ──────────────────────────────────────
-
-  const fetchPrices = useCallback(async () => {
-    try {
-      const cached = localStorage.getItem(PRICES_CACHE_KEY)
-      if (cached) {
-        const { prices: cachedPrices, ts } = JSON.parse(cached)
-        if (Date.now() - ts < PRICES_CACHE_TTL) {
-          setPrices(cachedPrices)
-          setPricesLoading(false)
-          return
-        }
-      }
-      const res = await fetch('/api/prices')
-      const data = await res.json()
-      if (data.prices?.length) {
-        localStorage.setItem(PRICES_CACHE_KEY, JSON.stringify({ prices: data.prices, ts: Date.now() }))
-        setPrices(data.prices)
-      }
-    } catch {}
-    finally { setPricesLoading(false) }
-  }, [])
 
   // ── Fetch international news ───────────────────────────────────────────────
 
@@ -135,24 +81,10 @@ export default function DashboardClient({
   // ── Effects ────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    fetchPrices()
     fetchMonitorNews()
-    const pricesTimer   = setInterval(fetchPrices,      60_000)
-    const monitorTimer  = setInterval(fetchMonitorNews, 120_000)
-    return () => {
-      clearInterval(pricesTimer)
-      clearInterval(monitorTimer)
-    }
-  }, [fetchPrices, fetchMonitorNews])
-
-  // ── Stress indicators ──────────────────────────────────────────────────────
-
-  const stressIndicators = useMemo(
-    () => prices.filter(p =>
-      ['VIX', '^VIX', 'DXY', 'NQ Futures', 'S&P 500', 'Russell 2000', 'Oro'].includes(p.name)
-    ),
-    [prices]
-  )
+    const monitorTimer = setInterval(fetchMonitorNews, 120_000)
+    return () => clearInterval(monitorTimer)
+  }, [fetchMonitorNews])
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -191,44 +123,6 @@ export default function DashboardClient({
       {/* ── Portafolio comunitario ───────────────────────────────────────────── */}
       <div className="mb-10">
         <PortafolioQuant />
-      </div>
-
-      {/* ── Indicadores de stress ────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <div className="label-mono mb-2.5 text-[var(--gold)]">Indicadores de stress del mercado</div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
-          {pricesLoading
-            ? Array.from({ length: 7 }).map((_, i) => (
-                <div key={i} className="card h-20 animate-pulse" />
-              ))
-            : stressIndicators.map(p => {
-                const cfg = STRESS_CONFIG[p.name] ?? { label: p.name, desc: '' }
-                const bad = cfg.dangerIfHigh ? p.up : !p.up
-                return (
-                  <div key={p.symbol} className="card flex flex-col gap-1 py-3">
-                    <div className="flex items-center justify-between">
-                      <span className="label-mono text-[10px]">{cfg.label}</span>
-                      <span
-                        className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
-                        style={{
-                          background: bad ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)',
-                          color:      bad ? '#ef4444'              : '#22c55e',
-                        }}
-                      >
-                        {p.changePct >= 0 ? '+' : ''}{p.changePct.toFixed(2)}%
-                      </span>
-                    </div>
-                    <div
-                      className="text-xl font-bold"
-                      style={{ fontFamily: 'var(--font-serif)', color: bad ? '#ef4444' : '#22c55e' }}
-                    >
-                      {fmtPrice(p.price, p.name)}
-                    </div>
-                    <div className="text-[10px] text-[var(--text-muted)] leading-tight">{cfg.desc}</div>
-                  </div>
-                )
-              })}
-        </div>
       </div>
 
       {/* ── Noticias internacionales ─────────────────────────────────────────── */}
