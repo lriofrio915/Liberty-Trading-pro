@@ -24,18 +24,15 @@ Monetiza vía Hotmart con 4 productos: academia, club, mensual, anual.
 | Ruta | Descripción |
 |------|-------------|
 | `academia` | Contenido educativo (acceso por plan) |
-| `acciones` | Acciones — señales diarias, picks intradía, research (Tauric) |
-| `agentes` | Agentes IA por estrategia (Peter Lynch, small caps, intradía, vanilla long/short, monitor) |
-| `analisis` | Análisis de mercado (`lib/analisis-engine.ts`) |
+| `acciones` | Acciones — señales diarias, research (Tauric), proyección TimesFM (`/api/forecast`) |
+| `agentes` | Agentes IA por estrategia (Peter Lynch, small caps, monitor) |
 | `brokers` | Conexión y ejecución vía brokers (IBKR) |
 | `championship` | Competencia de trading entre usuarios |
 | `clientes` | Clientes KYC (solo admin) |
 | `comunidad` | Posts, likes, comentarios |
 | `conocimiento` | Base de conocimiento |
-| `flujo` | Flujo del dinero |
-| `futuros` | Futuros NQ/MNQ — sesgo intradía y estado de la cuenta |
+| `futuros` | Futuros — mi cuenta, plan, track record y reportes |
 | `leads` | CRM interno (solo admin) |
-| `opciones` | Opciones (`lib/options`) |
 | `oportunidades` | Señales de trading |
 | `planes` | Gestión del plan de trading del usuario |
 | `profile` | Perfil, certificados, configuración |
@@ -43,7 +40,6 @@ Monetiza vía Hotmart con 4 productos: academia, club, mensual, anual.
 | `retiros` | Historial de retiros de cuenta |
 | `track-record` | Historial público de operaciones (`/track-record/[slug]`) |
 | `upgrade` | Página de upgrade de plan |
-| `vibe` | Laboratorio Quant — estrategias algorítmicas vía Vibe-Trading |
 | `vinces` | AI assistant de trading (OpenRouter) |
 
 ## Planes de usuario
@@ -66,12 +62,10 @@ Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus
 | 9:00am ET | `/api/cron/morning-scan` | Escaneo matutino de señales de mercado; guarda oportunidades con confianza ≥70%. Invocado desde VPS (`scripts/morning-scan-cron.sh` — 14:00 UTC en cron.d) | No |
 | 8:36am | `/api/cron/daily-scanner` | Escaneo acciones via API externa (async polling) | No |
 | 8am-2pm c/30min | `/api/cron/bias-monitor` | Detecta flips de sesgo en ScanOpportunity | No |
-| 8:15am-3:45pm c/30min | `/api/cron/sesgo-intraday` | Monitor sesgo índices — MANTENER/AJUSTAR/CERRAR | **Sí** |
 | c/15min, 24/7 | `/api/cron/p2p-binance` | Monitor P2P Binance USDT/USD Ecuador. Fetch en VPS (`scripts/p2p-binance-cron.sh` — Binance bloqueado desde Vercel) y POST al route. Alerta compra ≤0.995 / venta ≥1.005 (env `P2P_BUY_THRESHOLD`/`P2P_SELL_THRESHOLD`), cooldown 2h, log en `P2PPriceLog` | **Sí** |
 
 **Arquitectura de notificaciones:** `lib/notify-nexus.ts` → OpenClaw Gateway webhook → nexus_claw → WhatsApp Luis. Fallback: email via Resend.
 
-**Nota:** CfdSignal TP/SL ya no se cierra automáticamente (monitor-signals desactivado Jul 2026).
 
 ## Páginas Públicas
 
@@ -93,15 +87,15 @@ Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus
 | `POST /api/webhook/hotmart` | Recibe eventos de pago Hotmart y actualiza el plan del usuario |
 | `POST /api/vinces-wa` | Webhook del bot WhatsApp de Vinces (responde preguntas de leads) |
 
-## Vibe — Laboratorio Quant
+## Secciones retiradas (sep-2026)
 
-Reemplazó a AlgoLab (eliminado). El módulo `dashboard/vibe` es un proxy a
-[Vibe-Trading](https://github.com/HKUDS/Vibe-Trading), un FastAPI en Python que
-corre aparte y genera estrategias, backtests e indicadores para TradingView
-(Pine Script) y NinjaTrader 8 (NinjaScript).
-
-Cliente en `lib/vibe-trading.ts`. Config: `VIBE_TRADING_BASE_URL` (default
-`https://vibe-trading-liberty.fly.dev`) y `VIBE_TRADING_API_KEY`.
+Flujo del Dinero, CFDs (`dashboard/analisis`, `/api/cfds`), Laboratorio Quant
+(Vibe-Trading), Opciones, los agentes Vanilla Long/Short e Intradía, y la
+pestaña "Sesgo Intradía" de Futuros (con sus crons `futuros-sesgo`,
+`futuros-open`, `futuros-close`, `sesgo-intraday`, `monitor-signals` y
+`/api/futures/analyze`) se eliminaron del código. La tabla `CfdSignal` se
+borró (migración `20260923_drop_cfd_signal`). `OptionRecommendation` sigue en
+el schema sin uso.
 
 ## Marca
 
@@ -133,8 +127,7 @@ GROQ_API_KEY                      # AI alternativo
 NEXT_PUBLIC_APP_URL               # URL base del app
 RESEND_API_KEY                    # Emails
 HOTMART_WEBHOOK_TOKEN             # Validación de pagos
-NEXT_PUBLIC_HOTMART_LINK_QUANT    # Checkout de Liberty Quant ($1000). Vacío = el CTA cae a WhatsApp
-VIBE_TRADING_BASE_URL/API_KEY     # Backend Vibe-Trading (laboratorio quant)
+NEXT_PUBLIC_HOTMART_LINK_QUANT    # Checkout de Liberty Trading Club ($1,500). Vacío = el CTA cae a WhatsApp
 CLOUDINARY_*                      # Media uploads
 OPENCLAW_GATEWAY_URL/TOKEN        # nexus_claw — WhatsApp a Luis y a leads/compradores
 LUIS_EMAIL / ADMIN_EMAIL          # Fallback por email si nexus_claw falla
@@ -157,7 +150,7 @@ npm run dev                # Dev server en puerto 3000
 
 - **Supabase para auth, Prisma para queries:** No usar el cliente de Supabase para queries de datos, solo para auth y storage
 - **Server Components por defecto:** Solo añadir `'use client'` cuando sea necesario (interactividad)
-- **Tests:** solo `__tests__/lib/` (access, analisis-engine, cron-utils, faros-metrics, notifications, options-pricing, price-format, slug). Sin cobertura de rutas API ni componentes
+- **Tests:** solo `__tests__/lib/` (access, analisis-engine, cron-utils, notifications, price-format, slug). Sin cobertura de rutas API ni componentes
 - **Track Record público:** `/track-record/[slug]` es intencional — sirve como marketing
 
 ## Skill routing

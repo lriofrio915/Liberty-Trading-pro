@@ -3,13 +3,12 @@
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 
-const FuturosSesgoTab = dynamic(() => import('./FuturosSesgoTab'), { ssr: false })
 const MiCuentaTab = dynamic(() => import('./MiCuentaTab'), { ssr: false })
 const PlanesClient = dynamic(() => import('../planes/PlanesClient'), { ssr: false })
 const TrackRecordClient = dynamic(() => import('@/components/TrackRecord/TrackRecordClient'), { ssr: false })
 const ReportesClient = dynamic(() => import('../reportes/ReportesClient'), { ssr: false })
 
-type Tab = 'sesgo' | 'cuenta' | 'plan' | 'track' | 'reportes'
+type Tab = 'cuenta' | 'plan' | 'track' | 'reportes'
 
 interface Session {
   id: string; date: string; instrumento: string; direccion: string; resultado: string
@@ -24,7 +23,6 @@ interface Plan {
 }
 
 const NAV_TABS: [Tab, string][] = [
-  ['sesgo', 'SESGO INTRADÍA'],
   ['cuenta', 'MI CUENTA'],
 ]
 
@@ -47,7 +45,7 @@ export default function FuturosClient({
   userName?: string | null
   userPlan?: string | null
 }) {
-  const [tab, setTab] = useState<Tab>('sesgo')
+  const [tab, setTab] = useState<Tab>('cuenta')
 
   // MI CUENTA se resalta también cuando estamos en sub-tabs plan/track/reportes
   const isActiveCuenta = tab === 'cuenta' || tab === 'plan' || tab === 'track' || tab === 'reportes'
@@ -81,8 +79,6 @@ export default function FuturosClient({
           })}
         </div>
       </div>
-
-      {tab === 'sesgo' && <FuturosSesgoTab isAdmin={isAdmin} />}
 
       {tab === 'cuenta' && (
         <MiCuentaTab

@@ -1,5 +1,5 @@
 // lib/analisis-engine.ts
-// Shared analysis engine — used by /api/analisis and all cron jobs
+// Shared analysis engine — used by the cron jobs and /api/futures/analyze
 
 // FAROS (TAI-ACF Framework) removed — using 6 MAIA agents only
 
@@ -192,51 +192,6 @@ export async function runAgent(systemPrompt: string, userMessage: string, maxTok
     signal: AbortSignal.timeout(50000),
   })
   return result.content
-}
-
-// ── OHLCV fetch utility (used by /api/flujo — NOT part of MAIA analysis) ──────
-
-export interface OHLCVData {
-  symbol: string
-  timestamps: number[]
-  opens: number[]
-  highs: number[]
-  lows: number[]
-  closes: number[]
-  volumes: number[]
-}
-
-export async function fetchYahooOHLCV(symbol: string, label: string): Promise<OHLCVData | null> {
-  try {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=2mo`
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        Accept: 'application/json',
-      },
-      signal: AbortSignal.timeout(15000),
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    const result = data?.chart?.result?.[0]
-    if (!result) return null
-    const timestamps: number[] = result.timestamp ?? []
-    const quote = result.indicators?.quote?.[0]
-    if (!quote || timestamps.length === 0) return null
-    const filter = (arr: (number | null)[] | undefined) =>
-      (arr ?? []).map(v => (v == null || isNaN(v) ? 0 : v))
-    return {
-      symbol: label,
-      timestamps,
-      opens:   filter(quote.open),
-      highs:   filter(quote.high),
-      lows:    filter(quote.low),
-      closes:  filter(quote.close),
-      volumes: filter(quote.volume),
-    }
-  } catch {
-    return null
-  }
 }
 
 // ── Agent definitions ──────────────────────────────────────────────────────────

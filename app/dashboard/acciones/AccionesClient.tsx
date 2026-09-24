@@ -2,13 +2,12 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
-import IntradayPicksTable, { type IntradayPick } from './IntradayPicksTable'
 import ResearchTab from './ResearchTab'
 import TauricResearchTab from './TauricResearchTab'
 import DailySignalsTab from './DailySignalsTab'
 
 const ForecastTab = dynamic(
-  () => import('@/app/dashboard/flujo/ForecastTab'),
+  () => import('./ForecastTab'),
   { ssr: false },
 ) as React.ComponentType<Record<string, never>>
 
@@ -27,12 +26,10 @@ export default function AccionesClient({
   initialOpportunities,
   plan,
   isAdmin,
-  intradayPicks,
 }: {
   initialOpportunities: never[]
   plan: string
   isAdmin: boolean
-  intradayPicks: IntradayPick[]
 }) {
   const [tab, setTab] = useState<Tab>('recomendaciones')
   const [video, setVideo] = useState<{ youtubeUrl: string; title: string | null }>({ youtubeUrl: '', title: null })
@@ -202,10 +199,7 @@ export default function AccionesClient({
       </div>
 
       {tab === 'recomendaciones' && (
-        <>
-          <IntradayPicksTable picks={intradayPicks} />
-          <OportunidadesClient initialOpportunities={initialOpportunities} plan={plan} isAdmin={isAdmin} />
-        </>
+        <OportunidadesClient initialOpportunities={initialOpportunities} plan={plan} isAdmin={isAdmin} />
       )}
       {tab === 'research' && <ResearchTab />}
       {tab === 'proyeccion' && <ForecastTab />}
