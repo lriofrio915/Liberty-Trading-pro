@@ -253,7 +253,7 @@ export function notifyPurchaseConfirmed(data: {
   return notifyNexus('purchase_confirmed', data, { role: 'lead', phone: data.phone, email: data.email })
 }
 
-// ── Futuros sesgo ─────────────────────────────────────────────────────────────
+// ── Sesgo (tipos compartidos) ─────────────────────────────────────────────────────────────
 
 interface ActivoSesgo {
   simbolo: string
@@ -354,177 +354,7 @@ export function notifyMorningAgents(results: MorningAgentResult[]) {
   return notifyNexus('morning_agents_intraday', { resumen, total })
 }
 
-// ── Futuros sesgo ─────────────────────────────────────────────────────────────
-
-export function notifyFuturosSesgo(
-  activos: ActivoSesgo[],
-  saved: number,
-  savedLevels: { simbolo: string; sesgo: string; precioEntrada: number; stopLoss: number; takeProfit: number; rrRatio: number }[] = [],
-) {
-  const fecha = new Date().toLocaleDateString('es-EC', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    timeZone: 'America/Guayaquil',
-  })
-  const horaEcuador = new Date().toLocaleTimeString('es-EC', {
-    hour: '2-digit', minute: '2-digit',
-    timeZone: 'America/Guayaquil',
-  })
-
-  const sesgoBadge = (s: string) => s === 'COMPRA' ? '✅' : s === 'VENTA' ? '🔴' : '⚪'
-  const levelsMap = new Map(savedLevels.map(l => [l.simbolo.toUpperCase(), l]))
-
-  const lineas = activos.map(a => {
-    if (a.simbolo === 'VIX') {
-      const dir = a.cambio24h >= 0 ? '+' : ''
-      return `📈 *VIX:* $${a.precio.toFixed(2)} (${dir}${a.cambio24h.toFixed(2)}%) — ${a.sesgo === 'COMPRA' ? 'miedo' : 'complacencia'}`
-    }
-    const badge = sesgoBadge(a.sesgo)
-    const precio = `$${a.precio.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
-    return `${badge} *${a.simbolo}:* ${a.sesgo} (${a.confianza}%) — ${precio} | ${a.razon}`
-  })
-
-  const resumen = [
-    `📊 *Sesgo Futuros ${horaEcuador} Ecuador — ${fecha}*`,
-    '',
-    ...lineas,
-    '',
-    saved > 0
-      ? `✅ ${saved} señal(es) guardada(s). Entrada se confirma a las 9:30am ET.`
-      : 'Sin señales direccionales hoy.',
-  ].join('\n')
-
-  return notifyNexus('futuros_sesgo', { resumen, saved })
-}
-
-// ── Sesgo Intradía (monitor c/30min 8:15am–3pm Ecuador) ──────────────────────
-
 type Recomendacion = 'MANTENER' | 'AJUSTAR_STOP' | 'CERRAR'
-
-export function notifySesgoIntraday(
-  activos: ActivoSesgo[],
-  changed: Set<string> = new Set(),
-  morningBias: Map<string, string> = new Map(),
-  prevMap: Map<string, { sesgo: string; confianza: number }> = new Map(),
-  recomendaciones: Map<string, Recomendacion> = new Map(),
-) {
-  const fecha = new Date().toLocaleDateString('es-EC', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    timeZone: 'America/Guayaquil',
-  })
-  const horaEcuador = new Date().toLocaleTimeString('es-EC', {
-    hour: '2-digit', minute: '2-digit',
-    timeZone: 'America/Guayaquil',
-  })
-
-  const sesgoBadge = (s: string) => s === 'COMPRA' ? '✅' : s === 'VENTA' ? '🔴' : '⚪'
-  const isPreApertura = prevMap.size === 0
-
-  const lineas = activos.map(a => {
-    if (a.simbolo === 'VIX') {
-      const dir = a.cambio24h >= 0 ? '+' : ''
-      return `📉 *VIX:* $${a.precio.toFixed(2)} (${dir}${a.cambio24h.toFixed(2)}%) — ${a.sesgo === 'COMPRA' ? 'miedo' : 'complacencia'}`
-    }
-    const sym = a.simbolo.toUpperCase()
-    const isChanged = changed.has(sym)
-    const badge = isChanged ? '⚡' : sesgoBadge(a.sesgo)
-    const mornPrev = morningBias.get(sym)
-    const intradayPrev = prevMap.get(sym)
-    const sesgoPart = isChanged && mornPrev
-      ? `${mornPrev} → ${a.sesgo} (${a.confianza}%)`
-      : `${a.sesgo} (${a.confianza}%)`
-    const delta = intradayPrev ? a.confianza - intradayPrev.confianza : 0
-    const deltaPart = !isPreApertura && Math.abs(delta) >= 3
-      ? ` ${delta > 0 ? '▲' : '▼'}${Math.abs(delta)}pts`
-      : ''
-    return `${badge} *${a.simbolo}:* ${sesgoPart}${deltaPart} — ${a.razon}`
-  })
-
-  const recoBadge = (r: Recomendacion) =>
-    r === 'MANTENER' ? '✅' : r === 'AJUSTAR_STOP' ? '⚠️' : '🚨'
-  const recoLabel = (r: Recomendacion) =>
-    r === 'MANTENER' ? 'MANTENER' : r === 'AJUSTAR_STOP' ? 'AJUSTAR STOP' : 'CERRAR POSICIÓN'
-  const recoExtra = (sym: string, a: ActivoSesgo, r: Recomendacion) => {
-    if (r === 'CERRAR') return ' (sesgo invertido desde apertura)'
-    const p = prevMap.get(sym)
-    if (r === 'AJUSTAR_STOP' && p && p.sesgo !== a.sesgo) return ' (cambio de dirección)'
-    if (r === 'AJUSTAR_STOP') return ' (confianza bajando)'
-    return ''
-  }
-
-  const recoLineas = activos
-    .filter(a => a.simbolo !== 'VIX')
-    .map(a => {
-      const sym = a.simbolo.toUpperCase()
-      const r = recomendaciones.get(sym) ?? 'MANTENER'
-      const posicion = morningBias.get(sym) ?? a.sesgo
-      return `• ${a.simbolo} ${posicion} → ${recoBadge(r)} ${recoLabel(r)}${recoExtra(sym, a, r)}`
-    })
-
-  // PRE-APERTURA decision block (8:15am only)
-  const buildAperturaDecision = () => {
-    const equity = activos.filter(a => a.simbolo !== 'VIX')
-    const vix = activos.find(a => a.simbolo === 'VIX')
-    const confAlta = { COMPRA: 0, VENTA: 0 }
-    const total    = { COMPRA: 0, VENTA: 0 }
-    for (const a of equity) {
-      if (a.sesgo === 'COMPRA' || a.sesgo === 'VENTA') {
-        total[a.sesgo]++
-        if (a.confianza >= 75) confAlta[a.sesgo]++
-      }
-    }
-    const dom: 'COMPRA' | 'VENTA' = confAlta.COMPRA >= confAlta.VENTA ? 'COMPRA' : 'VENTA'
-    const n = confAlta[dom]
-    const vixOK = vix
-      ? (dom === 'COMPRA' && vix.sesgo === 'VENTA') || (dom === 'VENTA' && vix.sesgo === 'COMPRA')
-      : true
-    const vixWarn = !vixOK ? ' ⚠️ VIX en contra' : ''
-    if (n >= 3) {
-      const badge = dom === 'COMPRA' ? '🟢' : '🔴'
-      return [
-        '',
-        '━━━━━━━━━━━━━━━',
-        `${badge} *ABRIR POSICIÓN ${dom}*`,
-        `${n}/4 índices con confianza ≥75%${vixWarn}`,
-        '_Confirma en vela de apertura 9:30am ET_',
-      ]
-    }
-    if (n === 2) {
-      return [
-        '',
-        '━━━━━━━━━━━━━━━',
-        `🟡 *ESPERAR CONFIRMACIÓN (sesgo ${dom})*`,
-        `Solo ${n}/4 índices ≥75% — espera primera vela${vixWarn}`,
-        '_Confirma en vela de apertura 9:30am ET_',
-      ]
-    }
-    return [
-      '',
-      '━━━━━━━━━━━━━━━',
-      '⛔ *NO OPERAR HOY*',
-      'Sesgo sin convicción — riesgo alto de chop',
-    ]
-  }
-
-  const footerSection = isPreApertura
-    ? buildAperturaDecision()
-    : [
-        '',
-        '━━━━━━━━━━━━━━━',
-        '🔔 *Recomendación para tu posición:*',
-        ...recoLineas,
-        '',
-        '_Próxima actualización en 30 min_',
-      ]
-
-  const resumen = [
-    `📊 *Sesgo Intradía ${horaEcuador} Ecuador — ${fecha}*`,
-    '',
-    ...lineas,
-    ...footerSection,
-  ].join('\n')
-
-  return notifyNexus('sesgo_intraday', { resumen })
-}
 
 // ── Acciones Sesgo Intradía (monitor c/30min 8:30am–3pm Ecuador) ─────────────
 
@@ -746,7 +576,6 @@ interface MarketScanOportunidad {
 export function notifyMarketScan(data: {
   oportunidades: MarketScanOportunidad[]
   sesgogeneral: string
-  autoSaved: number
 }) {
   const fecha = new Date().toLocaleDateString('es-EC', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -774,12 +603,9 @@ export function notifyMarketScan(data: {
     ...(lineas.length ? lineas : ['Sin oportunidades destacadas hoy.']),
     '',
     `Total oportunidades: ${data.oportunidades.length}`,
-    data.autoSaved > 0
-      ? `Señales guardadas (≥80%): ${data.autoSaved} — visibles en dashboard.`
-      : 'Sin señales de alta confianza guardadas.',
   ].join('\n')
 
-  return notifyNexus('market_scan_morning', { resumen, total: data.oportunidades.length, autoSaved: data.autoSaved })
+  return notifyNexus('market_scan_morning', { resumen, total: data.oportunidades.length })
 }
 
 // ── Scan Prices — Cierre de Día ──────────────────────────────────────────────
@@ -822,58 +648,6 @@ export function notifyScanPricesClose(oportunidades: ScanPricesOportunidad[]) {
   ].join('\n')
 
   return notifyNexus('scan_prices_close', { resumen, ganadas, perdidas, flips, total: oportunidades.length })
-}
-
-// ── Futuros Open — Entrada 9:30am ET ─────────────────────────────────────────
-
-export function notifyFuturosOpen(updated: number) {
-  const fecha = new Date().toLocaleDateString('es-EC', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    timeZone: 'America/Guayaquil',
-  })
-
-  const resumen = [
-    `📍 *Entradas Futuros 9:30am ET — ${fecha}*`,
-    '',
-    updated > 0
-      ? `${updated} señal(es) registrada(s) con precio de entrada, SL y TP desde vela de apertura.`
-      : 'Sin señales de futuros para registrar hoy.',
-  ].join('\n')
-
-  return notifyNexus('futuros_open', { resumen, updated })
-}
-
-// ── Futuros Close — Auditoría 3:45pm ET ─────────────────────────────────────
-
-export function notifyFuturosClose(results: { id: string; resultado: string; pnlUsd: number }[]) {
-  const fecha = new Date().toLocaleDateString('es-EC', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    timeZone: 'America/Guayaquil',
-  })
-
-  const ganadas  = results.filter(r => r.resultado === 'GANADA').length
-  const perdidas = results.filter(r => r.resultado === 'PERDIDA').length
-  const pnlTotal = results.reduce((acc, r) => acc + r.pnlUsd, 0)
-
-  const resumen = [
-    `🏁 *Cierre Futuros 3:45pm ET — ${fecha}*`,
-    '',
-    results.length > 0
-      ? [
-          `Auditadas: ${results.length} señal(es)`,
-          `✅ Ganadas: ${ganadas} | 🔴 Perdidas: ${perdidas}`,
-          `PnL Total: $${pnlTotal.toFixed(2)}`,
-        ].join('\n')
-      : 'Sin señales de futuros para cerrar hoy.',
-  ].join('\n')
-
-  return notifyNexus('futuros_close', {
-    resumen,
-    ganadas,
-    perdidas,
-    pnlTotal: parseFloat(pnlTotal.toFixed(2)),
-    total: results.length,
-  })
 }
 
 // ── Morning News 6:30am ───────────────────────────────────────────────────────
@@ -929,23 +703,6 @@ export function notifyMorningNews(articles: {
   ].join('\n')
 
   return notifyNexus('morning_news', { resumen, count: articles.length })
-}
-
-// ── Monitor Signals — TP/SL en tiempo real ───────────────────────────────────
-
-export function notifyMonitorSignals(checked: number, closed: number) {
-  const hora = new Date().toLocaleTimeString('es-EC', {
-    hour: '2-digit', minute: '2-digit',
-    timeZone: 'America/Guayaquil',
-  })
-
-  const resumen = [
-    `🔍 *Monitor Señales ${hora} Ecuador — Cierre automático*`,
-    '',
-    `${closed} señal(es) cerrada(s) por TP/SL de ${checked} revisadas.`,
-  ].join('\n')
-
-  return notifyNexus('monitor_signals', { resumen, checked, closed })
 }
 
 // ── P2P Binance — alertas de precio USDT/USD ─────────────────────────────────

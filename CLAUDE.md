@@ -31,7 +31,7 @@ Monetiza vía Hotmart con 4 productos: academia, club, mensual, anual.
 | `clientes` | Clientes KYC (solo admin) |
 | `comunidad` | Posts, likes, comentarios |
 | `conocimiento` | Base de conocimiento |
-| `futuros` | Futuros NQ/MNQ — sesgo intradía y estado de la cuenta |
+| `futuros` | Futuros — mi cuenta, plan, track record y reportes |
 | `leads` | CRM interno (solo admin) |
 | `oportunidades` | Señales de trading |
 | `planes` | Gestión del plan de trading del usuario |
@@ -62,12 +62,10 @@ Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus
 | 9:00am ET | `/api/cron/morning-scan` | Escaneo matutino de señales de mercado; guarda oportunidades con confianza ≥70%. Invocado desde VPS (`scripts/morning-scan-cron.sh` — 14:00 UTC en cron.d) | No |
 | 8:36am | `/api/cron/daily-scanner` | Escaneo acciones via API externa (async polling) | No |
 | 8am-2pm c/30min | `/api/cron/bias-monitor` | Detecta flips de sesgo en ScanOpportunity | No |
-| 8:15am-3:45pm c/30min | `/api/cron/sesgo-intraday` | Monitor sesgo índices — MANTENER/AJUSTAR/CERRAR | **Sí** |
 | c/15min, 24/7 | `/api/cron/p2p-binance` | Monitor P2P Binance USDT/USD Ecuador. Fetch en VPS (`scripts/p2p-binance-cron.sh` — Binance bloqueado desde Vercel) y POST al route. Alerta compra ≤0.995 / venta ≥1.005 (env `P2P_BUY_THRESHOLD`/`P2P_SELL_THRESHOLD`), cooldown 2h, log en `P2PPriceLog` | **Sí** |
 
 **Arquitectura de notificaciones:** `lib/notify-nexus.ts` → OpenClaw Gateway webhook → nexus_claw → WhatsApp Luis. Fallback: email via Resend.
 
-**Nota:** CfdSignal TP/SL ya no se cierra automáticamente (monitor-signals desactivado Jul 2026).
 
 ## Páginas Públicas
 
@@ -91,11 +89,13 @@ Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus
 
 ## Secciones retiradas (sep-2026)
 
-Flujo del Dinero, CFDs (`dashboard/analisis`), Laboratorio Quant (Vibe-Trading),
-Opciones y los agentes Vanilla Long/Short e Intradía se eliminaron del código.
-Los modelos Prisma `OptionRecommendation` y `CfdSignal` siguen en el schema:
-`CfdSignal` lo usan los crons de futuros (`sector: 'Futuros'`, leído por
-`/api/cfds/signals` desde la pestaña de sesgo de Futuros).
+Flujo del Dinero, CFDs (`dashboard/analisis`, `/api/cfds`), Laboratorio Quant
+(Vibe-Trading), Opciones, los agentes Vanilla Long/Short e Intradía, y la
+pestaña "Sesgo Intradía" de Futuros (con sus crons `futuros-sesgo`,
+`futuros-open`, `futuros-close`, `sesgo-intraday`, `monitor-signals` y
+`/api/futures/analyze`) se eliminaron del código. La tabla `CfdSignal` se
+borró (migración `20260923_drop_cfd_signal`). `OptionRecommendation` sigue en
+el schema sin uso.
 
 ## Marca
 
