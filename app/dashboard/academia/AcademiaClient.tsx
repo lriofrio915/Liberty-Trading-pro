@@ -146,7 +146,11 @@ export default function AcademiaClient({
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-black mb-1"><span className="gradient-gold">Academia</span></h1>
-          <p className="text-[var(--text-secondary)] text-sm">
+          <p className="text-[var(--text-secondary)] text-sm max-w-2xl mb-1">
+            Trading algorítmico cuantitativo: monta tu infraestructura, crea estrategias con Claude Code,
+            NinjaTrader 8 y Obsidian, y valídalas antes de arriesgar capital.
+          </p>
+          <p className="text-[var(--text-muted)] text-xs">
             {isAdmin ? `${lecciones.length} lecciones en total` : `${totalCompletadas}/${totalPublicadas} lecciones completadas`}
           </p>
         </div>

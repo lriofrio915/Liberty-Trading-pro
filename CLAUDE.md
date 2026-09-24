@@ -23,7 +23,7 @@ Monetiza vía Hotmart con 4 productos: academia, club, mensual, anual.
 
 | Ruta | Descripción |
 |------|-------------|
-| `academia` | Contenido educativo (acceso por plan) |
+| `academia` | Temario de trading algorítmico cuantitativo (10 módulos). Contenido en `prisma/academia/lecciones.py` → `python prisma/academia/build.py` genera `seed-academia.ts` y `lecciones.sql` |
 | `acciones` | Recomendaciones del Agente Peter (`Opportunity.category = 'PETER_LYNCH'`) |
 | `agentes` | Solo admin — Agente Peter (Lynch 6/6 + forecast + Tauric); el alumno ve el resultado en Acciones |
 | `brokers` | Conexión y ejecución vía brokers (IBKR) |

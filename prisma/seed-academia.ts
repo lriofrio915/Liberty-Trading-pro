@@ -1,732 +1,272 @@
+// Generado por prisma/academia/build.py desde prisma/academia/lecciones.py — no editar a mano.
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-const VIDEO = 'https://www.youtube.com/watch?v=VIDEO_PENDIENTE'
-
 const lecciones = [
-
-  // ─── CAPÍTULO 1: PLATAFORMA NT8 ────────────────────────────────────────────
-
   {
-    titulo: 'Instalación de NinjaTrader 8 y Conexión de Cuentas',
-    categoria: 'Plataforma NT8',
-    orden: 1,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'Instala NinjaTrader 8 desde cero y conecta tu cuenta demo Sim101 para practicar con datos en tiempo real sin costo.',
-    contenido: `<h2>Instalación de NinjaTrader 8</h2>
-
-<p>NinjaTrader 8 (NT8) es la plataforma de ejecución que utilizaremos para operar futuros del Nasdaq. Es gratuita para simulación y análisis.</p>
-
-<h3>Pasos de instalación</h3>
-<ol>
-  <li>Ve a <strong>ninjatrader.com</strong> y descarga la versión más reciente de NinjaTrader 8</li>
-  <li>Ejecuta el instalador y sigue las instrucciones en pantalla</li>
-  <li>Una vez instalado, abre NinjaTrader y selecciona <em>"New Account"</em></li>
-  <li>Regístrate con tu correo electrónico — recibirás tus credenciales por email</li>
-</ol>
-
-<h3>Conectar la cuenta demo Sim101</h3>
-<p>La cuenta <strong>Sim101</strong> es la cuenta simulada nativa de NinjaTrader. Te permite operar en tiempo real con dinero ficticio sin pagar nada.</p>
-<ol>
-  <li>En la barra superior, ve a <strong>Connections → Configure</strong></li>
-  <li>Selecciona <em>NinjaTrader Brokerage</em> como conexión</li>
-  <li>Ingresa tus credenciales y activa el modo Simulation</li>
-  <li>La cuenta Sim101 aparecerá disponible en el Account Selector</li>
-</ol>
-
-<h3>¿Por qué usar Sim101 primero?</h3>
-<p>Antes de arriesgar capital real o comprar una prueba de fondeo, es <strong>obligatorio</strong> practicar en simulación hasta que el sistema sea mecánico y automático para ti. No se trata de practicar hasta que funcione — se trata de practicar hasta que no pueda fallar.</p>`,
+    "titulo": "Bienvenido al club: cómo vas a trabajar",
+    "descripcion": "Los tres pilares del club, la ruta que vas a seguir y lo que se espera de ti al final: tu propia estrategia en el portafolio comunitario.",
+    "contenido": "<h2>Un negocio, no una apuesta</h2><p>Este club no te enseña a adivinar el mercado. Te enseña a construir un <strong>sistema</strong>: estrategias que se programan, se validan con estadística y se operan con reglas fijas, medidas con un track record propio.</p><h3>Los tres pilares</h3><ol><li><strong>Video clases</strong> — la infraestructura (Claude Code, tu app de track record) y el método para crear estrategias con Claude Code, NinjaTrader 8 y Obsidian.</li><li><strong>Portafolio comunitario</strong> — 6 bots validados que instalas desde la primera semana, mientras aprendes.</li><li><strong>Cuenta fondeada de $200k</strong> — un pase directo de PJ Capital para operar con capital de la mesa.</li></ol><h3>Tu ruta</h3><ul><li><strong>Día 1:</strong> activas tu cuenta fondeada e instalas NinjaTrader 8.</li><li><strong>Semana 1:</strong> instalas el portafolio comunitario.</li><li><strong>Semanas 2–8:</strong> recorres los módulos y construyes tu laboratorio.</li><li><strong>Proyecto final:</strong> creas tu propia estrategia, la validas y la compartes con la comunidad.</li></ul><blockquote style=\"border-left:3px solid #C9A84C;padding-left:1rem;color:#C9A84C;font-style:italic\">Un backtest bonito no es un backtest fiable. Aquí aprendes a distinguirlos.</blockquote>",
+    "videoUrl": null,
+    "orden": 1,
+    "categoria": "01 · Infraestructura del negocio",
+    "publicado": true
   },
-
   {
-    titulo: 'Cómo Obtener tu Demo Gratuita de Bulenox',
-    categoria: 'Plataforma NT8',
-    orden: 2,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'Configura una cuenta demo de Bulenox y conéctala a NinjaTrader 8 para practicar en el entorno real de una prop firm.',
-    contenido: `<h2>¿Qué es Bulenox?</h2>
-
-<p><strong>Bulenox</strong> es una empresa de fondeo (prop firm) que ofrece cuentas demo gratuitas con datos en tiempo real. Practicar en Bulenox es importante porque te familiarizas con las reglas reales de las evaluaciones.</p>
-
-<h3>Obtener tu demo gratuita</h3>
-<ol>
-  <li>Ve a <strong>bulenox.com</strong> y crea una cuenta gratuita</li>
-  <li>Accede a tu panel de usuario y busca la opción <em>"Free Demo"</em> o <em>"Practice Account"</em></li>
-  <li>Recibirás por email:
-    <ul>
-      <li>Usuario (Server Login)</li>
-      <li>Contraseña</li>
-      <li>Servidor de conexión</li>
-    </ul>
-  </li>
-</ol>
-
-<h3>Conectar Bulenox en NinjaTrader 8</h3>
-<ol>
-  <li>En NT8: <strong>Connections → Configure → Add</strong></li>
-  <li>Busca y selecciona <em>Bulenox</em> en la lista de brokers</li>
-  <li>Ingresa tu usuario, contraseña y servidor de Bulenox</li>
-  <li>Haz clic en <strong>OK</strong> y luego en <strong>Connect</strong></li>
-  <li>Verifica que el indicador de conexión esté en <span style="color:#22c55e">verde</span></li>
-</ol>
-
-<h3>Tamaños de cuenta disponibles en Bulenox</h3>
-<table>
-  <thead><tr><th>Tamaño</th><th>Objetivo de ganancia</th><th>Pérdida máxima diaria</th><th>Trailing Drawdown</th></tr></thead>
-  <tbody>
-    <tr><td><strong>25K</strong></td><td>$1,500</td><td>$1,000</td><td>$1,500</td></tr>
-    <tr><td><strong>50K</strong></td><td>$3,000</td><td>$2,000</td><td>$2,500</td></tr>
-    <tr><td><strong>100K</strong></td><td>$6,000</td><td>$3,000</td><td>$4,500</td></tr>
-    <tr><td><strong>150K</strong></td><td>$9,000</td><td>$4,500</td><td>$6,000</td></tr>
-  </tbody>
-</table>`,
+    "titulo": "Tu estación de trabajo: equipo, VPS y suscripciones",
+    "descripcion": "Lo que necesitas antes de empezar: una PC con Windows o un VPS para NinjaTrader 8 y tu suscripción a Claude para usar Claude Code.",
+    "contenido": "<h2>Lo mínimo para operar un negocio algorítmico</h2><h3>1. Una máquina que no se apague</h3><p>NinjaTrader 8 solo corre en <strong>Windows</strong>. Tienes dos opciones:</p><ul><li><strong>Tu PC</strong> — válido para aprender y hacer backtests. Para operar bots en real, la PC debe quedar encendida y conectada durante la sesión.</li><li><strong>Un VPS con Windows</strong> — un servidor en la nube que corre 24/7. Es lo recomendado cuando los bots operan capital: no depende de tu internet ni de tu luz.</li></ul><p>Referencia de recursos: 4 GB de RAM como mínimo (8 GB recomendado), 2 núcleos y disco SSD.</p><h3>2. Tu suscripción a Claude</h3><p>El club te enseña a usar <strong>Claude Code</strong>, pero la suscripción es tuya y no está incluida. El plan <strong>Pro ($20/mes)</strong> es suficiente para todo el curso.</p><h3>3. Cuentas que vas a crear</h3><ul><li>NinjaTrader (gratis para simulación y backtest).</li><li>GitHub (gratis) — para guardar tu código.</li><li>Vercel (gratis) — para publicar tu app de track record.</li><li>Obsidian (gratis) — tu laboratorio de investigación.</li></ul>",
+    "videoUrl": null,
+    "orden": 2,
+    "categoria": "01 · Infraestructura del negocio",
+    "publicado": true
   },
-
   {
-    titulo: 'Abrir Cuenta en Interactive Brokers (IBKR)',
-    categoria: 'Plataforma NT8',
-    orden: 3,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'Paso a paso para abrir tu cuenta real en Interactive Brokers y conectarla a NinjaTrader 8 para operar con capital propio.',
-    contenido: `<h2>Interactive Brokers (IBKR)</h2>
-
-<p>Cuando estés listo para operar con capital real, <strong>Interactive Brokers</strong> es el broker que utilizamos. Ofrece acceso directo a los mercados de futuros con comisiones muy competitivas.</p>
-
-<h3>Abrir tu cuenta</h3>
-<p>Usa el siguiente link de referido para registrarte:</p>
-<p><a href="https://ibkr.com/referral/luis6493" target="_blank" style="color:#C9A84C;font-weight:bold;">→ https://ibkr.com/referral/luis6493</a></p>
-
-<ol>
-  <li>Haz clic en el link y selecciona <em>"Open Account"</em></li>
-  <li>Completa el formulario con tus datos personales</li>
-  <li>Selecciona <strong>Futures</strong> como producto de interés</li>
-  <li>Envía los documentos requeridos (identificación + comprobante de domicilio)</li>
-  <li>IBKR validará tu cuenta en 1-3 días hábiles</li>
-</ol>
-
-<h3>Conectar IBKR con NinjaTrader 8</h3>
-<ol>
-  <li>Descarga e instala <strong>TWS (Trader Workstation)</strong> desde ibkr.com</li>
-  <li>En TWS: activa la API en <em>Edit → Global Configuration → API → Settings</em></li>
-  <li>Marca <em>"Enable ActiveX and Socket Clients"</em> y anota el puerto (por defecto 7497)</li>
-  <li>En NT8: <strong>Connections → Configure → Add → Interactive Brokers</strong></li>
-  <li>Ingresa el puerto y conecta</li>
-</ol>
-
-<h3>Depósito mínimo</h3>
-<p>Para operar MNQ (Micro Nasdaq) con gestión de riesgo adecuada, se recomienda un mínimo de <strong>$2,000 - $5,000</strong> según el plan de trading que definas en el capítulo de Gestión de Riesgo.</p>`,
+    "titulo": "Instalar y configurar Claude Code",
+    "descripcion": "Instala Claude Code, inicia sesión con tu cuenta de Claude y aprende a darle contexto con un archivo CLAUDE.md.",
+    "contenido": "<h2>Claude Code: tu desarrollador cuantitativo</h2><p>Claude Code es un asistente de programación que trabaja en tu computadora: lee tus archivos, escribe código, lo ejecuta y corrige errores. Tú describes lo que quieres; él lo construye y tú revisas.</p><h3>Instalación</h3><ol><li>Descarga Claude Code desde <strong>claude.com/claude-code</strong> (app de escritorio o terminal).</li><li>Inicia sesión con la misma cuenta de tu suscripción Pro.</li><li>Crea una carpeta de trabajo, por ejemplo <code>C:\\Trading\\liberty</code>, y abre Claude Code dentro de ella.</li></ol><h3>El archivo CLAUDE.md</h3><p>Es la memoria del proyecto. Claude lo lee al empezar cada sesión. Escribe ahí lo que nunca debe olvidar:</p><ul><li>Qué instrumento operas (MNQ) y en qué sesión (RTH o ETH).</li><li>Tus reglas innegociables: todo valor como parámetro, stop loss obligatorio, logs en cada entrada y salida.</li><li>Dónde guardas las estrategias y los resultados.</li></ul><h3>Buenas prácticas</h3><ul><li>Pide una cosa a la vez y revisa el resultado antes de la siguiente.</li><li>Si algo no compila, pega el error completo: Claude lo corrige mejor con el mensaje exacto.</li><li>Nunca aceptes un \"funciona\" sin verlo compilar y correr tú mismo.</li></ul>",
+    "videoUrl": null,
+    "orden": 3,
+    "categoria": "01 · Infraestructura del negocio",
+    "publicado": true
   },
-
   {
-    titulo: 'Cómo Comprar una Prueba de Fondeo',
-    categoria: 'Plataforma NT8',
-    orden: 4,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'Entiende qué es una evaluación de prop firm, cómo funciona el proceso y cuándo es el momento correcto para comprarla.',
-    contenido: `<h2>¿Qué es una prueba de fondeo?</h2>
-
-<p>Una <strong>prueba de fondeo</strong> (o evaluación) es un proceso en el que demuestras a una empresa de capital (prop firm) que puedes operar de forma consistente y controlada. Si la apruebas, ellos te dan capital real para operar y tú te quedas con un porcentaje de las ganancias.</p>
-
-<h3>¿Cómo funciona con Bulenox?</h3>
-<ol>
-  <li>Compras una evaluación (ej: cuenta de 50K por ~$200)</li>
-  <li>Operas durante el período de evaluación cumpliendo las reglas:
-    <ul>
-      <li>Alcanzar el objetivo de ganancia (ej: $3,000 en 50K)</li>
-      <li>No superar la pérdida máxima diaria (ej: $2,000)</li>
-      <li>No tocar el trailing drawdown</li>
-    </ul>
-  </li>
-  <li>Si apruebas → recibes una cuenta financiada real</li>
-  <li>Con la cuenta financiada → operas y cobras 80-90% de las ganancias</li>
-</ol>
-
-<h3>¿Cuándo comprar la evaluación?</h3>
-<p>Solo cuando cumplas <strong>estos 3 criterios</strong>:</p>
-<ul>
-  <li>✅ Llevas mínimo 30 días operando en simulación de forma consistente</li>
-  <li>✅ Tu sistema es mecánico — ejecutas sin dudar, sin cambiar reglas</li>
-  <li>✅ Has completado el capítulo de Gestión de Riesgo y tienes tu plan escrito</li>
-</ul>
-
-<p><strong style="color:#ef4444">No compres la evaluación si no cumples los 3 criterios.</strong> Es mejor seguir practicando y ahorrar el dinero de la evaluación.</p>
-
-<h3>Regla de oro</h3>
-<blockquote style="border-left:3px solid #C9A84C;padding-left:1rem;color:#8a8480">
-  La evaluación no se compra para aprender a operar. Se compra para demostrar lo que ya sabes hacer.
-</blockquote>`,
+    "titulo": "Git y GitHub: tu código versionado",
+    "descripcion": "Guarda cada versión de tus estrategias y de tu app con Git, y respáldalas en GitHub para no perder nunca un cambio.",
+    "contenido": "<h2>Por qué versionar</h2><p>Una estrategia pasa por decenas de versiones. Sin control de versiones no sabes qué cambió entre el backtest que funcionaba y el que dejó de funcionar. Git guarda cada cambio con su fecha y su motivo.</p><h3>Lo esencial</h3><ol><li>Crea una cuenta en <strong>github.com</strong>.</li><li>Pide a Claude Code: <em>\"inicializa un repositorio git en esta carpeta y súbelo a un repositorio privado de GitHub\"</em>.</li><li>Cada vez que cierres un cambio importante, pide un <strong>commit</strong> con un mensaje claro: <em>\"RSI2: stop a 60 ticks, WFO ventana 3\"</em>.</li></ol><h3>Qué va en el repositorio</h3><ul><li>El código <code>.cs</code> de cada estrategia.</li><li>Las exportaciones de resultados (CSV) y los registros de WFO.</li><li>Tu app de track record (módulo 02).</li></ul><p>Qué <strong>no</strong> va: contraseñas, claves de API ni datos de tu cuenta del bróker.</p>",
+    "videoUrl": null,
+    "orden": 4,
+    "categoria": "01 · Infraestructura del negocio",
+    "publicado": true
   },
-
-  // ─── CAPÍTULO 2: CONFIGURACIÓN DE GRÁFICAS ────────────────────────────────
-
   {
-    titulo: 'Configuración de la Gráfica MNQ 1 Minuto',
-    categoria: 'Configuracion de Graficas',
-    orden: 1,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'Configura el único chart que necesitas: MNQ en 1 minuto. El sistema es minimalista por diseño — una sola gráfica, un solo timeframe.',
-    contenido: `<h2>El sistema minimalista</h2>
-
-<p>A diferencia de lo que ves en YouTube con múltiples pantallas y docenas de indicadores, este sistema utiliza <strong>una sola gráfica</strong> en <strong>un solo timeframe</strong>: el <strong>MNQ (Micro E-mini Nasdaq) en 1 minuto</strong>.</p>
-
-<p>La simplicidad no es limitación — es ventaja. Menos información = menos confusión = mejor ejecución.</p>
-
-<h3>Abrir la gráfica MNQ</h3>
-<ol>
-  <li>En NT8: clic derecho en el workspace → <strong>New Chart</strong></li>
-  <li>En Instrument, escribe <strong>MNQ 03-26</strong> (o el contrato vigente del trimestre actual)</li>
-  <li>Selecciona tipo de gráfica: <strong>Candlestick</strong></li>
-  <li>Timeframe: <strong>1 Minute</strong></li>
-  <li>Haz clic en <strong>OK</strong></li>
-</ol>
-
-<h3>Configuración visual recomendada</h3>
-<ul>
-  <li><strong>Velas:</strong> alcistas en verde (#22c55e), bajistas en rojo (#ef4444)</li>
-  <li><strong>Fondo:</strong> negro o gris muy oscuro — reduce la fatiga visual</li>
-  <li><strong>Cuadrícula:</strong> desactivada o muy sutil</li>
-  <li><strong>Panel de órdenes:</strong> visible y accesible (lo configuramos en la siguiente lección)</li>
-</ul>
-
-<h3>Nota sobre el contrato (rollover)</h3>
-<p>Los futuros del Nasdaq tienen vencimiento trimestral. Los contratos son:</p>
-<ul>
-  <li><strong>Marzo (H):</strong> vence tercera semana de marzo</li>
-  <li><strong>Junio (M):</strong> vence tercera semana de junio</li>
-  <li><strong>Septiembre (U):</strong> vence tercera semana de septiembre</li>
-  <li><strong>Diciembre (Z):</strong> vence tercera semana de diciembre</li>
-</ul>
-<p>Aproximadamente 1 semana antes del vencimiento, debes hacer rollover al siguiente contrato.</p>`,
+    "titulo": "Por qué necesitas un track record propio",
+    "descripcion": "Sin registro no hay negocio: cómo un track record honesto te dice si tu sistema funciona y te da credibilidad ante terceros.",
+    "contenido": "<h2>Lo que no se mide, no se gestiona</h2><p>Un track record es el historial completo de tus operaciones: ganadoras y perdedoras, sin recortes. Es la única forma de saber si tu sistema en real se parece a su backtest.</p><h3>Qué te responde</h3><ul><li>¿El profit factor en real se parece al del Walk-Forward?</li><li>¿El drawdown actual está dentro de lo esperado o es una señal de que el edge se rompió?</li><li>¿Qué estrategia del portafolio aporta y cuál resta?</li></ul><h3>Las reglas de un track record honesto</h3><ol><li>Se registran <strong>todas</strong> las operaciones, no solo las buenas.</li><li>Se registran con comisiones reales.</li><li>No se borra nada. Si hubo un error, se anota como error.</li></ol><blockquote style=\"border-left:3px solid #C9A84C;padding-left:1rem;color:#C9A84C;font-style:italic\">Publico mis pérdidas igual que mis ganancias. No vendo sueños — muestro datos.</blockquote>",
+    "videoUrl": null,
+    "orden": 1,
+    "categoria": "02 · Tu app de track record",
+    "publicado": true
   },
-
   {
-    titulo: 'Atajos de Teclado para Ejecución Rápida',
-    categoria: 'Configuracion de Graficas',
-    orden: 2,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'Configura los hotkeys en NinjaTrader 8 para entrar y salir del mercado en milisegundos. La velocidad de ejecución es clave en intradía.',
-    contenido: `<h2>¿Por qué usar atajos de teclado?</h2>
-
-<p>En trading intradía, especialmente en 1 minuto, <strong>cada segundo cuenta</strong>. Usar el mouse para ejecutar órdenes introduce latencia y errores. Los atajos de teclado permiten entrar, salir o ajustar posiciones en fracciones de segundo.</p>
-
-<h3>Configurar hotkeys en NT8</h3>
-<ol>
-  <li>Ve a <strong>Tools → Options → Hotkeys</strong></li>
-  <li>Configura las siguientes teclas según tu comodidad:</li>
-</ol>
-
-<table>
-  <thead><tr><th>Acción</th><th>Tecla sugerida</th></tr></thead>
-  <tbody>
-    <tr><td>Buy Market (Comprar al mercado)</td><td><strong>F1</strong></td></tr>
-    <tr><td>Sell Market (Vender al mercado)</td><td><strong>F2</strong></td></tr>
-    <tr><td>Close Position (Cerrar posición)</td><td><strong>F3</strong> o <strong>Escape</strong></td></tr>
-    <tr><td>Cancel All Orders</td><td><strong>F4</strong></td></tr>
-    <tr><td>Reverse Position</td><td><strong>F5</strong></td></tr>
-  </tbody>
-</table>
-
-<h3>SuperDOM vs Chart Trader</h3>
-<p>Puedes ejecutar órdenes desde dos lugares:</p>
-<ul>
-  <li><strong>SuperDOM:</strong> panel lateral con precio de oferta/demanda en tiempo real. Ideal para ver la profundidad del mercado.</li>
-  <li><strong>Chart Trader:</strong> panel integrado en la gráfica. Más visual, permite ver las órdenes directamente en el chart.</li>
-</ul>
-<p>Para este sistema usaremos principalmente <strong>Chart Trader</strong> activado dentro de la gráfica MNQ.</p>
-
-<h3>Práctica obligatoria</h3>
-<p>Antes de pasar al siguiente capítulo, practica en Sim101 durante al menos 2-3 días:</p>
-<ul>
-  <li>Abrir y cerrar posiciones únicamente con teclado</li>
-  <li>Hacerlo sin mirar el teclado (memoria muscular)</li>
-  <li>Ejecutar en menos de 2 segundos desde la señal hasta la orden enviada</li>
-</ul>`,
+    "titulo": "Crear tu app con Claude Code",
+    "descripcion": "Construye paso a paso una aplicación web para registrar tus operaciones, con base de datos, sin escribir el código a mano.",
+    "contenido": "<h2>De la idea a la app en una tarde</h2><p>Vas a construir una aplicación web propia (Next.js) con una base de datos donde viven tus operaciones.</p><h3>El pedido a Claude Code</h3><p>Empieza con una descripción clara, por ejemplo:</p><p><em>\"Crea una app Next.js con una base de datos Supabase para registrar operaciones de trading. Cada operación tiene: fecha, estrategia, instrumento, dirección, contratos, precio de entrada, precio de salida, comisiones y P&amp;L neto. Quiero una página para registrar y otra para ver el historial.\"</em></p><h3>Cómo avanzar</h3><ol><li>Pide primero la estructura y la base de datos. Revisa que los campos sean los correctos.</li><li>Después, el formulario de registro. Pruébalo con una operación real.</li><li>Después, el historial. Verifica que los totales cuadren con tu bróker.</li></ol><p>Cada paso termina con un commit (módulo 01).</p>",
+    "videoUrl": null,
+    "orden": 2,
+    "categoria": "02 · Tu app de track record",
+    "publicado": true
   },
-
-  // ─── CAPÍTULO 3: ESTRATEGIA INTRADÍA NQ ───────────────────────────────────
-
   {
-    titulo: 'El Método 1-2-3: Cómo Decidir la Dirección del Día',
-    categoria: 'Estrategia Intradia NQ',
-    orden: 1,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'El núcleo del sistema: el método 1-2-3 para determinar si el día es alcista o bajista antes de abrir cualquier operación.',
-    contenido: `<h2>El método 1-2-3</h2>
-
-<p>El sistema se basa en un principio simple pero poderoso: <strong>solo operamos en la dirección del mercado ese día</strong>. No peleamos contra la tendencia intradía.</p>
-
-<p>El método 1-2-3 es la herramienta para identificar esa dirección antes de abrir la plataforma.</p>
-
-<h3>Los 3 pasos</h3>
-
-<p><strong>Paso 1 — Identifica el contexto de apertura</strong></p>
-<p>Observa dónde abre el precio en relación al cierre del día anterior. Este dato nos da el primer sesgo: ¿el mercado quiere ir arriba o abajo?</p>
-
-<p><strong>Paso 2 — Confirma con la acción del precio en los primeros minutos</strong></p>
-<p>Durante los primeros 15-30 minutos de la sesión, el precio te "cuenta" la historia del día. Observa sin operar. Deja que el mercado muestre su intención.</p>
-
-<p><strong>Paso 3 — Espera la señal de entrada</strong></p>
-<p>Una vez identificada la dirección, esperas la configuración específica de entrada del sistema. No anticipas — reaccionas a lo que el mercado hace.</p>
-
-<h3>Regla fundamental</h3>
-<blockquote style="border-left:3px solid #C9A84C;padding-left:1rem;color:#8a8480">
-  Si el método 1-2-3 no da una dirección clara, el día es SIN OPERAR. La claridad es condición obligatoria para entrar al mercado.
-</blockquote>
-
-<h3>Lo que NO es el método</h3>
-<ul>
-  <li>❌ No es un indicador técnico</li>
-  <li>❌ No es análisis fundamental</li>
-  <li>❌ No requiere noticias económicas</li>
-  <li>✅ Es lectura de acción del precio en el contexto del día</li>
-</ul>`,
+    "titulo": "Publicar tu app: deploy en Vercel",
+    "descripcion": "Pon tu app en internet con Vercel, conectada a GitHub, para que se actualice sola cada vez que guardas un cambio.",
+    "contenido": "<h2>Tu track record, en tu propio dominio</h2><ol><li>Crea una cuenta en <strong>vercel.com</strong> usando tu GitHub.</li><li>Importa el repositorio de tu app.</li><li>Configura las variables de entorno (las claves de la base de datos). Nunca las subas al repositorio.</li><li>Pulsa Deploy. En un par de minutos tienes una URL pública.</li></ol><h3>Cómo se actualiza</h3><p>Cada vez que haces push a la rama principal, Vercel publica la nueva versión. Por eso: prueba antes de hacer push.</p><h3>Opcional: tu dominio</h3><p>Puedes conectar un dominio propio desde el panel de Vercel. Un track record en tu dominio transmite profesionalismo.</p>",
+    "videoUrl": null,
+    "orden": 3,
+    "categoria": "02 · Tu app de track record",
+    "publicado": true
   },
-
   {
-    titulo: 'Reglas de Entrada y Salida',
-    categoria: 'Estrategia Intradia NQ',
-    orden: 2,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'Las reglas exactas de cuándo entrar al mercado, dónde colocar el stop loss y cuándo tomar ganancias.',
-    contenido: `<h2>Reglas de Entrada</h2>
-
-<p>Una entrada válida requiere <strong>las 3 condiciones simultáneamente</strong>:</p>
-
-<ol>
-  <li>El método 1-2-3 indica una dirección clara para el día</li>
-  <li>El precio está en la zona de entrada (definida en la lección anterior)</li>
-  <li>La vela de confirmación se forma según el patrón del sistema</li>
-</ol>
-
-<p>Si alguna de las 3 no está presente → <strong>no entras</strong>.</p>
-
-<h3>Stop Loss</h3>
-<p>El stop loss es obligatorio en cada operación. No es opcional. Se coloca:</p>
-<ul>
-  <li>Por debajo/encima del punto de invalidación de la señal</li>
-  <li>El tamaño del stop define el riesgo de la operación (ver capítulo de Gestión de Riesgo)</li>
-  <li>Nunca se mueve en contra de la posición (ampliar el stop está prohibido por las reglas del sistema)</li>
-</ul>
-
-<h3>Gestión de la posición abierta</h3>
-<ul>
-  <li><strong>Target fijo:</strong> el sistema tiene un objetivo de ganancia definido en puntos de MNQ</li>
-  <li><strong>Trailing stop:</strong> alternativa para capturar movimientos más grandes en días de tendencia fuerte</li>
-  <li><strong>Cierre manual:</strong> solo si el precio muestra señal de reversión clara antes de alcanzar el target</li>
-</ul>
-
-<h3>Salida</h3>
-<p>Sales cuando ocurre uno de estos 3 eventos (el primero que suceda):</p>
-<ol>
-  <li>El precio alcanza el <strong>target de ganancia</strong></li>
-  <li>El precio toca el <strong>stop loss</strong></li>
-  <li>Se cumplen las <strong>condiciones de invalidación</strong> del setup</li>
-</ol>
-
-<p>No se sale "por intuición", no se corre el target, no se mueve el stop en contra.</p>`,
+    "titulo": "Métricas y curva de capital en tu app",
+    "descripcion": "Agrega a tu app las métricas que importan — neto, drawdown, profit factor, win rate — y la curva de capital de cada estrategia.",
+    "contenido": "<h2>Del listado al tablero</h2><p>Un historial de operaciones no dice nada por sí solo. Pide a Claude Code que calcule y grafique:</p><ul><li><strong>Beneficio neto</strong> total y por estrategia.</li><li><strong>Drawdown máximo</strong> — la mayor caída desde un pico. Es la métrica clave.</li><li><strong>Profit factor</strong> — ganancias brutas ÷ pérdidas brutas.</li><li><strong>Win rate</strong> — siempre junto al ratio riesgo/beneficio.</li><li><strong>Curva de capital</strong> acumulada, total y por estrategia.</li></ul><h3>Compara real vs backtest</h3><p>Guarda también las métricas del Walk-Forward de cada estrategia y muéstralas al lado de las reales. Si el drawdown real supera con claridad el peor caso de Montecarlo, esa estrategia se revisa.</p>",
+    "videoUrl": null,
+    "orden": 4,
+    "categoria": "02 · Tu app de track record",
+    "publicado": true
   },
-
   {
-    titulo: 'Reglas del Sistema y Condiciones para Operar',
-    categoria: 'Estrategia Intradia NQ',
-    orden: 3,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'El conjunto de reglas que define cuándo el sistema está activo y cuándo no. Disciplina antes que rentabilidad.',
-    contenido: `<h2>Condiciones para operar</h2>
-
-<p>El sistema solo está activo cuando <strong>todas</strong> estas condiciones se cumplen:</p>
-
-<ul>
-  <li>✅ Es un día de mercado regular (no días de vencimiento de contratos, no días con noticias de alto impacto como FOMC, CPI, NFP a menos que la estrategia lo contemple explícitamente)</li>
-  <li>✅ La sesión de Nueva York está activa (horario principal de liquidez)</li>
-  <li>✅ El método 1-2-3 da una dirección clara</li>
-  <li>✅ No has alcanzado tu límite de pérdida diaria</li>
-  <li>✅ No has alcanzado tu límite de operaciones por día</li>
-</ul>
-
-<h3>Días de NO operar</h3>
-<ul>
-  <li>Días con eventos de alto impacto (FOMC, NFP, CPI) — el mercado se vuelve errático</li>
-  <li>Días de vencimiento de contratos (Quad Witching)</li>
-  <li>Días con poca liquidez (vísperas de festivos en EE.UU.)</li>
-  <li>Cualquier día en que el método 1-2-3 no genere una señal clara</li>
-</ul>
-
-<h3>Límite de operaciones</h3>
-<p>Máximo <strong>1-2 operaciones por día</strong>. El sistema no es de alta frecuencia. Cada operación tiene peso.</p>
-
-<h3>La disciplina de no operar</h3>
-<blockquote style="border-left:3px solid #C9A84C;padding-left:1rem;color:#8a8480">
-  Uno de los días más rentables de un trader es aquel en el que decide conscientemente NO operar porque las condiciones no están dadas. Preservar el capital en días malos es parte del sistema.
-</blockquote>`,
+    "titulo": "Instalar NinjaTrader 8 y conectar datos",
+    "descripcion": "Instala NinjaTrader 8, conecta la simulación y descarga el histórico que vas a usar en tus backtests.",
+    "contenido": "<h2>NinjaTrader 8: backtest y ejecución</h2><ol><li>Descarga NinjaTrader 8 desde <strong>ninjatrader.com</strong> e instálalo.</li><li>Crea tu usuario. La simulación y el Strategy Analyzer son gratuitos.</li><li>Conéctate (Connections) para recibir datos. La cuenta <strong>Sim101</strong> te permite operar en simulación.</li></ol><h3>Configuración clave</h3><ul><li><strong>Zona horaria:</strong> Tools → Options → General. Todas las estrategias del club asumen hora de Nueva York (<em>Eastern Standard Time</em>).</li><li><strong>Histórico:</strong> descarga datos de NQ y MNQ desde el Historical Data Manager. Cuantos más años, mejor el backtest.</li><li><strong>Plantilla de sesión:</strong> define si el gráfico usa RTH (sesión regular) o ETH (sesión completa). Cambia por completo el resultado de las medias móviles.</li></ul>",
+    "videoUrl": null,
+    "orden": 1,
+    "categoria": "03 · NinjaTrader 8 y el portafolio comunitario",
+    "publicado": true
   },
-
   {
-    titulo: 'Objetivos y Gestión de la Operación',
-    categoria: 'Estrategia Intradia NQ',
-    orden: 4,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'Define los objetivos de ganancia por operación y por día, y aprende a gestionar la posición una vez que está abierta.',
-    contenido: `<h2>Objetivos del sistema</h2>
-
-<p>El sistema tiene objetivos <strong>realistas y consistentes</strong>, no grandiosos. La rentabilidad viene de la consistencia, no de un trade grande.</p>
-
-<h3>Objetivos por operación</h3>
-<ul>
-  <li><strong>Target conservador:</strong> 10-20 puntos de MNQ (~$100-$200 por contrato)</li>
-  <li><strong>Target estándar:</strong> 20-40 puntos de MNQ (~$200-$400 por contrato)</li>
-  <li><strong>Target ampliado:</strong> cuando hay tendencia fuerte, se puede usar trailing stop</li>
-</ul>
-
-<p>Cada punto de MNQ vale <strong>$0.50</strong>. Un movimiento de 20 puntos = $10 por contrato de MNQ.</p>
-<p>(En NQ grande, cada punto vale $5. En MNQ = $0.50, que es 1/10 del NQ)</p>
-
-<h3>Objetivo diario</h3>
-<p>Definido en tu plan de trading personal (capítulo 4). La referencia general:</p>
-<ul>
-  <li><strong>Mínimo diario:</strong> alcanzar 1 operación ganadora que cubra comisiones + algo de ganancia</li>
-  <li><strong>Objetivo diario:</strong> 1-2 operaciones ganadoras siguiendo el plan</li>
-  <li><strong>Máximo diario:</strong> 2 operaciones (si se dan las señales) — después de 2, cierra la plataforma</li>
-</ul>
-
-<h3>Gestión una vez en posición</h3>
-<ol>
-  <li>Stop loss colocado <strong>inmediatamente</strong> al entrar — nunca operar sin stop</li>
-  <li>No mover el stop en contra de la posición</li>
-  <li>Opcionalmente: mover el stop a breakeven cuando el precio avanza 50% del camino al target</li>
-  <li>Cerrar en el target o en el stop — el mercado decide</li>
-</ol>`,
+    "titulo": "Activar tu cuenta fondeada de $200k (PJ Capital)",
+    "descripcion": "Activa el pase directo de PJ Capital incluido en tu inscripción, conecta la cuenta a NinjaTrader y conoce sus reglas.",
+    "contenido": "<h2>Capital de la mesa, no el tuyo</h2><p>Tu inscripción incluye un <strong>pase directo a una cuenta fondeada de $200,000 en PJ Capital</strong>. Directo significa que no pasas una prueba de evaluación.</p><h3>Activación</h3><ol><li>Recibirás los datos de activación por WhatsApp o email tras tu inscripción.</li><li>Completa el registro en PJ Capital con tus datos reales (se usan para los pagos).</li><li>Conecta la cuenta en NinjaTrader 8 (Connections) con las credenciales que te entreguen.</li></ol><h3>Lee las reglas antes de operar</h3><ul><li><strong>Drawdown máximo</strong> permitido y cómo se calcula.</li><li><strong>Reglas de consistencia</strong> para solicitar retiros.</li><li>Horarios y noticias en las que no se permite operar, si aplica.</li></ul><p>Los bots del portafolio están pensados para respetar límites de drawdown, pero la responsabilidad de configurar el tamaño es tuya (módulo 09).</p>",
+    "videoUrl": null,
+    "orden": 2,
+    "categoria": "03 · NinjaTrader 8 y el portafolio comunitario",
+    "publicado": true
   },
-
-  // ─── CAPÍTULO 4: GESTIÓN DE RIESGO ───────────────────────────────────────
-
   {
-    titulo: 'Cómo Escribir tu Plan de Trading',
-    categoria: 'Gestion de Riesgo',
-    orden: 1,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'El plan de trading es el documento más importante que escribirás como trader. Sin plan, no hay sistema — solo apuestas.',
-    contenido: `<h2>¿Por qué necesitas un plan escrito?</h2>
-
-<p>Un plan de trading escrito es tu "manual de operaciones". Te dice exactamente qué hacer en cada situación <em>antes</em> de que ocurra, eliminando decisiones emocionales en el calor del mercado.</p>
-
-<h3>Estructura del plan de trading</h3>
-
-<p><strong>1. Mercado e instrumento</strong></p>
-<ul>
-  <li>Instrumento: MNQ (Micro E-mini Nasdaq)</li>
-  <li>Plataforma: NinjaTrader 8</li>
-  <li>Timeframe: 1 minuto</li>
-  <li>Sesión: Nueva York (9:30 AM - 12:00 PM ET)</li>
-</ul>
-
-<p><strong>2. Sistema y señales</strong></p>
-<ul>
-  <li>Método de dirección: 1-2-3 (según el capítulo de Estrategia)</li>
-  <li>Condiciones de entrada (copia exactamente las reglas del capítulo anterior)</li>
-  <li>Stop loss: [define en puntos]</li>
-  <li>Target: [define en puntos]</li>
-</ul>
-
-<p><strong>3. Gestión de riesgo</strong></p>
-<ul>
-  <li>% máximo de riesgo por operación: [define: 1%, 2%]</li>
-  <li>Pérdida máxima diaria: [define en $]</li>
-  <li>Máximo de operaciones por día: [define: 1 o 2]</li>
-</ul>
-
-<p><strong>4. Reglas de disciplina</strong></p>
-<ul>
-  <li>Si alcanzo mi pérdida máxima diaria → cierre la plataforma, sin excepciones</li>
-  <li>Si realizo 2 operaciones → cierre la plataforma, sin excepciones</li>
-  <li>No opero días de alto impacto: FOMC, NFP, CPI</li>
-</ul>
-
-<p><strong>5. Revisión</strong></p>
-<ul>
-  <li>Revisa y actualiza el plan cada 30 días basado en estadísticas reales</li>
-</ul>
-
-<p>Escribe tu plan en papel, impímelo y tenlo visible mientras operas.</p>`,
+    "titulo": "Instalar los 6 bots del portafolio comunitario",
+    "descripcion": "Importa el código de las 6 estrategias en NinjaTrader 8, compílalo y configúralo en tus gráficos.",
+    "contenido": "<h2>El portafolio que recibes</h2><p>Seis estrategias sobre MNQ, validadas por separado y en conjunto:</p><ul><li><strong>Overnight Drift</strong> — prima nocturna.</li><li><strong>RSI2 Reversion</strong> — reversión a la media.</li><li><strong>ZigZag Breakout</strong> — ruptura.</li><li><strong>Weekend Effect</strong> — estacional.</li><li><strong>Momentum de Apertura</strong> — momentum.</li><li><strong>IBS Reversion</strong> — reversión a la media.</li></ul><h3>Instalación</h3><ol><li>Descarga los archivos desde la sección del portafolio comunitario.</li><li>En NinjaTrader: Tools → Import → NinjaScript Add-On, o copia los <code>.cs</code> a la carpeta <code>Documents\\NinjaTrader 8\\bin\\Custom\\Strategies</code>.</li><li>Abre el NinjaScript Editor y compila (F5). No debe haber errores.</li><li>Agrega cada estrategia a su gráfico con la temporalidad y la sesión indicadas en su ficha.</li></ol><p>Empieza en <strong>Sim101</strong> unos días para confirmar que cada bot entra y sale como describe su ficha.</p>",
+    "videoUrl": null,
+    "orden": 3,
+    "categoria": "03 · NinjaTrader 8 y el portafolio comunitario",
+    "publicado": true
   },
-
   {
-    titulo: 'Porcentaje de Riesgo por Operación',
-    categoria: 'Gestion de Riesgo',
-    orden: 2,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'Define cuánto dinero arriesgas por operación en función del tamaño de tu cuenta. La regla del 1-2% que protege tu capital.',
-    contenido: `<h2>La regla del porcentaje de riesgo</h2>
-
-<p>La regla más importante en gestión de riesgo: <strong>nunca arriesgues más del 1-2% de tu cuenta en una sola operación</strong>.</p>
-
-<h3>¿Por qué 1-2%?</h3>
-<p>Con un 2% de riesgo por operación, necesitarías perder <strong>50 operaciones consecutivas</strong> para arruinar tu cuenta. Eso simplemente no pasa con un sistema que tiene reglas claras.</p>
-
-<p>Con un 1%, necesitarías perder 100 seguidas. La matematica trabaja para ti.</p>
-
-<h3>Cálculo del riesgo en $</h3>
-<table>
-  <thead><tr><th>Tamaño de cuenta</th><th>Riesgo 1%</th><th>Riesgo 2%</th></tr></thead>
-  <tbody>
-    <tr><td>$2,000</td><td>$20</td><td>$40</td></tr>
-    <tr><td>$5,000</td><td>$50</td><td>$100</td></tr>
-    <tr><td>$10,000</td><td>$100</td><td>$200</td></tr>
-    <tr><td>$25,000 (fondeo)</td><td>$250</td><td>$500</td></tr>
-    <tr><td>$50,000 (fondeo)</td><td>$500</td><td>$1,000</td></tr>
-  </tbody>
-</table>
-
-<h3>Regla para cuentas de fondeo</h3>
-<p>En cuentas de Bulenox (prop firm), el riesgo por operación se calcula sobre el <strong>trailing drawdown</strong>, no sobre el balance total:</p>
-<ul>
-  <li>Cuenta 50K → trailing drawdown $2,500 → riesgo 2% = $50 por operación</li>
-  <li>Esto es más conservador pero te protege de perder la cuenta</li>
-</ul>
-
-<h3>Regla de pérdida máxima diaria</h3>
-<p>Define un límite diario. Ejemplo: si tu riesgo por operación es $100, tu pérdida máxima diaria podría ser $200 (2 pérdidas consecutivas).</p>
-<p><strong>Cuando alcances ese límite → cierra la plataforma, sin excepciones, sin "una más".</strong></p>`,
+    "titulo": "Operar el portafolio día a día",
+    "descripcion": "La rutina diaria de un operador de bots: revisar conexiones, confirmar ejecuciones y registrar resultados.",
+    "contenido": "<h2>Operar bots no es \"encender y olvidar\"</h2><h3>Antes de la sesión</h3><ul><li>NinjaTrader conectado y con las estrategias habilitadas (en verde).</li><li>La cuenta correcta seleccionada en cada estrategia.</li><li>Sin posiciones abiertas inesperadas.</li></ul><h3>Después de la sesión</h3><ul><li>Compara las operaciones del día con lo que la estrategia debía hacer.</li><li>Registra todo en tu app de track record.</li><li>Revisa el Output de NinjaTrader: los logs te dicen por qué entró o salió cada bot.</li></ul><h3>Cuándo intervenir</h3><p>Casi nunca. Apagar un bot después de una pérdida es la forma más común de destruir un sistema rentable. Solo se interviene por fallas técnicas o si la estrategia sale de los rangos de su Montecarlo.</p>",
+    "videoUrl": null,
+    "orden": 4,
+    "categoria": "03 · NinjaTrader 8 y el portafolio comunitario",
+    "publicado": true
   },
-
   {
-    titulo: 'Métricas Clave de la Estrategia',
-    categoria: 'Gestion de Riesgo',
-    orden: 3,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'Las estadísticas que debes conocer de tu sistema: win rate, ratio R, profit factor, drawdown esperado. Los números que determinan si tu sistema es rentable.',
-    contenido: `<h2>Las métricas del trader profesional</h2>
-
-<p>Un trader profesional no dice "creo que mi sistema funciona". Lo demuestra con números. Estas son las métricas que debes llevar de cada período de operativa.</p>
-
-<h3>Win Rate</h3>
-<p>Porcentaje de operaciones ganadoras sobre el total.</p>
-<p><em>Ejemplo: 60 ganadoras de 100 = 60% win rate</em></p>
-<p>⚠️ Un win rate alto no garantiza rentabilidad. Depende del ratio R.</p>
-
-<h3>Ratio Riesgo/Beneficio (R)</h3>
-<p>Cuánto ganas en promedio vs cuánto pierdes en promedio.</p>
-<ul>
-  <li><strong>1R:</strong> ganas lo mismo que arriesgas</li>
-  <li><strong>2R:</strong> ganas el doble de lo que arriesgas</li>
-  <li><strong>1.5R:</strong> con un 50% de win rate ya eres rentable</li>
-</ul>
-
-<h3>Profit Factor</h3>
-<p>Ganancias brutas totales / Pérdidas brutas totales</p>
-<ul>
-  <li><strong>Menos de 1.0:</strong> sistema perdedor</li>
-  <li><strong>1.0 - 1.5:</strong> sistema marginal</li>
-  <li><strong>1.5 - 2.0:</strong> sistema sólido</li>
-  <li><strong>Más de 2.0:</strong> sistema excelente</li>
-</ul>
-
-<h3>Drawdown máximo</h3>
-<p>La caída máxima desde un pico hasta un valle en el equity curve. Es normal que ocurra — un sistema sin drawdown no existe. Lo que importa es que sea <strong>recuperable y predecible</strong>.</p>
-
-<h3>Expectativa matemática</h3>
-<p><em>Expectativa = (Win Rate × Ganancia promedio) - (Loss Rate × Pérdida promedio)</em></p>
-<p>Si la expectativa es positiva, el sistema es matemáticamente rentable en el largo plazo.</p>
-
-<h3>Tu dashboard de métricas</h3>
-<p>Todas estas métricas las puedes ver en tiempo real en la sección <strong>Track Record</strong> de esta plataforma, donde registras cada operación.</p>`,
+    "titulo": "Configurar tu bóveda de investigación",
+    "descripcion": "Organiza Obsidian como laboratorio: ideas, tesis, backtests y diario de trading enlazados entre sí.",
+    "contenido": "<h2>Un laboratorio, no una libreta</h2><p>Obsidian guarda notas en texto plano y las enlaza entre sí. En seis meses vas a tener decenas de ideas y backtests; sin orden, repetirás pruebas que ya descartaste.</p><h3>Estructura recomendada</h3><ul><li><strong>00-Ideas</strong> — cada idea de estrategia, en una línea, antes de programarla.</li><li><strong>10-Estrategias</strong> — una nota por estrategia con su tesis (siguiente lección).</li><li><strong>20-Backtests</strong> — una nota por corrida: fecha, parámetros, métricas y conclusión.</li><li><strong>30-Diario</strong> — lo que pasó cada semana con el portafolio en real.</li><li><strong>90-Descartadas</strong> — las ideas que murieron y por qué. Es la carpeta más valiosa.</li></ul><h3>Enlázalo todo</h3><p>Usa <code>[[nombre de la nota]]</code> para conectar cada backtest con su estrategia. La vista de grafo te mostrará qué ideas generaron más trabajo.</p>",
+    "videoUrl": null,
+    "orden": 1,
+    "categoria": "04 · Obsidian: tu laboratorio quant",
+    "publicado": true
   },
-
   {
-    titulo: 'Cálculo del Tamaño de Posición',
-    categoria: 'Gestion de Riesgo',
-    orden: 4,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'Aprende a calcular exactamente cuántos contratos de MNQ operar en función de tu riesgo definido y el stop loss de la señal.',
-    contenido: `<h2>Position Sizing: la fórmula</h2>
-
-<p>El tamaño de posición no es una decisión arbitraria. Es el resultado de una fórmula matemática que parte de tu riesgo definido.</p>
-
-<h3>La fórmula</h3>
-<pre style="background:#0d0d0d;padding:1rem;border-radius:8px;color:#C9A84C">
-Contratos = Riesgo en $ / (Stop en puntos × Valor del punto)
-</pre>
-
-<h3>Valor del punto en MNQ</h3>
-<ul>
-  <li>Cada punto de MNQ = <strong>$0.50</strong></li>
-  <li>Cada tick de MNQ = <strong>$0.25</strong> (1 punto = 4 ticks)</li>
-</ul>
-
-<h3>Ejemplos prácticos</h3>
-
-<p><strong>Ejemplo 1:</strong> Cuenta de $5,000, riesgo 2% = $100, stop loss de 10 puntos</p>
-<pre style="background:#0d0d0d;padding:1rem;border-radius:8px;color:#f0ece4">
-Contratos = $100 / (10 puntos × $0.50) = $100 / $5 = 20 contratos MNQ
-</pre>
-
-<p><strong>Ejemplo 2:</strong> Cuenta fondeo 50K, riesgo $100, stop de 20 puntos</p>
-<pre style="background:#0d0d0d;padding:1rem;border-radius:8px;color:#f0ece4">
-Contratos = $100 / (20 × $0.50) = $100 / $10 = 10 contratos MNQ
-</pre>
-
-<h3>Regla de escalado</h3>
-<p>Si empiezas con <strong>1 contrato</strong> y tienes una cuenta pequeña ($2,000-$5,000), eso es perfectamente correcto. No te apresures a operar más contratos. Escala solo cuando:</p>
-<ul>
-  <li>Tu win rate sea estable por 60+ días</li>
-  <li>Tu drawdown no supere el 10% del capital</li>
-  <li>La fórmula lo indique matemáticamente</li>
-</ul>
-
-<h3>Regla de margen en futuros</h3>
-<p>Verifica siempre que tengas suficiente margen para la cantidad de contratos. En IBKR, el margen intradía del MNQ es aproximadamente <strong>$40-$50 por contrato</strong>.</p>`,
+    "titulo": "La plantilla de tesis de una estrategia",
+    "descripcion": "Escribe la tesis de cada estrategia antes de programarla: qué edge busca, por qué debería existir y qué no cumple.",
+    "contenido": "<h2>Primero la tesis, después el código</h2><p>Cada estrategia del portafolio tiene una tesis escrita. Copia esta plantilla en tu bóveda:</p><ol><li><strong>En una frase:</strong> qué hace la estrategia.</li><li><strong>El edge:</strong> por qué debería existir esa ventaja (comportamiento, estructura del mercado, estacionalidad).</li><li><strong>Especificación:</strong> instrumento, temporalidad, sesión, zona horaria, entrada, filtro, salida, stop.</li><li><strong>Métricas:</strong> las del Walk-Forward, no las del optimizador.</li><li><strong>Lo que no cumple:</strong> los criterios que la estrategia no pasa.</li></ol><blockquote style=\"border-left:3px solid #C9A84C;padding-left:1rem;color:#C9A84C;font-style:italic\">Si un dato incomoda, se publica igual. La sección «lo que no cumple» no es opcional.</blockquote>",
+    "videoUrl": null,
+    "orden": 2,
+    "categoria": "04 · Obsidian: tu laboratorio quant",
+    "publicado": true
   },
-
-  // ─── CAPÍTULO 5: PSICOLOGÍA DEL TRADER ───────────────────────────────────
-
   {
-    titulo: 'Dopamina del Proceso, No del Resultado',
-    categoria: 'Psicologia del Trader',
-    orden: 1,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'El cambio mental más importante: reprograma tu cerebro para sentir satisfacción al seguir el plan, no al ganar dinero. Aquí empieza la consistencia.',
-    contenido: `<h2>El problema de la dopamina mal calibrada</h2>
-
-<p>El 95% de los traders que fracasan no lo hacen por falta de un buen sistema. Fracasan porque su cerebro está programado para buscar dopamina en el lugar equivocado: en el dinero ganado.</p>
-
-<p>Cuando tu satisfacción viene de ganar dinero, tu cerebro te sabotea. Te hace:</p>
-<ul>
-  <li>Mover el stop loss para "darle más tiempo" a una posición perdedora</li>
-  <li>Cerrar anticipadamente una posición ganadora por miedo a perder la ganancia</li>
-  <li>Sobreoperar después de una pérdida para "recuperar"</li>
-  <li>Aumentar el tamaño después de una racha ganadora por exceso de confianza</li>
-</ul>
-
-<h3>La reprogramación</h3>
-<p>El objetivo es simple pero profundo: <strong>sentir satisfacción al seguir el plan, independientemente del resultado de la operación</strong>.</p>
-
-<p>Esto no es motivación. Es neurología aplicada al trading.</p>
-
-<h3>El ejercicio de reprogramación</h3>
-<p>Al final de cada día de operativa, hazte esta única pregunta:</p>
-<blockquote style="border-left:3px solid #22c55e;padding-left:1rem;color:#f0ece4;font-size:1.1rem">
-  ¿Seguí mi plan al 100%?
-</blockquote>
-<p>Si la respuesta es <strong>sí</strong>: ese fue un <strong>buen día</strong> — sin importar si ganaste o perdiste dinero.</p>
-<p>Si la respuesta es <strong>no</strong>: ese fue un <strong>mal día</strong> — sin importar si terminaste en verde.</p>
-
-<h3>Por qué esto funciona</h3>
-<p>Si sigues tu plan consistentemente durante 100 operaciones, y tu sistema tiene expectativa positiva, la matemática garantiza que serás rentable. La única variable que puedes controlar al 100% es la ejecución del plan — no el resultado de cada trade.</p>`,
+    "titulo": "De discrecional a sistemático",
+    "descripcion": "Qué cambia cuando pasas de operar con tu criterio a operar reglas que un programa ejecuta y una estadística valida.",
+    "contenido": "<h2>El cambio de mentalidad</h2><p>El trader discrecional decide en el momento. El trader sistemático decide <strong>antes</strong>, con reglas escritas, y deja que el programa ejecute.</p><h3>Lo que ganas</h3><ul><li><strong>Medición:</strong> una regla se puede probar sobre 10 años de datos. Una intuición no.</li><li><strong>Consistencia:</strong> el bot no tiene miedo ni euforia.</li><li><strong>Escala:</strong> puedes operar varias estrategias a la vez sin mirar la pantalla.</li></ul><h3>Lo que tienes que aceptar</h3><ul><li>Habrá meses en pérdida. En el histórico del portafolio, alrededor de 1 de cada 3 meses cerró en negativo.</li><li>La mayoría de tus ideas no pasarán la validación. Eso es el proceso funcionando.</li><li>Nunca dirás que una estrategia \"funciona\": dirás que <em>habría funcionado</em> en esas condiciones.</li></ul>",
+    "videoUrl": null,
+    "orden": 1,
+    "categoria": "05 · Fundamentos cuantitativos",
+    "publicado": true
   },
-
   {
-    titulo: 'Desapego a los Resultados: Enfócate en tu Plan',
-    categoria: 'Psicologia del Trader',
-    orden: 2,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'Aprende a separar emocionalmente el resultado de cada operación de tu valor como trader. La pérdida no eres tú — es el mercado ejerciendo probabilidades.',
-    contenido: `<h2>El desapego como herramienta profesional</h2>
-
-<p>Un médico que pierde un paciente no deja de ejercer la medicina. Analiza qué pasó, aprende, y sigue ayudando a los demás pacientes con el mismo protocolo.</p>
-
-<p>Un trader profesional hace lo mismo: analiza las pérdidas, aprende, y sigue ejecutando el sistema sin cambiar las reglas por el resultado de un trade individual.</p>
-
-<h3>La paradoja del control</h3>
-<ul>
-  <li><strong>No puedes controlar:</strong> si el mercado va a tu favor o en tu contra</li>
-  <li><strong>Sí puedes controlar:</strong> si sigues las reglas de entrada, si colocas el stop, si respetas el target</li>
-</ul>
-<p>El desapego no es indiferencia. Es enfocar toda tu energía en lo que sí está bajo tu control.</p>
-
-<h3>La frase que cambia todo</h3>
-<blockquote style="border-left:3px solid #C9A84C;padding-left:1rem;color:#f0ece4;font-size:1.1rem">
-  "Si seguiste tu plan y perdiste, fue un buen día.<br>
-  Si no seguiste tu plan y ganaste, fue un mal día."
-</blockquote>
-
-<h3>Cómo manejar una racha de pérdidas</h3>
-<ol>
-  <li><strong>Detente y analiza:</strong> ¿seguiste el sistema en cada operación? Si sí, la racha es estadística normal.</li>
-  <li><strong>Reduce el tamaño:</strong> baja temporalmente a 1 contrato para reducir el impacto psicológico.</li>
-  <li><strong>No cambies el sistema:</strong> los peores errores ocurren cuando los traders modifican su sistema durante una racha perdedora.</li>
-  <li><strong>Vuelve a simulación:</strong> si tienes 3+ días con ejecución inconsistente, regresa a Sim101 hasta recuperar la mecánica.</li>
-</ol>
-
-<h3>Journaling emocional</h3>
-<p>Registra en el campo "Sentimiento" del Track Record cómo te sentiste en cada operación. Con el tiempo verás patrones: ¿en qué estados emocionales cometes más errores?</p>`,
+    "titulo": "Anatomía de un edge",
+    "descripcion": "Los cuatro tipos de ventaja estadística que usamos — momentum, reversión a la media, estacional y ruptura — con ejemplos del portafolio.",
+    "contenido": "<h2>¿De dónde sale la ventaja?</h2><p>Una estrategia rentable explota un comportamiento que se repite. En el portafolio usamos cuatro familias:</p><ul><li><strong>Momentum</strong> — lo que se mueve fuerte tiende a seguir moviéndose. <em>Ejemplo: Momentum de Apertura.</em></li><li><strong>Reversión a la media</strong> — tras un exceso, el precio tiende a volver. <em>Ejemplos: RSI2 Reversion, IBS Reversion.</em></li><li><strong>Estacional</strong> — ciertos momentos del calendario o del día se comportan distinto. <em>Ejemplos: Weekend Effect, Overnight Drift.</em></li><li><strong>Ruptura</strong> — cuando el precio rompe un rango, suele extenderse. <em>Ejemplo: ZigZag Breakout.</em></li></ul><h3>Por qué mezclarlas</h3><p>Cada familia gana en regímenes de mercado distintos. Por eso un portafolio con las cuatro sufre mucho menos que cualquiera de ellas sola (módulo 09).</p>",
+    "videoUrl": null,
+    "orden": 2,
+    "categoria": "05 · Fundamentos cuantitativos",
+    "publicado": true
   },
-
   {
-    titulo: 'Mentalidad de Probabilidades y Consistencia',
-    categoria: 'Psicologia del Trader',
-    orden: 3,
-    publicado: true,
-    videoUrl: VIDEO,
-    descripcion: 'El trading es un negocio de probabilidades a largo plazo, no de certezas en cada operación. Entiende por qué la consistencia supera siempre a la búsqueda del trade perfecto.',
-    contenido: `<h2>El trading es probabilístico, no determinístico</h2>
-
-<p>No existe el "trade perfecto" que siempre gana. No existe el sistema con 100% de win rate. El trading funciona como un casino: la ventaja no viene de cada mano individual, sino de jugar suficientes manos con ventaja matemática a tu favor.</p>
-
-<h3>La analogía del casino</h3>
-<p>El casino no sabe si la próxima mano de blackjack la ganará o la perderá. Pero sabe que después de 100,000 manos, habrá ganado porque tiene ventaja estadística del 0.5%.</p>
-<p>Tu sistema de trading, si tiene expectativa positiva, funciona igual. Necesitas:</p>
-<ul>
-  <li>Un sistema con ventaja estadística (esto lo construiste en los capítulos anteriores)</li>
-  <li>Suficientes operaciones para que la ventaja se materialice (mínimo 50-100)</li>
-  <li>Disciplina para no interrumpir el proceso antes de llegar a esa muestra</li>
-</ul>
-
-<h3>La consistencia antes que la rentabilidad</h3>
-<p>El objetivo del primer año no es ser millonario. El objetivo es demostrar, con datos, que puedes ejecutar un sistema de forma consistente durante 12 meses.</p>
-<p>Si logras eso, la rentabilidad es consecuencia matemática inevitable.</p>
-
-<h3>Checklist del trader consistente</h3>
-<ul>
-  <li>☐ Sigo mi plan en el 90%+ de las operaciones</li>
-  <li>☐ Registro cada operación en el Track Record con honestidad</li>
-  <li>☐ Reviso mis métricas semanalmente</li>
-  <li>☐ No cambio las reglas del sistema durante períodos de pérdida</li>
-  <li>☐ Tengo definida mi pérdida máxima diaria y la respeto siempre</li>
-  <li>☐ Mi satisfacción viene de seguir el proceso, no de los resultados</li>
-</ul>
-
-<h3>El destino del trader consistente</h3>
-<p>Los traders que llegan al año 2 y 3 siguiendo estos principios no son excepciones con suerte. Son la consecuencia lógica de aplicar matemáticas, disciplina y psicología correcta al mercado. Este curso te da las herramientas. La ejecución es tuya.</p>
-
-<blockquote style="border-left:3px solid #C9A84C;padding-left:1rem;color:#C9A84C;font-style:italic">
-  El mercado no tiene que darte nada. Tú tienes que tomar lo que el sistema te ofrece, cuando te lo ofrece, exactamente como está definido.
-</blockquote>`,
+    "titulo": "Las 6 métricas que importan",
+    "descripcion": "De las docenas que devuelve el Strategy Analyzer, solo seis deciden. Qué mide cada una y qué umbral buscar.",
+    "contenido": "<h2>Solo seis números deciden</h2><ul><li><strong>Net Profit</strong> — ganancia tras comisiones. Mayor a $0; es la menos importante de las importantes.</li><li><strong>Profit Factor</strong> — ganancias brutas ÷ pérdidas brutas. Mayor a 1.5 es bueno.</li><li><strong>Max Drawdown</strong> — la mayor caída desde un pico. Menos del 20% del capital. <strong>Es la métrica clave.</strong></li><li><strong>Win Rate</strong> — % de operaciones ganadoras. Mayor a 40%, acompañado de un PF alto.</li><li><strong>Sharpe Ratio</strong> — rentabilidad ajustada al riesgo. 0.8 aceptable, más de 1 decente.</li><li><strong>Avg Bars/Trade</strong> — duración media en velas. Al menos 2, obligatorio.</li></ul><h3>Muestra mínima: 200 operaciones</h3><p>Por debajo de eso cualquier conclusión es anécdota.</p><h3>El win rate engaña solo</h3><p>Un 90% de aciertos con riesgo/beneficio 1:13 pierde dinero; un 35% con 1:3 gana. Calcula el win rate de equilibrio: <code>riesgo ÷ (riesgo + beneficio)</code>. Con TP $150 y SL $2,000 necesitas 93% de aciertos solo para empatar.</p>",
+    "videoUrl": null,
+    "orden": 3,
+    "categoria": "05 · Fundamentos cuantitativos",
+    "publicado": true
   },
+  {
+    "titulo": "El proceso de 9 pasos",
+    "descripcion": "El camino que recorre toda estrategia, de la especificación a la cuenta real, sin saltarse la validación.",
+    "contenido": "<h2>De la idea al dinero real</h2><ol start=\"0\"><li><strong>Especificación</strong> — cerrar ambigüedades antes de escribir código.</li><li><strong>Idea y objetivo</strong> — qué edge se busca.</li><li><strong>Idea de estrategia</strong> — activo, temporalidad, indicadores, disparo y gestión de riesgo.</li><li><strong>Código + los 4 Mandamientos</strong> — si falla uno, se reconstruye.</li><li><strong>Optimización bruta</strong> — o descarte.</li><li><strong>Optimización fina</strong>.</li><li><strong>Elección de variante</strong> — la meseta, no el pico.</li><li><strong>Walk-Forward</strong> — pruebas de robustez.</li><li><strong>Montecarlo</strong> — peor caso y riesgo de ruina.</li><li><strong>Incubación</strong> en simulación con parámetros congelados, y recién entonces, <strong>real</strong>.</li></ol><blockquote style=\"border-left:3px solid #C9A84C;padding-left:1rem;color:#C9A84C;font-style:italic\">Descartar una idea en la optimización es un resultado exitoso del proceso, no un fracaso.</blockquote>",
+    "videoUrl": null,
+    "orden": 1,
+    "categoria": "06 · De la idea al código",
+    "publicado": true
+  },
+  {
+    "titulo": "Paso 0: la especificación",
+    "descripcion": "Las ocho preguntas que debes responder antes de programar. Cada una ha roto backtests reales.",
+    "contenido": "<h2>Ocho preguntas antes de la primera línea</h2><ol><li><strong>Instrumento y tick:</strong> MNQ = $0.50/tick · NQ = $5/tick · MES = $1.25/tick · ES = $12.50/tick.</li><li><strong>Sesión RTH o ETH:</strong> cambia por completo cualquier media móvil.</li><li><strong>Zona horaria del gráfico:</strong> si la lógica está en hora de Nueva York, el gráfico debe estar en Eastern.</li><li><strong>Precisión temporal:</strong> ¿la lógica necesita segundos? La serie principal no basta.</li><li><strong>Calculate:</strong><code>OnBarClose</code> por defecto, para evitar ver el futuro.</li><li><strong>Entradas por día:</strong> ¿una o varias?</li><li><strong>Cierre de sesión:</strong> ¿qué pasa con la posición abierta?</li><li><strong>Datos:</strong> ¿desde cuándo son fiables?</li></ol><p>Si no sabes la respuesta a una, no programes todavía: asumir mal cuesta horas de backtests inválidos.</p>",
+    "videoUrl": null,
+    "orden": 2,
+    "categoria": "06 · De la idea al código",
+    "publicado": true
+  },
+  {
+    "titulo": "Programar tu estrategia con Claude Code",
+    "descripcion": "Cómo pedirle a Claude Code una estrategia de NinjaScript que compile a la primera y cumpla las reglas innegociables.",
+    "contenido": "<h2>Tú defines la lógica, Claude escribe el C#</h2><h3>Un buen pedido incluye</h3><ul><li>Las respuestas del Paso 0.</li><li>La regla de entrada, el filtro, la salida y el stop, en lenguaje natural.</li><li>Las reglas innegociables (siguiente lista).</li></ul><h3>Reglas innegociables del código</h3><ul><li>Todo valor numérico como <strong>parámetro</strong> (NinjaScriptProperty). Si no es parámetro, no se puede optimizar.</li><li><strong>Stop loss obligatorio.</strong> El take profit es opcional.</li><li><strong>Logs</strong> en cada entrada, salida y P&amp;L. Sin logs no se puede depurar.</li><li><strong>Cierre de seguridad por horario</strong>, aunque la estrategia cierre sola al final de la sesión.</li><li>Comentarios que expliquen el <em>porqué</em>, no el qué.</li></ul><h3>El ciclo</h3><p>Pide el código → cópialo al NinjaScript Editor → compila (F5) → si hay error, pega el mensaje completo a Claude → repite hasta compilar → corre un primer backtest.</p>",
+    "videoUrl": null,
+    "orden": 3,
+    "categoria": "06 · De la idea al código",
+    "publicado": true
+  },
+  {
+    "titulo": "Los 4 Mandamientos del backtest fiable",
+    "descripcion": "El filtro que aplicamos después de programar y antes de optimizar. Si falla uno, la estrategia se reconstruye.",
+    "contenido": "<h2>Antes de optimizar, verifica los cuatro</h2><ol><li><strong>Stop loss de al menos 40 ticks.</strong> Con stops más ajustados, el simulador no sabe si el precio tocó primero el stop o el objetivo dentro de la vela: adivina.</li><li><strong>Avg Bars/Trade de al menos 2.</strong> Si la operación dura menos de 2 velas, el motor resuelve entrada y salida en la misma vela. Es la métrica más ignorada y la que más backtests invalida.</li><li><strong>Velas válidas.</strong> Datos sin huecos y una temporalidad coherente con la lógica.</li><li><strong>Entrada al open de la vela siguiente.</strong> La señal se evalúa al cierre y se ejecuta en la apertura siguiente. Entrar con información de la misma vela es hacer trampa al pasado.</li></ol><p>Repórtalos con el número concreto: <em>\"SL = 60 ticks ✅ · Avg bars/trade = 26,4 ✅\"</em>, nunca con un \"cumple\".</p><blockquote style=\"border-left:3px solid #C9A84C;padding-left:1rem;color:#C9A84C;font-style:italic\">Optimizar un backtest que miente solo produce una mentira más precisa.</blockquote>",
+    "videoUrl": null,
+    "orden": 1,
+    "categoria": "07 · Los 4 Mandamientos",
+    "publicado": true
+  },
+  {
+    "titulo": "Las 4 formas en que un backtest miente",
+    "descripcion": "Datos defectuosos, look-ahead, sobreoptimización y simulación imprecisa: cómo detectar cada una y qué concluye (y qué no) un backtest.",
+    "contenido": "<h2>Conoce al enemigo</h2><ol><li><strong>Datos defectuosos</strong> — huecos o errores en el histórico. Basura entra, basura sale.</li><li><strong>Look-ahead bias</strong> — la estrategia usa información que en tiempo real no tendría.</li><li><strong>Sobreoptimización</strong> — parámetros ajustados hasta que el pasado es perfecto. Se detecta con Walk-Forward.</li><li><strong>Simulación imprecisa</strong> — el motor desconoce el recorrido dentro de la vela. Lo cubren los Mandamientos 1 y 2.</li></ol><h3>Configuración de backtest recomendada</h3><ul><li>5 a 10 años de datos.</li><li>Comisiones siempre activadas y realistas.</li><li>Slippage de al menos 1 tick (el portafolio usa 2).</li></ul><h3>Una curva demasiado perfecta es sospechosa</h3><p>Buscamos una curva que suba, con caídas pequeñas y que se recuperen rápido. Si parece una línea recta, casi siempre es sobreoptimización.</p>",
+    "videoUrl": null,
+    "orden": 2,
+    "categoria": "07 · Los 4 Mandamientos",
+    "publicado": true
+  },
+  {
+    "titulo": "Optimización: la meseta, no el pico",
+    "descripcion": "Cómo usar el optimizador como brújula, qué parámetros optimizar y cómo elegir una variante robusta.",
+    "contenido": "<h2>El optimizador es una brújula, no un veredicto</h2><p>El optimizador encuentra los parámetros que mejor funcionaron en el pasado: los memoriza. Sus números no se creen; solo te dicen dónde buscar.</p><h3>El plan</h3><ol><li><strong>Fase bruta:</strong> rangos amplios y pasos grandes. Si ninguna zona da PF mayor a 1.3, se descarta.</li><li><strong>Fase fina:</strong> rangos estrechos alrededor de la zona prometedora.</li></ol><h3>Qué optimizar</h3><ul><li><strong>Sí:</strong> umbrales del disparo, parámetros de riesgo y periodos centrales de la tesis.</li><li><strong>No:</strong> horarios con razón estructural, número de contratos, lo que impone la lógica del edge.</li><li>Más de 4 o 5 parámetros a la vez y el Walk-Forward deja de ser confiable.</li></ul><h3>La meseta</h3><p>Elige un set de parámetros rodeado de vecinos con resultados parecidos. Un pico aislado entre resultados malos es ruido.</p>",
+    "videoUrl": null,
+    "orden": 1,
+    "categoria": "08 · Optimización, Walk-Forward y Montecarlo",
+    "publicado": true
+  },
+  {
+    "titulo": "Walk-Forward: el número que decide",
+    "descripcion": "Cómo validar en datos que la estrategia nunca vio, cómo configurar las ventanas y cómo leer el veredicto.",
+    "contenido": "<h2>La regla de oro</h2><p>Si el optimizador da PF 2.5 y el Walk-Forward da PF 1.1, la estrategia <strong>no es robusta</strong>. El número que decide es siempre el del Walk-Forward.</p><h3>Cómo funciona</h3><p>Divide los datos en ventanas. En cada una optimiza en un tramo (In-Sample) y prueba en el tramo siguiente, que nunca vio (Out-of-Sample). La cadena de tramos OOS es lo más parecido a haber operado en real.</p><h3>Configuración de referencia</h3><ul><li>Ventana de optimización: <strong>548 días</strong> (18 meses). Ventana de prueba: <strong>183 días</strong> (6 meses).</li><li>El In-Sample debe cubrir tendencia alcista, crisis y lateral, y generar al menos 200 operaciones.</li><li>Guarda al menos 12 meses finales sin tocar hasta el final.</li></ul><h3>Veredicto</h3><ul><li><strong>APTA:</strong> PF promedio OOS ≥ 1.3 · eficiencia (WFE) ≥ 50% · ≥ 75% de ventanas rentables · ≥ 200 operaciones OOS.</li><li><strong>REVISAR:</strong> PF OOS ≥ 1.0 y WFE ≥ 35%.</li><li><strong>DESCARTAR:</strong> el resto.</li></ul><p>Registra cada corrida en el Excel de registro de WFO del club.</p>",
+    "videoUrl": null,
+    "orden": 2,
+    "categoria": "08 · Optimización, Walk-Forward y Montecarlo",
+    "publicado": true
+  },
+  {
+    "titulo": "Montecarlo e incubación",
+    "descripcion": "Estima el peor drawdown posible reordenando tus operaciones y deja la estrategia en simulación antes de darle capital.",
+    "contenido": "<h2>El peor caso que todavía no viste</h2><p>El drawdown del backtest es solo <em>un</em> orden posible de las operaciones. Montecarlo las reordena miles de veces y te dice qué tan mal podría ir.</p><h3>Qué obtienes</h3><ul><li><strong>Drawdown peor caso</strong> (por ejemplo, el percentil 95).</li><li><strong>Riesgo de ruina</strong> para tu tamaño de cuenta.</li></ul><p>Si el peor caso supera el drawdown máximo permitido por tu cuenta fondeada, reduce el tamaño o no la operes.</p><h3>Incubación</h3><p>Con los parámetros <strong>congelados</strong>, la estrategia corre en simulación unas semanas. Solo pasa a real si se comporta dentro de lo esperado por el Walk-Forward y el Montecarlo.</p>",
+    "videoUrl": null,
+    "orden": 3,
+    "categoria": "08 · Optimización, Walk-Forward y Montecarlo",
+    "publicado": true
+  },
+  {
+    "titulo": "El poder de diversificar",
+    "descripcion": "Por qué seis estrategias juntas caen mucho menos que cualquiera por separado, con los números reales del portafolio.",
+    "contenido": "<h2>Juntas son otra cosa</h2><p>En el backtest del portafolio (enero 2015 – agosto 2026, MNQ, 1 contrato por estrategia):</p><ul><li>Si sumas los peores drawdowns de cada estrategia por separado: <strong>−$15,994</strong>.</li><li>El peor drawdown real del portafolio operando junto: <strong>−$4,099</strong>.</li><li>Una reducción del <strong>74.4%</strong>, porque sus peores días no coinciden.</li></ul><h3>Lo que cambia la mirada</h3><p>Por separado, ninguna estrategia supera un Neto/Drawdown de 9.2. Juntas, el portafolio llega a <strong>21.8</strong>. Una estrategia mediocre sola puede ser valiosa dentro de un portafolio si gana cuando las demás pierden.</p><p>Por eso una estrategia se evalúa con criterios de portafolio antes de descartarla: ZigZag Breakout estuvo fuera 24 horas y volvió cuando se midió su aporte al conjunto.</p>",
+    "videoUrl": null,
+    "orden": 1,
+    "categoria": "09 · Gestión de portafolio",
+    "publicado": true
+  },
+  {
+    "titulo": "Correlación, tamaño y reglas de la cuenta",
+    "descripcion": "Cómo correr varios bots sin que se pisen: correlación entre estrategias, tamaño de posición y límites de la cuenta fondeada.",
+    "contenido": "<h2>Varios bots, una sola cuenta</h2><h3>Correlación</h3><p>Dos estrategias muy correlacionadas son casi la misma apuesta dos veces. Mira sobre todo la correlación en los <strong>peores días</strong>: es la que define tu drawdown.</p><h3>Tamaño de posición</h3><ul><li>Empieza con 1 contrato MNQ por estrategia, como en el backtest.</li><li>Sube el tamaño solo cuando el drawdown real esté dentro del peor caso de Montecarlo.</li><li>El número de contratos no se optimiza: se decide con el riesgo.</li></ul><h3>Reglas de la cuenta fondeada</h3><p>Suma los drawdowns peor caso de las estrategias que corres a la vez y compáralo con el límite de tu cuenta. Deja margen: el pasado no garantiza el futuro.</p>",
+    "videoUrl": null,
+    "orden": 2,
+    "categoria": "09 · Gestión de portafolio",
+    "publicado": true
+  },
+  {
+    "titulo": "Tu estrategia al portafolio comunitario",
+    "descripcion": "El proyecto final: crea tu propia estrategia, valídala con el proceso completo y compártela con la comunidad.",
+    "contenido": "<h2>De alumno a aportante</h2><p>El proyecto final es tu propia estrategia, recorriendo el proceso completo. Si pasa el filtro, se suma al portafolio comunitario y todos los miembros se benefician.</p><h3>Lo que debes entregar</h3><ol><li><strong>La tesis</strong> en la plantilla del módulo 04, incluida la sección \"lo que no cumple\".</li><li><strong>El código</strong><code>.cs</code> que compile y cumpla las reglas innegociables.</li><li><strong>Los 4 Mandamientos</strong> reportados con sus números.</li><li><strong>El registro de Walk-Forward</strong> con el veredicto.</li><li><strong>El Montecarlo</strong> con el drawdown peor caso.</li><li><strong>Su aporte al portafolio:</strong> cómo cambian el drawdown y el Neto/DD del conjunto al sumarla.</li></ol><h3>Qué pasa si no pasa</h3><p>Documentas por qué se descartó y lo compartes igual. Una idea descartada con datos le ahorra semanas de trabajo a toda la comunidad.</p><blockquote style=\"border-left:3px solid #C9A84C;padding-left:1rem;color:#C9A84C;font-style:italic\">El portafolio crece con cada alumno. El tuyo puede ser el próximo bot.</blockquote>",
+    "videoUrl": null,
+    "orden": 1,
+    "categoria": "10 · Proyecto final",
+    "publicado": true
+  }
 ]
 
 async function main() {
   console.log('🎓 Seeding academia...')
-
-  // Clear existing lessons
   await prisma.leccionProgreso.deleteMany({})
   await prisma.leccion.deleteMany({})
-  console.log('  ✓ Lecciones anteriores eliminadas')
-
   for (const l of lecciones) {
     await prisma.leccion.create({ data: l })
-    console.log(`  ✓ ${l.categoria.padEnd(30)} → ${l.titulo}`)
+    console.log(`  ✓ ${l.categoria} → ${l.titulo}`)
   }
-
-  console.log(`\n✅ ${lecciones.length} lecciones creadas correctamente`)
+  console.log(`\n✅ ${lecciones.length} lecciones creadas`)
 }
 
-main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect())
+main().catch(console.error).finally(() => prisma.$disconnect())
