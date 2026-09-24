@@ -24,20 +24,18 @@ Monetiza vía Hotmart con 4 productos: academia, club, mensual, anual.
 | Ruta | Descripción |
 |------|-------------|
 | `academia` | Contenido educativo (acceso por plan) |
-| `acciones` | Acciones — señales diarias, research (Tauric), proyección TimesFM (`/api/forecast`) |
-| `agentes` | Agentes IA por estrategia (Peter Lynch, small caps, monitor) |
+| `acciones` | Recomendaciones del Agente Peter (`Opportunity.category = 'PETER_LYNCH'`) |
+| `agentes` | Solo admin — Agente Peter (Lynch 6/6 + forecast + Tauric); el alumno ve el resultado en Acciones |
 | `brokers` | Conexión y ejecución vía brokers (IBKR) |
 | `championship` | Competencia de trading entre usuarios |
 | `clientes` | Clientes KYC (solo admin) |
 | `comunidad` | Posts, likes, comentarios |
-| `conocimiento` | Base de conocimiento |
 | `futuros` | Futuros — mi cuenta, plan, track record y reportes |
 | `leads` | CRM interno (solo admin) |
 | `oportunidades` | Señales de trading |
 | `planes` | Gestión del plan de trading del usuario |
 | `profile` | Perfil, certificados, configuración |
 | `reportes` | Reportes semanales y mensuales |
-| `retiros` | Historial de retiros de cuenta |
 | `track-record` | Historial público de operaciones (`/track-record/[slug]`) |
 | `upgrade` | Página de upgrade de plan |
 | `vinces` | AI assistant de trading (OpenRouter) |
@@ -60,7 +58,6 @@ Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus
 |---|---|---|---|
 | 5:00am | `/api/screener/lynch?refresh=true` | Refresca cache Peter Lynch | No |
 | 9:00am ET | `/api/cron/morning-scan` | Escaneo matutino de señales de mercado; guarda oportunidades con confianza ≥70%. Invocado desde VPS (`scripts/morning-scan-cron.sh` — 14:00 UTC en cron.d) | No |
-| 8:36am | `/api/cron/daily-scanner` | Escaneo acciones via API externa (async polling) | No |
 | 8am-2pm c/30min | `/api/cron/bias-monitor` | Detecta flips de sesgo en ScanOpportunity | No |
 | c/15min, 24/7 | `/api/cron/p2p-binance` | Monitor P2P Binance USDT/USD Ecuador. Fetch en VPS (`scripts/p2p-binance-cron.sh` — Binance bloqueado desde Vercel) y POST al route. Alerta compra ≤0.995 / venta ≥1.005 (env `P2P_BUY_THRESHOLD`/`P2P_SELL_THRESHOLD`), cooldown 2h, log en `P2PPriceLog` | **Sí** |
 
@@ -75,7 +72,7 @@ Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus
 | `/p2p` | Landing de servicio P2P compra/venta USDT con Luis (CTA WhatsApp) |
 | `/maestria-futuros` | Landing del producto "Maestría en Futuros" (Hotmart anual) |
 | `/mentoria-integral` | Landing del producto "Mentoría Integral" (Hotmart mensual) |
-| `/unirse` | Landing principal de captación de leads con formulario y Vinces widget |
+| `/unirse` | Landing principal de captación de leads con formulario |
 | `/track-record/[slug]` | Track record público de un trader (marketing) |
 | `/video-semana/[id]` | Video semanal público con análisis en vivo |
 
@@ -88,6 +85,13 @@ Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus
 | `POST /api/vinces-wa` | Webhook del bot WhatsApp de Vinces (responde preguntas de leads) |
 
 ## Secciones retiradas (sep-2026)
+
+Dashboard: se retiraron el mapa GDELT y los enlaces de seguimiento en tiempo
+real; ahora muestra el portafolio comunitario (`components/PortafolioQuant`,
+datos en `lib/portafolio/portafolio.json`, generados desde Emporium Quant Desk).
+También se retiraron Conocimiento, Retiros, el popup de Vinces
+(`VincesWidget`, `/api/vinces-landing`), el Daily Scanner, Investigación,
+Proyección y Confirmación de Acciones, y los agentes Small Caps y Monitor.
 
 Flujo del Dinero, CFDs (`dashboard/analisis`, `/api/cfds`), Laboratorio Quant
 (Vibe-Trading), Opciones, los agentes Vanilla Long/Short e Intradía, y la

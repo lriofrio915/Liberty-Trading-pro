@@ -67,8 +67,9 @@ export async function POST(req: NextRequest) {
       stopLossPct  = 8,
       precioEntradaManual,
       precioObjetivoManual,
-      category     = 'OPERATOR',
     } = body
+    // Acciones solo publica recomendaciones del Agente Peter.
+    const category = 'PETER_LYNCH'
 
     if (!ticker) {
       return NextResponse.json({ error: 'ticker es requerido' }, { status: 400 })

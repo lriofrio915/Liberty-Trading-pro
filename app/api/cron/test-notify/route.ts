@@ -3,7 +3,6 @@ import {
   notifyMarketScan,
   notifyMorningAgents,
   notifyScanPricesClose,
-  notifyAccionesDailyScanner,
 } from '@/lib/notify-nexus'
 
 const CRON_SECRET = process.env.CRON_SECRET || ''
@@ -14,7 +13,7 @@ function validateAdmin(req: NextRequest) {
   return CRON_SECRET && (auth === CRON_SECRET || query === CRON_SECRET)
 }
 
-// GET /api/cron/test-notify?secret=XXX&event=all|market_scan|daily_scanner|...
+// GET /api/cron/test-notify?secret=XXX&event=all|market_scan|morning_agents|...
 export async function GET(req: NextRequest) {
   if (!validateAdmin(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -38,20 +37,9 @@ export async function GET(req: NextRequest) {
     sent.push('market_scan')
   }
 
-  if (event === 'daily_scanner' || event === 'all') {
-    await notifyAccionesDailyScanner([
-      { stock_code: 'AAPL', operation_advice: 'BUY',  sentiment_score: 82 },
-      { stock_code: 'TSLA', operation_advice: 'SELL', sentiment_score: 61 },
-      { stock_code: 'AMZN', operation_advice: 'BUY',  sentiment_score: 77 },
-      { stock_code: 'META', operation_advice: 'BUY',  sentiment_score: 74 },
-    ], ['AAPL', 'TSLA', 'AMZN', 'META'], true)
-    sent.push('daily_scanner')
-  }
-
   if (event === 'morning_agents' || event === 'all') {
     await notifyMorningAgents([
       { agent: 'Peter',        picks: [{ ticker: 'AAPL', direction: 'COMPRA', precioEntrada: 189.50 }, { ticker: 'NVDA', direction: 'COMPRA', precioEntrada: 875.30 }] },
-      { agent: 'SmallCap',     picks: [{ ticker: 'MARA', direction: 'COMPRA', precioEntrada: 22.10 }] },
     ])
     sent.push('morning_agents')
   }
@@ -70,7 +58,7 @@ export async function GET(req: NextRequest) {
     ok: true,
     sent,
     events_available: [
-      'market_scan', 'daily_scanner', 'morning_agents', 'scan_prices_close', 'all',
+      'market_scan', 'morning_agents', 'scan_prices_close', 'all',
     ],
   })
 }

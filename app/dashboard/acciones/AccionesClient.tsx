@@ -2,14 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
-import ResearchTab from './ResearchTab'
-import TauricResearchTab from './TauricResearchTab'
-import DailySignalsTab from './DailySignalsTab'
-
-const ForecastTab = dynamic(
-  () => import('./ForecastTab'),
-  { ssr: false },
-) as React.ComponentType<Record<string, never>>
 
 const OportunidadesClient = dynamic(
   () => import('@/app/dashboard/oportunidades/OportunidadesClient'),
@@ -20,8 +12,6 @@ const OportunidadesClient = dynamic(
   isAdmin: boolean
 }>
 
-type Tab = 'recomendaciones' | 'research' | 'tauric' | 'signals' | 'proyeccion'
-
 export default function AccionesClient({
   initialOpportunities,
   plan,
@@ -31,7 +21,6 @@ export default function AccionesClient({
   plan: string
   isAdmin: boolean
 }) {
-  const [tab, setTab] = useState<Tab>('recomendaciones')
   const [video, setVideo] = useState<{ youtubeUrl: string; title: string | null }>({ youtubeUrl: '', title: null })
   const [editMode, setEditMode] = useState(false)
   const [editUrl, setEditUrl] = useState('')
@@ -70,24 +59,15 @@ export default function AccionesClient({
     return match?.[1] || ''
   }
 
-  type ActiveOpp = { ticker: string; precioVenta: number | null; active: boolean }
-  const activeTickers = [...new Set(
-    (initialOpportunities as ActiveOpp[])
-      .filter(o => o.active && (o.precioVenta == null || o.precioVenta === 0))
-      .map(o => o.ticker)
-      .filter(Boolean),
-  )].join(',')
-
   return (
     <div className="animate-fadeIn">
       <h1 className="text-3xl font-black mb-2">
         <span className="gradient-gold">Acciones</span>
       </h1>
       <p className="text-[var(--text-secondary)] text-sm max-w-2xl mb-6">
-        Invertir en acciones significa comprar una participación en una empresa real.
-        Aquí encuentras recomendaciones profesionales basadas en análisis fundamental
-        y un screener avanzado con los criterios de Peter Lynch para filtrar las mejores
-        oportunidades del S&P 500 y NASDAQ 100.
+        Recomendaciones del Agente Peter: cada mañana analiza el S&P 500 y el NASDAQ 100
+        con los criterios de Peter Lynch, confirma la tendencia con un pronóstico de 30 días
+        y publica aquí solo las empresas que pasan todos los filtros.
       </p>
 
       {/* Video admin */}
@@ -144,67 +124,7 @@ export default function AccionesClient({
         )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-6 flex-wrap">
-        <button
-          onClick={() => setTab('signals')}
-          className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border ${
-            tab === 'signals'
-              ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
-              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
-          }`}
-        >
-          DAILY SCANNER
-        </button>
-        <button
-          onClick={() => setTab('recomendaciones')}
-          className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border ${
-            tab === 'recomendaciones'
-              ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
-              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
-          }`}
-        >
-          RECOMENDACIONES
-        </button>
-        <button
-          onClick={() => setTab('research')}
-          className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border ${
-            tab === 'research'
-              ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
-              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
-          }`}
-        >
-          INVESTIGACIÓN
-        </button>
-        <button
-          onClick={() => setTab('proyeccion')}
-          className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border ${
-            tab === 'proyeccion'
-              ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
-              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
-          }`}
-        >
-          PROYECCIÓN
-        </button>
-        <button
-          onClick={() => setTab('tauric')}
-          className={`px-4 py-2 text-xs font-mono tracking-widest rounded-lg border ${
-            tab === 'tauric'
-              ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
-              : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)]'
-          }`}
-        >
-          CONFIRMACIÓN
-        </button>
-      </div>
-
-      {tab === 'recomendaciones' && (
-        <OportunidadesClient initialOpportunities={initialOpportunities} plan={plan} isAdmin={isAdmin} />
-      )}
-      {tab === 'research' && <ResearchTab />}
-      {tab === 'proyeccion' && <ForecastTab />}
-      {tab === 'tauric' && <TauricResearchTab />}
-      {tab === 'signals' && <DailySignalsTab isAdmin={isAdmin} defaultTickers={activeTickers} />}
+      <OportunidadesClient initialOpportunities={initialOpportunities} plan={plan} isAdmin={isAdmin} />
     </div>
   )
 }

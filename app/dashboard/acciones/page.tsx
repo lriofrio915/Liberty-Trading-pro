@@ -25,16 +25,18 @@ export default async function AccionesPage() {
     userPlan = dbUser?.plan || 'FREE'
     const userLevel = PLAN_ORDER[userPlan] ?? 0
 
+    // Acciones muestra solo las recomendaciones del Agente Peter.
     const all = await prisma.opportunity.findMany({
       orderBy: { publishedAt: 'desc' },
-      ...(isAdmin ? {} : {
-        where: {
-          OR: [
-            { active: true },
-            { precioVenta: { not: null } },  // cerradas con venta documentada → track record
-          ],
-        },
-      }),
+      where: isAdmin
+        ? { category: 'PETER_LYNCH' }
+        : {
+            category: 'PETER_LYNCH',
+            OR: [
+              { active: true },
+              { precioVenta: { not: null } },  // cerradas con venta documentada → track record
+            ],
+          },
     })
 
     opportunities = isAdmin

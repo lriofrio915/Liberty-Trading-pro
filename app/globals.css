@@ -22,6 +22,10 @@
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-mono: 'DM Mono', monospace;
   --font-sans: 'Syne', system-ui, sans-serif;
+  /* Gráficas: acento y contexto validados (dataviz) contra #111111 */
+  --chart-accent: #AD8C3A;
+  --chart-context: #6b6460;
+  --chart-grid: #1e1e1e;
 }
 
 /* ─── Light mode ─── */
@@ -37,6 +41,9 @@ html.light {
   --border: #d8d3c8;
   --green: #00966e;
   --red: #d93535;
+  --chart-accent: #8C6B1F;
+  --chart-context: #a8a29b;
+  --chart-grid: #e4e0d6;
 }
 html.light body {
   background: var(--bg-primary);

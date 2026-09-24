@@ -4,7 +4,6 @@ import { redirect } from 'next/navigation'
 import SidebarNav from '@/components/Sidebar/SidebarNav'
 import MobileNav from '@/components/Sidebar/MobileNav'
 import TopBar from '@/components/Dashboard/TopBar'
-import VincesWidget from '@/components/VincesWidget/VincesWidget'
 import ThemeProvider from '@/components/ThemeProvider'
 import TrialBanner from '@/components/TrialBanner/TrialBanner'
 
@@ -61,7 +60,6 @@ export default async function DashboardLayout({
           </main>
         </div>
 
-        <VincesWidget />
       </div>
     </ThemeProvider>
   )
