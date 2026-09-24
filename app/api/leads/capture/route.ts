@@ -105,7 +105,7 @@ async function sendConfirmationEmail(name: string, email: string, plan: string) 
             '📈 Entender opciones y leer la cadena de opciones',
             '🎬 La historia de Luis: de profesor a operador financiero',
           ] : [
-            '🎬 Video clases: infraestructura con Claude Code + tu app de track record',
+            '🎬 Video clases: Claude Code + tu panel de negocio conectado a NinjaTrader',
             '🧠 Estrategias desde cero con Claude Code + NinjaTrader 8 + Obsidian',
             '💻 Portafolio comunitario: 6 bots listos para instalar',
             '🏦 Pase directo a cuenta fondeada de $200k en PJ Capital (valor $300)',

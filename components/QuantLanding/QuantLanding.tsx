@@ -25,10 +25,10 @@ const PILARES = [
     n: '01',
     tag: 'Video clases paso a paso',
     title: 'Monta la infraestructura de un negocio de trading',
-    desc: 'Te enseño a configurar Claude Code y a desplegar tu propio proyecto web para llevar el control de tu operativa: tu track record, en tu dominio, siempre actualizado.',
+    desc: 'Te enseño a configurar Claude Code y a construir tu propio panel web para administrar tu negocio de trading: conectado a tu cuenta en NinjaTrader, muestra solo ingresos, egresos y métricas.',
     bullets: [
       'Claude Code configurado desde cero',
-      'Deploy de tu propia app de track record',
+      'Tu panel de negocio conectado a NinjaTrader y Supabase',
       'Claude Code + NinjaTrader 8 + Obsidian para crear estrategias desde cero',
     ],
   },
@@ -60,13 +60,13 @@ const STACK = [
   { name: 'Claude Code', role: 'Tu desarrollador cuantitativo', desc: 'Escribe, depura y documenta el código de tus estrategias contigo.' },
   { name: 'NinjaTrader 8', role: 'Backtest y ejecución', desc: 'Strategy Analyzer, optimización, Walk-Forward y operación automática.' },
   { name: 'Obsidian', role: 'Tu laboratorio de ideas', desc: 'Cada hipótesis, backtest y decisión queda registrada y enlazada.' },
-  { name: 'Tu track record', role: 'La prueba de tu negocio', desc: 'Una app desplegada por ti que muestra tu operativa real.' },
+  { name: 'Tu panel de negocio', role: 'La administración de tu negocio', desc: 'Una web tuya, conectada a tu cuenta, con ingresos, egresos y riesgo en automático.' },
 ]
 
 const RUTA = [
   { when: 'Día 1', title: `Activa tu cuenta de ${ACCOUNT}`, desc: `Recibes tu pase directo de ${PROVIDER}, instalas NinjaTrader 8 y conectas la cuenta.` },
   { when: 'Semana 1', title: 'Pon a trabajar los bots', desc: 'Descargas el portafolio comunitario y lo instalas en tu plataforma.' },
-  { when: 'Semanas 2–8', title: 'Aprende y construye', desc: 'Video clases de infraestructura, Claude Code, Obsidian y desarrollo de estrategias.' },
+  { when: 'Semanas 2–8', title: 'Aprende y construye', desc: 'Tu panel de negocio conectado a NinjaTrader, Claude Code, Obsidian y desarrollo de estrategias.' },
   { when: 'Proyecto final', title: 'Tu estrategia al portafolio', desc: 'Creas una estrategia validada y la compartes: el portafolio de todos crece.' },
 ]
 
@@ -81,7 +81,7 @@ const ESTRATEGIAS = [
 
 const MODULOS = [
   { n: '01', title: 'Infraestructura del negocio', desc: 'Instalación y configuración de Claude Code, repositorio, variables de entorno y buenas prácticas de trabajo con IA.' },
-  { n: '02', title: 'Tu app de track record', desc: 'Con Claude Code creas y despliegas tu propio proyecto para registrar cada operación y medir tu negocio.' },
+  { n: '02', title: 'Tu panel de negocio de trading', desc: 'Creas con Claude Code una web conectada a Supabase y a tu cuenta de PJ Capital en NinjaTrader: ingresos, egresos y métricas en automático.' },
   { n: '03', title: 'NinjaTrader 8 + portafolio comunitario', desc: 'Instalación de la plataforma, conexión de tu cuenta fondeada e instalación de los 6 bots.' },
   { n: '04', title: 'Obsidian como laboratorio quant', desc: 'Tu bóveda de investigación: hipótesis, notas de backtest y decisiones enlazadas.' },
   { n: '05', title: 'Fundamentos cuantitativos', desc: 'De discrecional a sistemático. Anatomía de un edge: momentum, mean reversion, estacional, breakout.' },
@@ -99,7 +99,7 @@ const MODULOS = [
 const VALOR = [
   { item: 'Video clases: infraestructura + desarrollo de estrategias con IA', ref: '$800' },
   { item: 'Código de los 6 bots del portafolio comunitario', ref: '$1,500' },
-  { item: 'Plantilla y despliegue de tu app de track record', ref: '$300' },
+  { item: 'Tu panel de negocio conectado a NinjaTrader, paso a paso', ref: '$300' },
   { item: 'Comunidad y actualizaciones del portafolio de por vida', ref: '$600' },
   { item: `Pase directo a cuenta fondeada de ${ACCOUNT} (${PROVIDER})`, ref: FUNDING },
 ]
@@ -110,7 +110,7 @@ const COMPARATIVA: { label: string; club: Cell; curso: Cell; software: Cell; wor
   { label: 'Video clases paso a paso', club: true, curso: true, software: false, workshop: true },
   { label: 'Te enseña a programar con Claude Code (IA)*', club: true, curso: false, software: false, workshop: false },
   { label: 'Obsidian como laboratorio de investigación', club: true, curso: false, software: false, workshop: false },
-  { label: 'Tu propia app de track record desplegada', club: true, curso: false, software: false, workshop: false },
+  { label: 'Tu propio panel de negocio conectado a tu cuenta', club: true, curso: false, software: false, workshop: false },
   { label: 'Bots validados listos para instalar', club: '6 + creciendo', curso: false, software: 'Genéricos', workshop: false },
   { label: 'Cuenta fondeada incluida', club: `${ACCOUNT}`, curso: false, software: false, workshop: false },
   { label: 'Comunidad que comparte estrategias', club: true, curso: false, software: 'Foro', workshop: false },
