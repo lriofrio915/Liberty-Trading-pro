@@ -3,7 +3,6 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { getEffectiveAccess } from '@/lib/access'
 import { redirect } from 'next/navigation'
 import AcademiaClient from './AcademiaClient'
-import VideoSemanaWidget from '@/components/VideoSemana/VideoSemanaWidget'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 // Módulos del temario de trading algorítmico cuantitativo.
@@ -30,18 +29,9 @@ export default async function AcademiaPage() {
 
   let lecciones: any[] = []
   let completados: string[] = []
-  let videoSemana: any = null
 
   try {
-    const [dbUser, video] = await Promise.all([
-      prisma.user.findUnique({ where: { authId: user?.id }, }),
-      prisma.videoSemana.findFirst({
-        where: isAdmin ? {} : { publicado: true },
-        orderBy: { semana: 'desc' },
-      }),
-    ])
-
-    videoSemana = video
+    const dbUser = await prisma.user.findUnique({ where: { authId: user?.id } })
 
     const access = getEffectiveAccess({ plan: dbUser?.plan ?? 'FREE', trialEndsAt: dbUser?.trialEndsAt ?? null })
     if (!isAdmin && !access.canAccessClub) redirect('/dashboard/upgrade')
@@ -64,15 +54,6 @@ export default async function AcademiaPage() {
 
   return (
     <div>
-      <VideoSemanaWidget
-        initialVideo={videoSemana ? {
-          ...videoSemana,
-          semana: videoSemana.semana.toISOString(),
-          creadoEn: undefined,
-        } : null}
-        isAdmin={isAdmin}
-        appUrl={process.env.NEXT_PUBLIC_APP_URL ?? ''}
-      />
       <AcademiaClient
         initialLecciones={lecciones}
         completados={completados}

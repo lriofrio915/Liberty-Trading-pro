@@ -74,7 +74,6 @@ Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus
 | `/mentoria-integral` | Landing del producto "Mentoría Integral" (Hotmart mensual) |
 | `/unirse` | Landing principal de captación de leads con formulario |
 | `/track-record/[slug]` | Track record público de un trader (marketing) |
-| `/video-semana/[id]` | Video semanal público con análisis en vivo |
 
 ## APIs Notables
 

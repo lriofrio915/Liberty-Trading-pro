@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
-const SECTIONS = ['futuros', 'acciones', 'cfds', 'quant']
+const SECTIONS = ['academia', 'acciones']
 
 export async function GET(req: NextRequest) {
   const section = new URL(req.url).searchParams.get('section') || ''
