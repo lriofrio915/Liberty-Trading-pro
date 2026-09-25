@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import SectionVideo from '@/components/SectionVideo/SectionVideo'
 
 interface Leccion {
   id: string
@@ -188,6 +189,14 @@ export default function AcademiaClient({
           <button onClick={openNew} className="btn-gold py-2.5 px-5 rounded-lg text-sm">+ Nueva Leccion</button>
         )}
       </div>
+
+      {/* Video de bienvenida (lo sube el admin; si no hay, el alumno no ve nada) */}
+      <SectionVideo
+        section="academia"
+        isAdmin={isAdmin}
+        label="BIENVENIDA · EMPIEZA AQUÍ"
+        emptyText="Aún no has subido el video de bienvenida. Pega el enlace de YouTube con el botón de arriba."
+      />
 
       {/* Progress bar for students */}
       {!isAdmin && totalPublicadas > 0 && (
