@@ -20,8 +20,8 @@ export default function Footer() {
             <div className="headline text-2xl gradient-gold mb-1">{BRAND.name}</div>
             <div className="label-mono text-[10px] mb-3">{BRAND.role}</div>
             <p className="text-sm text-[var(--text-muted)] max-w-xs leading-relaxed mb-5">
-              Educación en trading, bots para futuros, intercambio cripto y asesoría de acciones
-              en EEUU. {BRAND.credential}.
+              Educación en trading, bots para futuros, intercambio cripto y formación en acciones
+              de EEUU. {BRAND.credential}.
             </p>
             {/* Socials */}
             <div className="flex items-center gap-3">
