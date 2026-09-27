@@ -80,7 +80,7 @@ siempre son dos frases.
 | Cambia tu vida financiera | Abre tu cuenta IBKR y compra tu primera acción |
 | Somos líderes en el mercado | Opero futuros NQ/MNQ desde hace X años |
 | Inversión segura | Toda inversión implica riesgo de pérdida |
-| Asesor registrado / autorizado | Asesor de inversiones (ver 07-legal) |
+| Asesor de inversiones / registrado / autorizado | Trader Cuantitativo (ver 07-legal) |
 | Gestionamos tu dinero | Te asesoro dentro de tu propia cuenta |
 | Oportunidad única, plazas limitadas | (escasez falsa: no usarla nunca) |
 

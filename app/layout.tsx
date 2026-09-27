@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   },
   description: DESCRIPTION,
   keywords:
-    'Luis Riofrio, asesor de inversiones, trading futuros, NinjaTrader 8, bots de trading, ' +
+    'Luis Riofrio, trader cuantitativo, trading futuros, NinjaTrader 8, bots de trading, ' +
     'pruebas de fondeo, comprar acciones EEUU, IBKR, Interactive Brokers, USDT Ecuador, ' +
     'intercambio cripto, NQ MNQ Nasdaq, trading algorítmico',
   alternates: { canonical: '/' },

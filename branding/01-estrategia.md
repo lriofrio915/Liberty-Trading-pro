@@ -15,7 +15,7 @@ Tu ventaja no es enseñar mejor. Es **ser auditable**.
 
 ## Posicionamiento
 
-> El único asesor en Ecuador que publica cada operación —ganadoras y perdedoras— y
+> El único trader en Ecuador que publica cada operación —ganadoras y perdedoras— y
 > te enseña a hacer lo mismo.
 
 Esta frase es la columna vertebral de todo. Cada pieza de comunicación debe poder
@@ -33,7 +33,7 @@ Marca madre = la persona. En servicios financieros la confianza se deposita en u
 nombre y una cara, no en un logo corporativo. Liberty queda como casa de productos.
 
 ```
-LUIS RIOFRIO · Asesor de Inversiones
+LUIS RIOFRIO · Trader Cuantitativo
 │
 ├── Liberty Club       Educación · suscripción mensual
 ├── Liberty Algo       Bots de trading para futuros · pago único

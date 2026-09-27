@@ -49,18 +49,20 @@ asesoría, y dilo explícitamente en cada comunicación.
 Si en algún momento pasas a operar directamente en cuentas de clientes con poder
 delegado, ya no es lo mismo y necesitas asesoría legal antes, no después.
 
-## El título "Asesor de Inversiones"
+## El título profesional: "Trader Cuantitativo"
 
-Se usa como descriptor profesional, y en ese uso es defendible. Lo que no puedes
-hacer es sugerir un registro o licencia que no tienes.
+**Decisión (2026-09-26):** Luis deja de usar "Asesor de Inversiones". Es un título
+regulado y no tiene la licencia, así que aunque se use como descriptor genera una
+exposición innecesaria. El descriptor oficial pasa a ser **Trader Cuantitativo**
+(`BRAND.role` en `lib/brand.ts`, logo wordmark, bios de redes).
 
 | Permitido | Prohibido |
 |---|---|
-| Asesor de Inversiones | Asesor de Inversiones Registrado |
-| Operador Financiero | Asesor Autorizado por la Superintendencia |
-| Trader de futuros | Registered Investment Advisor / RIA |
+| Trader Cuantitativo | Asesor de Inversiones (con o sin "Registrado") |
+| Trader de futuros | Asesor Autorizado por la Superintendencia |
+| Desarrollador de bots de trading | Registered Investment Advisor / RIA |
 | Mentor de trading | Corredor de bolsa / Agente de valores |
-| Gestor de portafolios en IBKR | Administrador de fondos |
+| Educador en trading algorítmico | Administrador de fondos / Gestor de portafolios |
 
 **No nombrar empresas empleadoras en la comunicación de marca.** Decisión tomada:
 mencionar dónde trabaja Luis abre un conflicto de interés con esa empresa y no aporta

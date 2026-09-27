@@ -37,7 +37,11 @@ export function wa(message: string): string {
 export const BRAND = {
   /** Marca madre: la persona. */
   name: 'Luis Riofrio',
-  role: 'Asesor de Inversiones',
+  /**
+   * No usar "Asesor de Inversiones": es un título regulado y Luis no tiene la
+   * licencia. Ver /branding/07-legal-y-disclaimers.md
+   */
+  role: 'Trader Cuantitativo',
   tagline: 'Transparencia como método',
   /**
    * Línea de autoridad de Luis. Mantener genérica y verificable: no nombrar

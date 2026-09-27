@@ -62,7 +62,7 @@ Es tu canal de cierre. Todo lo que se envía por aquí es marca.
 
 **Foto de perfil:** la foto 05 (avatar), recorte circular.
 **Nombre:** `Luis Riofrio` — no el nombre del negocio.
-**Descripción:** `Asesor de Inversiones · Ecuador`
+**Descripción:** `Trader Cuantitativo · Ecuador`
 
 **Links de la landing:** todos los CTA de WhatsApp llevan mensaje precargado
 específico del servicio, generado con `wa()` de `lib/brand.ts`. Esto te dice qué
@@ -100,7 +100,7 @@ Remitentes en uso: `soporte@libertytrading.pro` y `noreply@libertytrading.pro`.
 **Firma:**
 ```
 Luis Riofrio
-Asesor de Inversiones
+Trader Cuantitativo
 +593 99 669 1586 · libertytrading.pro
 ```
 
