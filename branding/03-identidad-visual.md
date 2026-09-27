@@ -26,7 +26,7 @@ tipográfico transmite más autoridad, y además escala mejor a un favicon de 32
 ```
         Luis Riofrio          ← Cormorant Garamond italic 300, degradado oro
         ──────────────        ← regla dorada al 55% de opacidad
-   ASESOR DE INVERSIONES      ← DM Mono, 7px de tracking, gris #8a8480
+   TRADER CUANTITATIVO        ← DM Mono, 7px de tracking, gris #8a8480
 ```
 
 **Área de respeto:** el alto de la letra "L" por cada lado.

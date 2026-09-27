@@ -27,7 +27,7 @@ Personal      ──●─────────  Corporativo
               (hablas en primera persona: "yo opero", "te enseño")
 ```
 
-**Primera persona siempre.** "Te asesoro", no "ofrecemos asesoría". No hay un "nosotros"
+**Primera persona siempre.** "Te enseño", no "ofrecemos formación". No hay un "nosotros"
 detrás — eres tú, y eso es una ventaja, no algo que disimular.
 
 ## Mensajes clave
@@ -80,8 +80,8 @@ siempre son dos frases.
 | Cambia tu vida financiera | Abre tu cuenta IBKR y compra tu primera acción |
 | Somos líderes en el mercado | Opero futuros NQ/MNQ desde hace X años |
 | Inversión segura | Toda inversión implica riesgo de pérdida |
-| Asesor registrado / autorizado | Asesor de inversiones (ver 07-legal) |
-| Gestionamos tu dinero | Te asesoro dentro de tu propia cuenta |
+| Asesor de inversiones / registrado / autorizado | Trader Cuantitativo (ver 07-legal) |
+| Gestionamos tu dinero / Te asesoro | Te enseño a invertir con tu propia cuenta |
 | Oportunidad única, plazas limitadas | (escasez falsa: no usarla nunca) |
 
 Las cuatro últimas no son preferencias de estilo. Son exposición legal.
@@ -94,7 +94,7 @@ Ver [07-legal-y-disclaimers.md](07-legal-y-disclaimers.md).
 | El producto educativo | Liberty Club | Nunca "el curso" — no es un curso |
 | Los bots | Liberty Algo, o "bots de trading para futuros" | No "robots", no "EAs" en público |
 | El cambio de cripto | Liberty Exchange, o "intercambio cripto" | "P2P" solo con quien ya sabe qué es |
-| La asesoría de acciones | Liberty Portfolio | Nunca "gestión de fondos" |
+| La formación en acciones | Liberty Portfolio | Nunca "gestión de fondos" ni "asesoría" |
 | Los alumnos | alumnos, o miembros | No "estudiantes", no "clientes" en contexto educativo |
 | El asistente IA | Vinces | Es un nombre propio, va con mayúscula |
 | El historial de operaciones | track record | En inglés, es el término del sector |
@@ -146,8 +146,8 @@ final. Te envío comprobante de la operación en cuanto se ejecute.
 Hola [nombre].
 
 Lo primero que quiero que tengas claro: el dinero nunca sale de tu cuenta. Abres
-tu propia cuenta en Interactive Brokers, yo te asesoro en las compras, y tú
-mantienes el control total.
+tu propia cuenta en Interactive Brokers, yo te enseño mi método, y tú tomas
+cada decisión y mantienes el control total.
 
 No cobro mensualidad. Mi comisión de éxito es del 20% de las ganancias que genere:
 gano cuando tú ganas, no antes.

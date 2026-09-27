@@ -134,7 +134,7 @@ export default function KycPage() {
             Tu información ha sido enviada correctamente. Luis revisará tu perfil
             y te contactará en breve para los próximos pasos.
           </p>
-          <p className="text-yellow-400 text-xs">Liberty Trading Pro — Asesoría de Inversión</p>
+          <p className="text-yellow-400 text-xs">Liberty Trading Pro — Formación en inversión</p>
         </div>
       </main>
     )
@@ -151,7 +151,7 @@ export default function KycPage() {
         <div className="text-center space-y-2">
           <p className="text-yellow-400 text-xs font-semibold uppercase tracking-widest">Liberty Trading Pro</p>
           <h1 className="text-2xl font-bold text-white">Formulario KYC</h1>
-          <p className="text-gray-500 text-sm">Asesoría de inversión — Conoce a tu cliente</p>
+          <p className="text-gray-500 text-sm">Programa de acciones EEUU — Conoce a tu alumno</p>
         </div>
 
         {/* Progress bar */}
@@ -222,8 +222,8 @@ export default function KycPage() {
               <Field label="Tier de interés" required>
                 <select className={selectCls} value={form.tier} onChange={e => set('tier', e.target.value)}>
                   <option value="">Selecciona...</option>
-                  <option value="A">Tier A — Gestión de portafolio (ideal USD 10,000)</option>
-                  <option value="B">Tier B — Ideas de inversión activas</option>
+                  <option value="A">Tier A — Acompañamiento educativo de cartera (ideal USD 10,000)</option>
+                  <option value="B">Tier B — Análisis de ideas de inversión</option>
                 </select>
               </Field>
               <Field label="Capital disponible para invertir (USD)">
@@ -353,8 +353,8 @@ export default function KycPage() {
                   checked={form.declaracion} onChange={e => set('declaracion', e.target.checked)} />
                 <span className="text-sm text-gray-300">
                   Declaro que toda la información proporcionada es verdadera y completa.
-                  Entiendo que estoy solicitando información sobre un servicio de asesoría
-                  y no garantías de rendimiento.
+                  Entiendo que estoy solicitando información sobre un programa educativo,
+                  que cada decisión de inversión es mía y que no hay garantías de rendimiento.
                 </span>
               </label>
             </>

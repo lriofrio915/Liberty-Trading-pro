@@ -37,7 +37,11 @@ export function wa(message: string): string {
 export const BRAND = {
   /** Marca madre: la persona. */
   name: 'Luis Riofrio',
-  role: 'Asesor de Inversiones',
+  /**
+   * No usar "Asesor de Inversiones": es un título regulado y Luis no tiene la
+   * licencia. Ver /branding/07-legal-y-disclaimers.md
+   */
+  role: 'Trader Cuantitativo',
   tagline: 'Transparencia como método',
   /**
    * Línea de autoridad de Luis. Mantener genérica y verificable: no nombrar
@@ -170,7 +174,7 @@ export const SERVICES = [
     name: BRAND.products.portfolio,
     category: 'Acciones EEUU',
     pitch:
-      'Te asesoro en la compra de acciones en la bolsa de EEUU dentro de tu propia cuenta IBKR.',
+      'Aprende a invertir en acciones de la bolsa de EEUU con tu propia cuenta IBKR: te enseño mi método y tú tomas cada decisión.',
     bullets: [
       'El capital nunca sale de tu cuenta',
       `Gano ${BRAND.price.successFee} cuando tú ganas`,
@@ -178,8 +182,8 @@ export const SERVICES = [
     ],
     price: `${BRAND.price.successFee} de éxito`,
     priceNote: 'Sin mensualidad',
-    cta: 'Agendar consulta',
-    href: wa('Hola Luis, me interesa la asesoría para comprar acciones en EEUU vía IBKR'),
+    cta: 'Agendar sesión',
+    href: wa('Hola Luis, me interesa aprender a invertir en acciones de EEUU vía IBKR'),
     hotmart: false,
   },
 ] as const

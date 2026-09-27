@@ -127,7 +127,7 @@ export default function ClientesClient({
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white">Clientes KYC</h1>
-        <p className="text-gray-500 text-sm mt-1">Gestión de formularios de asesoría de inversión</p>
+        <p className="text-gray-500 text-sm mt-1">Formularios del programa de acciones EEUU</p>
       </div>
 
       {/* Stats */}

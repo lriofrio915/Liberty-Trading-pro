@@ -15,7 +15,7 @@ Tu ventaja no es enseñar mejor. Es **ser auditable**.
 
 ## Posicionamiento
 
-> El único asesor en Ecuador que publica cada operación —ganadoras y perdedoras— y
+> El único trader en Ecuador que publica cada operación —ganadoras y perdedoras— y
 > te enseña a hacer lo mismo.
 
 Esta frase es la columna vertebral de todo. Cada pieza de comunicación debe poder
@@ -33,12 +33,12 @@ Marca madre = la persona. En servicios financieros la confianza se deposita en u
 nombre y una cara, no en un logo corporativo. Liberty queda como casa de productos.
 
 ```
-LUIS RIOFRIO · Asesor de Inversiones
+LUIS RIOFRIO · Trader Cuantitativo
 │
 ├── Liberty Club       Educación · suscripción mensual
 ├── Liberty Algo       Bots de trading para futuros · pago único
 ├── Liberty Exchange   Intercambio cripto ↔ fiat
-└── Liberty Portfolio  Asesoría de acciones en EEUU vía IBKR
+└── Liberty Portfolio  Formación en acciones de EEUU vía IBKR
 ```
 
 ### Reglas de nomenclatura
@@ -83,13 +83,13 @@ el mejor canal de entrada hacia los otros tres servicios.
 corriendo cada 15 minutos, así que compites con precio informado, no a ojo.
 
 ### 04 · Liberty Portfolio — Acciones EEUU
-**Qué es:** asesoría para la compra de acciones en la bolsa de EEUU dentro de la cuenta
+**Qué es:** formación para invertir en acciones de la bolsa de EEUU dentro de la cuenta
 IBKR del propio cliente.
 **Modelo:** sin mensualidad, 20% de comisión de éxito sobre las ganancias generadas.
 $10.000 es el capital ideal, pero se puede armar cartera o comprar acciones desde
 bastante menos — no es un mínimo.
 **El punto que más tranquiliza al cliente:** el capital nunca sale de su cuenta. Esto
-debe decirse siempre, primero, y en voz alta. Es la diferencia entre ser asesor y ser
+debe decirse siempre, primero, y en voz alta. Es la diferencia entre ser educador y ser
 custodio — y también la que te mantiene fuera del terreno regulatorio más pesado
 (ver [07-legal-y-disclaimers.md](07-legal-y-disclaimers.md)).
 

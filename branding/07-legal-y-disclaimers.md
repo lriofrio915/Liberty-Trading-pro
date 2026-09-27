@@ -25,11 +25,17 @@ descripción correcta es además la verdadera.
 Tú lo asesoras sobre qué comprar. El capital nunca sale de su cuenta ni pasa por la
 tuya. Cobras un porcentaje sobre las ganancias.
 
-**Cómo describirlo:**
+**Cómo describirlo (enfoque educativo, desde 2026-09-26):**
 
-> Te asesoro en la compra de acciones dentro de tu propia cuenta de Interactive
-> Brokers. El capital nunca sale de tu cuenta y mantienes el control total. Mi comisión
-> de éxito es del 20% de las ganancias generadas.
+> Aprende a invertir en acciones de la bolsa de EEUU con tu propia cuenta de
+> Interactive Brokers: te enseño mi método y tú tomas cada decisión. El capital
+> nunca sale de tu cuenta y mantienes el control total.
+
+**Punto abierto:** el texto ya es educativo, pero el cobro sigue siendo una comisión
+de éxito del 20% sobre las ganancias del alumno. Luis decidió mantenerla por ahora.
+Una comisión ligada al resultado de la cartera de otra persona puede interpretarse
+como remuneración por asesoría aunque el texto diga "formación". Es la primera
+pregunta para el abogado (ver Pendientes).
 
 **Cómo NO describirlo:**
 
@@ -43,24 +49,27 @@ tuya. Cobras un porcentaje sobre las ganancias.
 
 La distinción entre **asesoría** (recomiendas, el cliente decide y ejecuta en su
 cuenta) y **gestión discrecional** (operas por él con poder sobre su cuenta) es la
-línea regulatoria más importante de todo tu negocio. Mantente del lado de la
-asesoría, y dilo explícitamente en cada comunicación.
+línea regulatoria más importante de todo tu negocio. En la comunicación, quédate
+del lado educativo: enseñas un método y el alumno decide y ejecuta en su cuenta.
+Nunca "te asesoro", "te recomiendo comprar" ni "gestiono tu cartera".
 
 Si en algún momento pasas a operar directamente en cuentas de clientes con poder
 delegado, ya no es lo mismo y necesitas asesoría legal antes, no después.
 
-## El título "Asesor de Inversiones"
+## El título profesional: "Trader Cuantitativo"
 
-Se usa como descriptor profesional, y en ese uso es defendible. Lo que no puedes
-hacer es sugerir un registro o licencia que no tienes.
+**Decisión (2026-09-26):** Luis deja de usar "Asesor de Inversiones". Es un título
+regulado y no tiene la licencia, así que aunque se use como descriptor genera una
+exposición innecesaria. El descriptor oficial pasa a ser **Trader Cuantitativo**
+(`BRAND.role` en `lib/brand.ts`, logo wordmark, bios de redes).
 
 | Permitido | Prohibido |
 |---|---|
-| Asesor de Inversiones | Asesor de Inversiones Registrado |
-| Operador Financiero | Asesor Autorizado por la Superintendencia |
-| Trader de futuros | Registered Investment Advisor / RIA |
+| Trader Cuantitativo | Asesor de Inversiones (con o sin "Registrado") |
+| Trader de futuros | Asesor Autorizado por la Superintendencia |
+| Desarrollador de bots de trading | Registered Investment Advisor / RIA |
 | Mentor de trading | Corredor de bolsa / Agente de valores |
-| Gestor de portafolios en IBKR | Administrador de fondos |
+| Educador en trading algorítmico | Administrador de fondos / Gestor de portafolios |
 
 **No nombrar empresas empleadoras en la comunicación de marca.** Decisión tomada:
 mencionar dónde trabaja Luis abre un conflicto de interés con esa empresa y no aporta
@@ -162,7 +171,8 @@ diferencia parece semántica y no lo es.
 ## Pendientes
 
 - [ ] Consulta legal sobre si Liberty Portfolio requiere registro ante la
-      Superintendencia de Compañías, Valores y Seguros.
+      Superintendencia de Compañías, Valores y Seguros, en particular por la
+      comisión de éxito del 20% y el formulario KYC (pide capital y cuenta IBKR).
 - [x] Credenciales de empleador: resuelto — no se nombran empresas empleadoras
       (conflicto de interés).
 - [ ] Términos y condiciones del sitio (hoy no existen).
