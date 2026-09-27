@@ -3,7 +3,8 @@
 ## Qué es esto
 
 Plataforma SaaS de trading con 4 tiers (FREE, CLUB, PRO, PORTFOLIO).
-Combina educación, herramientas algorítmicas, comunidad y un AI assistant ("Vinces").
+Combina educación, herramientas algorítmicas y comunidad. La atención a leads y
+alumnos es personal de Luis: no se presenta ningún asistente o bot con nombre propio.
 Monetiza vía Hotmart con 4 productos: academia, club, mensual, anual.
 
 ## Stack
@@ -38,7 +39,6 @@ Monetiza vía Hotmart con 4 productos: academia, club, mensual, anual.
 | `reportes` | Reportes semanales y mensuales |
 | `track-record` | Historial público de operaciones (`/track-record/[slug]`) |
 | `upgrade` | Página de upgrade de plan |
-| `vinces` | AI assistant de trading (OpenRouter) |
 
 ## Planes de usuario
 
@@ -81,15 +81,17 @@ Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus
 |----------|-------------|
 | `GET /api/benchmark` | Series históricas de S&P 500 y NASDAQ normalizadas. Params: `desde`, `hasta`. Cache 1h. |
 | `POST /api/webhook/hotmart` | Recibe eventos de pago Hotmart y actualiza el plan del usuario |
-| `POST /api/vinces-wa` | Webhook del bot WhatsApp de Vinces (responde preguntas de leads) |
 
 ## Secciones retiradas (sep-2026)
 
 Dashboard: se retiraron el mapa GDELT y los enlaces de seguimiento en tiempo
 real; ahora muestra el portafolio comunitario (`components/PortafolioQuant`,
 datos en `lib/portafolio/portafolio.json`, generados desde Emporium Quant Desk).
-También se retiraron Conocimiento, Retiros, el popup de Vinces
-(`VincesWidget`, `/api/vinces-landing`), el Daily Scanner, Investigación,
+También se retiraron Conocimiento, Retiros, todo Vinces (el popup
+`VincesWidget` y `/api/vinces-landing`, y en sep-2026 el chat `dashboard/vinces` +
+`/api/vinces`: Luis atiende en persona y no quiere un bot con nombre; el modelo
+Prisma `VincesConversation` y los campos `vincesAnalysis`/`vincesNotes` quedan en
+la BD sin uso), el Daily Scanner, Investigación,
 Proyección y Confirmación de Acciones, y los agentes Small Caps y Monitor.
 
 Flujo del Dinero, CFDs (`dashboard/analisis`, `/api/cfds`), Laboratorio Quant

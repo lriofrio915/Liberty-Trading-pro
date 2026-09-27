@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       .join('\n')
 
     const prompt = sanitize(
-      `Eres Vinces, coach de trading experto. Analiza el siguiente reporte de operativa del periodo: ${periodLabel}\n\n` +
+      `Eres un coach de trading experto. Analiza el siguiente reporte de operativa del periodo: ${periodLabel}\n\n` +
       `METRICAS DEL PERIODO:\n` +
       `- Total operaciones: ${stats.total}\n` +
       `- Ganadoras: ${stats.wins} | Perdedoras: ${stats.losses} | BE: ${stats.breakevens}\n` +

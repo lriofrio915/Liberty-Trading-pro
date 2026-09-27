@@ -96,7 +96,7 @@ Ver [07-legal-y-disclaimers.md](07-legal-y-disclaimers.md).
 | El cambio de cripto | Liberty Exchange, o "intercambio cripto" | "P2P" solo con quien ya sabe qué es |
 | La formación en acciones | Liberty Portfolio | Nunca "gestión de fondos" ni "asesoría" |
 | Los alumnos | alumnos, o miembros | No "estudiantes", no "clientes" en contexto educativo |
-| El asistente IA | Vinces | Es un nombre propio, va con mayúscula |
+| La atención a interesados | "te escribo yo", "Luis" | Nunca un bot o asistente con nombre propio: el trato es personal de Luis |
 | El historial de operaciones | track record | En inglés, es el término del sector |
 | Las operaciones | operaciones, o trades | Ambas valen |
 | La suscripción | suscripción, membresía | No "plan premium", no "VIP" |
