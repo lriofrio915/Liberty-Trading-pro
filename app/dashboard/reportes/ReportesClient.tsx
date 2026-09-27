@@ -349,7 +349,7 @@ export default function ReportesClient() {
       </table>
 
       ${analysis ? `
-        <div class="section-title">Análisis Vinces AI</div>
+        <div class="section-title">Análisis con IA</div>
         <div class="analysis">${analysis
           .split('\n\n')
           .map(p => `<p style="margin-bottom:10px">${p.replace(/\n/g, '<br/>')}</p>`)
@@ -594,7 +594,7 @@ export default function ReportesClient() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <div className="label-mono text-[9px] text-[var(--gold)] mb-0.5">ANÁLISIS CON IA</div>
-                <div className="text-xs text-[var(--text-muted)]">Vinces analiza tu operativa del período y te da feedback concreto</div>
+                <div className="text-xs text-[var(--text-muted)]">Análisis automático de tu operativa del período con feedback concreto</div>
               </div>
               {!analysis && (
                 <button
@@ -631,7 +631,7 @@ export default function ReportesClient() {
 
             {!analysis && !aiLoading && (
               <div className="text-center py-6 text-[var(--text-muted)] text-xs">
-                Haz clic en &quot;Generar análisis&quot; para que Vinces revise tu operativa
+                Haz clic en &quot;Generar análisis&quot; para revisar tu operativa
               </div>
             )}
           </div>
