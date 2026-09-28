@@ -5,7 +5,7 @@
 Plataforma SaaS de trading con 4 tiers (FREE, CLUB, PRO, PORTFOLIO).
 Combina educación, herramientas algorítmicas y comunidad. La atención a leads y
 alumnos es personal de Luis: no se presenta ningún asistente o bot con nombre propio.
-Monetiza vía Hotmart con 4 productos: academia, club, mensual, anual.
+Producto de pago vigente: **Liberty Trading Club**, $1,500 pago único (ver `lib/brand.ts` y `branding/`). Los productos Hotmart históricos (academia, mensual, anual) están retirados, pero el webhook aún los reconoce.
 
 ## Stack
 
@@ -70,9 +70,8 @@ Todos requieren `CRON_SECRET` en el header. Notificaciones via `lib/notify-nexus
 |------|-------------|
 | `/p/[id]` | Vista pública de un post de comunidad (compartir en redes) |
 | `/p2p` | Landing de servicio P2P compra/venta USDT con Luis (CTA WhatsApp) |
-| `/maestria-futuros` | Landing del producto "Maestría en Futuros" (Hotmart anual) |
-| `/mentoria-integral` | Landing del producto "Mentoría Integral" (Hotmart mensual) |
-| `/unirse` | Landing principal de captación de leads con formulario |
+| `/` y `/liberty-quant` | Landing de venta de Liberty Trading Club (`components/QuantLanding`) |
+| `/unirse` | Curso gratis: captación de leads con formulario |
 | `/track-record/[slug]` | Track record público de un trader (marketing) |
 
 ## APIs Notables

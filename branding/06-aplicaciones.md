@@ -4,38 +4,27 @@ Cómo se aplica la marca en cada canal.
 
 ## Web — landing principal (`/`)
 
-Estructura de cinco secciones. Se rediseñó desde siete porque el visitante abandonaba
-antes de llegar al precio.
+La home vende un solo producto: **Liberty Trading Club** ($1,500, pago único). Es
+`components/QuantLanding/QuantLanding.tsx`; `/liberty-quant` muestra la misma landing.
+Exchange y Portfolio no están en la home: se llega por `/p2p` y por WhatsApp.
 
-| # | Sección | Función | Archivo |
-|---|---|---|---|
-| 1 | Hero | Quién eres + foto + 3 KPIs en vivo + 2 CTAs | `components/Hero/Hero.tsx` |
-| 2 | Servicios | Las cuatro tarjetas, cada una con su CTA | `app/page.tsx` |
-| 3 | Prueba | Foto + credenciales + cita + track record en vivo | `app/page.tsx` |
-| 4 | Precio | Plan mensual + bloque Liberty Portfolio | `components/Pricing/Pricing.tsx` |
-| 5 | Cierre | FAQ (3) + CTA a WhatsApp + disclaimer | `app/page.tsx` |
+Mientras `NEXT_PUBLIC_HOTMART_LINK_QUANT` esté vacío, el CTA de compra cae a
+WhatsApp con mensaje precargado.
 
 **Regla de copy:** ninguna sección supera dos frases de texto corrido. Lo demás son
 bullets de una línea o datos.
 
-**Objetivo de longitud:** la página completa debe caber en unas cuatro pantallas de
-1080px. Si crece más, hay que recortar, no comprimir la tipografía.
-
-**Punto de verdad de la página:** el bloque de track record. Todo lo anterior sirve
-para llevar al visitante hasta ahí; todo lo posterior asume que ya lo vio.
+**Punto de verdad de la página:** el bloque de track record y el histórico del
+portafolio. Todo lo anterior sirve para llevar al visitante hasta ahí.
 
 ## Web — otras páginas públicas
 
 | Ruta | Estado |
 |---|---|
+| `/unirse` | Curso gratis, imán de leads. **Fuera del sistema visual**: hex hardcodeados, Georgia en vez de Cormorant, sin Navbar/Footer compartidos |
 | `/p2p` | Coherente con el sistema. Destino del CTA de Liberty Exchange |
 | `/track-record/[slug]` | Coherente. Es la prueba pública |
-| `/unirse` | **Fuera del sistema visual** — hex hardcodeados, Georgia en vez de Cormorant, sin Navbar/Footer compartidos |
-| `/maestria-futuros` | Coherente pero duplicado con `/mentoria-integral` |
-| `/mentoria-integral` | Coherente pero duplicado con `/maestria-futuros` |
-
-Las tres últimas quedan fuera de este trabajo. Ver la deuda técnica en
-[README.md](README.md).
+| `/p/[id]` | Post público de la comunidad |
 
 ## Compartir en redes (Open Graph)
 
@@ -48,9 +37,8 @@ principal es WhatsApp es una pérdida directa de clics.
 | Home `/` | `app/opengraph-image.tsx` — generada, 1200×630 |
 | Post de comunidad | `app/p/[id]/opengraph-image.tsx` |
 | Track record | `app/track-record/[slug]/opengraph-image.tsx` |
-| Video semanal | `app/video-semana/[id]/opengraph-image.tsx` |
 
-Las cuatro comparten el mismo lenguaje: fondo `#080808`, acento oro, tipografía serif
+Las tres comparten el mismo lenguaje: fondo `#080808`, acento oro, tipografía serif
 para el nombre y monoespaciada para los datos.
 
 `metadataBase` está definido en `app/layout.tsx` a partir de `BRAND.url`, así que las
@@ -84,14 +72,18 @@ plataforma.
 | Campo | Valor |
 |---|---|
 | Nombre del productor | Luis Riofrio |
-| Nombre del producto (mensual) | Liberty Club — Educación en Trading |
+| Nombre del producto | Liberty Trading Club |
+| Precio | $1,500, pago único |
 | Imagen de portada | Foto 04 (OG) con el wordmark superpuesto |
 | Avatar | Monograma LR o foto 05 |
 | Descripción | Mensajes clave 1, 2 y 4 de la identidad verbal |
 
-**Pendiente:** crear el producto de Liberty Algo y pegar su link en
-`NEXT_PUBLIC_HOTMART_LINK_BOTS`. Mientras esté vacío, el CTA de la tarjeta de bots
-cae automáticamente a WhatsApp — no queda roto, pero tampoco cobra solo.
+**Pendiente:** crear el producto de $1,500 y pegar su link en
+`NEXT_PUBLIC_HOTMART_LINK_QUANT` (Vercel). Mientras esté vacío, el CTA cae a
+WhatsApp: no queda roto, pero tampoco cobra solo.
+
+Los productos mensual y anual antiguos están retirados. `BRAND.hotmart.mensual`
+se conserva solo por el webhook histórico.
 
 ## Email
 
@@ -118,21 +110,36 @@ medioambiente antes de imprimir".
 
 ## Redes sociales
 
-**Handles:** `@libertytradingclub` en Instagram y Facebook. Se mantienen pese a no
-coincidir con la nueva marca personal — cambiarlos costaría más audiencia de la que
-gana en coherencia. El nombre visible del perfil sí debe ser `Luis Riofrio`.
+| Cuenta | Uso | Nombre visible |
+|---|---|---|
+| FB página `facebook.com/luisriofrio.trader` | Marca profesional: reels, posts de trading, CTA al curso gratis | Luis Riofrío Trader Cuantitativo |
+| IG `@luisriofrioec` | Marca personal: reels y trading | Luis Riofrio |
+| FB página Liberty Trading Club + IG `@liberty_trading_club` | Cuentas del producto | Liberty Trading Club |
+| Perfil personal de FB (Luis Riofrio Lopez) | Personal; lo de trading se redirige a la página | — |
+
+Los handles del producto (`@liberty_trading_club`) se mantienen aunque no coincidan
+con la marca personal: cambiarlos costaría más audiencia de la que gana en coherencia.
+
+**Empleador:** puede aparecer en IG personal y en el perfil personal de FB, nunca en
+las cuentas del producto. Ver [07-legal-y-disclaimers.md](07-legal-y-disclaimers.md).
+
+**CTA de todo el contenido orgánico:** el curso gratis en `libertytrading.pro/unirse`.
 
 **Formato de post:**
 1. Dato o afirmación incómoda en la primera línea.
 2. Contexto en dos o tres líneas.
 3. Qué hacer con eso.
 
+**Reels:** vertical 9:16, subtítulos quemados, primera frase en los primeros 3
+segundos, cierre con el curso gratis. Si muestran cifras, el caption lleva el
+disclaimer corto de track record.
+
 **Publica una operación perdedora al menos una vez al mes.** Es lo más eficiente que
 puedes hacer por la marca: nadie que esté inflando resultados lo hace.
 
 ## Checklist antes de publicar cualquier pieza
 
-- [ ] ¿El nombre está bien escrito? (Luis Riofrio · Liberty Club, no "Liberty Trading Club Club")
+- [ ] ¿El nombre está bien escrito? (Luis Riofrio · Liberty Trading Club, no "Liberty Club" ni "Liberty Trading Pro")
 - [ ] ¿Hay alguna promesa de rentabilidad, explícita o insinuada?
 - [ ] Si muestra resultados, ¿lleva el disclaimer?
 - [ ] ¿Los titulares tienen menos de 6 palabras y ningún signo de exclamación?

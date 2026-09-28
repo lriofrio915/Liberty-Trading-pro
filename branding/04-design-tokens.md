@@ -110,14 +110,14 @@ No son tokens visuales, pero siguen la misma lógica de fuente única.
 | Export | Contenido |
 |---|---|
 | `BRAND.name` / `.role` / `.tagline` | Identidad |
-| `BRAND.products` | Los cuatro nombres Liberty |
-| `BRAND.legalName` | "Liberty Trading Club" — solo para contexto legal |
+| `BRAND.products` | Los tres nombres Liberty (`quant` = Liberty Trading Club) |
+| `BRAND.legalName` | "Liberty Trading Club" — nombre legal y del producto |
 | `BRAND.phone` / `.phoneDisplay` / `.email` | Contacto |
 | `BRAND.social` | Handles y URLs |
 | `BRAND.hotmart` | Links de checkout, con fallback por entorno |
-| `BRAND.price` | Precio mensual, fee de éxito, mínimo de portfolio |
+| `BRAND.price` | Precio del Club ($1,500), pase de fondeo, fee de éxito, capital de referencia de Portfolio |
 | `BRAND.photos` | Rutas de las fotos — hoy placeholders |
-| `SERVICES` | Los cuatro servicios con copy, bullets y CTA |
+| `SERVICES` | Los tres servicios con copy, bullets y CTA |
 | `RISK_DISCLAIMER` | Texto legal obligatorio |
 | `wa(mensaje)` | Constructor de links de WhatsApp |
 
@@ -129,8 +129,8 @@ apunta a una ruta de imagen directamente.
 | Variable | Efecto |
 |---|---|
 | `NEXT_PUBLIC_APP_URL` | Base de `metadataBase` y de las URLs canónicas |
-| `NEXT_PUBLIC_HOTMART_LINK_MENSUAL` | CTA de Liberty Club |
-| `NEXT_PUBLIC_HOTMART_LINK_BOTS` | CTA de Liberty Algo. **Si está vacío, cae a WhatsApp** |
+| `NEXT_PUBLIC_HOTMART_LINK_QUANT` | CTA de compra de Liberty Trading Club. **Si está vacío, cae a WhatsApp** |
+| `NEXT_PUBLIC_HOTMART_LINK_MENSUAL` | Obsoleto: suscripción retirada |
 
-Ese fallback es intencional: permite publicar la tarjeta de bots antes de que el
-producto exista en Hotmart, sin dejar un botón roto.
+Ese fallback es intencional: permite publicar la landing antes de que el producto
+exista en Hotmart, sin dejar un botón roto.

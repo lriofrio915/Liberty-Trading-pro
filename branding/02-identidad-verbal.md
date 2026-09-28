@@ -37,8 +37,10 @@ Orden de prioridad. Si solo cabe uno, es el primero.
 1. **Publico cada operación, incluidas las que pierdo.**
 2. **Opero con mi propio dinero antes de enseñarte nada.**
 3. **Tu capital nunca sale de tu cuenta.** (Liberty Portfolio)
-4. **$29 al mes para probar, cancelas cuando quieras.** (Liberty Club)
-5. **Cuatro servicios, un solo interlocutor.**
+4. **Código completo, no cajas negras.** (Liberty Trading Club: bots validados con
+   Walk-Forward y Montecarlo)
+5. **Empieza gratis.** (curso en `/unirse`: IBKR, acciones con Claude, opciones)
+6. **Un solo interlocutor: yo.** Sin bots ni asistentes con nombre propio.
 
 ## Titulares: cómo se construyen
 
@@ -91,44 +93,57 @@ Ver [07-legal-y-disclaimers.md](07-legal-y-disclaimers.md).
 
 | Concepto | Término correcto | Notas |
 |---|---|---|
-| El producto educativo | Liberty Club | Nunca "el curso" — no es un curso |
-| Los bots | Liberty Algo, o "bots de trading para futuros" | No "robots", no "EAs" en público |
+| El producto educativo | Liberty Trading Club, o "el Club" | No "Liberty Club" ni "Liberty Quant". "Curso" solo para el gratuito |
+| El imán de leads | el curso gratis | En `/unirse`. Es el único producto que se llama "curso" |
+| Los bots | "los 6 bots del portafolio comunitario", o "bots de trading para futuros" | No "robots", no "EAs" en público. "Liberty Algo" ya no existe |
+| El pase de fondeo | pase directo a cuenta fondeada de $200k (PJ Capital) | Nunca "te damos $200k" ni "capital garantizado" |
 | El cambio de cripto | Liberty Exchange, o "intercambio cripto" | "P2P" solo con quien ya sabe qué es |
 | La formación en acciones | Liberty Portfolio | Nunca "gestión de fondos" ni "asesoría" |
 | Los alumnos | alumnos, o miembros | No "estudiantes", no "clientes" en contexto educativo |
 | La atención a interesados | "te escribo yo", "Luis" | Nunca un bot o asistente con nombre propio: el trato es personal de Luis |
 | El historial de operaciones | track record | En inglés, es el término del sector |
 | Las operaciones | operaciones, o trades | Ambas valen |
-| La suscripción | suscripción, membresía | No "plan premium", no "VIP" |
+| El acceso al Club | pago único, acceso de por vida | No hay suscripción. No "plan premium", no "VIP" |
 
 ## Plantillas de WhatsApp
 
 WhatsApp es tu canal principal. Estas son las respuestas base — adáptalas, pero
 mantén la estructura: contexto breve, dato concreto, siguiente paso claro.
 
-### Consulta sobre Liberty Club
+### Consulta sobre Liberty Trading Club
 ```
 Hola [nombre], gracias por escribir.
 
-El Club son $29 al mes e incluye la formación completa (de cero hasta futuros
-NQ/MNQ), una mentoría 1:1 conmigo cada mes, y acceso a mi track record en vivo
-para que veas cómo opero de verdad.
+El Club es un pago único de $1,500 con acceso de por vida. Incluye las video
+clases (Claude Code, NinjaTrader 8 y Obsidian), los 6 bots del portafolio
+comunitario con su código completo, y un pase directo a una cuenta fondeada de
+$200k en PJ Capital que yo te compro.
 
-Cancelas cuando quieras desde Hotmart, sin penalización.
+Puedes ver cómo opero en mi track record en vivo: [link al track record]
 
-¿Vienes desde cero o ya has operado antes? Según eso te digo por dónde empezar.
+¿Ya operas futuros o vienes desde cero? Según eso te digo por dónde empezar.
 ```
 
-### Consulta sobre Liberty Algo
+### Consulta sobre los bots
 ```
 Hola [nombre].
 
-Los bots están hechos para futuros y funcionan tanto en cuenta real como en
-pruebas de fondeo — respetan los límites de drawdown de las mesas.
+Los bots no se venden por separado: son el portafolio comunitario del Club. Son
+6 bots para NinjaTrader 8, con código completo, validados con Walk-Forward y
+Montecarlo, y configurados para respetar los límites de drawdown de la mesa.
 
-Te paso los detalles: [instrumento, marco temporal, resultados documentados].
+Todo sistema automatizado puede generar pérdidas; los meses en negativo existen
+y están en el histórico.
 
-¿Es para cuenta propia o para pasar una prueba de fondeo? El setup cambia.
+¿Es para cuenta propia o para una cuenta fondeada? El setup cambia.
+```
+
+### Lead del curso gratis que aún no compra
+```
+Hola [nombre], vi que entraste al curso gratis.
+
+¿Pudiste abrir tu cuenta en Interactive Brokers? Si te trabaste en algún paso,
+dime en cuál y lo vemos.
 ```
 
 ### Consulta sobre Liberty Exchange
