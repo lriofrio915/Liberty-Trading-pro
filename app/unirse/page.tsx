@@ -260,9 +260,12 @@ export default function UnirsePage() {
       <nav className="sticky top-0 z-40 border-b px-4 py-3"
         style={{ background: 'rgba(8,8,8,0.95)', backdropFilter: 'blur(12px)', borderColor: 'rgba(255,255,255,0.07)' }}>
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center" aria-label="Liberty Trading Club — inicio">
-            <Image src={BRAND.logos.horizontal} alt="Liberty Trading Club" width={180} height={40}
-              className="h-9 w-auto" priority unoptimized />
+          <Link href="/" className="flex items-center gap-2.5" aria-label="Liberty Trading Club — inicio">
+            <Image src={BRAND.logos.isotipo} alt="" width={36} height={36} className="h-9 w-9" priority unoptimized />
+            <span className="flex flex-col leading-none">
+              <span className="headline text-xl gradient-gold">Liberty</span>
+              <span className="label-mono text-[8px] mt-0.5 text-[var(--text-primary)]">Trading Club</span>
+            </span>
           </Link>
           <div className="flex items-center gap-3">
             <a href={LUIS_WA} target="_blank" rel="noopener noreferrer"
