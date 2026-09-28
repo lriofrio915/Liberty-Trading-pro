@@ -23,6 +23,12 @@ lo que está mal es la publicación.
 | `assets/logo-wordmark.svg` | Logo principal — web, presentaciones, documentos |
 | `assets/logo-monograma.svg` | LR en caja — favicon, avatar, sello |
 | `assets/logo-liberty.svg` | Lockup secundario para los productos Liberty |
+| `assets/liberty-trading-club/` | Sistema de logos de Liberty Trading Club: isotipo, logotipo, horizontal y con respaldo, en 5 variantes de color (SVG con texto en trazos + `png/` al doble) |
+| `assets/liberty-trading-club/piezas/` | Piezas listas: post y portada de reel, historia, portadas de FB, avatar, tarjeta, certificado, portada de Hotmart |
+| `manual/Manual-de-marca-Liberty-Trading-Club.pdf` | Manual de marca del Club (20 páginas) |
+
+Para regenerar: `python branding/manual/src/logos.py` (logos), `python branding/manual/src/render.py` (PNGs y piezas),
+y el PDF imprimiendo `branding/manual/src/manual.html` con Chrome headless (`--print-to-pdf`).
 
 El favicon activo del sitio es `app/icon.svg` (misma pieza que el monograma,
 con tipografía del sistema para que no dependa de una fuente descargada).
