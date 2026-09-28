@@ -78,6 +78,9 @@ export const BRAND = {
     handle: '@liberty_trading_club',
     instagram: 'https://www.instagram.com/liberty_trading_club',
     facebook: 'https://www.facebook.com/share/18LE9Crx9i/',
+    /** Marca personal de Luis (página /luis). */
+    luisFacebook: 'https://www.facebook.com/luisriofrio.trader',
+    luisInstagram: 'https://www.instagram.com/luisriofrioec',
     /** Botones genéricos de WhatsApp: abren el chat con un mensaje pidiendo información. */
     whatsapp: wa('Hola Luis, quiero información sobre el Liberty Trading Club'),
   },

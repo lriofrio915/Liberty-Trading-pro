@@ -64,7 +64,7 @@ export default function OgImage() {
         </div>
 
         <div style={{ display: 'flex', gap: 14 }}>
-          {['Video clases', `${BRAND.price.fundingAccountLabel} cuenta fondeada`, 'Bots con código completo'].map((s) => (
+          {['Video clases', `Pase a cuenta fondeada de ${BRAND.price.fundingAccountLabel}`, 'Bots con código completo'].map((s) => (
             <div
               key={s}
               style={{

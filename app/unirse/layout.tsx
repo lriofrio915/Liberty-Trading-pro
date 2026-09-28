@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Curso gratuito de trading | Luis Riofrio',
+  title: 'Curso gratuito de trading',
   description:
     'Aprende gratis a abrir tu cuenta en Interactive Brokers, analizar acciones con Claude y entender opciones. Con Luis Riofrio, trader cuantitativo con track record público verificable.',
   keywords: 'curso gratis trading, Liberty Trading Club, IBKR, análisis de acciones, opciones, Luis Riofrio',
