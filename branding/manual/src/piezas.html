@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<link rel="stylesheet" href="brand.css">
+<style>
+  body { background: #000; }
+  .piece { position: relative; overflow: hidden; display: none; }
+  .piece.on { display: block; }
+  .abs { position: absolute; }
+</style></head>
+<body>
+<!-- Cada pieza se renderiza sola con ?p=<id>; render.py las captura una a una. -->
+
+<!-- Post de Instagram 1080x1080 -->
+<section class="piece noise grid-bg" id="ig-post" style="width:1080px;height:1080px;background-color:var(--ink)">
+  <div class="abs label" style="left:80px;top:84px;font-size:18px;color:var(--gold)">Transparencia como método</div>
+  <div class="abs serif" style="left:80px;top:170px;font-size:116px;width:900px;color:var(--cream)">Opero con mi propio dinero. <span class="gold">Mi track record es público.</span></div>
+  <svg class="abs curve" data-seed="3" style="left:0;top:640px" width="1080" height="260"></svg>
+  <div class="abs rule" style="left:80px;right:80px;bottom:150px"></div>
+  <img class="abs" src="../../assets/liberty-trading-club/logotipo-oscuro.svg" style="left:64px;bottom:40px;width:300px">
+  <div class="abs label" style="right:80px;bottom:88px;font-size:18px">libertytrading.pro</div>
+</section>
+
+<!-- Portada de reel 1080x1920 -->
+<section class="piece noise" id="reel-cover" style="width:1080px;height:1920px;background:var(--ink)">
+  <div class="abs" style="left:0;top:0;width:1080px;height:1250px;background:url(luis.png) center 20%/cover;filter:grayscale(.35) contrast(1.05) brightness(.9)"></div>
+  <div class="abs" style="left:0;top:500px;width:1080px;height:760px;background:linear-gradient(transparent,var(--ink) 85%)"></div>
+  <div class="abs label" style="left:90px;top:1160px;font-size:24px;color:var(--gold)">Reel · Método</div>
+  <div class="abs serif" style="left:90px;top:1230px;font-size:150px;width:900px">Cómo valido una <span class="gold">estrategia</span></div>
+  <div class="abs rule" style="left:90px;right:90px;top:1640px"></div>
+  <img class="abs" src="../../assets/liberty-trading-club/horizontal-oscuro.svg" style="left:78px;top:1690px;width:520px">
+</section>
+
+<!-- Historia con CTA 1080x1920 -->
+<section class="piece noise grid-bg" id="story-cta" style="width:1080px;height:1920px;background-color:var(--ink)">
+  <img class="abs" src="../../assets/liberty-trading-club/isotipo-oscuro.svg" style="left:90px;top:150px;width:170px">
+  <div class="abs label" style="left:90px;top:420px;font-size:26px;color:var(--gold)">Curso gratis</div>
+  <div class="abs serif" style="left:90px;top:490px;font-size:170px;width:920px">Empieza <span class="gold">gratis</span></div>
+  <div class="abs" style="left:90px;top:900px;width:880px;font-size:40px;line-height:1.45;color:var(--stone)">Abre tu cuenta en Interactive Brokers, analiza acciones con Claude y entiende las opciones. Sin tarjeta.</div>
+  <svg class="abs curve" data-seed="7" style="left:0;top:1180px" width="1080" height="300"></svg>
+  <div class="abs btn" style="left:90px;top:1600px;font-size:34px;padding:34px 52px;border-radius:14px">libertytrading.pro/unirse</div>
+</section>
+
+<!-- Portada de Facebook, página Liberty Trading Club 1640x624 -->
+<section class="piece noise grid-bg" id="fb-cover-liberty" style="width:1640px;height:624px;background-color:var(--ink)">
+  <div class="abs" style="inset:0;background:radial-gradient(ellipse at 70% 40%, rgba(201,168,76,.12), transparent 60%)"></div>
+  <svg class="abs curve" data-seed="11" style="left:0;top:470px;opacity:.7" width="1640" height="150"></svg>
+  <img class="abs" src="../../assets/liberty-trading-club/logotipo-respaldo-oscuro.svg" style="left:470px;top:80px;width:700px">
+  <div class="abs label" style="left:0;right:0;text-align:center;top:410px;font-size:20px;color:var(--gold)">Trading algorítmico cuantitativo · Transparencia como método</div>
+</section>
+
+<!-- Portada de Facebook, página personal de Luis 1640x624 -->
+<section class="piece noise" id="fb-cover-luis" style="width:1640px;height:624px;background:var(--ink)">
+  <div class="abs grid-bg" style="inset:0"></div>
+  <div class="abs" style="right:140px;top:0;width:624px;height:624px;background:url(luis.png) center/cover;filter:grayscale(.35) brightness(.78) contrast(1.05);-webkit-mask-image:linear-gradient(90deg,transparent,#000 45%)"></div>
+  <svg class="abs curve" data-seed="5" style="left:0;top:470px;opacity:.7" width="1100" height="150"></svg>
+  <div class="abs serif gold" style="left:330px;top:170px;font-size:124px">Luis Riofrio</div>
+  <div class="abs rule" style="left:334px;width:520px;top:320px"></div>
+  <div class="abs label" style="left:334px;top:350px;font-size:24px;letter-spacing:.3em">Trader cuantitativo</div>
+  <div class="abs label" style="left:334px;top:400px;font-size:18px;color:var(--gold)">Mercados · Bots · Estrategias algorítmicas</div>
+</section>
+
+<!-- Vista previa al compartir libertytrading.pro/luis 1200x630 -->
+<section class="piece noise" id="og-luis" style="width:1200px;height:630px;background:var(--ink)">
+  <div class="abs grid-bg" style="inset:0"></div>
+  <div class="abs" style="right:0;top:0;width:560px;height:630px;background:url(luis.png) center 30%/cover;filter:grayscale(.35) brightness(.78) contrast(1.05);-webkit-mask-image:linear-gradient(90deg,transparent,#000 45%)"></div>
+  <svg class="abs curve" data-seed="5" style="left:0;top:470px;opacity:.7" width="820" height="140"></svg>
+  <div class="abs serif gold" style="left:80px;top:170px;font-size:112px">Luis Riofrio</div>
+  <div class="abs rule" style="left:84px;width:480px;top:310px"></div>
+  <div class="abs label" style="left:84px;top:336px;font-size:24px;letter-spacing:.3em">Trader cuantitativo</div>
+  <div class="abs label" style="left:84px;top:386px;font-size:17px;color:var(--gold)">Mercados · Bots · Estrategias algorítmicas</div>
+  <img class="abs" src="../../assets/liberty-trading-club/isotipo-oscuro.svg" style="left:84px;top:60px;width:72px">
+</section>
+
+<!-- Avatar 1080x1080 -->
+<section class="piece" id="avatar" style="width:1080px;height:1080px;background:var(--ink)">
+  <img class="abs" src="../../assets/liberty-trading-club/isotipo-oscuro.svg" style="left:140px;top:140px;width:800px">
+</section>
+
+<!-- Tarjeta, anverso 1050x600 -->
+<section class="piece noise grid-bg" id="tarjeta-anverso" style="width:1050px;height:600px;background-color:var(--ink)">
+  <img class="abs" src="../../assets/liberty-trading-club/logotipo-respaldo-oscuro.svg" style="left:185px;top:130px;width:680px">
+</section>
+
+<!-- Tarjeta, reverso 1050x600 -->
+<section class="piece noise" id="tarjeta-reverso" style="width:1050px;height:600px;background:var(--surface)">
+  <div class="abs serif gold" style="left:80px;top:90px;font-size:72px">Luis Riofrio</div>
+  <div class="abs label" style="left:82px;top:190px;font-size:17px;letter-spacing:.25em">Trader cuantitativo</div>
+  <div class="abs rule" style="left:82px;width:380px;top:240px"></div>
+  <div class="abs mono" style="left:82px;top:290px;font-size:24px;line-height:1.9;color:var(--cream)">+593 99 669 1586<br>soporte@libertytrading.pro<br>libertytrading.pro</div>
+  <img class="abs" src="../../assets/liberty-trading-club/isotipo-oscuro.svg" style="right:80px;bottom:80px;width:150px">
+</section>
+
+<!-- Certificado 1754x1240 -->
+<section class="piece noise" id="certificado" style="width:1754px;height:1240px;background:var(--ink)">
+  <div class="abs" style="inset:40px;border:2px solid var(--gold-d);border-radius:18px"></div>
+  <div class="abs" style="inset:56px;border:1px solid rgba(201,168,76,.25);border-radius:12px"></div>
+  <img class="abs" src="../../assets/liberty-trading-club/logotipo-oscuro.svg" style="left:517px;top:120px;width:720px">
+  <div class="abs label" style="left:0;right:0;text-align:center;top:420px;font-size:24px;color:var(--gold)">Certificado de finalización</div>
+  <div class="abs serif" style="left:0;right:0;text-align:center;top:490px;font-size:130px">Nombre del alumno</div>
+  <div class="abs rule" style="left:477px;width:800px;top:660px"></div>
+  <div class="abs" style="left:277px;width:1200px;text-align:center;top:700px;font-size:30px;line-height:1.6;color:var(--stone)">Completó la formación en trading algorítmico cuantitativo y aportó una estrategia validada con Walk-Forward y Montecarlo al portafolio comunitario.</div>
+  <div class="abs serif gold" style="left:260px;top:960px;font-size:64px">Luis Riofrio</div>
+  <div class="abs rule" style="left:260px;width:420px;top:1050px"></div>
+  <div class="abs label" style="left:260px;top:1072px;font-size:16px">Trader cuantitativo · Instructor</div>
+  <div class="abs mono" style="right:260px;top:990px;font-size:26px;color:var(--cream);text-align:right">Fecha · ID de certificado</div>
+  <div class="abs rule" style="right:260px;width:420px;top:1050px"></div>
+  <div class="abs label" style="right:260px;top:1072px;font-size:16px;text-align:right">Verificable en libertytrading.pro</div>
+</section>
+
+<!-- Portada de producto en Hotmart 1920x1080 -->
+<section class="piece noise grid-bg" id="hotmart" style="width:1920px;height:1080px;background-color:var(--ink)">
+  <div class="abs" style="inset:0;background:radial-gradient(ellipse at 30% 50%, rgba(201,168,76,.10), transparent 60%)"></div>
+  <img class="abs" src="../../assets/liberty-trading-club/horizontal-oscuro.svg" style="left:130px;top:120px;width:640px">
+  <div class="abs serif" style="left:140px;top:420px;font-size:104px;width:1000px">Monta tu negocio de <span class="gold">trading algorítmico</span></div>
+  <div class="abs mono" style="left:144px;top:790px;font-size:28px;line-height:1.9;color:var(--stone)">— Video clases · Claude Code + NinjaTrader 8 + Obsidian<br>— 6 bots con código completo<br>— Pase a cuenta fondeada de $200k</div>
+  <svg class="abs curve" data-seed="13" style="left:1100px;top:380px" width="820" height="520"></svg>
+</section>
+
+<script>
+// Curva de equity con velas: línea fina dorada, determinista por semilla.
+function rnd(seed){ let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+document.querySelectorAll('svg.curve').forEach(svg => {
+  const W = +svg.getAttribute('width'), H = +svg.getAttribute('height'), r = rnd(+svg.dataset.seed * 997);
+  const n = Math.round(W / 26); let y = H * .78; const pts = []; let candles = '';
+  for (let i = 0; i < n; i++) {
+    const o = y; y = Math.max(H * .12, Math.min(H * .92, y - (r() - .38) * H * .09)); const c = y;
+    const x = 13 + i * 26, hi = Math.min(o, c) - r() * H * .05, lo = Math.max(o, c) + r() * H * .05;
+    const up = c <= o, col = up ? 'rgba(201,168,76,.55)' : 'rgba(138,132,128,.35)';
+    candles += `<line x1="${x}" x2="${x}" y1="${hi}" y2="${lo}" stroke="${col}" stroke-width="1.2"/>` +
+      `<rect x="${x - 5}" y="${Math.min(o, c)}" width="10" height="${Math.max(2, Math.abs(c - o))}" fill="${up ? 'none' : col}" stroke="${col}" stroke-width="1.2"/>`;
+    pts.push(`${x},${c}`);
+  }
+  svg.innerHTML = candles + `<polyline points="${pts.join(' ')}" fill="none" stroke="#C9A84C" stroke-width="2.2" opacity=".9"/>`;
+});
+const p = new URLSearchParams(location.search).get('p');
+const el = document.getElementById(p) || document.querySelector('.piece');
+el.classList.add('on');
+</script>
+</body></html>

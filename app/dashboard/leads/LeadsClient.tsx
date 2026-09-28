@@ -127,7 +127,7 @@ const PREGUNTAS: Record<string, string> = {
 }
 
 const LANDING_PAGES = [
-  { nombre: 'Principal',           slug: '/',                  descripcion: 'Página de inicio Liberty Trading Pro' },
+  { nombre: 'Principal',           slug: '/',                  descripcion: 'Página de inicio Liberty Trading Club' },
   { nombre: 'Liberty Trading Club',       slug: '/liberty-quant',     descripcion: 'Landing de Liberty Trading Club ($1,500, pago único)' },
   { nombre: 'Mentoría Integral',   slug: '/mentoria-integral', descripcion: '(retirada — redirige a /liberty-quant)' },
   { nombre: 'Maestría Futuros',    slug: '/maestria-futuros',  descripcion: '(retirada — redirige a /liberty-quant)' },

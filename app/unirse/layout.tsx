@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Curso gratuito de trading | Liberty Trading Pro',
+  title: 'Curso gratuito de trading',
   description:
     'Aprende gratis a abrir tu cuenta en Interactive Brokers, analizar acciones con Claude y entender opciones. Con Luis Riofrio, trader cuantitativo con track record público verificable.',
-  keywords: 'curso gratis trading, Liberty Trading Pro, IBKR, análisis de acciones, opciones, Luis Riofrio',
+  keywords: 'curso gratis trading, Liberty Trading Club, IBKR, análisis de acciones, opciones, Luis Riofrio',
   openGraph: {
-    title: 'Curso gratuito de trading — Liberty Trading Pro',
+    title: 'Curso gratuito de trading — Luis Riofrio',
     description: 'De cero a tu primera cuenta en acciones y opciones. 100% gratis, sin tarjeta.',
     url: 'https://libertytrading.pro/unirse',
   },

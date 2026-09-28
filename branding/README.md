@@ -23,6 +23,12 @@ lo que está mal es la publicación.
 | `assets/logo-wordmark.svg` | Logo principal — web, presentaciones, documentos |
 | `assets/logo-monograma.svg` | LR en caja — favicon, avatar, sello |
 | `assets/logo-liberty.svg` | Lockup secundario para los productos Liberty |
+| `assets/liberty-trading-club/` | Sistema de logos de Liberty Trading Club: isotipo, logotipo, horizontal y con respaldo, en 5 variantes de color (SVG con texto en trazos + `png/` al doble) |
+| `assets/liberty-trading-club/piezas/` | Piezas listas: post y portada de reel, historia, portadas de FB, avatar, tarjeta, certificado, portada de Hotmart |
+| `manual/Manual-de-marca-Liberty-Trading-Club.pdf` | Manual de marca del Club (20 páginas) |
+
+Para regenerar: `python branding/manual/src/logos.py` (logos), `python branding/manual/src/render.py` (PNGs y piezas),
+y el PDF imprimiendo `branding/manual/src/manual.html` con Chrome headless (`--print-to-pdf`).
 
 El favicon activo del sitio es `app/icon.svg` (misma pieza que el monograma,
 con tipografía del sistema para que no dependa de una fuente descargada).
@@ -54,22 +60,21 @@ Reglas prácticas:
 - [x] `lib/brand.ts` como fuente única
 - [x] Tokens expuestos en Tailwind
 - [x] OG image de la home
-- [ ] **Fotos reales de Luis** — hoy hay placeholders. Ver [05-guia-fotografia.md](05-guia-fotografia.md)
+- [ ] **Fotos reales de Luis**: la web sigue con placeholders; sesión profesional pendiente. Ver [05-guia-fotografia.md](05-guia-fotografia.md)
+- [ ] Producto de $1,500 en Hotmart y `NEXT_PUBLIC_HOTMART_LINK_QUANT`
+- [ ] Decidir si la página de FB "Luis Riofrío Trader Cuantitativo" nombra al empleador. Ver [07-legal-y-disclaimers.md](07-legal-y-disclaimers.md)
 - [ ] Revisión legal del encuadre de Liberty Portfolio. Ver [07-legal-y-disclaimers.md](07-legal-y-disclaimers.md)
 
 ## Deuda técnica conocida
 
 No bloquea nada, pero conviene resolverlo antes de que crezca:
 
-1. **148 ocurrencias de `#C9A84C` literal** en 26 archivos, sobre todo en el dashboard.
+1. **21 archivos con `#C9A84C` literal**, sobre todo en el dashboard.
    Deberían ser `var(--gold)` o `text-gold`. Migración mecánica, sin riesgo.
-2. **Typo "Club Liberty Trading Club"** en `app/api/webhook/hotmart/route.ts:60`,
-   `app/unirse/layout.tsx:9` y `app/maestria-futuros/page.tsx:55`.
-3. **"Liberty Trading Pro"** en `app/kyc/page.tsx` — marca que no existe.
-4. **`/unirse` está fuera del sistema visual**: hex hardcodeados, Georgia en vez de
-   Cormorant, sin Navbar/Footer compartidos.
-5. **Landings duplicadas**: `maestria-futuros` y `mentoria-integral` son el mismo
-   archivo con distinto copy (~470 líneas cada una).
-6. **`app/api/upload/document/route.ts` no valida autenticación**, a diferencia de
-   `app/api/upload/route.ts`. Esto es una brecha de seguridad, no de marca — cualquiera
-   con la URL puede subir archivos a tu Cloudinary.
+2. **`/unirse` está fuera del sistema visual**: hex hardcodeados, Georgia en vez de
+   Cormorant, sin Navbar/Footer compartidos. Es la página que reciben todos los
+   reels, así que es la siguiente en importancia.
+
+Resuelto el 2026-09-28: el typo "Club Liberty Trading Club", la marca inexistente
+"Liberty Trading Pro" (kyc, unirse, leads), las landings duplicadas (ya no existen),
+y `app/api/upload/document/route.ts`, que ahora exige sesión igual que `app/api/upload`.

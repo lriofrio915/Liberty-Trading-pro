@@ -1,11 +1,13 @@
 import { ImageResponse } from 'next/og'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 import { BRAND } from '@/lib/brand'
 
 export const runtime = 'nodejs'
 export const revalidate = 86400
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
-export const alt = `${BRAND.name} — ${BRAND.role}`
+export const alt = `${BRAND.legalName} — por ${BRAND.name}, ${BRAND.role}`
 
 /**
  * OG image de la home. Antes no existía: los links compartidos por WhatsApp
@@ -15,6 +17,12 @@ export const alt = `${BRAND.name} — ${BRAND.role}`
  * remotas: mismo criterio que las otras OG del proyecto, y evita una descarga
  * de fuente en cada regeneración.
  */
+/** Logo con texto en trazos: no necesita cargar fuentes en el render. */
+function logoDataUri() {
+  const svg = readFileSync(join(process.cwd(), 'public', BRAND.logos.respaldo), 'utf-8')
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`
+}
+
 export default function OgImage() {
   return new ImageResponse(
     (
@@ -25,8 +33,9 @@ export default function OgImage() {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
+          alignItems: 'center',
           background: '#080808',
-          padding: '64px 72px',
+          padding: '56px 72px 44px',
         }}>
         {/* Franja dorada superior */}
         <div
@@ -40,44 +49,22 @@ export default function OgImage() {
           }}
         />
 
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div
-            style={{
-              fontSize: 22,
-              letterSpacing: 8,
-              textTransform: 'uppercase',
-              color: '#C9A84C',
-              fontFamily: 'monospace',
-            }}>
-            {BRAND.role}
-          </div>
-          <div
-            style={{
-              fontSize: 96,
-              fontStyle: 'italic',
-              fontWeight: 400,
-              color: '#f0ece4',
-              fontFamily: 'serif',
-              marginTop: 12,
-              lineHeight: 1.05,
-            }}>
-            {BRAND.name}
-          </div>
-          <div
-            style={{
-              fontSize: 34,
-              color: '#8a8480',
-              marginTop: 20,
-              maxWidth: 820,
-              lineHeight: 1.35,
-            }}>
-            Invierte con quien opera de verdad.
-          </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={logoDataUri()} width={612} height={247} alt="" />
+
+        <div
+          style={{
+            fontSize: 44,
+            fontStyle: 'italic',
+            color: '#f0ece4',
+            fontFamily: 'serif',
+            marginTop: -8,
+          }}>
+          Monta tu negocio de trading algorítmico
         </div>
 
-        {/* Servicios */}
-        <div style={{ display: 'flex', gap: 14, marginTop: 8 }}>
-          {['Educación', 'Bots de futuros', 'Cripto ↔ Fiat', 'Acciones EEUU'].map((s) => (
+        <div style={{ display: 'flex', gap: 14 }}>
+          {['Video clases', `Pase a cuenta fondeada de ${BRAND.price.fundingAccountLabel}`, 'Bots con código completo'].map((s) => (
             <div
               key={s}
               style={{
@@ -97,15 +84,16 @@ export default function OgImage() {
         <div
           style={{
             display: 'flex',
+            width: '100%',
             justifyContent: 'space-between',
             alignItems: 'center',
             borderTop: '1px solid #1e1e1e',
-            paddingTop: 24,
+            paddingTop: 20,
           }}>
-          <div style={{ fontSize: 24, color: '#4a4642', fontFamily: 'monospace' }}>
+          <div style={{ fontSize: 24, color: '#8a8480', fontFamily: 'monospace' }}>
             {BRAND.domain}
           </div>
-          <div style={{ fontSize: 24, color: '#4a4642', fontFamily: 'monospace' }}>
+          <div style={{ fontSize: 24, color: '#8a8480', fontFamily: 'monospace' }}>
             {BRAND.location}
           </div>
         </div>

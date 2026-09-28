@@ -2,7 +2,12 @@
 
 ## Estado actual
 
-**No hay fotos reales.** Todas las posiciones de la web usan placeholders SVG en
+**La web todavía no tiene fotos reales** (2026-09-28). Existe un retrato de estudio
+(fondo claro, saco oscuro) que ya se usa como foto de perfil en IG @luisriofrioec y
+en la página de FB, pero Luis va a hacer una sesión profesional. Cuando la tenga, se
+reemplazan a la vez la web, la foto de perfil y la portada de la página de FB.
+
+Hoy todas las posiciones de la web usan placeholders SVG en
 `public/brand/placeholders/`, que muestran una silueta con la etiqueta
 `FOTO PENDIENTE` y la proporción correcta.
 

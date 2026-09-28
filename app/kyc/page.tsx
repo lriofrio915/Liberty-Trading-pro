@@ -134,7 +134,7 @@ export default function KycPage() {
             Tu información ha sido enviada correctamente. Luis revisará tu perfil
             y te contactará en breve para los próximos pasos.
           </p>
-          <p className="text-yellow-400 text-xs">Liberty Trading Pro — Formación en inversión</p>
+          <p className="text-yellow-400 text-xs">Liberty Trading Club — Formación en inversión</p>
         </div>
       </main>
     )
@@ -149,7 +149,7 @@ export default function KycPage() {
 
         {/* Header */}
         <div className="text-center space-y-2">
-          <p className="text-yellow-400 text-xs font-semibold uppercase tracking-widest">Liberty Trading Pro</p>
+          <p className="text-yellow-400 text-xs font-semibold uppercase tracking-widest">Liberty Trading Club</p>
           <h1 className="text-2xl font-bold text-white">Formulario KYC</h1>
           <p className="text-gray-500 text-sm">Programa de acciones EEUU — Conoce a tu alumno</p>
         </div>

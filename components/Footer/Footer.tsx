@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { BRAND, RISK_DISCLAIMER } from '@/lib/brand'
 
 const WA = BRAND.social.whatsapp
@@ -16,10 +17,11 @@ export default function Footer() {
 
           {/* Brand */}
           <div className="md:col-span-5">
-            <div className="headline text-2xl gradient-gold mb-1">{BRAND.name}</div>
-            <div className="label-mono text-[10px] mb-3">{BRAND.role}</div>
+            <Image src={BRAND.logos.respaldo} alt={`${BRAND.legalName} por ${BRAND.name}`}
+              width={220} height={89} className="h-20 w-auto mb-3 -ml-3" unoptimized />
+            <div className="label-mono text-[10px] mb-3">{BRAND.name} · {BRAND.role}</div>
             <p className="text-sm text-[var(--text-muted)] max-w-xs leading-relaxed mb-5">
-              Educación en trading, bots para futuros, intercambio cripto y formación en acciones
+              Educación en trading algorítmico cuantitativo, intercambio cripto y formación en acciones
               de EEUU. {BRAND.credential}.
             </p>
             {/* Socials */}

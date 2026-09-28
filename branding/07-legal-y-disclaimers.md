@@ -71,10 +71,27 @@ exposición innecesaria. El descriptor oficial pasa a ser **Trader Cuantitativo*
 | Mentor de trading | Corredor de bolsa / Agente de valores |
 | Educador en trading algorítmico | Administrador de fondos / Gestor de portafolios |
 
-**No nombrar empresas empleadoras en la comunicación de marca.** Decisión tomada:
-mencionar dónde trabaja Luis abre un conflicto de interés con esa empresa y no aporta
-lo suficiente para justificarlo. La autoridad se construye con el track record propio,
-no con el logo de un tercero. Aplica a la web, redes, materiales de venta y bios.
+**Empleador: sí en perfiles personales, no en lo que vende.** Decisión de Luis
+(2026-09-28), que reemplaza la regla anterior de no nombrarlo nunca.
+
+| Dónde | ¿Se nombra la empresa donde trabaja Luis? |
+|---|---|
+| Instagram personal @luisriofrioec (bio, etiquetas) | Sí |
+| Perfil personal de Facebook | Sí |
+| Web `libertytrading.pro` (todas las páginas), `lib/brand.ts` | **No** |
+| Hotmart, anuncios pagados, PDFs y presentaciones de venta | **No** |
+| Cuentas del producto (Liberty Trading Club en FB e IG) | **No** |
+| Página de FB "Luis Riofrío Trader Cuantitativo" | **Pendiente de decidir.** Es donde van los reels y el CTA al curso gratis, así que funciona como canal de venta |
+
+**Por qué la línea está ahí:** en un perfil personal, mencionar dónde trabajas es
+información biográfica. En una página que vende un producto financiero, el nombre
+del empleador se lee como aval: parece que la empresa respalda el Club, y eso es
+un conflicto de interés para ambos. Además, la autoridad de la marca se construye
+con el track record propio, no con el logo de un tercero.
+
+**Antes de etiquetar a la empresa con frecuencia,** revisa si tiene una política
+para empleados sobre redes sociales o sobre actividades externas relacionadas con
+inversión. Muchas firmas la tienen.
 
 ## Track record
 
@@ -85,8 +102,10 @@ lugar donde más cuidado hay que tener con la redacción.
 
 1. Etiquétalo siempre como **resultados de tu cuenta de capital propio**, no como una
    oferta ni como un resultado que otro pueda esperar.
-2. Incluye las operaciones perdedoras. Además de ser lo correcto, un track record sin
-   pérdidas es una señal de alarma para cualquier regulador.
+2. Publícalo completo: no se borran ni se ocultan operaciones. La marca no necesita
+   *hablar* de las pérdidas en su contenido, pero el historial no puede filtrarse: un
+   track record sin operaciones perdedoras es engañoso y una señal de alarma para
+   cualquier regulador.
 3. Nunca presentes un rendimiento pasado como indicativo de uno futuro.
 4. No uses el track record como argumento de venta directo del tipo "gana lo mismo
    que yo".
@@ -120,7 +139,7 @@ la landing y en el footer global:
 **Dónde no hace falta:** posts orgánicos de redes sin cifras concretas, mensajes de
 WhatsApp de conversación normal.
 
-## Liberty Algo — bots de trading
+## Bots de trading (portafolio comunitario del Club)
 
 Terreno con su propio riesgo de sobrepromesa.
 
@@ -139,6 +158,17 @@ Terreno con su propio riesgo de sobrepromesa.
 > Resultados de operativa real desde [fecha]: [datos]. Todo sistema automatizado
 > puede generar pérdidas.
 
+## Pase a cuenta fondeada (PJ Capital)
+
+El Club incluye un pase directo a una cuenta fondeada de $200k que Luis compra para
+cada alumno.
+
+- Di "pase directo a una cuenta fondeada de $200k". Nunca "te damos $200k",
+  "capital de $200k para ti" ni nada que sugiera que el alumno recibe ese dinero.
+- La cuenta tiene reglas de la mesa (drawdown, límites diarios) y se puede perder.
+  Dilo cuando hables del pase.
+- "Valor $300" es lo que cuesta el pase, no el tamaño de la cuenta.
+
 ## Liberty Exchange — intercambio cripto
 
 Riesgo distinto: no es regulación de valores, es prevención de lavado de activos.
@@ -156,7 +186,7 @@ adelantarse.
 
 ## Educación vs. recomendación personalizada
 
-Liberty Club es formación. Mantén la distinción clara:
+Liberty Trading Club y el curso gratis son formación. Mantén la distinción clara:
 
 | Educativo (seguro) | Recomendación personalizada (regulado) |
 |---|---|
@@ -173,8 +203,8 @@ diferencia parece semántica y no lo es.
 - [ ] Consulta legal sobre si Liberty Portfolio requiere registro ante la
       Superintendencia de Compañías, Valores y Seguros, en particular por la
       comisión de éxito del 20% y el formulario KYC (pide capital y cuenta IBKR).
-- [x] Credenciales de empleador: resuelto — no se nombran empresas empleadoras
-      (conflicto de interés).
+- [x] Credenciales de empleador: resuelto (2026-09-28). Sí en perfiles personales,
+      no en web ni materiales de venta. Falta decidir la página profesional de FB.
 - [ ] Términos y condiciones del sitio (hoy no existen).
 - [ ] Política de privacidad — obligatoria: capturas leads con nombre, teléfono y
       email vía `/api/leads/capture`.

@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<title>Liberty Trading Club — Manual de marca</title>
+<link rel="stylesheet" href="brand.css">
+<style>
+  @page { size: 1280px 720px; margin: 0; }
+  html, body { background: var(--ink); }
+  .pg { width: 1280px; height: 720px; position: relative; overflow: hidden; page-break-after: always; background: var(--ink); padding: 64px 80px; }
+  .pg.alt { background: var(--surface); }
+  .pg.light { background: var(--paper); color: var(--ink-light); }
+  .num { position: absolute; right: 80px; bottom: 36px; }
+  .foot { position: absolute; left: 80px; bottom: 36px; }
+  .eyebrow { color: var(--gold); margin-bottom: 18px; }
+  h1 { font-size: 64px; margin-bottom: 22px; }
+  h2 { font-size: 30px; margin-bottom: 10px; }
+  p, li { font-size: 15.5px; line-height: 1.6; color: var(--stone); }
+  p strong, li strong { color: var(--cream); font-weight: 600; }
+  .cols { display: grid; gap: 40px; }
+  .c2 { grid-template-columns: 1fr 1fr; } .c3 { grid-template-columns: repeat(3, 1fr); } .c4 { grid-template-columns: repeat(4, 1fr); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px; }
+  .card h3 { font-family: 'Cormorant'; font-style: italic; font-weight: 300; font-size: 28px; color: var(--cream); margin-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--stone); vertical-align: top; }
+  th { font-family: 'DM Mono'; font-weight: 400; text-transform: uppercase; letter-spacing: .14em; font-size: 10.5px; color: var(--ash); }
+  td b { color: var(--cream); font-weight: 600; }
+  .sw { border-radius: 12px; height: 150px; display: flex; flex-direction: column; justify-content: flex-end; padding: 14px; border: 1px solid var(--line); }
+  .sw span { font-family: 'DM Mono'; font-size: 11.5px; line-height: 1.55; }
+  .x { position: relative; border-radius: 10px; padding: 18px; background: var(--panel); border: 1px solid var(--line); height: 150px; display: flex; align-items: center; justify-content: center; }
+  .x::after { content: '✕'; position: absolute; right: 10px; top: 6px; color: var(--loss); font-size: 18px; }
+  .ok::after { content: '✓'; color: var(--profit); }
+  .cap { font-family: 'DM Mono'; font-size: 11px; letter-spacing: .08em; color: var(--stone); margin-top: 8px; text-transform: uppercase; }
+  img.shot { border-radius: 8px; border: 1px solid var(--line); display: block; }
+  ul { padding-left: 18px; }
+  .gold { background: none; color: var(--gold); } /* background-clip:text deja una raya al imprimir */
+</style></head>
+<body>
+<!-- Rutas relativas a manual/src -->
+
+<!-- 1 · Portada -->
+<section class="pg noise grid-bg" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+  <div class="abs" style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%, rgba(201,168,76,.12), transparent 60%)"></div>
+  <img src="../../assets/liberty-trading-club/logotipo-respaldo-oscuro.svg" style="width:640px;position:relative">
+  <div class="label" style="position:relative;margin-top:40px;font-size:14px;color:var(--gold)">Manual de identidad de marca · v1.0 · Septiembre 2026</div>
+</section>
+
+<!-- 2 · Índice -->
+<section class="pg alt">
+  <div class="label eyebrow">Contenido</div>
+  <h1 class="serif">Lo que hay <span class="gold">en este manual</span></h1>
+  <div class="cols c3" style="margin-top:36px">
+    <div><div class="label">01 · Esencia</div><p style="margin-top:10px">La marca y su arquitectura<br>Propósito, posicionamiento y valores<br>Personalidad y voz</p></div>
+    <div><div class="label">02 · Sistema visual</div><p style="margin-top:10px">Logotipo e isotipo<br>Versiones y variantes de color<br>Área de respeto, tamaños y usos incorrectos<br>Color · Tipografía · Elementos gráficos · Fotografía</p></div>
+    <div><div class="label">03 · Aplicaciones</div><p style="margin-top:10px">Redes sociales<br>Portadas y avatar<br>Tarjeta, certificado y Hotmart<br>Reglas legales en cada pieza</p></div>
+  </div>
+  <p style="position:absolute;left:80px;right:80px;bottom:90px">Este manual es la fuente de verdad visual de Liberty Trading Club. Si una pieza publicada lo contradice, lo que está mal es la pieza. Los archivos fuente viven en <strong>branding/assets/liberty-trading-club</strong> del repositorio.</p>
+  <div class="label num">02</div>
+</section>
+
+<!-- 3 · La marca -->
+<section class="pg">
+  <div class="label eyebrow">01 · Esencia</div>
+  <h1 class="serif">Qué es <span class="gold">Liberty Trading Club</span></h1>
+  <div class="cols c2" style="margin-top:20px">
+    <div>
+      <p>Liberty Trading Club es el producto de educación de <strong>Luis Riofrio, trader cuantitativo</strong>: formación en trading algorítmico cuantitativo, en pago único de <strong>$1,500</strong> con acceso de por vida.</p>
+      <ul style="margin-top:14px">
+        <li>Video clases: Claude Code, NinjaTrader 8 y Obsidian para crear estrategias desde cero.</li>
+        <li>Infraestructura propia del alumno: su panel de negocio conectado a NinjaTrader.</li>
+        <li>Portafolio comunitario de 6 bots con código completo, validados con Walk-Forward y Montecarlo.</li>
+        <li>Pase directo a una cuenta fondeada de $200k (PJ Capital).</li>
+        <li>Proyecto final: el alumno aporta una estrategia validada al portafolio.</li>
+      </ul>
+    </div>
+    <div>
+      <h2 class="serif">Arquitectura: marca respaldada</h2>
+      <p>La marca madre es la persona. En servicios financieros la confianza se deposita en un nombre y una cara, no en un logo. Liberty es la casa de productos y siempre va <strong>respaldada por Luis Riofrio</strong>.</p>
+      <div class="card mono" style="margin-top:18px;font-size:13.5px;line-height:1.9;color:var(--cream)">
+        LUIS RIOFRIO · Trader Cuantitativo<br>
+        ├── <span style="color:var(--gold)">Curso gratis</span> · puerta de entrada<br>
+        ├── <span style="color:var(--gold)">Liberty Trading Club</span> · $1,500 pago único<br>
+        ├── Liberty Exchange · intercambio cripto<br>
+        └── Liberty Portfolio · acciones EEUU vía IBKR
+      </div>
+    </div>
+  </div>
+  <div class="label num">03</div>
+</section>
+
+<!-- 4 · Esencia -->
+<section class="pg alt">
+  <div class="label eyebrow">01 · Esencia</div>
+  <h1 class="serif">Transparencia <span class="gold">como método</span></h1>
+  <p style="max-width:900px">El sector de educación financiera en Latinoamérica tiene un problema de credibilidad: casi nadie muestra resultados verificables. Nuestra ventaja no es enseñar mejor. Es <strong>ser auditables</strong>.</p>
+  <div class="card" style="margin:24px 0;border-color:var(--gold-d)"><p class="serif" style="font-size:30px;color:var(--cream);line-height:1.3">"Un trader cuantitativo que opera con su propio dinero, publica su track record y te enseña a construir el tuyo."</p><div class="label" style="margin-top:10px">Posicionamiento</div></div>
+  <div class="cols c4" style="gap:18px">
+    <div class="card"><h3>Transparencia</h3><p>Track record público y verificable.</p></div>
+    <div class="card"><h3>Método</h3><p>Hipótesis, backtest, Walk-Forward. Nada se decide a ojo.</p></div>
+    <div class="card"><h3>Código abierto</h3><p>Los bots se entregan con su código. Cero cajas negras.</p></div>
+    <div class="card"><h3>Comunidad</h3><p>El portafolio crece con la estrategia de cada alumno.</p></div>
+  </div>
+  <div class="label num">04</div>
+</section>
+
+<!-- 5 · Voz -->
+<section class="pg">
+  <div class="label eyebrow">01 · Esencia</div>
+  <h1 class="serif">Personalidad <span class="gold">y voz</span></h1>
+  <div class="cols c2">
+    <div>
+      <p>Escribimos como alguien que ya tiene los datos y no necesita convencer a gritos. <strong>Primera persona siempre</strong>: "te enseño", no "ofrecemos formación".</p>
+      <table style="margin-top:14px">
+        <tr><th>Eje</th><th>Posición</th></tr>
+        <tr><td>Formal ↔ Cercano</td><td><b>Cercano</b>: tuteo, sin coloquialismos</td></tr>
+        <tr><td>Técnico ↔ Simple</td><td><b>Técnico</b>: términos exactos, explicados</td></tr>
+        <tr><td>Contenido ↔ Efusivo</td><td><b>Contenido</b>: afirmamos, no exclamamos</td></tr>
+        <tr><td>Personal ↔ Corporativo</td><td><b>Personal</b>: habla Luis, no una empresa</td></tr>
+      </table>
+      <p style="margin-top:14px">Filtro antes de publicar: <strong>¿podría decir esto un vendedor que no opera?</strong> Si sí, se reescribe.</p>
+    </div>
+    <div>
+      <table>
+        <tr><th>No decimos</th><th>Decimos</th></tr>
+        <tr><td>Rentabilidad garantizada</td><td><b>Track record público y verificable</b></td></tr>
+        <tr><td>Sistema infalible</td><td><b>Validado con Walk-Forward y Montecarlo</b></td></tr>
+        <tr><td>Te damos $200k</td><td><b>Pase directo a una cuenta fondeada de $200k</b></td></tr>
+        <tr><td>Asesor de inversiones</td><td><b>Trader cuantitativo</b></td></tr>
+        <tr><td>Gestiono tu dinero</td><td><b>Te enseño a operar con tu propia cuenta</b></td></tr>
+        <tr><td>Plazas limitadas, solo hoy</td><td><b>(nunca escasez falsa)</b></td></tr>
+      </table>
+      <p style="margin-top:14px">Titulares: <strong>máximo 6 palabras, sin signos de exclamación</strong>, con la mitad que carga el significado en dorado.</p>
+    </div>
+  </div>
+  <div class="label num">05</div>
+</section>
+
+<!-- 6 · Logotipo -->
+<section class="pg alt">
+  <div class="label eyebrow">02 · Sistema visual</div>
+  <h1 class="serif">El <span class="gold">logotipo</span></h1>
+  <div class="cols" style="grid-template-columns:1.25fr 1fr;align-items:center">
+    <div class="card" style="height:400px;display:flex;align-items:center;justify-content:center;background:var(--ink)">
+      <img src="../../assets/liberty-trading-club/logotipo-oscuro.svg" style="width:520px">
+    </div>
+    <div>
+      <h2 class="serif">Anatomía</h2>
+      <table>
+        <tr><td><b>"Liberty"</b></td><td>Cormorant Garamond italic 300, en degradado latón a 135°. Es la voz editorial.</td></tr>
+        <tr><td><b>Regla</b></td><td>Línea dorada al 55%. Representa la disciplina: el límite que no se cruza.</td></tr>
+        <tr><td><b>"TRADING CLUB"</b></td><td>DM Mono en mayúsculas, tracking amplio, crema. La voz de terminal: dato, no promesa.</td></tr>
+      </table>
+      <p style="margin-top:16px">El texto de todos los logos está convertido a trazos: no depende de tener las fuentes instaladas.</p>
+    </div>
+  </div>
+  <div class="label num">06</div>
+</section>
+
+<!-- 7 · Isotipo -->
+<section class="pg">
+  <div class="label eyebrow">02 · Sistema visual</div>
+  <h1 class="serif">El <span class="gold">isotipo</span></h1>
+  <div class="cols" style="grid-template-columns:auto 1fr;gap:56px;align-items:center">
+    <img src="../../assets/liberty-trading-club/isotipo-oscuro.svg" style="width:380px">
+    <div>
+      <p>Una <strong>"L" italic</strong> cuyo pie se prolonga en <strong>tres barras ascendentes</strong>, dentro de la misma caja redondeada con borde de latón que el monograma LR de Luis. Eso lo emparenta con la marca madre sin copiarla.</p>
+      <table style="margin-top:16px">
+        <tr><td><b>La L</b></td><td>Liberty. La inicial en la misma serif del logotipo.</td></tr>
+        <tr><td><b>Las barras</b></td><td>El portafolio de bots y un crecimiento medido, paso a paso. No es un cohete: es una escalera.</td></tr>
+        <tr><td><b>La regla</b></td><td>La misma línea de disciplina del logotipo, bajo la L.</td></tr>
+        <tr><td><b>La caja</b></td><td>Formato de app: avatar de redes, favicon, sello de certificados.</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="label num">07</div>
+</section>
+
+<!-- 8 · Versiones -->
+<section class="pg alt">
+  <div class="label eyebrow">02 · Sistema visual</div>
+  <h1 class="serif">Versiones <span class="gold">del logo</span></h1>
+  <div class="cols c3" style="gap:22px">
+    <div><div class="card" style="height:190px;display:flex;align-items:center;justify-content:center;background:var(--ink)"><img src="../../assets/liberty-trading-club/horizontal-oscuro.svg" style="width:330px"></div><div class="cap">Horizontal · uso preferente</div></div>
+    <div><div class="card" style="height:190px;display:flex;align-items:center;justify-content:center;background:var(--ink)"><img src="../../assets/liberty-trading-club/logotipo-oscuro.svg" style="width:300px"></div><div class="cap">Logotipo · centrado, portadas</div></div>
+    <div><div class="card" style="height:190px;display:flex;align-items:center;justify-content:center;background:var(--ink)"><img src="../../assets/liberty-trading-club/logotipo-respaldo-oscuro.svg" style="width:300px"></div><div class="cap">Con respaldo · primera mención, ventas</div></div>
+  </div>
+  <div class="cols" style="grid-template-columns:repeat(5,1fr);gap:16px;margin-top:26px">
+    <div><div class="card" style="height:150px;display:flex;align-items:center;justify-content:center;background:var(--ink)"><img src="../../assets/liberty-trading-club/logotipo-oscuro.svg" style="width:180px"></div><div class="cap">Sobre oscuro · principal</div></div>
+    <div><div class="card" style="height:150px;display:flex;align-items:center;justify-content:center;background:var(--paper)"><img src="../../assets/liberty-trading-club/logotipo-claro.svg" style="width:180px"></div><div class="cap">Sobre claro</div></div>
+    <div><div class="card" style="height:150px;display:flex;align-items:center;justify-content:center;background:var(--ink)"><img src="../../assets/liberty-trading-club/logotipo-oro.svg" style="width:180px"></div><div class="cap">Oro plano · grabado, bordado</div></div>
+    <div><div class="card" style="height:150px;display:flex;align-items:center;justify-content:center;background:#fff"><img src="../../assets/liberty-trading-club/logotipo-negro.svg" style="width:180px"></div><div class="cap">Negro · fax, sello, 1 tinta</div></div>
+    <div><div class="card" style="height:150px;display:flex;align-items:center;justify-content:center;background:var(--gold-d)"><img src="../../assets/liberty-trading-club/logotipo-blanco.svg" style="width:180px"></div><div class="cap">Blanco · sobre color o foto</div></div>
+  </div>
+  <div class="label num">08</div>
+</section>
+
+<!-- 9 · Respeto y tamaños -->
+<section class="pg">
+  <div class="label eyebrow">02 · Sistema visual</div>
+  <h1 class="serif">Área de respeto <span class="gold">y tamaños</span></h1>
+  <div class="cols c2" style="align-items:center">
+    <div style="position:relative;height:380px;display:flex;align-items:center;justify-content:center">
+      <div style="position:absolute;inset:40px 30px;border:1px dashed var(--gold-d);border-radius:6px"></div>
+      <div style="position:absolute;inset:40px 30px;margin:48px;border:1px solid var(--line)"></div>
+      <img src="../../assets/liberty-trading-club/horizontal-oscuro.svg" style="width:380px;position:relative">
+      <div class="label" style="position:absolute;top:14px;left:30px;color:var(--gold)">x = alto de la "L" del isotipo</div>
+    </div>
+    <div>
+      <p><strong>Área de respeto:</strong> el alto de la "L" del isotipo por cada lado. Ningún texto, borde ni imagen entra en esa zona.</p>
+      <table style="margin-top:16px">
+        <tr><th>Versión</th><th>Mínimo digital</th><th>Mínimo impreso</th></tr>
+        <tr><td><b>Horizontal</b></td><td>200 px de ancho</td><td>40 mm</td></tr>
+        <tr><td><b>Logotipo</b></td><td>160 px</td><td>30 mm</td></tr>
+        <tr><td><b>Con respaldo</b></td><td>240 px</td><td>45 mm</td></tr>
+        <tr><td><b>Isotipo</b></td><td>32 px (favicon)</td><td>8 mm</td></tr>
+      </table>
+      <p style="margin-top:16px">Por debajo del mínimo del logotipo se usa solo el isotipo.</p>
+    </div>
+  </div>
+  <div class="label num">09</div>
+</section>
+
+<!-- 10 · Usos incorrectos -->
+<section class="pg alt">
+  <div class="label eyebrow">02 · Sistema visual</div>
+  <h1 class="serif">Usos <span class="gold">incorrectos</span></h1>
+  <div class="cols c4" style="gap:18px">
+    <div><div class="x"><img src="../../assets/liberty-trading-club/logotipo-oscuro.svg" style="width:190px;transform:scaleX(1.45)"></div><div class="cap">No deformar</div></div>
+    <div><div class="x"><img src="../../assets/liberty-trading-club/logotipo-oscuro.svg" style="width:190px;transform:rotate(-12deg)"></div><div class="cap">No rotar ni inclinar</div></div>
+    <div><div class="x"><img src="../../assets/liberty-trading-club/logotipo-oro.svg" style="width:190px;filter:saturate(3) brightness(1.3) hue-rotate(10deg)"></div><div class="cap">No oro saturado ni amarillo</div></div>
+    <div><div class="x" style="background:#1a4a8a"><img src="../../assets/liberty-trading-club/logotipo-oscuro.svg" style="width:190px"></div><div class="cap">No sobre colores fuera de paleta</div></div>
+    <div><div class="x"><img src="../../assets/liberty-trading-club/logotipo-oscuro.svg" style="width:190px;filter:drop-shadow(0 0 12px #E8C96A) drop-shadow(4px 4px 0 #000)"></div><div class="cap">Sin sombras, brillos ni bisel</div></div>
+    <div><div class="x" style="background:url(luis.png) center/cover"><img src="../../assets/liberty-trading-club/logotipo-oscuro.svg" style="width:190px"></div><div class="cap">No sobre foto sin capa oscura (≥60%)</div></div>
+    <div><div class="x"><div class="serif" style="font-size:40px;color:var(--gold)">Liberty <span class="mono" style="font-size:16px;font-style:normal">PRO</span></div></div><div class="cap">No cambiar el descriptor</div></div>
+    <div><div class="x" style="gap:10px"><img src="../../assets/liberty-trading-club/isotipo-oscuro.svg" style="width:60px"><img src="../../assets/liberty-trading-club/logotipo-oscuro.svg" style="width:120px"></div><div class="cap">No recomponer el lockup a mano</div></div>
+  </div>
+  <p style="margin-top:22px">Nombres prohibidos en cualquier pieza: <strong>Liberty Trading Pro, Liberty Club, Liberty Quant, Club Liberty Trading, Liberty Trading Club Club.</strong></p>
+  <div class="label num">10</div>
+</section>
+
+<!-- 11 · Color -->
+<section class="pg">
+  <div class="label eyebrow">02 · Sistema visual</div>
+  <h1 class="serif">Color: <span class="gold">latón sobre tinta</span></h1>
+  <p style="max-width:960px;margin-bottom:22px">Negro profundo como base y un oro apagado, casi latón, como único acento. Evitamos el azul corporativo de banca, el verde neón cripto y el dorado brillante de los gurús. <strong>El oro saturado grita; este susurra.</strong> Los valores CMYK son aproximados: pide prueba de color a la imprenta.</p>
+  <div class="cols" style="grid-template-columns:repeat(6,1fr);gap:14px">
+    <div><div class="sw" style="background:var(--grad);border:none"><span style="color:#080808">Degradado<br>135°</span></div><div class="cap">Degradado de marca</div></div>
+    <div><div class="sw" style="background:#C9A84C"><span style="color:#080808">#C9A84C<br>201 168 76<br>CMYK 0 16 62 21</span></div><div class="cap">Latón · acento</div></div>
+    <div><div class="sw" style="background:#E8C96A"><span style="color:#080808">#E8C96A<br>232 201 106<br>CMYK 0 13 54 9</span></div><div class="cap">Latón claro</div></div>
+    <div><div class="sw" style="background:#9A7A30"><span style="color:#080808">#9A7A30<br>154 122 48<br>CMYK 0 21 69 40</span></div><div class="cap">Latón oscuro</div></div>
+    <div><div class="sw" style="background:#080808"><span>#080808<br>8 8 8<br>CMYK 0 0 0 97</span></div><div class="cap">Tinta · fondo</div></div>
+    <div><div class="sw" style="background:#f0ece4"><span style="color:#080808">#F0ECE4<br>240 236 228<br>CMYK 0 2 5 6</span></div><div class="cap">Crema · texto</div></div>
+  </div>
+  <div class="cols" style="grid-template-columns:repeat(6,1fr);gap:14px;margin-top:18px">
+    <div><div class="sw" style="background:#111111;height:90px"><span>#111111</span></div><div class="cap">Grafito · paneles</div></div>
+    <div><div class="sw" style="background:#0d0d0d;height:90px"><span>#0D0D0D</span></div><div class="cap">Superficie</div></div>
+    <div><div class="sw" style="background:#8a8480;height:90px"><span style="color:#080808">#8A8480</span></div><div class="cap">Piedra · apoyo</div></div>
+    <div><div class="sw" style="background:#4a4642;height:90px"><span>#4A4642</span></div><div class="cap">Ceniza · labels</div></div>
+    <div><div class="sw" style="background:#00C896;height:90px"><span style="color:#080808">#00C896</span></div><div class="cap">Ganancia · solo datos</div></div>
+    <div><div class="sw" style="background:#FF4444;height:90px"><span style="color:#080808">#FF4444</span></div><div class="cap">Pérdida · solo datos</div></div>
+  </div>
+  <div class="label num">11</div>
+</section>
+
+<!-- 12 · Proporción y accesibilidad -->
+<section class="pg alt">
+  <div class="label eyebrow">02 · Sistema visual</div>
+  <h1 class="serif">Proporción <span class="gold">y contraste</span></h1>
+  <div class="cols c2">
+    <div>
+      <p>En cualquier pieza, el color se reparte así:</p>
+      <div style="display:flex;height:64px;border-radius:10px;overflow:hidden;margin:16px 0 10px">
+        <div style="flex:70;background:#080808;border:1px solid var(--line)"></div><div style="flex:18;background:#f0ece4"></div><div style="flex:10;background:#C9A84C"></div><div style="flex:2;background:#00C896"></div>
+      </div>
+      <div class="cap">70% tinta · 18% crema · 10% latón · 2% semánticos</div>
+      <p style="margin-top:20px"><strong>Verde y rojo solo significan dinero.</strong> Ganancia y pérdida se usan únicamente en datos financieros y estados de sistema, nunca como decoración.</p>
+      <p style="margin-top:12px"><strong>El resplandor dorado marca el punto de conversión.</strong> Uno por pantalla; si aparece en todo, deja de significar algo.</p>
+    </div>
+    <div>
+      <table>
+        <tr><th>Combinación</th><th>Contraste</th><th>WCAG</th></tr>
+        <tr><td><b>Crema sobre tinta</b></td><td>17.0:1</td><td>AAA</td></tr>
+        <tr><td><b>Latón sobre tinta</b></td><td>8.76:1</td><td>AAA</td></tr>
+        <tr><td><b>Tinta sobre latón</b> (botón)</td><td>9.19:1</td><td>AAA</td></tr>
+        <tr><td><b>Piedra sobre tinta</b></td><td>5.43:1</td><td>AA</td></tr>
+        <tr><td><b>Ceniza sobre tinta</b></td><td>2.14:1</td><td>Falla: solo labels ≥14 px en mayúsculas</td></tr>
+      </table>
+      <p style="margin-top:14px">Crema en vez de blanco puro: reduce la fatiga visual sobre negro y aporta la calidez editorial del concepto.</p>
+    </div>
+  </div>
+  <div class="label num">12</div>
+</section>
+
+<!-- 13 · Tipografía -->
+<section class="pg">
+  <div class="label eyebrow">02 · Sistema visual</div>
+  <h1 class="serif">Tipografía</h1>
+  <div class="cols c3" style="gap:26px">
+    <div class="card"><div class="label">Titulares</div><div class="serif" style="font-size:78px;color:var(--cream);margin:10px 0">Aa <span class="gold">Liberty</span></div><p><strong>Cormorant Garamond</strong> italic 300, tracking −0.02em. La voz de autoridad. Solo titulares y citas, nunca texto corrido.</p></div>
+    <div class="card"><div class="label">Datos y etiquetas</div><div class="mono" style="font-size:44px;color:var(--cream);margin:26px 0 22px">0123456789<br><span style="font-size:20px;color:var(--gold)">NQ · MNQ · ES</span></div><p><strong>DM Mono</strong>. Cifras tabulares, labels en mayúsculas con tracking .15em y botones. Dice "esto es un dato, no una promesa".</p></div>
+    <div class="card"><div class="label">Cuerpo</div><div style="font-family:Syne;font-size:54px;font-weight:600;color:var(--cream);margin:14px 0 20px">Aa Syne</div><p><strong>Syne</strong>. Sans geométrica para párrafos e interfaz. Contrasta con la serif sin competir.</p></div>
+  </div>
+  <table style="margin-top:22px">
+    <tr><th>Nivel</th><th>Tamaño (escritorio / móvil)</th><th>Familia</th><th>Nivel</th><th>Tamaño</th><th>Familia</th></tr>
+    <tr><td><b>Display</b></td><td>72 / 48 px</td><td>Cormorant italic 300</td><td><b>Body</b></td><td>16 px</td><td>Syne</td></tr>
+    <tr><td><b>H2</b></td><td>48 / 40 px</td><td>Cormorant italic 300</td><td><b>Label</b></td><td>11 px, mayúsculas</td><td>DM Mono</td></tr>
+  </table>
+  <p style="margin-top:12px">Las tres son de Google Fonts con licencia libre (OFL). Los archivos están en <strong>branding/manual/src/fonts</strong>.</p>
+  <div class="label num">13</div>
+</section>
+
+<!-- 14 · Elementos gráficos -->
+<section class="pg alt">
+  <div class="label eyebrow">02 · Sistema visual</div>
+  <h1 class="serif">Elementos <span class="gold">gráficos</span></h1>
+  <div class="cols c3" style="gap:22px">
+    <div><div class="card grid-bg" style="height:190px;background-color:var(--ink)"></div><div class="cap">Rejilla de 64 px al 5%</div><p style="margin-top:6px">Fondo de portadas y hero. Evoca una hoja de cálculo o un gráfico, sin decir "cripto".</p></div>
+    <div><div class="card" style="height:190px;background:var(--ink);padding:0;overflow:hidden"><svg class="curve" data-seed="9" width="360" height="190"></svg></div><div class="cap">Curva de equity con velas</div><p style="margin-top:6px">Línea fina de latón sobre velas tenues. Siempre ilustrativa: nunca se presenta como resultado real.</p></div>
+    <div><div class="card" style="height:190px;background:var(--ink);display:flex;flex-direction:column;justify-content:center;gap:14px"><div class="label" style="color:var(--gold)">Transparencia como método</div><div class="serif" style="font-size:40px">Titular con <span class="gold">mitad dorada</span></div><div class="rule" style="width:60%"></div></div><div class="cap">Patrón de composición</div><p style="margin-top:6px">Label mono dorada → titular Cormorant → regla → contenido.</p></div>
+  </div>
+  <p style="margin-top:22px">Iconos: si se necesitan, de línea, 1.5 px, esquinas rectas, en latón o piedra. <strong>Nunca rellenos ni multicolor.</strong> Los emojis se reservan para WhatsApp. Textura de ruido al 4–5% sobre fondos grandes.</p>
+  <div class="label num">14</div>
+</section>
+
+<!-- 15 · Fotografía -->
+<section class="pg">
+  <div class="label eyebrow">02 · Sistema visual</div>
+  <h1 class="serif">Fotografía</h1>
+  <div class="cols" style="grid-template-columns:1fr 1.2fr;gap:44px">
+    <div>
+      <p><strong>Retrato editorial de bajo perfil:</strong> luz cálida lateral sobre fondo casi negro, mirada directa, sin sonrisa de catálogo y sin objetos de estatus.</p>
+      <p style="margin-top:12px">La foto debe transmitir "esta persona sabe lo que hace y no necesita demostrártelo".</p>
+      <table style="margin-top:16px">
+        <tr><th>Sí</th><th>No</th></tr>
+        <tr><td>Escritorio real con NinjaTrader</td><td>Autos, relojes, fajos de billetes</td></tr>
+        <tr><td>Pantallas con datos reales</td><td>Capturas recortadas de ganancias</td></tr>
+        <tr><td>Luz cálida, fondo oscuro</td><td>Fondo blanco de estudio</td></tr>
+        <tr><td>Grano sutil, tonos neutros</td><td>Filtros saturados</td></tr>
+      </table>
+    </div>
+    <div>
+      <img class="shot" src="../../assets/liberty-trading-club/piezas/fb-cover-luis.png" style="width:100%">
+      <p style="margin-top:12px"><strong>Estado actual:</strong> el retrato disponible tiene fondo claro. Se usa oscurecido y con máscara hasta la sesión profesional, que debe seguir esta guía (ver branding/05-guia-fotografia.md).</p>
+    </div>
+  </div>
+  <div class="label num">15</div>
+</section>
+
+<!-- 16 · Aplicaciones: redes -->
+<section class="pg alt">
+  <div class="label eyebrow">03 · Aplicaciones</div>
+  <h1 class="serif">Redes <span class="gold">sociales</span></h1>
+  <div style="display:flex;gap:26px;align-items:flex-start">
+    <div><img class="shot" src="../../assets/liberty-trading-club/piezas/ig-post.png" style="height:420px"><div class="cap">Post 1080×1080</div></div>
+    <div><img class="shot" src="../../assets/liberty-trading-club/piezas/reel-cover.png" style="height:420px"><div class="cap">Portada de reel 1080×1920</div></div>
+    <div><img class="shot" src="../../assets/liberty-trading-club/piezas/story-cta.png" style="height:420px"><div class="cap">Historia con CTA</div></div>
+    <div style="flex:1"><p><strong>Estructura de post:</strong> dato o afirmación incómoda en la primera línea, contexto en dos o tres, y qué hacer con eso.</p><p style="margin-top:10px"><strong>Reels:</strong> vertical, subtítulos quemados, gancho en 3 segundos, cierre con el curso gratis.</p><p style="margin-top:10px"><strong>Temas:</strong> método, herramientas, mercado y el curso gratis.</p><p style="margin-top:10px">CTA de todo el contenido orgánico: <strong>libertytrading.pro/unirse</strong>.</p></div>
+  </div>
+  <div class="label num">16</div>
+</section>
+
+<!-- 17 · Aplicaciones: portadas -->
+<section class="pg">
+  <div class="label eyebrow">03 · Aplicaciones</div>
+  <h1 class="serif">Portadas <span class="gold">y avatar</span></h1>
+  <div style="display:flex;gap:24px;align-items:flex-start">
+    <div><img class="shot" src="../../assets/liberty-trading-club/piezas/fb-cover-liberty.png" style="height:250px"><div class="cap">Portada de Facebook · Liberty Trading Club · 1640×624</div></div>
+    <div><img class="shot" src="../../assets/liberty-trading-club/piezas/hotmart.png" style="height:250px"><div class="cap">Portada de producto · Hotmart · 1920×1080</div></div>
+  </div>
+  <div style="display:flex;gap:30px;align-items:center;margin-top:26px">
+    <img class="shot" src="../../assets/liberty-trading-club/piezas/avatar.png" style="width:150px;border-radius:50%">
+    <div><div class="cap" style="margin-top:0">Avatar · recorte circular</div><p style="margin-top:8px;max-width:760px">El isotipo es el avatar de las cuentas del producto (Facebook e Instagram de Liberty Trading Club). En las portadas de Facebook el centro es la zona segura: en móvil se recortan los lados.</p></div>
+  </div>
+  <div class="label num">17</div>
+</section>
+
+<!-- 18 · Aplicaciones: papelería -->
+<section class="pg alt">
+  <div class="label eyebrow">03 · Aplicaciones</div>
+  <h1 class="serif">Tarjeta <span class="gold">y certificado</span></h1>
+  <div class="cols" style="grid-template-columns:1fr 1.25fr;gap:34px">
+    <div>
+      <img class="shot" src="../../assets/liberty-trading-club/piezas/tarjeta-anverso.png" style="width:78%">
+      <img class="shot" src="../../assets/liberty-trading-club/piezas/tarjeta-reverso.png" style="width:78%;margin-top:14px"><div class="cap">Tarjeta 3.5×2 in · anverso y reverso</div>
+    </div>
+    <div>
+      <img class="shot" src="../../assets/liberty-trading-club/piezas/certificado.png" style="width:90%"><div class="cap">Certificado de finalización · A4 horizontal</div>
+      <p style="margin-top:12px">El certificado se entrega cuando el alumno aporta su estrategia validada al portafolio. Lleva un ID verificable en libertytrading.pro.</p>
+    </div>
+  </div>
+  <div class="label num">18</div>
+</section>
+
+<!-- 19 · Legal -->
+<section class="pg">
+  <div class="label eyebrow">03 · Aplicaciones</div>
+  <h1 class="serif">Reglas legales <span class="gold">en cada pieza</span></h1>
+  <div class="cols c2">
+    <div>
+      <table>
+        <tr><th>Situación</th><th>Qué lleva</th></tr>
+        <tr><td><b>Cualquier cifra de rendimiento</b></td><td>"Resultados de mi cuenta de capital propio. Rendimientos pasados no garantizan resultados futuros."</td></tr>
+        <tr><td><b>Resultados de un bot</b></td><td>Indicar si son de backtest o de operativa real. "Todo sistema automatizado puede generar pérdidas."</td></tr>
+        <tr><td><b>Pase de fondeo</b></td><td>"Pase directo a una cuenta fondeada de $200k". Nunca "te damos $200k".</td></tr>
+        <tr><td><b>Landing, PDF y presentaciones con cifras</b></td><td>Disclaimer de riesgo completo al pie.</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="card" style="border-color:var(--gold-d)"><div class="label" style="color:var(--gold)">Disclaimer de riesgo</div><p style="margin-top:10px">Operar futuros, acciones, opciones y criptomonedas implica riesgo de pérdida de capital. Los resultados publicados corresponden a la cuenta de capital propio de Luis Riofrio y no garantizan rendimientos futuros. El contenido es educativo e informativo; no constituye una recomendación personalizada de inversión ni una oferta de valores.</p></div>
+      <p style="margin-top:16px"><strong>Título profesional:</strong> "Trader cuantitativo". Nunca "Asesor de inversiones". <strong>Empleador:</strong> nunca en piezas de Liberty Trading Club.</p>
+    </div>
+  </div>
+  <div class="label num">19</div>
+</section>
+
+<!-- 20 · Contraportada -->
+<section class="pg noise grid-bg" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+  <img src="../../assets/liberty-trading-club/isotipo-oscuro.svg" style="width:170px">
+  <div class="serif" style="font-size:52px;margin-top:34px">Transparencia <span class="gold">como método</span></div>
+  <div class="label" style="margin-top:22px">libertytrading.pro · +593 99 669 1586 · soporte@libertytrading.pro</div>
+</section>
+
+<script>
+function rnd(seed){ let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+document.querySelectorAll('svg.curve').forEach(svg => {
+  const W = +svg.getAttribute('width'), H = +svg.getAttribute('height'), r = rnd(+svg.dataset.seed * 997);
+  const n = Math.round(W / 20); let y = H * .78; const pts = []; let c = '';
+  for (let i = 0; i < n; i++) {
+    const o = y; y = Math.max(H * .12, Math.min(H * .9, y - (r() - .38) * H * .1)); const cl = y;
+    const x = 10 + i * 20, hi = Math.min(o, cl) - r() * H * .05, lo = Math.max(o, cl) + r() * H * .05, up = cl <= o;
+    const col = up ? 'rgba(201,168,76,.55)' : 'rgba(138,132,128,.35)';
+    c += `<line x1="${x}" x2="${x}" y1="${hi}" y2="${lo}" stroke="${col}"/><rect x="${x-4}" y="${Math.min(o,cl)}" width="8" height="${Math.max(2,Math.abs(cl-o))}" fill="${up?'none':col}" stroke="${col}"/>`;
+    pts.push(`${x},${cl}`);
+  }
+  svg.innerHTML = c + `<polyline points="${pts.join(' ')}" fill="none" stroke="#C9A84C" stroke-width="2"/>`;
+});
+</script>
+</body></html>

@@ -78,6 +78,9 @@ export const BRAND = {
     handle: '@liberty_trading_club',
     instagram: 'https://www.instagram.com/liberty_trading_club',
     facebook: 'https://www.facebook.com/share/18LE9Crx9i/',
+    /** Marca personal de Luis (página /luis). */
+    luisFacebook: 'https://www.facebook.com/luisriofrio.trader',
+    luisInstagram: 'https://www.instagram.com/luisriofrioec',
     /** Botones genéricos de WhatsApp: abren el chat con un mensaje pidiendo información. */
     whatsapp: wa('Hola Luis, quiero información sobre el Liberty Trading Club'),
   },
@@ -116,6 +119,17 @@ export const BRAND = {
     desk: '/brand/placeholders/03-escritorio.svg',
     og: '/brand/placeholders/04-og.svg',
     avatar: '/brand/placeholders/05-avatar.svg',
+  },
+
+  /**
+   * Logos de Liberty Trading Club (texto en trazos, versión sobre oscuro).
+   * Fuente y resto de variantes: /branding/assets/liberty-trading-club.
+   */
+  logos: {
+    horizontal: '/brand/liberty/horizontal-oscuro.svg',
+    isotipo: '/brand/liberty/isotipo-oscuro.svg',
+    logotipo: '/brand/liberty/logotipo-oscuro.svg',
+    respaldo: '/brand/liberty/logotipo-respaldo-oscuro.svg',
   },
 
   /** Track record público de Luis. */

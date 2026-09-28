@@ -29,12 +29,12 @@ const syne = Syne({
 
 const DESCRIPTION =
   'Liberty Trading Club: trading algorítmico cuantitativo con Claude Code, NinjaTrader 8 y Obsidian. ' +
-  '6 bots listos para instalar y cuenta fondeada de $200k incluida. Pago único, acceso de por vida.'
+  '6 bots listos para instalar y pase a cuenta fondeada de $200k incluido. Pago único, acceso de por vida.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(BRAND.url),
   title: {
-    default: `${BRAND.name} — ${BRAND.role}`,
+    default: `${BRAND.legalName} — por ${BRAND.name}, ${BRAND.role}`,
     template: `%s | ${BRAND.name}`,
   },
   description: DESCRIPTION,
@@ -46,14 +46,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'es_EC',
-    title: `${BRAND.name} — ${BRAND.role}`,
+    title: `${BRAND.legalName} — por ${BRAND.name}, ${BRAND.role}`,
     description: DESCRIPTION,
     url: BRAND.url,
     siteName: BRAND.name,
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${BRAND.name} — ${BRAND.role}`,
+    title: `${BRAND.legalName} — por ${BRAND.name}, ${BRAND.role}`,
     description: DESCRIPTION,
   },
 }
