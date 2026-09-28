@@ -118,6 +118,17 @@ export const BRAND = {
     avatar: '/brand/placeholders/05-avatar.svg',
   },
 
+  /**
+   * Logos de Liberty Trading Club (texto en trazos, versión sobre oscuro).
+   * Fuente y resto de variantes: /branding/assets/liberty-trading-club.
+   */
+  logos: {
+    horizontal: '/brand/liberty/horizontal-oscuro.svg',
+    isotipo: '/brand/liberty/isotipo-oscuro.svg',
+    logotipo: '/brand/liberty/logotipo-oscuro.svg',
+    respaldo: '/brand/liberty/logotipo-respaldo-oscuro.svg',
+  },
+
   /** Track record público de Luis. */
   trackRecordSlug: 'cmmjkgdt800004kjq1zep8qc9',
 } as const

@@ -18,8 +18,8 @@ Tu ventaja no es enseñar mejor. Es **ser auditable**.
 
 ## Posicionamiento
 
-> El único trader en Ecuador que publica cada operación —ganadoras y perdedoras— y
-> te enseña a hacer lo mismo.
+> Un trader cuantitativo que opera con su propio dinero, publica su track record
+> y te enseña a construir el tuyo.
 
 Esta frase es la columna vertebral de todo. Cada pieza de comunicación debe poder
 justificarse contra ella.
@@ -163,7 +163,7 @@ se llega a ellos por sus rutas y por WhatsApp.
 
 | Tipo | Cómo compiten | Cómo los superas |
 |---|---|---|
-| Gurús de Instagram | Aspiracional, resultados no verificables | Track record en base de datos, con pérdidas |
+| Gurús de Instagram | Aspiracional, resultados no verificables | Track record público y verificable, en base de datos |
 | Academias grandes (cursos $500-2000) | Producción alta, contenido genérico | Bots con código, cuenta fondeada incluida, infraestructura propia del alumno |
 | Vendedores de bots | Backtests dudosos, cajas negras, cero soporte | Código completo, Walk-Forward y Montecarlo, y enseñas a construirlos |
 | Casas de cambio P2P | Solo precio | Precio informado + los otros servicios |

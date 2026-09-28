@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import { BRAND } from '@/lib/brand'
@@ -44,9 +45,9 @@ export default function Navbar({ initialUser = null }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
         {/* Logo */}
-        <Link href="/" className="flex flex-col leading-none">
-          <span className="headline text-lg gradient-gold">{BRAND.name}</span>
-          <span className="label-mono text-[8px] hidden sm:block">{BRAND.role}</span>
+        <Link href="/" className="flex items-center" aria-label={`${BRAND.legalName} — inicio`}>
+          <Image src={BRAND.logos.horizontal} alt={BRAND.legalName} width={180} height={40}
+            className="h-9 w-auto" priority unoptimized />
         </Link>
 
         {/* Desktop Nav */}

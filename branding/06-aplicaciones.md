@@ -134,8 +134,9 @@ las cuentas del producto. Ver [07-legal-y-disclaimers.md](07-legal-y-disclaimers
 segundos, cierre con el curso gratis. Si muestran cifras, el caption lleva el
 disclaimer corto de track record.
 
-**Publica una operación perdedora al menos una vez al mes.** Es lo más eficiente que
-puedes hacer por la marca: nadie que esté inflando resultados lo hace.
+**Temas de contenido:** método (cómo valido una estrategia), herramientas (Claude Code,
+NinjaTrader, Obsidian), mercado y el curso gratis. Las pérdidas no son un tema de
+contenido de la marca (decisión de Luis, 2026-09-28).
 
 ## Checklist antes de publicar cualquier pieza
 

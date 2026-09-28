@@ -51,8 +51,8 @@ export default function Hero() {
               </h1>
 
               <p className="text-base text-[var(--text-secondary)] max-w-md mb-8 leading-relaxed">
-                Educación en trading cuantitativo, bots, cripto y acciones de EEUU. Con cada operación mía
-                publicada — ganadoras y perdedoras.
+                Educación en trading cuantitativo, bots, cripto y acciones de EEUU. Con mi track record
+                público y verificable.
               </p>
 
               {/* Señales de confianza */}

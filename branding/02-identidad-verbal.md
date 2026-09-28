@@ -4,7 +4,7 @@
 
 Escribes como alguien que ya tiene los datos y no necesita convencer a gritos.
 La transparencia no se declara, se demuestra: en vez de "somos transparentes",
-pones la tabla de operaciones con las pérdidas incluidas.
+pones el link a tu track record verificable.
 
 Un buen filtro antes de publicar cualquier frase: **¿podría decir esto un vendedor
 que no opera?** Si sí, reescríbela.
@@ -34,7 +34,7 @@ detrás — eres tú, y eso es una ventaja, no algo que disimular.
 
 Orden de prioridad. Si solo cabe uno, es el primero.
 
-1. **Publico cada operación, incluidas las que pierdo.**
+1. **Mi track record es público y verificable.**
 2. **Opero con mi propio dinero antes de enseñarte nada.**
 3. **Tu capital nunca sale de tu cuenta.** (Liberty Portfolio)
 4. **Código completo, no cajas negras.** (Liberty Trading Club: bots validados con
@@ -75,7 +75,7 @@ siempre son dos frases.
 
 | No digas | Di |
 |---|---|
-| Rentabilidad garantizada | Resultados publicados, con pérdidas incluidas |
+| Rentabilidad garantizada | Track record público y verificable |
 | Gana dinero desde casa | Aprende a operar futuros con método |
 | Sistema infalible / 100% efectivo | Win rate de X% sobre N operaciones |
 | Únete a la comunidad de ganadores | Mentoría 1:1 cada mes |
@@ -177,8 +177,7 @@ cartera con bastante menos.
 ```
 No te voy a dar un número, porque nadie honesto puede.
 
-Lo que sí puedo darte es mi historial completo, con las operaciones perdedoras
-incluidas: [link al track record]
+Lo que sí puedo darte es mi historial completo: [link al track record]
 
 Míralo y decide tú.
 ```
@@ -192,6 +191,3 @@ un link es tu diferenciador entero en una frase.
 1. **Línea 1:** un dato o una afirmación incómoda. Sin preámbulo.
 2. **Líneas 2-4:** el contexto que hace que el dato importe.
 3. **Cierre:** qué hacer con eso, o una pregunta real (no retórica).
-
-Publica pérdidas al menos una vez al mes. Es contraintuitivo y es exactamente lo que
-construye la marca: nadie que esté mintiendo publica una operación perdedora.

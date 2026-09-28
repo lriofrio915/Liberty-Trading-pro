@@ -102,8 +102,10 @@ lugar donde más cuidado hay que tener con la redacción.
 
 1. Etiquétalo siempre como **resultados de tu cuenta de capital propio**, no como una
    oferta ni como un resultado que otro pueda esperar.
-2. Incluye las operaciones perdedoras. Además de ser lo correcto, un track record sin
-   pérdidas es una señal de alarma para cualquier regulador.
+2. Publícalo completo: no se borran ni se ocultan operaciones. La marca no necesita
+   *hablar* de las pérdidas en su contenido, pero el historial no puede filtrarse: un
+   track record sin operaciones perdedoras es engañoso y una señal de alarma para
+   cualquier regulador.
 3. Nunca presentes un rendimiento pasado como indicativo de uno futuro.
 4. No uses el track record como argumento de venta directo del tipo "gana lo mismo
    que yo".
