@@ -16,7 +16,7 @@ def shot(url, w, h, out, transparent=False):
 PIECES = {'ig-post': (1080, 1080), 'reel-cover': (1080, 1920), 'story-cta': (1080, 1920),
           'fb-cover-liberty': (1640, 624), 'fb-cover-luis': (1640, 624), 'avatar': (1080, 1080),
           'tarjeta-anverso': (1050, 600), 'tarjeta-reverso': (1050, 600), 'certificado': (1754, 1240),
-          'hotmart': (1920, 1080), 'og-luis': (1200, 630), 'dest-operativa': (1080, 1920), 'dest-duo': (1080, 1920), 'dest-citas': (1080, 1920), 'dest-pj-capital': (1080, 1920), 'dest-youtube': (1080, 1920)}
+          'hotmart': (1920, 1080), 'og-luis': (1200, 630), 'dest-operativa': (1080, 1920), 'dest-duo': (1080, 1920), 'dest-citas': (1080, 1920), 'dest-pj-capital': (1080, 1920), 'dest-youtube': (1080, 1920), 'reel-1': (1080, 1920), 'reel-2': (1080, 1920), 'reel-3': (1080, 1920), 'reel-4': (1080, 1920), 'reel-5': (1080, 1920)}
 out = ASSETS / 'piezas'; out.mkdir(exist_ok=True)
 only = sys.argv[1:]
 for pid, (w, h) in PIECES.items():
