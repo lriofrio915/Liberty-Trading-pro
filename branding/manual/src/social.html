@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<link rel="stylesheet" href="brand.css">
+<style>
+  /* Slides de carrusel 1080x1350 (4:5) para los posts diarios de Liberty Trading Club.
+     Se renderizan con render_social.py: ?t=<portada|contenido|cierre>&title=...&body=... */
+  body { background: #000; }
+  .slide { position: relative; width: 1080px; height: 1350px; overflow: hidden; background: var(--ink); }
+  .abs { position: absolute; }
+  .fit { overflow: hidden; }
+  .body { font-family: 'Syne', sans-serif; color: var(--cream); line-height: 1.42; }
+  .body p + p { margin-top: .7em; }
+  .body b { color: var(--gold); font-weight: 600; }
+  .dato { border: 1.5px solid var(--gold-d); border-radius: 14px; padding: 26px 30px; background: rgba(201,168,76,.05); }
+  .foot { left: 90px; right: 90px; bottom: 70px; display: flex; justify-content: space-between; align-items: center; }
+</style></head>
+<body>
+<div class="slide noise" id="s">
+  <div class="abs grid-bg" style="inset:0"></div>
+  <div class="abs" id="glow" style="inset:0;background:radial-gradient(ellipse at 70% 20%, rgba(201,168,76,.10), transparent 55%)"></div>
+
+  <!-- PORTADA -->
+  <div id="portada" hidden>
+    <img class="abs" src="../../assets/liberty-trading-club/isotipo-oscuro.svg" style="left:90px;top:90px;width:110px">
+    <div class="abs label" data-k="label" style="left:90px;top:270px;font-size:26px;color:var(--gold)"></div>
+    <div class="abs serif fit" data-k="title" data-fit="150,70" style="left:90px;top:330px;width:900px;height:640px;font-size:150px;color:var(--cream)"></div>
+    <svg class="abs curve" data-seed="3" style="left:0;top:880px;opacity:.3" width="1080" height="140"></svg>
+    <div class="abs body fit" data-k="sub" data-fit="40,28" style="left:92px;top:1050px;width:880px;height:150px;font-size:40px;color:var(--stone)"></div>
+  </div>
+
+  <!-- CONTENIDO -->
+  <div id="contenido" hidden>
+    <div class="abs label" style="left:90px;top:96px;font-size:24px;color:var(--gold)"><span data-k="n"></span> / <span data-k="total"></span></div>
+    <div class="abs" id="flow" style="left:90px;top:170px;width:900px;height:1020px;display:flex;flex-direction:column;gap:38px">
+      <div class="serif fit" data-k="title" data-fit="96,54" style="max-height:300px;font-size:96px;color:var(--cream)"></div>
+      <div class="rule" style="width:260px;flex:none"></div>
+      <div class="body fit" data-k="body" data-fit="46,28" style="flex:1 1 auto;min-height:0;font-size:46px"></div>
+      <div class="dato mono fit" data-k="dato" data-fit="34,22" style="flex:none;max-height:190px;font-size:34px;color:var(--gold)"></div>
+    </div>
+  </div>
+
+  <!-- CIERRE -->
+  <div id="cierre" hidden>
+    <img class="abs" src="../../assets/liberty-trading-club/isotipo-oscuro.svg" style="left:485px;top:150px;width:110px">
+    <div class="abs serif fit" data-k="title" data-fit="120,64" style="left:90px;top:330px;width:900px;height:330px;font-size:120px;color:var(--cream);text-align:center"></div>
+    <div class="abs body fit" data-k="body" data-fit="42,28" style="left:120px;top:690px;width:840px;height:200px;font-size:42px;color:var(--stone);text-align:center"></div>
+    <div class="abs btn" style="left:50%;transform:translateX(-50%);top:930px;font-size:34px;padding:30px 46px;border-radius:14px;white-space:nowrap">libertytrading.pro/unirse</div>
+    <div class="abs label fit" data-k="disclaimer" data-fit="21,15" style="left:120px;top:1080px;width:840px;height:110px;font-size:21px;letter-spacing:.04em;text-transform:none;text-align:center;color:var(--stone)"></div>
+  </div>
+
+  <div class="abs foot">
+    <img src="../../assets/liberty-trading-club/logotipo-oscuro.svg" style="width:220px">
+    <div class="label" style="font-size:20px">@liberty_trading_club</div>
+  </div>
+</div>
+
+<script>
+const q = new URLSearchParams(location.search);
+const tipo = q.get('t') || 'portada';
+document.getElementById(tipo).hidden = false;
+if (tipo !== 'portada') document.getElementById('glow').style.background = 'radial-gradient(ellipse at 20% 10%, rgba(201,168,76,.07), transparent 50%)';
+
+// Texto seguro: se escapa el HTML; *texto* va en dorado y las líneas en blanco separan párrafos.
+const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = (s, para) => {
+  let h = esc(s).replace(/\*([^*]+)\*/g, para ? '<b>$1</b>' : '<span class="gold">$1</span>');
+  return para ? h.split(/\n\s*\n/).map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('') : h.replace(/\n/g, '<br>');
+};
+const vis = document.getElementById(tipo);
+vis.querySelectorAll('[data-k]').forEach(el => {
+  const v = q.get(el.dataset.k);
+  if (!v) { if (el.classList.contains('dato') || el.dataset.k === 'disclaimer') el.remove(); return; }
+  el.innerHTML = fmt(v, el.classList.contains('body') || el.classList.contains('dato'));
+});
+
+// Ajuste automático: baja el tamaño de letra hasta que el texto quepa en su caja.
+document.fonts.ready.then(() => {
+  vis.querySelectorAll('[data-fit]').forEach(el => {
+    const [max, min] = el.dataset.fit.split(',').map(Number);
+    let size = max;
+    el.style.fontSize = size + 'px';
+    const limit = () => el.style.maxHeight && el.scrollHeight > 0 && !el.style.flex ? parseFloat(el.style.maxHeight) : el.clientHeight;
+    while (size > min && el.scrollHeight > limit() + 2) { size -= 2; el.style.fontSize = size + 'px'; }
+    if (el.scrollHeight > limit() + 2) document.body.dataset.overflow = (document.body.dataset.overflow || '') + el.dataset.k + ' ';
+  });
+  document.body.dataset.ready = '1';
+});
+
+// Curva decorativa (misma que piezas.html).
+function rnd(seed){ let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+document.querySelectorAll('svg.curve').forEach(svg => {
+  const W = +svg.getAttribute('width'), H = +svg.getAttribute('height'), r = rnd(+svg.dataset.seed * 997);
+  const n = Math.round(W / 26); let y = H * .78; const pts = [];
+  for (let i = 0; i < n; i++) { y = Math.max(H * .12, Math.min(H * .92, y - (r() - .38) * H * .09)); pts.push(`${13 + i * 26},${y}`); }
+  svg.innerHTML = `<polyline points="${pts.join(' ')}" fill="none" stroke="#C9A84C" stroke-width="2.2"/>`;
+});
+</script>
+</body></html>

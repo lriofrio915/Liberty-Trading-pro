@@ -575,3 +575,27 @@ model P2PPriceLog {
 
   @@index([timestamp])
 }
+
+/// Posts diarios de Liberty Trading Club generados en el VPS (social-autopost).
+/// Se crean como "pendiente"; Luis los aprueba desde WhatsApp y entonces se publican
+/// en Instagram y Facebook con la API de Meta (lib/meta-graph.ts).
+model SocialPost {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  fecha       String // yyyy-MM-dd del día del post
+  pilar       String
+  tema        String
+  slides      String[] // URLs públicas (Cloudinary), en orden
+  caption     String
+  hashtags    String[]
+  alt         String?
+  estado      String    @default("pendiente") // pendiente | publicando | publicado | descartado | caducado | error
+  igMediaId   String?
+  igPermalink String?
+  fbPostId    String?
+  error       String?
+  decididoAt  DateTime?
+
+  @@index([estado, createdAt])
+  @@map("social_posts")
+}
