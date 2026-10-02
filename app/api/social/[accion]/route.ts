@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { CADUCIDAD_MS, firmaValida, type AccionSocial } from '@/lib/social-approval'
-import { publicarFacebook, publicarInstagram } from '@/lib/meta-graph'
+import { CUENTAS, esCuenta, publicarFacebook, publicarInstagram } from '@/lib/meta-graph'
 import { notifyNexus } from '@/lib/notify-nexus'
 
 export const runtime = 'nodejs'
@@ -52,8 +52,9 @@ export async function GET(req: NextRequest, ctx: Ctx) {
   const { accion, post, url } = r
   if (post.estado !== 'pendiente') return yaDecidido(post)
   if (Date.now() - post.createdAt.getTime() > CADUCIDAD_MS) return pagina('Caducado', '<h1>Este borrador caducó (24 h)</h1>')
+  const destinoCuentas = esCuenta(post.cuenta) ? CUENTAS[post.cuenta].etiqueta : post.cuenta
   const boton = accion === 'aprobar'
-    ? '<button class="si" type="submit">Publicar ahora en Instagram y Facebook</button>'
+    ? `<p>Se publicará en <strong>${esc(destinoCuentas)}</strong>.</p><button class="si" type="submit">Publicar ahora en Instagram y Facebook</button>`
     : '<button class="no" type="submit">Descartar este post</button>'
   return pagina(post.tema, `<h1>${esc(post.tema)}</h1><img src="${esc(post.slides[0])}" alt="">
 <p>${post.slides.length} slides · ${esc(post.pilar)}</p><pre>${esc(post.caption)}\n\n${esc(post.hashtags.join(' '))}</pre>
@@ -76,11 +77,13 @@ export async function POST(req: NextRequest, ctx: Ctx) {
 
   const caption = `${post.caption}\n\n${post.hashtags.join(' ')}`
   try {
-    const ig = await publicarInstagram(post.slides, caption)
+    if (!esCuenta(post.cuenta)) throw new Error(`cuenta desconocida: ${post.cuenta}`)
+    const cuenta = post.cuenta
+    const ig = await publicarInstagram(cuenta, post.slides, caption)
     await prisma.socialPost.update({ where: { id: post.id }, data: { igMediaId: ig.id, igPermalink: ig.permalink } })
-    const fb = await publicarFacebook(post.slides, caption)
+    const fb = await publicarFacebook(cuenta, post.slides, caption)
     await prisma.socialPost.update({ where: { id: post.id }, data: { estado: 'publicado', fbPostId: fb.id } })
-    await notifyNexus('social_publicado', { resumen: `✅ Publicado: ${post.tema}\nInstagram: ${ig.permalink}\nFacebook: ${fb.permalink}` })
+    await notifyNexus('social_publicado', { resumen: `✅ Publicado en ${CUENTAS[cuenta].etiqueta}: ${post.tema}\nInstagram: ${ig.permalink}\nFacebook: ${fb.permalink}` })
     return pagina('Publicado', `<h1>Publicado ✅</h1><p><a href="${esc(ig.permalink)}">Ver en Instagram</a> · <a href="${esc(fb.permalink)}">Ver en Facebook</a></p>`)
   } catch (e: any) {
     const msg = String(e?.message ?? e).slice(0, 500)
