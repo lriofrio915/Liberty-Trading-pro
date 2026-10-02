@@ -103,7 +103,8 @@ export default function Footer() {
             {RISK_DISCLAIMER}
           </p>
           <p className="label-mono text-[10px]">
-            © {new Date().getFullYear()} {BRAND.name} — Todos los derechos reservados
+            © {new Date().getFullYear()} {BRAND.name} — Todos los derechos reservados ·{' '}
+            <Link href="/privacidad" className="underline hover:text-[var(--gold)]">Política de privacidad</Link>
           </p>
         </div>
       </div>
