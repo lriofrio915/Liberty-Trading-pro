@@ -582,6 +582,7 @@ model P2PPriceLog {
 model SocialPost {
   id          String    @id @default(cuid())
   createdAt   DateTime  @default(now())
+  cuenta      String    @default("liberty") // liberty | luis (ver CUENTAS en lib/meta-graph.ts)
   fecha       String // yyyy-MM-dd del día del post
   pilar       String
   tema        String

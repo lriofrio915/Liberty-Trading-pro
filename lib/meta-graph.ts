@@ -1,12 +1,11 @@
 /**
  * Publicación en Instagram y Facebook con la Graph API de Meta.
  *
- * Variables de entorno (Vercel):
- *   META_ACCESS_TOKEN — token de un usuario del sistema del portafolio de Liberty, sin caducidad,
- *                       con pages_manage_posts, pages_read_engagement, instagram_basic,
- *                       instagram_content_publish y business_management.
- *   META_PAGE_ID      — id de la página de Facebook "Liberty Trading Club".
- *   META_IG_USER_ID   — id de la cuenta profesional @liberty_trading_club.
+ * Cada cuenta publica con su propio token de página (sin caducidad, derivado del token de usuario
+ * de Luis vía la app Nexus_Solution) y sus ids. Variables de entorno (Vercel):
+ *   liberty → META_ACCESS_TOKEN, META_PAGE_ID, META_IG_USER_ID (página Liberty Trading Club + @liberty_trading_club)
+ *   luis    → META_LUIS_ACCESS_TOKEN, META_LUIS_PAGE_ID, META_LUIS_IG_USER_ID
+ *             (página Luis Riofrío Trader Cuantitativo + @luisriofrioec)
  *
  * Las imágenes tienen que ser URLs públicas (Cloudinary): Meta las descarga.
  */
@@ -19,8 +18,23 @@ function env(name: string): string {
   return v
 }
 
-async function graph<T = any>(path: string, params: Record<string, string>, method: 'GET' | 'POST' = 'POST', token?: string): Promise<T> {
-  const body = new URLSearchParams({ ...params, access_token: token ?? env('META_ACCESS_TOKEN') })
+export type Cuenta = 'liberty' | 'luis'
+
+/** Nombres visibles de cada cuenta (para la página de confirmación y los avisos). */
+export const CUENTAS: Record<Cuenta, { etiqueta: string; prefijo: string }> = {
+  liberty: { etiqueta: '@liberty_trading_club y la página Liberty Trading Club', prefijo: 'META_' },
+  luis: { etiqueta: '@luisriofrioec y la página Luis Riofrío Trader Cuantitativo', prefijo: 'META_LUIS_' },
+}
+
+export const esCuenta = (c: unknown): c is Cuenta => c === 'liberty' || c === 'luis'
+
+function config(cuenta: Cuenta) {
+  const p = CUENTAS[cuenta].prefijo
+  return { token: env(`${p}ACCESS_TOKEN`), pageId: env(`${p}PAGE_ID`), igUserId: env(`${p}IG_USER_ID`) }
+}
+
+async function graph<T = any>(path: string, params: Record<string, string>, method: 'GET' | 'POST', token: string): Promise<T> {
+  const body = new URLSearchParams({ ...params, access_token: token })
   const url = method === 'GET' ? `${GRAPH}/${path}?${body}` : `${GRAPH}/${path}`
   const res = await fetch(url, {
     method,
@@ -38,9 +52,9 @@ async function graph<T = any>(path: string, params: Record<string, string>, meth
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 /** Espera a que Meta termine de procesar un contenedor de Instagram (las imágenes tardan unos segundos). */
-async function esperarContenedor(id: string) {
+async function esperarContenedor(id: string, token: string) {
   for (let i = 0; i < 20; i++) {
-    const { status_code } = await graph<{ status_code: string }>(id, { fields: 'status_code' }, 'GET')
+    const { status_code } = await graph<{ status_code: string }>(id, { fields: 'status_code' }, 'GET', token)
     if (status_code === 'FINISHED') return
     if (status_code === 'ERROR' || status_code === 'EXPIRED') throw new Error(`Contenedor de Instagram ${id}: ${status_code}`)
     await sleep(3000)
@@ -49,35 +63,29 @@ async function esperarContenedor(id: string) {
 }
 
 /** Publica una imagen o un carrusel (2–10) en Instagram. Devuelve el id y el enlace del post. */
-export async function publicarInstagram(urls: string[], caption: string) {
-  const ig = env('META_IG_USER_ID')
+export async function publicarInstagram(cuenta: Cuenta, urls: string[], caption: string) {
+  const { token, igUserId: ig } = config(cuenta)
   let creation: string
   if (urls.length === 1) {
-    creation = (await graph<{ id: string }>(`${ig}/media`, { image_url: urls[0], caption })).id
+    creation = (await graph<{ id: string }>(`${ig}/media`, { image_url: urls[0], caption }, 'POST', token)).id
   } else {
     const hijos: string[] = []
     for (const image_url of urls) {
-      hijos.push((await graph<{ id: string }>(`${ig}/media`, { image_url, is_carousel_item: 'true' })).id)
+      hijos.push((await graph<{ id: string }>(`${ig}/media`, { image_url, is_carousel_item: 'true' }, 'POST', token)).id)
     }
-    for (const h of hijos) await esperarContenedor(h)
-    creation = (await graph<{ id: string }>(`${ig}/media`, { media_type: 'CAROUSEL', children: hijos.join(','), caption })).id
+    for (const h of hijos) await esperarContenedor(h, token)
+    creation = (await graph<{ id: string }>(`${ig}/media`, { media_type: 'CAROUSEL', children: hijos.join(','), caption }, 'POST', token)).id
   }
-  await esperarContenedor(creation)
-  const { id } = await graph<{ id: string }>(`${ig}/media_publish`, { creation_id: creation })
-  const { permalink } = await graph<{ permalink: string }>(id, { fields: 'permalink' }, 'GET')
+  await esperarContenedor(creation, token)
+  const { id } = await graph<{ id: string }>(`${ig}/media_publish`, { creation_id: creation }, 'POST', token)
+  const { permalink } = await graph<{ permalink: string }>(id, { fields: 'permalink' }, 'GET', token)
   return { id, permalink }
 }
 
-/** Token de página: el del usuario del sistema sirve para pedirlo y no caduca. */
-async function tokenDePagina(page: string) {
-  const { access_token } = await graph<{ access_token: string }>(page, { fields: 'access_token' }, 'GET')
-  return access_token
-}
-
-/** Publica en la página de Facebook las fotos (sin publicar por separado) y un post que las agrupa. */
-export async function publicarFacebook(urls: string[], mensaje: string) {
-  const page = env('META_PAGE_ID')
-  const token = await tokenDePagina(page)
+/** Publica en la página de Facebook las fotos (sin publicar por separado) y un post que las agrupa.
+ *  El token configurado ya es de página, así que se usa directamente. */
+export async function publicarFacebook(cuenta: Cuenta, urls: string[], mensaje: string) {
+  const { token, pageId: page } = config(cuenta)
   const fotos: string[] = []
   for (const url of urls) {
     fotos.push((await graph<{ id: string }>(`${page}/photos`, { url, published: 'false' }, 'POST', token)).id)
@@ -89,8 +97,9 @@ export async function publicarFacebook(urls: string[], mensaje: string) {
 }
 
 /** Comprobación de configuración: nombre de usuario de IG y nombre de la página. */
-export async function verificarCuentas() {
-  const ig = await graph<{ username: string }>(env('META_IG_USER_ID'), { fields: 'username' }, 'GET')
-  const page = await graph<{ name: string }>(env('META_PAGE_ID'), { fields: 'name' }, 'GET')
+export async function verificarCuenta(cuenta: Cuenta) {
+  const { token, igUserId, pageId } = config(cuenta)
+  const ig = await graph<{ username: string }>(igUserId, { fields: 'username' }, 'GET', token)
+  const page = await graph<{ name: string }>(pageId, { fields: 'name' }, 'GET', token)
   return { instagram: ig.username, facebook: page.name }
 }
