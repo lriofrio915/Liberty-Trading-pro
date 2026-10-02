@@ -206,8 +206,9 @@ diferencia parece semántica y no lo es.
 - [x] Credenciales de empleador: resuelto (2026-09-28). Sí en perfiles personales,
       no en web ni materiales de venta. Falta decidir la página profesional de FB.
 - [ ] Términos y condiciones del sitio (hoy no existen).
-- [ ] Política de privacidad — obligatoria: capturas leads con nombre, teléfono y
-      email vía `/api/leads/capture`.
+- [x] Política de privacidad: publicada en `/privacidad` (2026-10-02), según la LOPDP.
+      Enlazada en el footer y junto a los formularios de leads. Si se añade un formulario,
+      un proveedor o un rastreador nuevo, actualizar `app/privacidad/page.tsx`.
 - [ ] Definir umbral de identificación para operaciones de Liberty Exchange.
 
 Los dos primeros son los importantes. Los demás son higiene que conviene tener antes

@@ -500,6 +500,10 @@ export default function UnirsePage() {
                     'Empezar gratis ahora →'
                   )}
                 </button>
+                <p className="text-[11px] text-center leading-relaxed" style={{ color: '#6b6460' }}>
+                  Al enviar aceptas que usemos tus datos para darte acceso al curso y contactarte, según la{' '}
+                  <Link href="/privacidad" className="underline" style={{ color: '#C9A84C' }}>política de privacidad</Link>.
+                </p>
 
                 {/* Trust signals */}
                 <div className="grid grid-cols-3 gap-2 pt-1">
@@ -530,6 +534,9 @@ export default function UnirsePage() {
           © {new Date().getFullYear()} Liberty Trading Club · Las inversiones implican riesgo.
           Resultados pasados no garantizan rendimientos futuros.
         </p>
+        <Link href="/privacidad" className="text-[11px] font-mono underline mt-2 inline-block" style={{ color: '#6b6460' }}>
+          Política de privacidad
+        </Link>
       </footer>
     </div>
   )

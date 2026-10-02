@@ -132,6 +132,10 @@ export default function LeadCaptureForm({
         <p className="text-[10px] text-[var(--text-muted)] text-center font-mono">
           Sin spam. Solo te contacta Luis Riofrio, de Liberty Trading Club.
         </p>
+        <p className="text-[11px] text-center leading-relaxed text-[var(--text-muted)]">
+          Al enviar aceptas que usemos tus datos para contactarte, según la{' '}
+          <a href="/privacidad" className="underline text-[var(--gold)]">política de privacidad</a>.
+        </p>
       </form>
     </div>
   )
